@@ -1,0 +1,12 @@
+freqReq_vio = 100;
+m_axis_resetn = 0;
+m_axis_tready = 1;
+ctrl_auto = 1;
+ctrl_freqMin = 100;
+ctrl_freqMax = 200;
+ctrl_freqStep = 1;
+ctrl_stimTime = 400000;
+ctrl_adc_nSamples = 4;
+ctrl_ctrlStart = 0;
+adcAutoDc_chSel = 1;
+adcHScale = 8;
