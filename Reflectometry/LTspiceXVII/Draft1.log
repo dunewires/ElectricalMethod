@@ -1,0 +1,25 @@
+Circuit: * C:\Users\Pratyush Anand\Documents\LTspiceXVII\Draft1.asc
+
+WARNING: Node V- is floating.
+
+WARNING: Less than two connections to node V+.  This node is used by T1.
+WARNING: Less than two connections to node V-.  This node is used by T1.
+Direct Newton iteration for .op point succeeded.
+
+Date: Mon Jul 15 21:35:18 2019
+Total elapsed time: 96.126 seconds.
+
+tnom = 27
+temp = 27
+method = modified trap
+totiter = 101321417
+traniter = 101321414
+tranpoints = 50660708
+accept = 38863354
+rejected = 11797354
+matrix size = 8
+fillins = 3
+solver = Normal
+Matrix Compiler1: 380 bytes object code size  0.1/0.1/[0.1]
+Matrix Compiler2:      49 opcodes  0.1/[0.1]/0.1
+
