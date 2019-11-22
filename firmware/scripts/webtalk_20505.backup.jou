@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Webtalk v2018.3 (64-bit)
+# SW Build 2405991 on Thu Dec  6 23:36:41 MST 2018
+# IP Build 2404404 on Fri Dec  7 01:43:56 MST 2018
+# Start of session at: Fri May 17 10:40:22 2019
+# Process ID: 20505
+# Current directory: /home/nate/projects/duneWireTension/firmware/scripts
+# Command line: wbtcv -mode batch -source /home/nate/projects/duneWireTension/firmware/scripts/.Xil/Vivado-20232-lt2/webtalk/labtool_webtalk.tcl -notrace
+# Log file: /home/nate/projects/duneWireTension/firmware/scripts/webtalk.log
+# Journal file: /home/nate/projects/duneWireTension/firmware/scripts/webtalk.jou
+#-----------------------------------------------------------
+source /home/nate/projects/duneWireTension/firmware/scripts/.Xil/Vivado-20232-lt2/webtalk/labtool_webtalk.tcl -notrace

@@ -1,0 +1,16 @@
+Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2018.2 (lin64) Build 2258646 Thu Jun 14 20:02:38 MDT 2018
+| Date         : Thu Apr 11 15:41:11 2019
+| Host         : lt2 running 64-bit CentOS Linux release 7.6.1810 (Core)
+| Command      : upgrade_ip
+| Device       : xc7vx485tffg1761-2
+------------------------------------------------------------------------------------
+
+Upgrade Log for IP 'clk_sysclk_mmcm'
+
+1. Summary
+----------
+
+SUCCESS in the conversion of clk_sysclk_mmcm (xilinx.com:ip:clk_wiz:6.0 (Rev. 1)) to Vivado generation flows.
+

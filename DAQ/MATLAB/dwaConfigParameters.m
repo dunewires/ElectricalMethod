@@ -1,6 +1,6 @@
 freqReq_vio = "00001000";
 % dwaCtrl  => (auto mainsMinus_enable m_axis_tready)
-dwaCtrl = "0000000a";
+dwaCtrl = "00000005";
 ctrl_freqMin = "00000100";
 ctrl_freqMax = "00000200";
 ctrl_freqStep = "00000010";

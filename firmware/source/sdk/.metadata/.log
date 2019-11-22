@@ -1,0 +1,9 @@
+!SESSION 2018-10-02 13:28:46.595 -----------------------------------------------
+eclipse.buildId=2015.1
+java.version=1.8.0_25
+java.vendor=Oracle Corporation
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Command-line arguments:  -data /home/nate/projects/atlas/mmtp/firmware/sources/sdk -os linux -ws gtk -arch x86_64
+
+!ENTRY org.eclipse.cdt.core 1 0 2018-10-02 13:30:27.847
+!MESSAGE Indexed 'mmtp_lwip_interface' (12 sources, 36 headers) in 0.82 sec: 1,847 declarations; 3,441 references; 30 unresolved inclusions; 0 syntax errors; 327 unresolved names (5.82%)

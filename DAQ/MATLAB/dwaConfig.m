@@ -4,8 +4,6 @@ regWrite(t,'00000000',freqReq_vio)
 pause(.2);
 regWrite(t,'00000002',dwaCtrl)
 pause(.2);
-regWrite(t,'00000003',dwaCtrl)
-pause(.2);
 regWrite(t,'00000004',ctrl_freqMin);
 pause(.2);
 regWrite(t,'00000005',ctrl_freqMax);
@@ -15,8 +13,6 @@ pause(.2);
 regWrite(t,'00000007',ctrl_stimTime);
 pause(.2);
 regWrite(t,'00000008',ctrl_adc_nSamples);
-pause(.2);
-regWrite(t,'00000009',ctrl_ctrlStart);
 pause(.2);
 regWrite(t,'0000000A',adcAutoDc_chSel);
 pause(.2);

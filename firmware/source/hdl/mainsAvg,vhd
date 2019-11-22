@@ -1,0 +1,41 @@
+--------------------------------------------------------------------------------
+-- Title       : Mains Average Noise
+-- Project     : DUNE Wire Tension Analyzer	
+--------------------------------------------------------------------------------
+-- File        : mainsAvg,vhd
+-- Author      : User Name <user.email@user.company.com>
+-- Company     : Harvard LPPC
+-- Created     : Tue Jun 18 14:58:17 2019
+-- Last update : Tue Jun 18 17:24:39 2019
+-- Platform    : Default Part Number
+-- Standard    : VHDL-2008 
+-------------------------------------------------------------------------------
+-- Description: Collect mains synced samples from the sense wire with no stimulus, 
+-- Accumulate and average the mains noise which can be subtracted from the signal
+--------------------------------------------------------------------------------
+-- Revisions:  Revisions and documentation are controlled by
+-- the revision control system (RCS).  The RCS should be consulted
+-- on revision history.
+-------------------------------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+library duneWta;
+library UNISIM;
+use UNISIM.VCOMPONENTS.all;
+
+entity mainsAvg is
+	port (
+		senseWireData :in standard_logic_vector(15 downto 0) := (others  => '0');
+		senseWireData_wstrb  :out std_logic := '0';
+		
+		sansMainsData :out standard_logic_vector(15 downto 0) := (others  => '0');
+		sansMainsData_wstrb :out std_logic := '0';
+		mainsSquare :in standard_logic  := '0';
+
+		clk :in standard_logic  := '0'
+	);
+end entity mainsAvg;
+
+

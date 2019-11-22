@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<Checkpoint Version="10" Minor="0">
+	<BUILD_NUMBER Name="2258646"/>
+	<FULL_BUILD Name="SW Build 2258646 on Thu Jun 14 20:02:38 MDT 2018"/>
+	<PRODUCT Name="Vivado v2018.2 (64-bit)"/>
+	<Part Name="xc7vx485tffg1761-2"/>
+	<BoardPart Name="xilinx.com:vc707:part0:1.1"/>
+	<Top Name="dbg_hub"/>
+	<DisableAutoIOBuffers Name="1"/>
+	<OutOfContext Name="1"/>
+	<IpOocRunGenerated Name="1"/>
+	<HDPlatform Name="0"/>
+	<XPMLIBRARY Name="XPM_CDC"/>
+	<XPMLIBRARY Name="XPM_MEMORY"/>
+	<File Type="XDC_IN_CONTEXT" Name="dbg_hub_in_context.xdc" ModTime="1554925764"/>
+	<File Type="SHAPE" Name="dbg_hub.shape" ModTime="1554925764"/>
+	<File Type="EDIF" Name="dbg_hub.edf" ModTime="1554925764"/>
+	<File Type="VERILOG_STUB" Name="dbg_hub_stub.v" ModTime="1554925764"/>
+	<File Type="VHDL_STUB" Name="dbg_hub_stub.vhdl" ModTime="1554925764"/>
+	<File Type="XN" Name="dbg_hub.xn" ModTime="1554925764"/>
+	<File Type="INCR" Name="dbg_hub.incr" ModTime="1554925764"/>
+	<File Type="RDA" Name="dbg_hub.rda" ModTime="1554925764"/>
+	<File Type="WDF" Name="dbg_hub.wdf" ModTime="1554925764"/>
+	<File Type="RESOURSES" Name="dbg_hub.resources" ModTime="1554925764"/>
+</Checkpoint>
+

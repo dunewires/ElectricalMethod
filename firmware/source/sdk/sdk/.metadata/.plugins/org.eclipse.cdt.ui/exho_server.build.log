@@ -1,0 +1,15 @@
+19:42:53 **** Auto Build of configuration Debug for project exho_server ****
+make pre-build main-build 
+a9-linaro-pre-build-step
+ 
+Building file: ../src/echo.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O0 -g3 -c -fmessage-length=0 -MT"src/echo.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I../../lwip_r2_bsp/ps7_cortexa9_0/include -MMD -MP -MF"src/echo.d" -MT"src/echo.o" -o "src/echo.o" "../src/echo.c"
+../src/echo.c:32:10: fatal error: lwip/err.h: No such file or directory
+ #include "lwip/err.h"
+          ^~~~~~~~~~~~
+compilation terminated.
+make: *** [src/echo.o] Error 1
+
+19:42:53 Build Finished (took 126ms)
+

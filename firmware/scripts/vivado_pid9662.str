@@ -1,0 +1,227 @@
+/*
+
+Xilinx Vivado v2018.3 (64-bit) [Major: 2018, Minor: 3]
+SW Build: 2405991 on Thu Dec  6 23:36:41 MST 2018
+IP Build: 2404404 on Fri Dec  7 01:43:56 MST 2018
+
+Process ID (PID): 9662
+License: Customer
+
+Current time: 	Thu Nov 14 16:37:58 EST 2019
+Time zone: 	Eastern Standard Time (America/New_York)
+
+OS: CentOS Linux release 7.6.1810 (Core)
+OS Version: 3.10.0-957.21.3.el7.x86_64
+OS Architecture: amd64
+Available processors (cores): 4
+
+Display: :0
+Screen size: 1920x1080
+Screen resolution (DPI): 96
+Available screens: 2
+Available disk space: 30 GB
+Default font: family=Dialog,name=Dialog,style=plain,size=12
+
+Java version: 	9.0.4 64-bit
+Java home: 	/home/nate/opt/Xilinx/Vivado/2018.3/tps/lnx64/jre9.0.4
+Java executable location: 	/home/nate/opt/Xilinx/Vivado/2018.3/tps/lnx64/jre9.0.4/bin/java
+Java initial memory (-Xms): 	128 MB
+Java maximum memory (-Xmx):	 3 GB
+
+
+User name: 	nate
+User home directory: /home/nate
+User working directory: /home/nate/projects/duneWireTension/firmware/scripts
+User country: 	US
+User language: 	en
+User locale: 	en_US
+
+RDI_BASEROOT: /home/nate/opt/Xilinx/Vivado
+HDI_APPROOT: /home/nate/opt/Xilinx/Vivado/2018.3
+RDI_DATADIR: /home/nate/opt/Xilinx/Vivado/2018.3/data
+RDI_BINDIR: /home/nate/opt/Xilinx/Vivado/2018.3/bin
+
+Vivado preferences file location: /home/nate/.Xilinx/Vivado/2018.3/vivado.xml
+Vivado preferences directory: /home/nate/.Xilinx/Vivado/2018.3/
+Vivado layouts directory: /home/nate/.Xilinx/Vivado/2018.3/layouts
+PlanAhead jar file location: 	/home/nate/opt/Xilinx/Vivado/2018.3/lib/classes/planAhead.jar
+Vivado log file location: 	
+Vivado journal file location: 	
+Engine tmp dir: 	./.Xil/Vivado-9662-lt2
+
+Xilinx Environment Variables
+----------------------------
+XILINX: /home/nate/opt/Xilinx/Vivado/2018.3/ids_lite/ISE
+XILINXD_LICENSE_FILE: 1717@128.103.100.254
+XILINX_DSP: /home/nate/opt/Xilinx/Vivado/2018.3/ids_lite/ISE
+XILINX_PLANAHEAD: /home/nate/opt/Xilinx/Vivado/2018.3
+XILINX_SDK: /home/nate/opt/Xilinx/SDK/2018.3
+XILINX_VIVADO: /home/nate/opt/Xilinx/Vivado/2018.3
+XILINX_VIVADO_HLS: /home/nate/opt/Xilinx/Vivado/2018.3
+
+
+GUI allocated memory:	154 MB
+GUI max memory:		3,072 MB
+Engine allocated memory: 5,042 MB
+
+Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+
+*/
+
+// TclEventType: START_GUI
+// Tcl Message: source implementation/build.tcl -notrace 
+// Tcl Message: use commands: setup, readSource, synth, opt, place, postPlacePhysOpt route, bitgen, makeBit, explorePlaceDirectives exploreFullDirectives 
+// Tcl Message: start_gui  
+// HMemoryUtils.trashcanNow. Engine heap size: 5,047 MB. GUI used memory: 37 MB. Current time: 11/14/19, 4:38:00 PM EST
+selectMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // X (q, cp)
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_CHECKPOINT, "Checkpoint"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_OPEN_RECENT_PROJECT, "Open Recent"); // ac (cp)
+selectMenuItem(PAResourceItoN.MainMenuMgr_OPEN_RECENT_PROJECT, "/home/nate/projects/duneWireTension-bk3/vivadoProjects/microzedTut/microzedTut.xpr"); // af (cp)
+dismissMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // X (q, cp)
+// bx (cp):  Open Project : addNotify
+// Opening Vivado Project: /home/nate/projects/duneWireTension-bk3/vivadoProjects/microzedTut/microzedTut.xpr. Version: Vivado v2018.3 
+// TclEventType: DEBUG_PROBE_SET_CHANGE
+// TclEventType: MSGMGR_MOVEMSG
+// TclEventType: FILE_SET_NEW
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_CURRENT
+// TclEventType: PROJECT_DASHBOARD_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: PROJECT_NEW
+// [GUI Memory]: 78 MB (+79536kb) [00:00:36]
+// [Engine Memory]: 5,092 MB (+5188262kb) [00:00:36]
+// [GUI Memory]: 86 MB (+3739kb) [00:00:36]
+// [GUI Memory]: 94 MB (+4390kb) [00:00:38]
+// WARNING: HEventQueue.dispatchEvent() is taking  3777 ms.
+// Tcl Message: open_project /home/nate/projects/duneWireTension-bk3/vivadoProjects/microzedTut/microzedTut.xpr 
+// Tcl Message: Scanning sources... Finished scanning sources 
+// Tcl Message: INFO: [IP_Flow 19-234] Refreshing IP repositories INFO: [IP_Flow 19-1700] Loaded user IP repository '/home/nate/projects/duneWireTension-bk3/vivadoProjects/ip_repo/PLAXI_INTERFACE_1.0'. INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/nate/opt/Xilinx/Vivado/2018.3/data/ip'. 
+// HMemoryUtils.trashcanNow. Engine heap size: 5,139 MB. GUI used memory: 49 MB. Current time: 11/14/19, 4:38:28 PM EST
+// Project name: microzedTut; location: /home/nate/projects/duneWireTension-bk3/vivadoProjects/microzedTut; part: xc7z020clg400-1
+dismissDialog("Open Project"); // bx (cp)
+// [GUI Memory]: 103 MB (+4281kb) [00:00:40]
+// WARNING: HEventQueue.dispatchEvent() is taking  1405 ms.
+// Tcl Message: update_compile_order -fileset sources_1 
+selectMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // X (q, cp)
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_CHECKPOINT, "Checkpoint"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_IP, "IP"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_TEXT_EDITOR, "Text Editor"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_EXPORT, "Export"); // ac (cp)
+selectMenuItem(PAResourceCommand.PACommandNames_LAUNCH_HARDWARE, "Launch SDK"); // af (cp)
+dismissMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // X (q, cp)
+// Run Command: PAResourceCommand.PACommandNames_LAUNCH_HARDWARE
+// aa (cp): Launch SDK: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aa)
+// 'o' command handler elapsed time: 4 seconds
+dismissDialog("Launch SDK"); // aa (cp)
+// Tcl Message: launch_sdk -workspace /home/nate/projects/duneWireTension-bk3/vivadoProjects/microzedTut/microzedTut.sdk -hwspec /home/nate/projects/duneWireTension-bk3/vivadoProjects/microzedTut/microzedTut.sdk/design_1_wrapper.hdf 
+// Tcl Message: INFO: [Vivado 12-393] Launching SDK... INFO: [Vivado 12-417] Running xsdk -workspace /home/nate/projects/duneWireTension-bk3/vivadoProjects/microzedTut/microzedTut.sdk -hwspec /home/nate/projects/duneWireTension-bk3/vivadoProjects/microzedTut/microzedTut.sdk/design_1_wrapper.hdf INFO: [Vivado 12-3157] SDK launch initiated. Please check console for any further messages. 
+// HMemoryUtils.trashcanNow. Engine heap size: 5,179 MB. GUI used memory: 51 MB. Current time: 11/14/19, 5:08:30 PM EST
+// [GUI Memory]: 110 MB (+1958kb) [00:51:08]
+// Elapsed time: 3148 seconds
+selectMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // X (q, cp)
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_CHECKPOINT, "Checkpoint"); // ac (cp)
+dismissMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // X (q, cp)
+selectMenu(PAResourceItoN.MainMenuMgr_WINDOW, "Window"); // X (q, cp)
+dismissMenu(PAResourceItoN.MainMenuMgr_WINDOW, "Window"); // X (q, cp)
+// HMemoryUtils.trashcanNow. Engine heap size: 5,179 MB. GUI used memory: 45 MB. Current time: 11/14/19, 5:38:30 PM EST
+// Elapsed time: 661 seconds
+selectMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // X (q, cp)
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_CHECKPOINT, "Checkpoint"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_IP, "IP"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_CHECKPOINT, "Checkpoint"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_OPEN_RECENT_PROJECT, "Open Recent"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_OPEN_RECENT_PROJECT, "Open Recent"); // ac (cp)
+selectMenuItem(PAResourceItoN.MainMenuMgr_OPEN_RECENT_PROJECT, "/home/nate/projects/duneWireTension/vivadoProjects/microzedTut/microzedTut.xpr"); // af (cp)
+dismissMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // X (q, cp)
+// TclEventType: PROJECT_CLOSE
+// HMemoryUtils.trashcanNow. Engine heap size: 5,171 MB. GUI used memory: 45 MB. Current time: 11/14/19, 5:42:39 PM EST
+// bx (cp):  Open Project : addNotify
+// Opening Vivado Project: /home/nate/projects/duneWireTension/vivadoProjects/microzedTut/microzedTut.xpr. Version: Vivado v2018.3 
+selectButton("PAResourceOtoP.PABaseTab_WOULD_YOU_LIKE_TO_CLOSE_CURRENTLY_Yes", "Yes"); // JButton (C, I)
+// Tcl Message: close_project 
+// TclEventType: MSGMGR_MOVEMSG
+// TclEventType: FILE_SET_NEW
+// TclEventType: RUN_COMPLETED
+// TclEventType: RUN_CURRENT
+// TclEventType: PROJECT_DASHBOARD_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: PROJECT_DASHBOARD_GADGET_NEW
+// TclEventType: PROJECT_DASHBOARD_GADGET_CHANGE
+// TclEventType: FILE_SET_CHANGE
+// TclEventType: PROJECT_NEW
+// WARNING: HEventQueue.dispatchEvent() is taking  1454 ms.
+// Tcl Message: open_project /home/nate/projects/duneWireTension/vivadoProjects/microzedTut/microzedTut.xpr 
+// Tcl Message: Scanning sources... Finished scanning sources 
+// Tcl Message: INFO: [IP_Flow 19-234] Refreshing IP repositories INFO: [IP_Flow 19-1700] Loaded user IP repository '/home/nate/projects/duneWireTension/vivadoProjects/ip_repo/PLAXI_INTERFACE_1.0'. INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/nate/opt/Xilinx/Vivado/2018.3/data/ip'. 
+// Project name: microzedTut; location: /home/nate/projects/duneWireTension/vivadoProjects/microzedTut; part: xc7z020clg400-1
+dismissDialog("Open Project"); // bx (cp)
+// Tcl Message: update_compile_order -fileset sources_1 
+// Elapsed time: 13 seconds
+selectMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // X (q, cp)
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_CHECKPOINT, "Checkpoint"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_IP, "IP"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_TEXT_EDITOR, "Text Editor"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_EXPORT, "Export"); // ac (cp)
+selectMenuItem(PAResourceCommand.PACommandNames_LAUNCH_HARDWARE, "Launch SDK"); // af (cp)
+dismissMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // X (q, cp)
+// Run Command: PAResourceCommand.PACommandNames_LAUNCH_HARDWARE
+// aa (cp): Launch SDK: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aa)
+dismissDialog("Launch SDK"); // aa (cp)
+// Tcl Message: launch_sdk -workspace /home/nate/projects/duneWireTension/vivadoProjects/microzedTut/microzedTut.sdk -hwspec /home/nate/projects/duneWireTension/vivadoProjects/microzedTut/microzedTut.sdk/design_1_wrapper.hdf 
+// Tcl Message: INFO: [Vivado 12-393] Launching SDK... INFO: [Vivado 12-417] Running xsdk -workspace /home/nate/projects/duneWireTension/vivadoProjects/microzedTut/microzedTut.sdk -hwspec /home/nate/projects/duneWireTension/vivadoProjects/microzedTut/microzedTut.sdk/design_1_wrapper.hdf INFO: [Vivado 12-3157] SDK launch initiated. Please check console for any further messages. 
+// Elapsed time: 823 seconds
+selectMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // X (q, cp)
+selectMenu(PAResourceItoN.MainMenuMgr_PROJECT, "Project"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_CHECKPOINT, "Checkpoint"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_IP, "IP"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_TEXT_EDITOR, "Text Editor"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_EXPORT, "Export"); // ac (cp)
+selectMenu(PAResourceItoN.MainMenuMgr_EXPORT, "Export"); // ac (cp)
+// [GUI Memory]: 117 MB (+1918kb) [01:18:56]
+selectMenuItem(PAResourceCommand.PACommandNames_LAUNCH_HARDWARE, "Launch SDK"); // af (cp)
+dismissMenu(PAResourceItoN.MainMenuMgr_FILE, "File"); // X (q, cp)
+// Run Command: PAResourceCommand.PACommandNames_LAUNCH_HARDWARE
+// aa (cp): Launch SDK: addNotify
+selectButton(RDIResource.BaseDialog_OK, "OK"); // a (aa)
+dismissDialog("Launch SDK"); // aa (cp)
+// Tcl Message: launch_sdk -workspace /home/nate/projects/duneWireTension/vivadoProjects/microzedTut/microzedTut.sdk -hwspec /home/nate/projects/duneWireTension/vivadoProjects/microzedTut/microzedTut.sdk/design_1_wrapper.hdf 
+// Tcl Message: INFO: [Vivado 12-393] Launching SDK... INFO: [Vivado 12-417] Running xsdk -workspace /home/nate/projects/duneWireTension/vivadoProjects/microzedTut/microzedTut.sdk -hwspec /home/nate/projects/duneWireTension/vivadoProjects/microzedTut/microzedTut.sdk/design_1_wrapper.hdf INFO: [Vivado 12-3157] SDK launch initiated. Please check console for any further messages. 
+// WARNING: HEventQueue.dispatchEvent() is taking  294825 ms.
+// HMemoryUtils.trashcanNow. Engine heap size: 5,204 MB. GUI used memory: 51 MB. Current time: 11/14/19, 6:16:25 PM EST
+// HMemoryUtils.trashcanNow. Engine heap size: 5,204 MB. GUI used memory: 49 MB. Current time: 11/14/19, 6:46:25 PM EST
+// HMemoryUtils.trashcanNow. Engine heap size: 5,204 MB. GUI used memory: 47 MB. Current time: 11/14/19, 7:16:25 PM EST
+// HMemoryUtils.trashcanNow. Engine heap size: 5,204 MB. GUI used memory: 47 MB. Current time: 11/14/19, 7:46:25 PM EST
+// HMemoryUtils.trashcanNow. Engine heap size: 5,204 MB. GUI used memory: 47 MB. Current time: 11/14/19, 8:20:18 PM EST
+// HMemoryUtils.trashcanNow. Engine heap size: 5,204 MB. GUI used memory: 53 MB. Current time: 11/14/19, 8:50:17 PM EST

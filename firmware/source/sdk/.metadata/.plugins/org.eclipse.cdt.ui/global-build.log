@@ -1,0 +1,18 @@
+
+**** Build of configuration Debug for project mmtp_lwip_interface ****
+
+Nothing to build for project mmtp_lwip_interface
+13:30:27 **** Clean-only build of configuration Debug for project mmtp_lwip_interface ****
+make clean 
+rm -rf  ./src/echo.o ./src/i2c_access.o ./src/iic_program_clocks.o ./src/main.o ./src/mmUdpTx.o ./src/platform.o ./src/platform_mb.o ./src/platform_ppc.o ./src/platform_zynq.o ./src/sfp.o ./src/si5324.o ./src/xiic_eeprom_example.o  ./src/echo.d ./src/i2c_access.d ./src/iic_program_clocks.d ./src/main.d ./src/mmUdpTx.d ./src/platform.d ./src/platform_mb.d ./src/platform_ppc.d ./src/platform_zynq.d ./src/sfp.d ./src/si5324.d ./src/xiic_eeprom_example.d  mmtp_lwip_interface.elf.size  mmtp_lwip_interface.elf
+ 
+13:30:27 **** Auto Build of configuration Debug for project mmtp_lwip_interface ****
+make all 
+Building file: ../src/echo.c
+Invoking: MicroBlaze gcc compiler
+mb-gcc -Wall -O0 -g3 -I../mmTrigProc_bsp/microblaze_0/include -c -fmessage-length=0 -MT"src/echo.o" -I/home/nate/projects/atlas/mmtp/vivadoProjects/mm_top/mm_top.sdk/standalone_bsp_0/microblaze_0/include -mlittle-endian -mxl-barrel-shift -mcpu=v9.5 -mxl-soft-mul -Wl,--no-relax -ffunction-sections -fdata-sections -MMD -MP -MF"src/echo.d" -MT"src/echo.d" -o "src/echo.o" "../src/echo.c"
+../src/echo.c:24:25: fatal error: xparameters.h: No such file or directory
+ #include "xparameters.h"
+                         ^
+compilation terminated.
+make: *** [src/echo.o] Error 1

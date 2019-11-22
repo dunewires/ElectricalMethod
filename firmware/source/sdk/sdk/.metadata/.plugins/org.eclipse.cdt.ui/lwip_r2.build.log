@@ -1,0 +1,70 @@
+19:30:32 **** Auto Build of configuration Debug for project lwip_r2 ****
+make pre-build main-build 
+a9-linaro-pre-build-step
+ 
+Building file: ../src/main.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O0 -g3 -c -fmessage-length=0 -MT"src/main.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I../../lwip_r2_bsp/ps7_cortexa9_0/include -MMD -MP -MF"src/main.d" -MT"src/main.o" -o "src/main.o" "../src/main.c"
+Finished building: ../src/main.c
+ 
+Building file: ../src/mmUdpTx.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O0 -g3 -c -fmessage-length=0 -MT"src/mmUdpTx.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I../../lwip_r2_bsp/ps7_cortexa9_0/include -MMD -MP -MF"src/mmUdpTx.d" -MT"src/mmUdpTx.o" -o "src/mmUdpTx.o" "../src/mmUdpTx.c"
+../src/mmUdpTx.c: In function 'send_write_ack':
+../src/mmUdpTx.c:42:3: warning: implicit declaration of function 'transfer_mmUdpTx_data' [-Wimplicit-function-declaration]
+   transfer_mmUdpTx_data(udpTxbuf, wAckBuffLength, mmDataTxPcb);
+   ^~~~~~~~~~~~~~~~~~~~~
+../src/mmUdpTx.c: In function 'drainDebugFifoUdp':
+../src/mmUdpTx.c:53:7: warning: unused variable 'rfifo' [-Wunused-variable]
+   int rfifo;
+       ^~~~~
+../src/mmUdpTx.c:49:7: warning: unused variable 'i' [-Wunused-variable]
+   int i;
+       ^
+../src/mmUdpTx.c:48:26: warning: variable 'regStatusNext' set but not used [-Wunused-but-set-variable]
+   u32_t regStatusInitial,regStatusNext;
+                          ^~~~~~~~~~~~~
+../src/mmUdpTx.c:48:9: warning: variable 'regStatusInitial' set but not used [-Wunused-but-set-variable]
+   u32_t regStatusInitial,regStatusNext;
+         ^~~~~~~~~~~~~~~~
+../src/mmUdpTx.c: In function 'transfer_mmUdpTx_data':
+../src/mmUdpTx.c:112:5: warning: implicit declaration of function 'xil_printf'; did you mean 'viprintf'? [-Wimplicit-function-declaration]
+     xil_printf("!connected_pcb\r\n");
+     ^~~~~~~~~~
+     viprintf
+In file included from ../../lwip_r2_bsp/ps7_cortexa9_0/include/lwip/ip_addr.h:43:0,
+                 from ../../lwip_r2_bsp/ps7_cortexa9_0/include/lwip/netif.h:46,
+                 from ../../lwip_r2_bsp/ps7_cortexa9_0/include/lwip/udp.h:46,
+                 from ../src/mmUdpTx.c:8:
+../src/mmUdpTx.c: In function 'start_udp':
+../../lwip_r2_bsp/ps7_cortexa9_0/include/lwip/ip4_addr.h:120:44: error: invalid use of undefined type 'struct ip_addr'
+ #define IP4_ADDR(ipaddr, a,b,c,d)  (ipaddr)->addr = PP_HTONL(LWIP_MAKEU32(a,b,c,d))
+                                            ^
+../src/mmUdpTx.c:148:7: note: in expansion of macro 'IP4_ADDR'
+       IP4_ADDR(&udpDstIpAddr, 192, 168,   2, 100); //38 Oxford
+       ^~~~~~~~
+../src/mmUdpTx.c:151:3: warning: implicit declaration of function 'print_ip'; did you mean 'printf'? [-Wimplicit-function-declaration]
+   print_ip("MM Data sent to IP  : ", &udpDstIpAddr);
+   ^~~~~~~~
+   printf
+../src/mmUdpTx.c:158:12: warning: 'return' with a value, in function returning void
+     return -1;
+            ^
+../src/mmUdpTx.c:134:6: note: declared here
+ void start_udp( ){
+      ^~~~~~~~~
+../src/mmUdpTx.c:161:39: warning: passing argument 2 of 'udp_connect' from incompatible pointer type [-Wincompatible-pointer-types]
+   if ((err = udp_connect(mmDataTxPcb, &udpDstIpAddr, port)) != ERR_OK) {
+                                       ^
+In file included from ../src/mmUdpTx.c:8:0:
+../../lwip_r2_bsp/ps7_cortexa9_0/include/lwip/udp.h:120:18: note: expected 'const ip_addr_t * {aka const struct ip4_addr *}' but argument is of type 'struct ip_addr *'
+ err_t            udp_connect    (struct udp_pcb *pcb, const ip_addr_t *ipaddr,
+                  ^~~~~~~~~~~
+../src/mmUdpTx.c: At top level:
+../src/mmUdpTx.c:13:16: error: storage size of 'udpDstIpAddr' isn't known
+ struct ip_addr udpDstIpAddr;
+                ^~~~~~~~~~~~
+make: *** [src/mmUdpTx.o] Error 1
+
+19:30:32 Build Finished (took 267ms)
+

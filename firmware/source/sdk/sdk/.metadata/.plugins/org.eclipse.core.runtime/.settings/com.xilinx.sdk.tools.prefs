@@ -1,0 +1,16 @@
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:.bss=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:.data=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:.data1=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:.fixup=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:.rodata=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:.rodata1=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:.sbss=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:.sbss2=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:.sdata=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:.sdata2=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:.text=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:heap=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:heap-size=4096
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:stack=ps7_ddr_0
+com.xilinx.sdk.linkgen.prefs.lwip_ref\:stack-size=4096
+eclipse.preferences.version=1

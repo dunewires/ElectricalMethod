@@ -1,0 +1,4 @@
+13:28:16 INFO  : Launching XSDB server: xsdb -n -s /home/nate/opt/Xilinx/SDK/2015.1/scripts/xsdb/xsdb/xsdb-server.tcl 2450
+13:28:16 ERROR : (XSDB Server)error: illegal option '-s'
+
+13:28:46 ERROR : Timed out. 30 seconds have elapsed while waiting for XSDB server to launch.
