@@ -29,19 +29,22 @@ bootload.elf.size \
 
 
 # All Target
-all: bootload.elf secondary-outputs
+all: pre-build main-build
+
+# Main-build Target
+main-build: bootload.elf secondary-outputs
 
 # Tool invocations
 bootload.elf: $(OBJS) ../src/lscript.ld $(USER_OBJS)
 	@echo 'Building target: $@'
-	@echo 'Invoking: MicroBlaze gcc linker'
-	mb-gcc -Wl,-T -Wl,../src/lscript.ld -L../../standalone_bsp_0/microblaze_0/lib -mlittle-endian -mxl-barrel-shift -mcpu=v9.5 -mxl-soft-mul -Wl,--no-relax -Wl,--gc-sections -o "bootload.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	@echo 'Invoking: ARM v7 gcc linker'
+	arm-none-eabi-gcc -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec -Wl,-T -Wl,../src/lscript.ld -L../../bootload_bsp/ps7_cortexa9_0/lib -o "bootload.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 bootload.elf.size: bootload.elf
-	@echo 'Invoking: MicroBlaze Print Size'
-	mb-size bootload.elf  |tee "bootload.elf.size"
+	@echo 'Invoking: ARM v7 Print Size'
+	arm-none-eabi-size bootload.elf  |tee "bootload.elf.size"
 	@echo 'Finished building: $@'
 	@echo ' '
 
@@ -50,9 +53,13 @@ clean:
 	-$(RM) $(EXECUTABLES)$(OBJS)$(S_UPPER_DEPS)$(C_DEPS)$(ELFSIZE) bootload.elf
 	-@echo ' '
 
+pre-build:
+	-a9-linaro-pre-build-step
+	-@echo ' '
+
 secondary-outputs: $(ELFSIZE)
 
 .PHONY: all clean dependents
-.SECONDARY:
+.SECONDARY: main-build pre-build
 
 -include ../makefile.targets

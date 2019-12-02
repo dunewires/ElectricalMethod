@@ -3,8 +3,6 @@
 	<name>mmtp_lwip_interface</name>
 	<comment></comment>
 	<projects>
-		<project>standalone_bsp_0</project>
-		<project>top_vc707_dev_hw_platform_0</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

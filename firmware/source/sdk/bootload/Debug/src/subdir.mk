@@ -7,26 +7,23 @@ LD_SRCS += \
 ../src/lscript.ld 
 
 C_SRCS += \
-../src/bootloader.c \
-../src/platform.c \
-../src/srec.c 
+../src/helloworld.c \
+../src/platform.c 
 
 OBJS += \
-./src/bootloader.o \
-./src/platform.o \
-./src/srec.o 
+./src/helloworld.o \
+./src/platform.o 
 
 C_DEPS += \
-./src/bootloader.d \
-./src/platform.d \
-./src/srec.d 
+./src/helloworld.d \
+./src/platform.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 src/%.o: ../src/%.c
 	@echo 'Building file: $<'
-	@echo 'Invoking: MicroBlaze gcc compiler'
-	mb-gcc -Wall -O0 -g3 -c -fmessage-length=0 -MT"$@" -I../../standalone_bsp_0/microblaze_0/include -mlittle-endian -mxl-barrel-shift -mcpu=v9.5 -mxl-soft-mul -Wl,--no-relax -ffunction-sections -fdata-sections -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Invoking: ARM v7 gcc compiler'
+	arm-none-eabi-gcc -Wall -O0 -g3 -c -fmessage-length=0 -MT"$@" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I../../bootload_bsp/ps7_cortexa9_0/include -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
