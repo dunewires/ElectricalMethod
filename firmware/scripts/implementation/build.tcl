@@ -87,15 +87,15 @@ proc setup {} {
 
     set_param general.maxThreads 8
     set post_route_wns xxx
-    set proj_dir $firmware_dir/../vivadoProjects/$proj_name
+    set proj_dir $firmware_dir/../../vivadoProjects/$proj_name
    
     puts "Target: $target"
     puts "FPGA Part: $part"
     puts "Scripts Directory:  $scriptdir"
     puts "Project Directory: $proj_dir"
     
-    set_property ip_repo_paths {$scriptdir/../../../vivadoProjects/ip_repo/dwa_registers_1.0} [current_project]
-    update_ip_catalog
+  #  set_property ip_repo_paths {$scriptdir/../../../vivadoProjects/ip_repo/dwa_registers_1.0} [current_project]
+   # update_ip_catalog
 }
 
 proc readSource {} {
@@ -117,7 +117,6 @@ proc readSource {} {
         # source $scriptdir/implementation/readVc707DwaSource.tcl
         source $scriptdir/implementation/readMicrozedWtaSource.tcl
         #source ../../vivadoProjects/dwa_ps/dwa_ps_bd.tcl
-        read_checkpoint ./../../vivadoProjects/dwa_ps/dwa_ps.srcs/sources_1/bd/dwa_ps_bd/dwa_ps_bd.dcp
 }
 
 proc synth {} {

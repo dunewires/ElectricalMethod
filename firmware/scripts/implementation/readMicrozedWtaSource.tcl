@@ -18,6 +18,11 @@ read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/dwa_ps_pl_top.vhd
 read_xdc -verbose $proj_sources_dir/constraints/tensionAnalyzerMicrozedPl.xdc
 
 # --------------------------------------------------------------------------
+#                 Custom DCP
+# --------------------------------------------------------------------------
+# design checkpoint for PS BD
+read_checkpoint $proj_sources_dir/cores/checkpoints/dwa_ps_bd.dcp
+# --------------------------------------------------------------------------
 #                 Xilinx IP
 # --------------------------------------------------------------------------
 # IP for scint timestamp

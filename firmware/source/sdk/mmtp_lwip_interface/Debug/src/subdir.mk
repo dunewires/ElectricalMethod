@@ -53,7 +53,7 @@ C_DEPS += \
 src/%.o: ../src/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: MicroBlaze gcc compiler'
-	mb-gcc -Wall -O0 -g3 -I../mmTrigProc_bsp/microblaze_0/include -c -fmessage-length=0 -MT"$@" -I/home/nate/Downloads/mm_top.sdk/standalone_bsp_0/microblaze_0/include -mlittle-endian -mxl-barrel-shift -mcpu=v9.5 -mxl-soft-mul -Wl,--no-relax -ffunction-sections -fdata-sections -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	mb-gcc -Wall -O0 -g3 -I../mmTrigProc_bsp/microblaze_0/include -c -fmessage-length=0 -MT"$@" -I/home/nate/Downloads/mm_top.sdk/standalone_bsp_0/microblaze_0/include -mlittle-endian -mxl-barrel-shift -mcpu=v9.5 -mxl-soft-mul -Wl,--no-relax -ffunction-sections -fdata-sections -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

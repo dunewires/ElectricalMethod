@@ -1,4 +1,4 @@
-set_property SRC_FILE_INFO {cfile:/home/nate/projects/duneWireTension/firmware/source/constraints/tensionAnalyzerMicrozedPl.xdc rfile:../../source/constraints/tensionAnalyzerMicrozedPl.xdc id:1} [current_design]
+set_property SRC_FILE_INFO {cfile:/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/constraints/tensionAnalyzerMicrozedPl.xdc rfile:../../source/constraints/tensionAnalyzerMicrozedPl.xdc id:1} [current_design]
 set_property src_info {type:XDC file:1 line:2 export:INPUT save:INPUT read:READ} [current_design]
 set_property PACKAGE_PIN G14 [get_ports acStim_obuf]
 set_property src_info {type:XDC file:1 line:5 export:INPUT save:INPUT read:READ} [current_design]
