@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
-	<item value="/home/nate/projects/duneWireTension/vivadoProjects" key="bootgen_files_selection"/>
-	<item value="/home/nate/projects/duneWireTension/vivadoProjects/dwa_ps_pl_top" key="program_fpga_view_bit_bmm_browse_key"/>
-	<item value="/home/nate/projects/duneWireTension/vivadoProjects/microzedTut/microzedTut.sdk/dwaFsbl/Debug" key="zynq_flash_files_selection"/>
-	<item value="/home/nate/projects/duneWireTension/vivadoProjects" key="last_stored_selection"/>
+	<item value="/home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation" key="bootgen_files_selection"/>
+	<item value="/home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation" key="last_stored_selection"/>
 </section>

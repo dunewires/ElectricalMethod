@@ -1,4 +1,4 @@
-09:04:11 **** Build of configuration Debug for project lwip_echo1 ****
+16:30:08 **** Build of configuration Debug for project lwip_echo1 ****
 make pre-build main-build 
 a9-linaro-pre-build-step
  
@@ -104,7 +104,7 @@ In file included from ../../lwip_echo1_bsp/ps7_cortexa9_0/include/lwip/ip_addr.h
 ../src/main.c:138:6: warning: implicit declaration of function 'drainDebugFifoUdp' [-Wimplicit-function-declaration]
       drainDebugFifoUdp(0x21);
       ^~~~~~~~~~~~~~~~~
-make: *** [src/main.o] Error 1
+make: *** [src/subdir.mk:59: src/main.o] Error 1
 
-09:04:11 Build Finished (took 374ms)
+16:30:08 Build Finished (took 359ms)
 

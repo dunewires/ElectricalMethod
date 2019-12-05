@@ -143,17 +143,6 @@
 							<tool id="xilinx.gnu.armv7.size.release.188618737" name="ARM v7 Print Size" superClass="xilinx.gnu.armv7.size.release"/>
 						</toolChain>
 					</folderInfo>
-					<folderInfo id="xilinx.gnu.armv7.exe.release.1066416525.479679649" name="/" resourcePath="src">
-						<toolChain id="xilinx.gnu.armv7.exe.release.toolchain.341797436" name="Xilinx ARM v7 GNU Toolchain" superClass="xilinx.gnu.armv7.exe.release.toolchain" unusedChildren="">
-							<tool id="xilinx.gnu.armv7.c.toolchain.assembler.release.1292017585" name="ARM v7 gcc assembler" superClass="xilinx.gnu.armv7.c.toolchain.assembler.release.1819321125"/>
-							<tool id="xilinx.gnu.armv7.c.toolchain.compiler.release.1713531661" name="ARM v7 gcc compiler" superClass="xilinx.gnu.armv7.c.toolchain.compiler.release.1789158404"/>
-							<tool id="xilinx.gnu.armv7.cxx.toolchain.compiler.release.914389025" name="ARM v7 g++ compiler" superClass="xilinx.gnu.armv7.cxx.toolchain.compiler.release.1806012829"/>
-							<tool id="xilinx.gnu.armv7.toolchain.archiver.1560725361" name="ARM v7 archiver" superClass="xilinx.gnu.armv7.toolchain.archiver.379241665"/>
-							<tool id="xilinx.gnu.armv7.c.toolchain.linker.release.894237220" name="ARM v7 gcc linker" superClass="xilinx.gnu.armv7.c.toolchain.linker.release.814852964"/>
-							<tool id="xilinx.gnu.armv7.cxx.toolchain.linker.release.1609445263" name="ARM v7 g++ linker" superClass="xilinx.gnu.armv7.cxx.toolchain.linker.release.1181194822"/>
-							<tool id="xilinx.gnu.armv7.size.release.1196213572" name="ARM v7 Print Size" superClass="xilinx.gnu.armv7.size.release.188618737"/>
-						</toolChain>
-					</folderInfo>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
