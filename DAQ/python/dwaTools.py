@@ -34,56 +34,64 @@ def dwaConfig(verbose=0):
 
     s = tcpOpen(verbose=verbose)
 
-    time.sleep(0.2)
+    sleepSec = 0.2
+
+    time.sleep(sleepSec)
     dwaRegWrite(s, '00000000',freqReq_vio, verbose=verbose)
-    time.sleep(0.2)
+    time.sleep(sleepSec)
     dwaRegWrite(s, '00000002',dwaCtrl, verbose=verbose)
-    time.sleep(0.2)
+    time.sleep(sleepSec)
     dwaRegWrite(s, '00000004',ctrl_freqMin, verbose=verbose)
-    time.sleep(0.2)
+    time.sleep(sleepSec)
     dwaRegWrite(s, '00000005',ctrl_freqMax, verbose=verbose)
-    time.sleep(0.2)
+    time.sleep(sleepSec)
     dwaRegWrite(s, '00000006',ctrl_freqStep, verbose=verbose)
-    time.sleep(0.2)
+    time.sleep(sleepSec)
     dwaRegWrite(s, '00000007',ctrl_stimTime, verbose=verbose)
-    time.sleep(0.2)
+    time.sleep(sleepSec)
     dwaRegWrite(s, '00000008',ctrl_adc_nSamples, verbose=verbose)
-    time.sleep(0.2)
+    time.sleep(sleepSec)
     dwaRegWrite(s, '0000000A',adcAutoDc_chSel, verbose=verbose)
-    time.sleep(0.2)
+    time.sleep(sleepSec)
     dwaRegWrite(s, '0000000B',adcHScale, verbose=verbose)
-    time.sleep(0.2)
+    time.sleep(sleepSec)
 
     tcpClose(s, verbose=verbose)
 
 def dwaStart(verbose=0):
+
+    sleepSec = 0.2
+
     s = tcpOpen(verbose=verbose)
     # start
     dwaRegWrite(s,'00000009','00000001', verbose=verbose)
-    time.sleep(0.2)
+    time.sleep(sleepSec)
     dwaRegWrite(s,'00000009','00000000', verbose=verbose)
-    time.sleep(0.2)
+    time.sleep(sleepSec)
 
     tcpClose(s, verbose=verbose)
 
 def dwaStat(verbose=0):
+
+    sleepSec = 0.2
+
     s = tcpOpen(verbose=verbose)
 
     # acStim_nPeriod
     dwaRegRead(s, '0000000F')
-    time.sleep(0.25)
+    time.sleep(sleepSec)
     # acStimX200_nPeriod
     dwaRegRead(s, '00000010')
-    time.sleep(0.25)
+    time.sleep(sleepSec)
     # ctrl busy
     dwaRegRead(s, '00000011')
-    time.sleep(0.25)
+    time.sleep(sleepSec)
     # constant
     dwaRegRead(s, '00000012')
-    time.sleep(0.25)
+    time.sleep(sleepSec)
     # fifoAutoDC_ff fifoAutoDC_ef
     dwaRegRead(s, '0000001B')
-    time.sleep(0.25)
+    time.sleep(sleepSec)
 
     tcpClose(s)
 
@@ -150,7 +158,7 @@ def dwaRegRead(ss, address, verbose=0):
         #
         print('Sending...')
         ss.sendall(packed_data)
-        time.sleep(0.5)
+        time.sleep(0.25)
         #FIXME: don't actually know if msg is sent successfully...
         print('Message sent successfully')
     except socket.error:
@@ -216,7 +224,7 @@ def dwaRegWrite(s, address, value, verbose=0):
         # https://docs.python.org/2/library/struct.html#byte-order-size-and-alignment
         packer = struct.Struct('!L L L L')
 
-        packed_data = packer.pack(*values)
+        msg = packer.pack(*values)
         if (verbose > 0):
             print('PAYLOAD_HEADER = {0:s}'.format(PAYLOAD_HEADER))
             print('PAYLOAD_TYPE = {0:s}'.format(PAYLOAD_TYPE))
@@ -225,8 +233,8 @@ def dwaRegWrite(s, address, value, verbose=0):
             print('values = {}'.format(values))
         
         if (verbose > 0): print('Sending...')
-        s.sendall(packed_data)
-        time.sleep(0.5)
+        s.sendall(msg)
+        time.sleep(0.2)
         if (verbose > 0): print('Message sent successfully')
     except socket.error:
         #Send failed
