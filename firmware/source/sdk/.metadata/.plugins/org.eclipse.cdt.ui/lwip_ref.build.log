@@ -1,48 +1,8 @@
-17:03:53 **** Auto Build of configuration Release for project lwip_ref ****
+15:49:47 **** Auto Build of configuration Release for project lwip_ref ****
 make pre-build main-build 
 a9-linaro-pre-build-step
  
-Building file: ../src/echo.c
-Invoking: ARM v7 gcc compiler
-arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/echo.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I../../lwip_echo1_bsp/ps7_cortexa9_0/include -MMD -MP -MF"src/echo.d" -MT"src/echo.o" -o "src/echo.o" "../src/echo.c"
-../src/echo.c:42:12: warning: initialization makes pointer from integer without a cast [-Wint-conversion]
- int *ptr = 0xc2000000;
-            ^~~~~~~~~~
-../src/echo.c: In function 'recv_callback':
-../src/echo.c:160:5: warning: implicit declaration of function 'transferTcpData'; did you mean 'transfer_data'? [-Wimplicit-function-declaration]
-     transferTcpData(tcpTxbuf, 12, tpcb);
-     ^~~~~~~~~~~~~~~
-     transfer_data
-../src/echo.c:142:9: warning: unused variable 'wAckBuffLength' [-Wunused-variable]
-     int wAckBuffLength = 8;
-         ^~~~~~~~~~~~~~
-../src/echo.c:60:7: warning: variable 'cyLiteCmd' set but not used [-Wunused-but-set-variable]
-   int cyLiteCmd;
-       ^~~~~~~~~
-../src/echo.c:56:7: warning: variable 'pktSN' set but not used [-Wunused-but-set-variable]
-   int pktSN;
-       ^~~~~
-../src/echo.c:54:9: warning: variable 'errCode' set but not used [-Wunused-but-set-variable]
-   u32_t errCode = 0;
-         ^~~~~~~
-../src/echo.c: In function 'start_application':
-../src/echo.c:247:3: warning: implicit declaration of function 'start_udp'; did you mean 'strtold'? [-Wimplicit-function-declaration]
-   start_udp();
-   ^~~~~~~~~
-   strtold
-Finished building: ../src/echo.c
- 
-Building target: lwip_ref.elf
-Invoking: ARM v7 gcc linker
-arm-none-eabi-gcc -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec -Wl,-T -Wl,../src/lscript.ld -L../../lwip_echo1_bsp/ps7_cortexa9_0/lib -o "lwip_ref.elf"  ./src/echo.o ./src/i2c_access.o ./src/iic_phyreset.o ./src/main.o ./src/mmUdpTx.o ./src/platform.o ./src/platform_mb.o ./src/platform_ppc.o ./src/platform_zynq.o ./src/platform_zynqmp.o ./src/sfp.o ./src/si5324.o   -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-llwip4,-lgcc,-lc,--end-group
-Finished building target: lwip_ref.elf
- 
-Invoking: ARM v7 Print Size
-arm-none-eabi-size lwip_ref.elf  |tee "lwip_ref.elf.size"
-   text	   data	    bss	    dec	    hex	filename
- 111632	   3048	5257232	5371912	 51f808	lwip_ref.elf
-Finished building: lwip_ref.elf.size
- 
+make: Nothing to be done for `main-build'.
 
-17:03:53 Build Finished (took 415ms)
+15:49:47 Build Finished (took 125ms)
 

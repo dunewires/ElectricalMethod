@@ -21,19 +21,21 @@ entity dwa_ps_pl_top is
         led : out std_logic_vector(3 downto 0);
 
         acStimX200_obuf : out std_logic := '0';
-        acStim_obuf     : out std_logic := '0';
 
-        V_p     : in std_logic;
-        V_n     : in std_logic;
-        Vaux0_n : in std_logic;
-        Vaux0_p : in std_logic;
-        Vaux8_n : in std_logic;
-        Vaux8_p : in std_logic;
+        V_p : in std_logic;
+        V_n : in std_logic;
+
 
         mainsSquare : in std_logic;
 
-        BB_CLK    : in  std_logic;
-        BB_CLK_EN : out std_logic := '1';
+        DAC_SDI   : out std_logic := '0';
+        DAC_CS_B  : out std_logic := '0';
+        DAC_LD_B  : out std_logic := '0';
+        DAC_CLR_B : out std_logic := '0';
+        DAC_CLK   : out std_logic := '0';
+
+        BB_CLK_P : in std_logic;
+        BB_CLK_N : in std_logic;
 
         --processing system 
         DDR_addr          : inout STD_LOGIC_VECTOR ( 14 downto 0 );
@@ -161,11 +163,11 @@ architecture STRUCTURE of dwa_ps_pl_top is
     signal peripheral_aresetn_0 : STD_LOGIC_VECTOR ( 0 to 0 );
     signal aclk                 : STD_LOGIC;
 
-    signal regFromDwa : SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
-      signal  regFromDwa_strb :   std_logic_vector(31 downto 0);
+    signal regFromDwa      : SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
+    signal regFromDwa_strb : std_logic_vector(31 downto 0);
 
 
-    signal regToDwa   : SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
+    signal regToDwa : SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
 begin
 
     dwa_ps_bd_i : component dwa_ps_bd
@@ -240,33 +242,34 @@ begin
             S_AXI_RREADY  => M00_AXI_0_RREADY,
 
             regFromDwa => regFromDwa,
-regFromDwa_strb => regFromDwa_strb,
+            regFromDwa_strb => regFromDwa_strb,
 
-            regToDwa   => regToDwa
+            regToDwa => regToDwa
         );
 
     top_tension_analyzer_1 : entity work.top_tension_analyzer
         port map (
             regFromDwa => regFromDwa,
-regFromDwa_strb => regFromDwa_strb,
+            regFromDwa_strb => regFromDwa_strb,
 
             regToDwa   => regToDwa,
-            S_AXI_ACLK    => aclk,
+            S_AXI_ACLK => aclk,
 
 
             led             => led,
             acStimX200_obuf => acStimX200_obuf,
-            acStim_obuf     => acStim_obuf,
             V_p             => V_p,
             V_n             => V_n,
-            Vaux0_n         => Vaux0_n,
-            Vaux0_p         => Vaux0_p,
-            Vaux8_n         => Vaux8_n,
-            Vaux8_p         => Vaux8_p,
             mainsSquare     => mainsSquare,
-            BB_CLK          => BB_CLK,
-            BB_CLK_EN       => BB_CLK_EN
+            
+            DAC_SDI   => DAC_SDI,
+            DAC_CS_B  => DAC_CS_B,
+            DAC_LD_B  => DAC_LD_B,
+            DAC_CLR_B => DAC_CLR_B,
+            DAC_CLK   => DAC_CLK,
 
+            BB_CLK_P => BB_CLK_P,
+            BB_CLK_N => BB_CLK_N
 
         );
 

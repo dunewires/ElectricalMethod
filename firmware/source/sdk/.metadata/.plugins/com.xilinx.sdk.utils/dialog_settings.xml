@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
 	<item value="/home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation" key="bootgen_files_selection"/>
-	<item value="/home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation" key="last_stored_selection"/>
+	<item value="/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/sdk/dwaFsbl/Debug" key="zynq_flash_files_selection"/>
+	<item value="/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/sdk/dwaFsbl/Debug" key="last_stored_selection"/>
 </section>

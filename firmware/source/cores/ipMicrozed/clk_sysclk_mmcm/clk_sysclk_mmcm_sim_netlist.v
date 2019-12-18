@@ -1,10 +1,10 @@
 // Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2018.3 (lin64) Build 2405991 Thu Dec  6 23:36:41 MST 2018
-// Date        : Thu Nov 21 19:46:49 2019
+// Date        : Thu Nov 21 19:02:23 2019
 // Host        : lt2 running 64-bit CentOS Linux release 7.6.1810 (Core)
-// Command     : write_verilog -force -mode funcsim
-//               /home/nate/projects/duneWireTension/firmware/source/cores/ipMicrozed/clk_sysclk_mmcm/clk_sysclk_mmcm_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim -rename_top clk_sysclk_mmcm -prefix
+//               clk_sysclk_mmcm_ clk_sysclk_mmcm_sim_netlist.v
 // Design      : clk_sysclk_mmcm
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -22,7 +22,8 @@ module clk_sysclk_mmcm
     clk_out6,
     reset,
     locked,
-    clk_in1);
+    clk_in1_p,
+    clk_in1_n);
   output clk_out1;
   output clk_out2;
   output clk_out3;
@@ -31,9 +32,11 @@ module clk_sysclk_mmcm
   output clk_out6;
   input reset;
   output locked;
-  input clk_in1;
+  input clk_in1_p;
+  input clk_in1_n;
 
-  (* IBUF_LOW_PWR *) wire clk_in1;
+  (* DIFF_TERM = 0 *) (* IBUF_LOW_PWR *) wire clk_in1_n;
+  (* DIFF_TERM = 0 *) (* IBUF_LOW_PWR *) wire clk_in1_p;
   wire clk_out1;
   wire clk_out2;
   wire clk_out3;
@@ -44,7 +47,8 @@ module clk_sysclk_mmcm
   wire reset;
 
   clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz inst
-       (.clk_in1(clk_in1),
+       (.clk_in1_n(clk_in1_n),
+        .clk_in1_p(clk_in1_p),
         .clk_out1(clk_out1),
         .clk_out2(clk_out2),
         .clk_out3(clk_out3),
@@ -55,7 +59,6 @@ module clk_sysclk_mmcm
         .reset(reset));
 endmodule
 
-(* ORIG_REF_NAME = "clk_sysclk_mmcm_clk_wiz" *) 
 module clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz
    (clk_out1,
     clk_out2,
@@ -65,7 +68,8 @@ module clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz
     clk_out6,
     reset,
     locked,
-    clk_in1);
+    clk_in1_p,
+    clk_in1_n);
   output clk_out1;
   output clk_out2;
   output clk_out3;
@@ -74,10 +78,12 @@ module clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz
   output clk_out6;
   input reset;
   output locked;
-  input clk_in1;
+  input clk_in1_p;
+  input clk_in1_n;
 
-  wire clk_in1;
   wire clk_in1_clk_sysclk_mmcm;
+  wire clk_in1_n;
+  wire clk_in1_p;
   wire clk_out1;
   wire clk_out1_clk_sysclk_mmcm;
   wire clk_out2;
@@ -114,10 +120,11 @@ module clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz
   (* CAPACITANCE = "DONT_CARE" *) 
   (* IBUF_DELAY_VALUE = "0" *) 
   (* IFD_DELAY_VALUE = "AUTO" *) 
-  IBUF #(
+  IBUFDS #(
     .IOSTANDARD("DEFAULT")) 
-    clkin1_ibufg
-       (.I(clk_in1),
+    clkin1_ibufgds
+       (.I(clk_in1_p),
+        .IB(clk_in1_n),
         .O(clk_in1_clk_sysclk_mmcm));
   (* BOX_TYPE = "PRIMITIVE" *) 
   BUFG clkout1_buf

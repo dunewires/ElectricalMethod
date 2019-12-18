@@ -1,4 +1,4 @@
-16:30:18 **** Build of configuration Debug for project mmtp_lwip_interface ****
+15:44:16 **** Build of configuration Debug for project mmtp_lwip_interface ****
 make all 
 Building file: ../src/echo.c
 Invoking: MicroBlaze gcc compiler
@@ -7,7 +7,7 @@ mb-gcc -Wall -O0 -g3 -I../mmTrigProc_bsp/microblaze_0/include -c -fmessage-lengt
  #include "xparameters.h"
           ^~~~~~~~~~~~~~~
 compilation terminated.
-make: *** [src/subdir.mk:56: src/echo.o] Error 1
+make: *** [src/echo.o] Error 1
 
-16:30:18 Build Finished (took 311ms)
+15:44:16 Build Finished (took 173ms)
 

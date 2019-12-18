@@ -2,6 +2,6 @@
 the_ROM_image:
 {
 	[bootloader]/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwaFsbl/Debug/dwaFsbl.elf
-	/home/nate/projects/duneWireTension/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20191127_120116_0.255ns.bit
+	/home/nate/projects/duneWireTension/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20191216_150530_0.298ns.bit
 	/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Release/lwip_ref.elf
 }

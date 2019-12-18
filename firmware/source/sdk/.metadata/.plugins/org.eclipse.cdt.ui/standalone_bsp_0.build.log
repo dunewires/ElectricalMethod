@@ -1,4 +1,4 @@
-16:30:18 **** Build of project standalone_bsp_0 ****
+15:44:16 **** Build of project standalone_bsp_0 ****
 make -k all 
 Running Make include in ps7_cortexa9_0/libsrc/ddrps_v1_0/src
 make -C ps7_cortexa9_0/libsrc/ddrps_v1_0/src -s include  "SHELL=/bin/sh" "COMPILER=arm-none-eabi-gcc" "ARCHIVER=arm-none-eabi-ar" "COMPILER_FLAGS=  -O2 -c" "EXTRA_COMPILER_FLAGS=-mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -nostartfiles -g -Wall -Wextra"
@@ -118,5 +118,5 @@ make -C ps7_cortexa9_0/libsrc/scutimer_v2_1/src -s libs  "SHELL=/bin/sh" "COMPIL
 Compiling scutimer
 Finished building libraries
 
-16:30:25 Build Finished (took 6s.879ms)
+15:44:26 Build Finished (took 9s.727ms)
 
