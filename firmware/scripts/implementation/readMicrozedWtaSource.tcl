@@ -9,6 +9,7 @@
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/packages/global_def.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/wtaController.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/dacInterface.vhd
+read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/adcReadout.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/top_tension_analyzer.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/dwa_registers_v1_0_S00_AXI.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/dwa_ps_pl_top.vhd

@@ -9,24 +9,29 @@ use duneDwa.global_def.all;
 
 entity top_tension_analyzer is
   port (
-    regFromDwa : out SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
-    regFromDwa_strb : in std_logic_vector(31 downto 0);
+    regFromDwa      : out SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
+    regFromDwa_strb : in  std_logic_vector(31 downto 0);
 
     regToDwa   : in SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
     S_AXI_ACLK : in std_logic;
 
 
-    led : out std_logic_vector(3 downto 0);
+    led             : out std_logic_vector(3 downto 0);
     acStimX200_obuf : out std_logic := '0';
-    V_p : in std_logic;
-    V_n : in std_logic;
-    mainsSquare : in std_logic;
+    V_p             : in  std_logic;
+    V_n             : in  std_logic;
+    mainsSquare     : in  std_logic;
 
     DAC_SDI   : out std_logic := '0';
     DAC_CS_B  : out std_logic := '0';
     DAC_LD_B  : out std_logic := '0';
     DAC_CLR_B : out std_logic := '0';
     DAC_CLK   : out std_logic := '0';
+
+    adcCnv        : out std_logic                    := '0';
+    adcSck        : out std_logic                    := '0';
+    adcDataSerial : in  std_logic_vector(3 downto 0) := (others => '0');
+    adcSrcSyncClk : in  std_logic                    := '0';
 
     BB_CLK_P : in std_logic;
     BB_CLK_N : in std_logic
@@ -386,6 +391,24 @@ begin
       alarm_out   => open,
       eos_out     => open,
       busy_out    => open
+    );
+
+  adcReadout_1 : entity duneDwa.adcReadout
+    port map (
+      start  => start,
+      enable => enable,
+
+      adcCnv        => adcCnv,
+      adcSck        => adcSck,
+      adcDataSerial => adcDataSerial,
+
+      dataParallel     => dataParallel,
+      dataParallelStrb => dataParallelStrb,
+
+      busy          => busy,
+      reset         => reset,
+      adcSrcSyncClk => adcSrcSyncClk,
+      sysclk100     => sysclk100
     );
 
   genCh : for i in 2 downto 0 generate

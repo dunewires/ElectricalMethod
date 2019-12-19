@@ -34,6 +34,11 @@ entity dwa_ps_pl_top is
         DAC_CLR_B : out std_logic := '0';
         DAC_CLK   : out std_logic := '0';
 
+        adcCnv        : out std_logic                    := '0';
+        adcSck        : out std_logic                    := '0';
+        adcDataSerial : in  std_logic_vector(3 downto 0) := (others => '0');
+        adcSrcSyncClk : in  std_logic                    := '0';
+
         BB_CLK_P : in std_logic;
         BB_CLK_N : in std_logic;
 
@@ -241,7 +246,7 @@ begin
             S_AXI_RVALID  => M00_AXI_0_RVALID,
             S_AXI_RREADY  => M00_AXI_0_RREADY,
 
-            regFromDwa => regFromDwa,
+            regFromDwa      => regFromDwa,
             regFromDwa_strb => regFromDwa_strb,
 
             regToDwa => regToDwa
@@ -249,7 +254,7 @@ begin
 
     top_tension_analyzer_1 : entity work.top_tension_analyzer
         port map (
-            regFromDwa => regFromDwa,
+            regFromDwa      => regFromDwa,
             regFromDwa_strb => regFromDwa_strb,
 
             regToDwa   => regToDwa,
@@ -261,12 +266,18 @@ begin
             V_p             => V_p,
             V_n             => V_n,
             mainsSquare     => mainsSquare,
-            
+
             DAC_SDI   => DAC_SDI,
             DAC_CS_B  => DAC_CS_B,
             DAC_LD_B  => DAC_LD_B,
             DAC_CLR_B => DAC_CLR_B,
             DAC_CLK   => DAC_CLK,
+
+            adcCnv        => adcCnv,
+            adcSck        => adcSck,
+            adcDataSerial => adcDataSerial,
+            adcSrcSyncClk => adcSrcSyncClk,
+
 
             BB_CLK_P => BB_CLK_P,
             BB_CLK_N => BB_CLK_N
