@@ -1909,3 +1909,27 @@ java.lang.NullPointerException
 
 !ENTRY com.xilinx.sdk.utils 1 0 2019-12-19 19:48:56.109
 !MESSAGE Updating toolusage
+
+!ENTRY com.xilinx.sdk.utils 1 0 2019-12-20 12:31:36.954
+!MESSAGE Updating toolusage
+
+!ENTRY com.xilinx.sdk.utils 0 0 2019-12-20 12:33:29.749
+!MESSAGE XSCT Command: [ ::hsi::utils::set_current_hw_sw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwaFsbl_bsp/system.mss ], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2019-12-20 12:33:29.759
+!MESSAGE XSCT command with result: [ ::hsi::utils::set_current_hw_sw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwaFsbl_bsp/system.mss ], Result: [null, ]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2019-12-20 12:33:29.759
+!MESSAGE XSCT Command: [::hsi::utils::get_hw_sw_details -json /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwaFsbl_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2019-12-20 12:33:29.763
+!MESSAGE XSCT command with result: [::hsi::utils::get_hw_sw_details -json /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwaFsbl_bsp/system.mss], Result: [null, {"procname": "ps7_cortexa9_0",
+"osname": "standalone",
+"osver": "6.8",
+}]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2019-12-20 12:33:29.763
+!MESSAGE XSCT Command: [::hsi::utils::closesw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwaFsbl_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2019-12-20 12:33:29.764
+!MESSAGE XSCT command with result: [::hsi::utils::closesw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwaFsbl_bsp/system.mss], Result: [null, ]. Thread: main

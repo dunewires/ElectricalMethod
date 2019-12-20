@@ -1,4 +1,4 @@
-19:25:34 **** Auto Build of configuration Release for project lwip_ref ****
+12:28:50 **** Auto Build of configuration Release for project lwip_ref ****
 make pre-build main-build 
 a9-linaro-pre-build-step
  
@@ -27,11 +27,11 @@ arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/mmUdpTx.o" -mcpu=corte
    u32_t regStatusInitial,regStatusNext;
          ^~~~~~~~~~~~~~~~
 ../src/mmUdpTx.c: In function 'start_udp':
-../src/mmUdpTx.c:157:3: warning: implicit declaration of function 'print_ip'; did you mean 'printf'? [-Wimplicit-function-declaration]
+../src/mmUdpTx.c:150:3: warning: implicit declaration of function 'print_ip'; did you mean 'printf'? [-Wimplicit-function-declaration]
    print_ip("MM Data sent to IP  : ", &udpDstIpAddr);
    ^~~~~~~~
    printf
-../src/mmUdpTx.c:164:12: warning: 'return' with a value, in function returning void
+../src/mmUdpTx.c:157:12: warning: 'return' with a value, in function returning void
      return -1;
             ^
 ../src/mmUdpTx.c:140:6: note: declared here
@@ -55,5 +55,5 @@ arm-none-eabi-size lwip_ref.elf  |tee "lwip_ref.elf.size"
 Finished building: lwip_ref.elf.size
  
 
-19:25:34 Build Finished (took 425ms)
+12:28:51 Build Finished (took 406ms)
 
