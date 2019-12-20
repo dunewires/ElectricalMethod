@@ -148,11 +148,11 @@ void start_udp( ){
  //IP4_ADDR(&udpDstIpAddr, 192, 168,   1, 3);
   //IP4_ADDR(&udpDstIpAddr, 10,251,103,57);
   //IP4_ADDR(&udpDstIpAddr, 140,247,123, 116);//jeff laptop
-   //IP4_ADDR(&udpDstIpAddr, 140,247,132,8);//new pc2
+   IP4_ADDR(&udpDstIpAddr, 140,247,132,8);//new pc2
   //IP4_ADDR(&udpDstIpAddr, 149,130,136,84); //James noether.wellesley.edu
    //IP4_ADDR(&udpDstIpAddr, 192, 168,   0, 1); //Alex cern version
      // IP4_ADDR(&udpDstIpAddr, 128, 103, 100, 251); //HOME
-   IP4_ADDR(&udpDstIpAddr, 128, 103,   100, 251);//laptop
+   //IP4_ADDR(&udpDstIpAddr, 128, 103,   100, 251);//laptop
    //IP4_ADDR(&udpDstIpAddr, 128, 103,   100, 252);//new pc2
   print_ip("MM Data sent to IP  : ", &udpDstIpAddr);
   xil_printf("\r\n");

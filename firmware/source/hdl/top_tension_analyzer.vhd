@@ -18,8 +18,6 @@ entity top_tension_analyzer is
 
     led             : out std_logic_vector(3 downto 0);
     acStimX200_obuf : out std_logic := '0';
-    V_p             : in  std_logic;
-    V_n             : in  std_logic;
     mainsSquare     : in  std_logic;
 
     DAC_SDI   : out std_logic := '0';
@@ -240,6 +238,10 @@ architecture STRUCT of top_tension_analyzer is
 
   signal mainsTrig_filter : unsigned(17 downto 0);
 
+  signal senseWireData :UNSIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) :=  (others  => (others => '0'));
+  signal senseWireDataStrb :std_logic :=  '0';
+  signal senseWireDataSel           : unsigned(2 downto 0)          := (others => '0');
+
 begin
   led(1) <= sysclk100;
   led(0) <= ctrl_busy;
@@ -369,44 +371,20 @@ begin
       sysclk200  => sysclk200
     );
 
-  xadc_senseWire_inst : xadc_senseWire
-    PORT MAP (
-      m_axis_tvalid => m_axis_tvalid,
-      m_axis_tready => m_axis_tready,
-      m_axis_tdata  => m_axis_tdata,
-      m_axis_tid    => m_axis_tid,
-      m_axis_aclk   => sysclk100,
-      s_axis_aclk   => sysclk100,
-      m_axis_resetn => m_axis_resetn,
-
-      vp_in  => V_p,
-      vn_in  => V_n,
-      vauxp0 => '0',
-      vauxn0 => '0',
-      vauxp8 => '0',
-      vauxn8 => '0',
-
-      channel_out => open,
-      eoc_out     => open,
-      alarm_out   => open,
-      eos_out     => open,
-      busy_out    => open
-    );
-
   adcReadout_1 : entity duneDwa.adcReadout
     port map (
-      start  => start,
-      enable => enable,
+      start  => '0',
+      enable => '1',
 
       adcCnv        => adcCnv,
       adcSck        => adcSck,
       adcDataSerial => adcDataSerial,
 
-      dataParallel     => dataParallel,
-      dataParallelStrb => dataParallelStrb,
+      dataParallel     => senseWireData,
+      dataParallelStrb => senseWireDataStrb,
 
-      busy          => busy,
-      reset         => reset,
+      busy          => open,
+      reset         => '0',
       adcSrcSyncClk => adcSrcSyncClk,
       sysclk100     => sysclk100
     );
@@ -446,13 +424,6 @@ begin
 
   end generate genCh;
 
-  ila_xadc_all : ila_xadc
-    PORT MAP (
-      clk       => sysclk100,
-      probe0(0) => m_axis_tvalid,
-      probe1    => m_axis_tdata,
-      probe2    => m_axis_tid
-    );
 
   trigGen : process (sysclk100)
   begin
@@ -524,6 +495,7 @@ begin
   adcAutoDc_chSel   <= regToDwa(10)(3 DOWNTO 0);
   adcHScale         <= unsigned(regToDwa(11)(4 DOWNTO 0));
   acStim_mag        <= unsigned(regToDwa(12)(11 DOWNTO 0));
+  senseWireDataSel        <= unsigned(regToDwa(13)(2 DOWNTO 0));
 
 
   wtaController_inst : entity duneDwa.wtaController
@@ -569,10 +541,10 @@ begin
         fifoAutoDC_din   <= std_logic_vector(adcAutoDc_headData);
         fifoAutoDC_wen   <= '1';
       else
-        adcAutoDC_dValid <= fifo_adcData_wen(to_integer(unsigned(adcAutoDc_chSel)));
+        adcAutoDC_dValid <= senseWireDataStrb;
         fifoAutoDC_din   <= std_logic_vector(mainsMinus_data);
         --             fifoAutoDC_wen <= (fifo_adcData_wen(to_integer(unsigned(adcAutoDc_chSel))) and adcAutoDc_wen);
-        adcAutoDC_data <= m_axis_tdata;
+        adcAutoDC_data <= std_logic_vector(senseWireData(to_integer(senseWireDataSel)));
         fifoAutoDC_wen <= mainsMinus_wen;
       end if;
 

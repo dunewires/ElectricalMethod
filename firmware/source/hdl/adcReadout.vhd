@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Dec 18 17:04:05 2019
+-- Last update : Thu Dec 19 19:40:38 2019
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -22,10 +22,13 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+
 library duneDwa;
-use duneDwa.globalDefs.all
-library UNISIM;
-use UNISIM.VCOMPONENTS.all;
+use duneDwa.global_def.all;
+
+library UNISIM; 
+use UNISIM.all; 
+use UNISIM.vcomponents.all; 
 
 entity adcReadout is
 	port (
@@ -36,7 +39,7 @@ entity adcReadout is
 		adcSck        : out std_logic := '0';
 		adcDataSerial : in  STD_LOGIC_VECTOR(3 downto 0);
 
-		dataParallel     : out UNSIGNED_VECTOR_TYPE(7 downto 0)(11 downto 0);
+		dataParallel     : out UNSIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0);
 		dataParallelStrb : out std_logic := '0';
 
 		busy          : out std_logic := '0';
@@ -51,12 +54,11 @@ architecture rtl of adcReadout is
 	signal ctrlState, ctrlState_next : ctrlState_type               := idle_s;
 	signal adcDataSerial_reg         : STD_LOGIC_VECTOR(3 downto 0) := (others => '0');
 	signal sampleCnt                 : unsigned(7 downto 0)         := (others => '0');
-	signal timerCnt                  : unsigned(7 downto 0)         := (others => '0');
-	signal adcDataSerial             : signed(23 downto 0)          := (others => '0');
+	signal timerCnt                  : unsigned(11 downto 0)         := (others => '0');
 	signal start_del                 : std_logic                    := '0';
 	signal adcSckEnable              : std_logic                    := '0';
 	signal readoutDone               : std_logic                    := '0';
-	signal dataParallelSsclk         : UNSIGNED_VECTOR_TYPE(7 downto 0)(11 downto 0);
+	signal dataParallelSsclk         : UNSIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
 
 begin
 
@@ -104,10 +106,11 @@ begin
 		cdc : process (sysclk100)
 		begin
 			if rising_edge(sysclk100) then
+				dataParallelStrb                     <= readoutDone;
 				if readoutDone then
-					dataParallel(adcSer_indx * 2)        <= dataParallelSsclk(adcSer_indx)(31 downto 20);
-					dataParallel((adcSer_indx * 2) + 1 ) <= dataParallelSsclk(adcSer_indx)(15 downto 4);
-					dataParallelStrb                     <= readoutDone;
+					-- also compatible with 16 bit ADC
+					dataParallel(adcSer_indx * 2)        <= dataParallelSsclk(adcSer_indx)(31 downto 16);
+					dataParallel((adcSer_indx * 2) + 1 ) <= dataParallelSsclk(adcSer_indx)(15 downto 0);
 				end if;
 			end if;
 		end process cdc;

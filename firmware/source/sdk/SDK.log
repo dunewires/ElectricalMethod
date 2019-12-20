@@ -60,3 +60,11 @@
 15:08:33 INFO  : Invoking Bootgen: bootgen -image output.bif -arch zynq -o /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/BOOT.bin -w on
 15:08:33 INFO  : Overwriting existing bif file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/output.bif
 15:08:34 INFO  : Bootgen command execution is done.
+18:13:36 INFO  : Invoking Bootgen: bootgen -image output.bif -arch zynq -o /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/BOOT.bin -w on
+18:13:36 INFO  : Overwriting existing bif file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/output.bif
+18:13:37 INFO  : Bootgen command execution is done.
+19:26:01 INFO  : Invoking Bootgen: bootgen -image output.bif -arch zynq -o /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/BOOT.bin -w on
+19:26:02 INFO  : Bootgen command execution is done.
+19:48:49 INFO  : Invoking Bootgen: bootgen -image output.bif -arch zynq -o /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/BOOT.bin -w on
+19:48:49 INFO  : Overwriting existing bif file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/output.bif
+19:48:50 INFO  : Bootgen command execution is done.

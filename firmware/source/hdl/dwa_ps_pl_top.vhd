@@ -22,10 +22,6 @@ entity dwa_ps_pl_top is
 
         acStimX200_obuf : out std_logic := '0';
 
-        V_p : in std_logic;
-        V_n : in std_logic;
-
-
         mainsSquare : in std_logic;
 
         DAC_SDI   : out std_logic := '0';
@@ -34,10 +30,13 @@ entity dwa_ps_pl_top is
         DAC_CLR_B : out std_logic := '0';
         DAC_CLK   : out std_logic := '0';
 
-        adcCnv        : out std_logic                    := '0';
-        adcSck        : out std_logic                    := '0';
-        adcDataSerial : in  std_logic_vector(3 downto 0) := (others => '0');
-        adcSrcSyncClk : in  std_logic                    := '0';
+        adcCnv          : out std_logic                    := '0';
+        adcSck_p        : out std_logic                    := '0';
+        adcSck_n        : out std_logic                    := '0';
+        adcDataSerial_p : in  std_logic_vector(3 downto 0) := (others => '0');
+        adcDataSerial_n : in  std_logic_vector(3 downto 0) := (others => '0');
+        adcSrcSyncClk_p : in  std_logic                    := '0';
+        adcSrcSyncClk_n : in  std_logic                    := '0';
 
         BB_CLK_P : in std_logic;
         BB_CLK_N : in std_logic;
@@ -173,7 +172,46 @@ architecture STRUCTURE of dwa_ps_pl_top is
 
 
     signal regToDwa : SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
+
+    signal adcDataSerial : std_logic_vector(3 downto 0) := (others => '0');
+    signal adcSrcSyncClk : std_logic                    := '0';
+    signal adcSck        : std_logic                    := '0';
+    
 begin
+
+    adcSerialInbuf_gen :for adcSerial_indx in 3 downto 0 generate
+        IBUFDS_ADCSDIN : IBUFDS
+            generic map (
+                DIFF_TERM    => true,
+                IBUF_LOW_PWR => false,-- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
+                IOSTANDARD   => "LVDS"
+            )
+            port map (
+                O  => adcDataSerial(adcSerial_indx),
+                I  => adcDataSerial_p(adcSerial_indx),
+                IB => adcDataSerial_n(adcSerial_indx)
+            );
+
+    end generate adcSerialInbuf_gen;
+
+    OBUFDS_ADCSCK : OBUFDS
+        port map (
+            O  => adcSck_p, -- Diff_p output (connect directly to top-level port)
+            OB => adcSck_n, -- Diff_n output (connect directly to top-level port)
+            I  => adcSck    -- Buffer input
+        );
+
+    IBUFDS_ADCSSIN : IBUFDS
+        generic map (
+            DIFF_TERM    => true,
+            IBUF_LOW_PWR => false,-- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
+            IOSTANDARD   => "LVDS"
+        )
+        port map (
+            O  => adcSrcSyncClk,
+            I  => adcSrcSyncClk_p,
+            IB => adcSrcSyncClk_n
+        );
 
     dwa_ps_bd_i : component dwa_ps_bd
         port map (
@@ -263,8 +301,6 @@ begin
 
             led             => led,
             acStimX200_obuf => acStimX200_obuf,
-            V_p             => V_p,
-            V_n             => V_n,
             mainsSquare     => mainsSquare,
 
             DAC_SDI   => DAC_SDI,

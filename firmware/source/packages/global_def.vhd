@@ -14,9 +14,9 @@ use IEEE.MATH_REAL.all;
 
 library duneDwa;
 
-package globalDefs is
+package global_def is
   type TARGET_TYPE is (COSMIC_TS,TEST_BEAM,V_SLICE,BENCHTOP); 
   type SLV_VECTOR_TYPE is array (natural range <>) of std_logic_vector; 
   type UNSIGNED_VECTOR_TYPE is array (natural range <>) of unsigned; 
   type INTEGER_VECTOR_TYPE is array (natural range <>) of integer; 
-end globalDefs; 
+end global_def; 

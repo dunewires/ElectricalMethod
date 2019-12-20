@@ -42,25 +42,25 @@ set_property IOSTANDARD LVCMOS25 [get_ports led[3]]
 set_property PACKAGE_PIN A20 [get_ports led[3]]
 
 set_property IOSTANDARD LVCMOS25 [get_ports adcCnv]
-set_property PACKAGE_PIN  [get_ports adcCnv]
+set_property PACKAGE_PIN G17 [get_ports adcCnv]
 
-set_property IOSTANDARD LVCMOS25 [get_ports adcSck]
-set_property PACKAGE_PIN  [get_ports adcSck]
+set_property IOSTANDARD LVDS_25 [get_ports adcSck_p]
+set_property PACKAGE_PIN M19 [get_ports adcSck_p]
 
-set_property IOSTANDARD LVCMOS25 [get_ports adcDataSerial[0]]
-set_property PACKAGE_PIN  [get_ports adcDataSerial[0]]
+set_property IOSTANDARD LVDS_25 [get_ports adcDataSerial_p[0]]
+set_property PACKAGE_PIN M17 [get_ports adcDataSerial_p[0]]
 
-set_property IOSTANDARD LVCMOS25 [get_ports adcDataSerial[1]]
-set_property PACKAGE_PIN  [get_ports adcDataSerial[1]]
+set_property IOSTANDARD LVDS_25 [get_ports adcDataSerial_p[1]]
+set_property PACKAGE_PIN K19 [get_ports adcDataSerial_p[1]]
 
-set_property IOSTANDARD LVCMOS25 [get_ports adcDataSerial[2]]
-set_property PACKAGE_PIN  [get_ports adcDataSerial[2]]
+set_property IOSTANDARD LVDS_25 [get_ports adcDataSerial_p[2]]
+set_property PACKAGE_PIN J18 [get_ports adcDataSerial_p[2]]
 
-set_property IOSTANDARD LVCMOS25 [get_ports adcDataSerial[3]]
-set_property PACKAGE_PIN  [get_ports adcDataSerial[3]]
+set_property IOSTANDARD LVDS_25 [get_ports adcDataSerial_p[3]]
+set_property PACKAGE_PIN F19 [get_ports adcDataSerial_p[3]]
 
-set_property IOSTANDARD LVCMOS25 [get_ports adcSrcSyncClk]
-set_property PACKAGE_PIN  [get_ports adcSrcSyncClk]
+set_property IOSTANDARD LVDS_25 [get_ports adcSrcSyncClk_p]
+set_property PACKAGE_PIN H16 [get_ports adcSrcSyncClk_p]
 
 set_property IOSTANDARD LVCMOS25 [get_ports mainsSquare]
 set_property PACKAGE_PIN G18 [get_ports mainsSquare]
