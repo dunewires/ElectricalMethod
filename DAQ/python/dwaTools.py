@@ -9,6 +9,40 @@ import time
 import struct
 import binascii
 
+# From 
+# https://stackoverflow.com/questions/6727875/hex-string-to-signed-int-in-python-3-2
+def twos_complement(hexstr, bits):
+    """Convert a hexadecimal string to a signed integer.
+
+    Args:
+        hexstr (str): hexidecimal string to be converted
+        bits (int): number of bits in hexstr (one char in hexstr is 4 bits)
+    
+    Returns:
+        value (int): signed decimal value corresponding to hexstr
+
+    Example:
+        twos_complement('FFCA', 16) returns -54
+        twos_complement('FFCA', 20) returns 126250 (equivalent to '0FFCA')
+
+    Explanation of the algorithm via an example:
+    * In binary, with 16 bits, decimal 1 is 'b0000 0000 0000 0001'
+    * Bit-shift by 16-1 places to get 'b1000 0000 0000 0000'
+    * Bit-wise AND with the input value to check if 
+      most significant bit is on (which indicates a negative number).
+    * If MSB is on, then we must subtract 2**16
+    * e.g. hexstr='FFCA' is unsigned int value 65482 is b1111 1111 1100 1010
+      The MSB is a one, so this should really represent a negative number
+      We then subtract 2**16 = 65536 from 65482 to get the signed integer -54
+    """
+    base = 16
+    value = int(hexstr, base)   # returns unsigned integer from zero to maxval
+    #                           # where maxval is (2**base)-1
+    if value & (1 << (bits-1)): # A MSB of one indicates dec value is negative
+        value -= 1 << bits
+    return value
+
+
 def dwaReset(verbose=0):
     s = tcpOpen(verbose=verbose)
     dwaRegWrite(s, '00000001', '00000000', verbose=verbose)
