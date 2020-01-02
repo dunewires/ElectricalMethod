@@ -83,7 +83,8 @@ port
   -- Status and control signals
   reset             : in     std_logic;
   locked            : out    std_logic;
-  clk_in1           : in     std_logic
+  clk_in1_p         : in     std_logic;
+  clk_in1_n         : in     std_logic
  );
 end component;
 
@@ -104,6 +105,7 @@ your_instance_name : clk_sysclk_mmcm
    reset => reset,
    locked => locked,
    -- Clock in ports
-   clk_in1 => clk_in1
+   clk_in1_p => clk_in1_p,
+   clk_in1_n => clk_in1_n
  );
 -- INST_TAG_END ------ End INSTANTIATION Template ------------

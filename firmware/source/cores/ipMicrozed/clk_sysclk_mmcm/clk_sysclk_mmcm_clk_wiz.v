@@ -83,15 +83,17 @@ module clk_sysclk_mmcm_clk_wiz
   // Status and control signals
   input         reset,
   output        locked,
-  input         clk_in1
+  input         clk_in1_p,
+  input         clk_in1_n
  );
   // Input buffering
   //------------------------------------
 wire clk_in1_clk_sysclk_mmcm;
 wire clk_in2_clk_sysclk_mmcm;
-  IBUF clkin1_ibufg
-   (.O (clk_in1_clk_sysclk_mmcm),
-    .I (clk_in1));
+  IBUFDS clkin1_ibufgds
+   (.O  (clk_in1_clk_sysclk_mmcm),
+    .I  (clk_in1_p),
+    .IB (clk_in1_n));
 
 
 

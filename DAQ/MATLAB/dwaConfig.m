@@ -14,8 +14,10 @@ regWrite(t,'00000007',ctrl_stimTime);
 pause(.2);
 regWrite(t,'00000008',ctrl_adc_nSamples);
 pause(.2);
-regWrite(t,'0000000A',adcAutoDc_chSel);
+regWrite(t,'0000000D',adcAutoDc_chSel);
 pause(.2);
 regWrite(t,'0000000B',adcHScale);
+pause(.2);
+regWrite(t,'0000000C',stimMag) 
 pause(.2);
 tcpCloseMmtp(t);
