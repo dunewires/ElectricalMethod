@@ -20,4 +20,6 @@ regWrite(t,'0000000B',adcHScale);
 pause(.2);
 regWrite(t,'0000000C',stimMag) 
 pause(.2);
+regWrite(t,'0000000E',relays_enable) 
+pause(.2);
 tcpCloseMmtp(t);
