@@ -29,8 +29,7 @@ except:
 
 
 # Open a file for writing data
-fout = open('junk.dat', 'w')
-
+fout = open('mmTest1F.python.txt', 'a')
 
 try:
     print("UDP Receiver ready ...")
@@ -59,12 +58,12 @@ try:
         #
         # convert received data into a list of strings, each 8 chars long.
         dataStr = binascii.hexlify(data)
-        dataToks = [ dataStr[ii:ii+tokSize].upper() 
+        dataToks = [ str(dataStr[ii:ii+tokSize], 'utf-8').upper() 
                      for ii in range(0, len(dataStr), tokSize) ]
         print("      {} words arrived".format(len(dataToks)))
         for tok in dataToks:
             print(tok)  # Print all toks to screen
-            # Don't log all toks to file
+            # Certain toks should not be logged to file
             if tok.startswith('F00001'):
                 continue
             if tok == '0000001F':

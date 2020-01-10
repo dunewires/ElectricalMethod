@@ -3,11 +3,8 @@ import dwaTools as dwa
 print('\n\n======= dwaReset() ===========')
 dwa.dwaReset(verbose=1)
 
-# FIXME: need to define config parameters and pass to dwaConfig()
-# dwa.dwaConfigParameters()
-
 print('\n\n======= dwaConfig() ===========')
-dwa.dwaConfig(verbose=0)
+dwa.dwaConfig(verbose=0, configFile="dwaConfig.ini")
 
 print('\n\n======= dwaStart() ===========')
 dwa.dwaStart(verbose=1)

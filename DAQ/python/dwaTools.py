@@ -8,6 +8,7 @@ import socket
 import time
 import struct
 import binascii
+import json, configparser
 
 # From 
 # https://stackoverflow.com/questions/6727875/hex-string-to-signed-int-in-python-3-2
@@ -51,20 +52,62 @@ def dwaReset(verbose=0):
     time.sleep(0.2)
     tcpClose(s)
 
-def dwaConfig(verbose=0):
+def dwaGetConfigParameters(configFile):
+    """Parse and return DWA configuration parameters from a file
+
+    """
+    # Can use lists in this configuration file with:
+    # [Foo]
+    # fibs: [1,1,2,3,5,8,13]
+    # >>> json.loads(config.get("Foo","fibs"))
+    # [1, 1, 2, 3, 5, 8, 13
+    # see: https://stackoverflow.com/questions/335695/lists-in-configparser
+
+    cp = configparser.ConfigParser()
+    cp.read(configFile)
+
+    config = {}
+
+    SECTION = "FPGA"
+    # FIXME: move these to a config file
+    config["freqReq_vio"] = cp.get(SECTION, "freqReq_vio")
+    # dwaCtrl  => (auto mainsMinus_enable m_axis_tready)
+    config["dwaCtrl"] = cp.get(SECTION, "dwaCtrl")
+    config["ctrl_freqMin"] = cp.get(SECTION, "ctrl_freqMin")
+    config["ctrl_freqMax"] = cp.get(SECTION, "ctrl_freqMax")
+    config["ctrl_freqStep"] = cp.get(SECTION, "ctrl_freqStep")
+    config["ctrl_stimTime"] = cp.get(SECTION, "ctrl_stimTime")
+    config["ctrl_adc_nSamples"] = cp.get(SECTION, "ctrl_adc_nSamples")
+    config["adcAutoDc_chSel"] = cp.get(SECTION, "adcAutoDc_chSel")
+    config["adcHScale"] = cp.get(SECTION, "adcHScale")
+
+    return config
+
+def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
+    """
+    Args:
+        config (dict): dictionary containing configuration parameters
+    
+    Returns:
+
+    Example:
+    """
     print("verbose = {}".format(verbose))
 
+    config = dwaGetConfigParameters(configFile)
+
     # FIXME: move these to a config file
-    freqReq_vio = "00001000"
+    freqReq_vio = config["freqReq_vio"]
     # dwaCtrl  => (auto mainsMinus_enable m_axis_tready)
-    dwaCtrl = "00000005"
-    ctrl_freqMin = "00000100"
-    ctrl_freqMax = "00000200"
-    ctrl_freqStep = "00000010"
-    ctrl_stimTime = "00001000"
-    ctrl_adc_nSamples = "00000008"
-    adcAutoDc_chSel = "00000001"
-    adcHScale = "00000018"
+    dwaCtrl = config["dwaCtrl"]
+    ctrl_freqMin = config["ctrl_freqMin"]
+    ctrl_freqMax = config["ctrl_freqMax"]
+    ctrl_freqStep = config["ctrl_freqStep"]
+    ctrl_stimTime = config["ctrl_stimTime"]
+    ctrl_adc_nSamples = config["ctrl_adc_nSamples"]
+    adcAutoDc_chSel = config["adcAutoDc_chSel"]
+    adcHScale = config["adcHScale"]
+
 
     s = tcpOpen(verbose=verbose)
 
