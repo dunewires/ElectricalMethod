@@ -50,10 +50,17 @@ f.close()
 # Stream data over UDP, N data points at a time
 nPer = 10  # number of points to send per transmission
 nData = len(data)
+iimax = math.floor(nData/nPer)
+#print("nData = {}".format(nData))
+#print("iimax = {}".format(iimax))
 
-for ii in range(math.floor(nData/nPer)):
-    dataToSend = data[ii*nPer:(ii+1)*nPer]
+for ii in range(iimax):
+    idmin = ii*nPer
+    idmax = (ii+1)*nPer
+    dataToSend = data[idmin:idmax]      
+    #dataToSend = data[ii*nPer:(ii+1)*nPer]
     bytesToSend = struct.pack('!{}f'.format(nPer), *dataToSend)
+    #print("ids = {}:{}".format(idmin, idmax))
     sock.sendto(bytesToSend, address)
 
 #while (data):
