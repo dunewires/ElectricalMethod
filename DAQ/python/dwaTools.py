@@ -44,6 +44,97 @@ def twos_complement(hexstr, bits):
     return value
 
 
+def parseUdpDataLine(line, verbose=False):
+    line = line.strip()
+    data1 = line[0:4]
+    data2 = line[4:]
+    print('data1, data2 = [{}], [{}]'.format(data1, data2))
+    bits = 16  # bits per ADC sample  'FFCA' is 16 bits (4 bits per hexstring character)
+    return [twos_complement(data1, bits), twos_complement(data2, bits)]
+
+def parseUdpHeader(hdr1, hdr2, verbose=False):
+    """Parse the two-line header in the DWA UDP stream
+
+    Args:
+        hdr1 (str): 8-character string from the DWA data stream
+        hdr2 (str): same (second line of a 2-line header)
+    
+    Returns:
+        headerDict (dict): parsed DWA data header
+
+    Example:
+    #   >>> parseUdpHeader('CAFE802F', '89738000')
+    #   {'STIM_PERIOD_NS': 1949310, 'STIM_FREQ_HZ': 513.0020366180853, 'DT_us': 2.0}
+    """
+
+    # FIXME: add checks for fixed elements of the header
+    # FIXME: e.g. hdr1 must start with 'CAFE'
+    # FIXME: in fact the '8' after CAFE is also constant
+    # FIXME: and the '8' that starts hdr2 is also constant
+
+    # Get rid of leading/trailing whitespace
+    hdr1 = hdr1.strip()
+    hdr2 = hdr2.strip()
+
+    # Dictionary to hold the parsed header information
+    headerDict = {}
+
+    # Decode the simulus period
+    #
+    # From Nathan: This is a 24 bit number where the MS 12 bits are in
+    # the second 16 bit header word and the LS 12 bits are in the
+    # third 16 bit header word. the MS 4 bits of these header words
+    # will be set to a constant 0x8 and the LS 12 bits represent the
+    # stimulus frequency. I think the units of this number is 10ns
+    # but will need to check the code to be sure
+    stimFreq_ms12 = hdr1[5:]
+    stimFreq_ls12 = hdr2[1:4]
+    stimFreq_hexstr = stimFreq_ms12+stimFreq_ls12  # e.g. '05EFF1'
+    if verbose:
+        print("  stimFreq_ms12 = [{}]".format(stimFreq_ms12))
+        print("  stimFreq_ls12 = [{}]".format(stimFreq_ls12))
+        print("  stimFreq      = [{}]".format(stimFreq_hexstr))
+    base16 = 16  # hexidecimal is base 16
+    stimFreq_int = int(stimFreq_hexstr, base16)  # period in units of 10ns
+    stimPeriod_ns = stimFreq_int * 10  # period in ns
+    stimFreq_Hz = 1./(stimPeriod_ns*1e-9)  # freq in Hz
+    headerDict['STIM_PERIOD_NS'] = stimPeriod_ns  # period in nanosec
+    headerDict['STIM_FREQ_HZ'] = stimFreq_Hz      # freq in Hz 
+
+    # Decode the ADC sampling period 
+    #
+    # From Nathan: This is a 15 bit number contained in the fourth 16
+    # bit header word. The MS bit of this header word is a constant 1
+    # and the LS 15 bits are the ADC sampling period. The sample
+    # period tells you how many samples are skipped in order to keep
+    # roughly the same number of cycles for each frequency. e.g. if
+    # the number is 2, every third sample is kept.
+    # 
+    # This will tell you the sampling rate and allow you to scale the
+    # sine fit. This is a 15 bit number and the 16th bit in the word
+    # is always a '1' since it is part of the header.
+    # 
+    # The sampling period is fixed by the XADC and I think it is 2us
+    # but will need to verify. This will soon change when we are
+    # fully transitioned to the DWA 2 and have more control of the ADC
+    # sampling.
+    adcSampPer_str = hdr2[4:]
+    # bit-wise AND with a mask
+    mask = 0b0111111111111111  # 16-bit mask to kill the MSB
+    nAdcSampSkip = int(adcSampPer_str, base16) & mask
+    adcSampPer_us = 2.0
+    if verbose:
+        print("  adcSampPer_str   =  [{}]".format(adcSampPer_str))
+        print("  nAdcSampSkip (b) =  [0b{:016b}]".format(nAdcSampSkip))
+        print("  nAdcSampSkip (d) =  [{}]".format(nAdcSampSkip))
+
+    # time interval between samples in the UDP stream
+    headerDict['DT_us'] = adcSampPer_us*(nAdcSampSkip+1)  # time between samples in microseconds
+
+    return headerDict
+
+
+
 def dwaReset(verbose=0):
     s = tcpOpen(verbose=verbose)
     dwaRegWrite(s, '00000001', '00000000', verbose=verbose)
@@ -324,48 +415,18 @@ def dwaRegWrite(s, address, value, verbose=0):
     #print recv_timeout(s)
 
 
-
-
 #def addressValid(address):
 #    # FIXME: check that 'address' is, indeed valid.
 #    # must be a 4-byte hex string
 #    return 1
 
-
-# Receive with timeout from e.g.:
-# https://stackoverflow.com/questions/17499961/send-receive-packets-with-tcp-sockets
-
-    ##total data partwise in an array
-    #total_data=[];
-    #data='';
-    #
-    ##beginning time
-    #begin=time.time()
-    #while 1:
-    #    #if you got some data, then break after timeout
-    #    if total_data and time.time()-begin > timeout:
-    #        print 'here'
-    #        break
-    #
-    #    #if you got no data at all, wait a little longer, twice the timeout
-    #    elif time.time()-begin > timeout*2:
-    #        print 'no data'
-    #        break
-    #
-    #    #recv something
-    #    try:
-    #        data = ss.recv(8192)
-    #        if data:
-    #            total_data.append(data)
-    #            #change the beginning time for measurement
-    #            begin=time.time()
-    #        else:
-    #            #sleep for sometime to indicate a gap
-    #            time.sleep(0.1)
-    #    except:
-    #        pass
-    #
-    ##join all parts to make final string
-    #return ''.join(total_data)
-
+def resonanceModel(freqs, a, b, c, f0, gamma):
+    # see model in Jackson's Final Presentation
+    # returns amplitude vs. frequency for a wire resonance
+    # assumes that freqs is a numpy array (1D)
+    ampls = a
+    ampls += b*freqs 
+    ampls += c*(freqs**2-f0**2)/( (freqs**2-f0**2)**2 - (2*gamma*freqs) )
+    return ampls
+    
 
