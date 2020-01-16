@@ -498,38 +498,7 @@ begin
   adcHScale         <= unsigned(regToDwa(11)(4 DOWNTO 0));
   acStim_mag        <= unsigned(regToDwa(12)(11 DOWNTO 0));
   senseWireDataSel  <= unsigned(regToDwa(13)(2 DOWNTO 0));
-  CoilDrive(0)      <= unsigned(regToDwa(14)(0);
-  CoilDrive(1)      <= unsigned(regToDwa(14)(1);
-  CoilDrive(2)      <= unsigned(regToDwa(14)(2);
-  CoilDrive(3)      <= unsigned(regToDwa(14)(3);
-  CoilDrive(4)      <= unsigned(regToDwa(14)(4);
-  CoilDrive(5)      <= unsigned(regToDwa(14)(5);
-  CoilDrive(6)      <= unsigned(regToDwa(14)(6);
-  CoilDrive(7)      <= unsigned(regToDwa(14)(7);
-  CoilDrive(8)      <= unsigned(regToDwa(14)(8);
-  CoilDrive(9)      <= unsigned(regToDwa(14)(9);
-  CoilDrive(10)      <= unsigned(regToDwa(14)(10);
-  CoilDrive(11)      <= unsigned(regToDwa(14)(11);
-  CoilDrive(12)      <= unsigned(regToDwa(14)(12);
-  CoilDrive(13)      <= unsigned(regToDwa(14)(13);
-  CoilDrive(14)      <= unsigned(regToDwa(14)(14);
-  CoilDrive(15)      <= unsigned(regToDwa(14)(15);
-  CoilDrive(16)      <= unsigned(regToDwa(14)(16);
-  CoilDrive(17)      <= unsigned(regToDwa(14)(17);
-  CoilDrive(18)      <= unsigned(regToDwa(14)(18);
-  CoilDrive(19)      <= unsigned(regToDwa(14)(19);
-  CoilDrive(20)      <= unsigned(regToDwa(14)(20);
-  CoilDrive(21)      <= unsigned(regToDwa(14)(21);
-  CoilDrive(22)      <= unsigned(regToDwa(14)(22);
-  CoilDrive(23)      <= unsigned(regToDwa(14)(23);
-  CoilDrive(24)      <= unsigned(regToDwa(14)(24);
-  CoilDrive(25)      <= unsigned(regToDwa(14)(25);
-  CoilDrive(26)      <= unsigned(regToDwa(14)(26);
-  CoilDrive(27)      <= unsigned(regToDwa(14)(27);
-  CoilDrive(28)      <= unsigned(regToDwa(14)(28);
-  CoilDrive(29)      <= unsigned(regToDwa(14)(29);
-  CoilDrive(30)      <= unsigned(regToDwa(14)(30);
-  CoilDrive(31)      <= unsigned(regToDwa(14)(31);
+  CoilDrive         <= regToDwa(14);
 
 
   wtaController_inst : entity duneDwa.wtaController
