@@ -1,4 +1,5 @@
 # a UDP server that sends data
+import time
 import socket
 import struct
 import math
@@ -66,7 +67,8 @@ def sendDummyDataSine(sock):
 
 def sendDummyDataDwa(sock):
     # Read data from a file
-    filename = 'mmTest1F.python.txt'
+    #filename = 'mmTest1F.python.txt'
+    filename = 'junk.txt'
     f = open(filename, "rb")
     # read all data into a list (without newlines)
     # https://stackoverflow.com/questions/12330522/how-to-read-a-file-without-newlines
@@ -74,13 +76,16 @@ def sendDummyDataDwa(sock):
     f.close()
     
     # Send data in file one line at a time
+    nTx = 0
     for datum in data:
+        nTx += 1
         dataToSend = datum
         #bytesToSend = struct.pack('!{}f'.format(nPer), *dataToSend)
         bytesToSend = binascii.unhexlify(dataToSend)  # convert string to bytes.  e.g. dataToSend is 'CAFE805E' and bytesToSend is b'\xca\xfe\x80^'
         #print("ids = {}:{}".format(idmin, idmax))
         sock.sendto(bytesToSend, address)
-
+        time.sleep(0.03)  # needed otherwise packets are dropped.  not sure how small the sleep can be... 5ms seems to work fine though
+    print("Sent {} lines of data".format(nTx))
 
 #sendDummyDataSine(sock)
 sendDummyDataDwa(sock)

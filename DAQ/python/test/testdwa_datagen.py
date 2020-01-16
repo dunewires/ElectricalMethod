@@ -7,7 +7,7 @@ dt = 0.5e-3    # seconds
 
 fmin = 100
 fmax = 200
-nf   = 10
+nf   = 30
 freqs = np.linspace(fmin, fmax, num=nf)
 
 # adc sampling dt
