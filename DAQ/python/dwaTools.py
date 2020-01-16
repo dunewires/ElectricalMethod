@@ -44,11 +44,42 @@ def twos_complement(hexstr, bits):
     return value
 
 
+def hexStrOfSignedInt(signedInt, strLen=4):
+    """Convert a signed integer to a hex string using two's complement
+
+    Args:
+        signedInt (int): integer to be converted to hex string
+        strLen (int): desired length of output hex string
+    
+    Returns:
+        hexStr (str): hex string corresponding to signedInt
+
+    Example:
+        hexStrOfSignedInt(-54) returns 'FFCA'
+        hexStrOfSignedInt(54) returns  '0036'
+        hexStrOfSignedInt(-54, strLen=6) returns '00FFCA'
+
+    Explanation of the algorithm via an example:
+    * if the int is positive, just find the hex representation of that integer
+    * if the int is negative, add 2**16 and then find the hex representation
+    * FIXME: this *assumes* a 16-bit
+    
+    See twos_complement() to go the other direction
+    """
+    # FIXME: this *assumes* 16-bit values (a 4-character hex string)
+    bits = 16
+    if signedInt < 0:
+        signedInt += (1 << bits)
+    fmtStr = '{{:0{}x}}'.format(strLen)
+    hexStr = fmtStr.format(signedInt).upper()
+    return hexStr
+
 def parseUdpDataLine(line, verbose=False):
     line = line.strip()
     data1 = line[0:4]
     data2 = line[4:]
-    print('data1, data2 = [{}], [{}]'.format(data1, data2))
+    if verbose:
+        print('data1, data2 = [{}], [{}]'.format(data1, data2))
     bits = 16  # bits per ADC sample  'FFCA' is 16 bits (4 bits per hexstring character)
     return [twos_complement(data1, bits), twos_complement(data2, bits)]
 
@@ -426,7 +457,98 @@ def resonanceModel(freqs, a, b, c, f0, gamma):
     # assumes that freqs is a numpy array (1D)
     ampls = a
     ampls += b*freqs 
-    ampls += c*(freqs**2-f0**2)/( (freqs**2-f0**2)**2 - (2*gamma*freqs) )
+    ampls += c*(f0**2 - freqs**2) / ( (f0**2-freqs**2)**2 + (2*gamma*freqs)**2 )
     return ampls
     
 
+def adcSkipHexStringOfDt(dt, adc_dt=2.0e-6):
+    """Calculate the hex string representation of the number of ADC samples to skip
+
+    Args:
+        dt (float): desired sample rate (seconds)
+        adc_dt (float): ADC sampling period (seconds)
+
+    Returns:
+        skipHexStr (str): hex string representation of number of samples to skip
+
+    Note: This is a 15 bit number contained in the fourth 16 bit
+     header word.  The MS bit of this header word is a constant 1 and
+     the LS 15 bits are the ADC sampling period.  The sample period
+     tells you how many samples are skipped in order to keep roughly
+     the same number of cycles for each frequency.  e.g. if the number
+     is 2, every third sample is kept.  This will tell you the
+     sampling rate and allow you to scale the sine fit. This is a 15
+     bit number and the 16th bit in the word is always a '1' since it
+     is part of the header.
+
+    Example:
+        adcSkipHexStringOfDt(2.0e-6, adc_dt=2.0e-6) returns '8000'
+        adcSkipHexStringOfDt(4.0e-6, adc_dt=2.0e-6) returns '8001'
+        adcSkipHexStringOfDt(0.5e-3, adc_dt=2.0e-6) returns '80F9'
+    """
+    nskip = int(dt/adc_dt)-1
+    mask = 0b1000000000000000   # msb is 1, rest of the 15 bits are zero
+    skipHexStr = '{:04x}'.format(nskip | mask).upper()
+    return skipHexStr
+
+
+def hexStringOfFreq(freq):
+    """Calculate the hex string representation of the nearest valid period for a given frequency
+
+    Args:
+        freq (float): frequency, in Hz
+    
+    Returns:
+        period_hexstr (str): hex string of period associated with the input frequency, rounded to 10ns
+
+    Example:
+        hexStringOfFreq(257.0) returns '05EFF1'  since 0x05EFF1 is 389105 (decimal), which is a period of 3.89105e-3 seconds
+    """
+    period_hexstr = '{:06x}'.format(int(1e8*1.0/freq)).upper()
+    return period_hexstr
+
+def hexStringOfPeriod(period_10ns):
+    """Calculate the hex string representation of the nearest valid period for a given frequency
+
+    Args:
+        period_10ns (int): period, in units of 10ns
+    
+    Returns:
+        period_hexstr (str): hex string of period associated with the input period
+
+    Example:
+        hexStringOfPeriod(389105) returns '05EFF1'  since 0x05EFF1 is 389105 (decimal)
+    """
+    period_hexstr = '{:06x}'.format(period_10ns).upper()
+    return period_hexstr
+
+
+def stimPeriodOfFreq(freq):
+    """Calculate the nearest valid period for a given frequency
+
+    Args:
+        freq (float): frequency, in Hz
+    
+    Returns:
+        period_10ns (int): period associated with the input frequency, rounded to 10ns
+
+    Example:
+        stimPeriodOfFreq(257.0) returns 389105
+    """
+    period_10ns = int(1e8*1.0/freq)
+    return period_10ns
+    
+
+def freqOfPeriod(period_10ns):
+    """Calculate the frequency of a given period
+
+    Args:
+        period_10ns (int): period, in units of 10ns
+    
+    Returns:
+        freq (float): associated frequency, in Hz
+
+    Example:
+        freqOfPeriod(389105) returns 257.00003855  (Hz)
+    """
+    return 1./(period_10ns*1e-8)
