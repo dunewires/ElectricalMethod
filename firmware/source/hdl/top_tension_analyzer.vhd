@@ -26,6 +26,8 @@ entity top_tension_analyzer is
     DAC_CLR_B : out std_logic := '0';
     DAC_CLK   : out std_logic := '0';
 
+    CoilDrive : out std_logic_vector(31 downto 0);
+    
     adcCnv        : out std_logic                    := '0';
     adcSck        : out std_logic                    := '0';
     adcDataSerial : in  std_logic_vector(3 downto 0) := (others => '0');
@@ -495,7 +497,8 @@ begin
   adcAutoDc_chSel   <= regToDwa(10)(3 DOWNTO 0);
   adcHScale         <= unsigned(regToDwa(11)(4 DOWNTO 0));
   acStim_mag        <= unsigned(regToDwa(12)(11 DOWNTO 0));
-  senseWireDataSel        <= unsigned(regToDwa(13)(2 DOWNTO 0));
+  senseWireDataSel  <= unsigned(regToDwa(13)(2 DOWNTO 0));
+  CoilDrive         <= regToDwa(14);
 
 
   wtaController_inst : entity duneDwa.wtaController
