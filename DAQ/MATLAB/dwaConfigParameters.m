@@ -10,3 +10,4 @@ adcAutoDc_chSel = "00000007";
 adcHScale = "0000001d";
 %12 bit stim DAC amplitude
 stimMag = "00000010";
+relays_enable = "00000000";

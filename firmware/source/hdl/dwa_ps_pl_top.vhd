@@ -30,6 +30,8 @@ entity dwa_ps_pl_top is
         DAC_CLR_B : out std_logic := '0';
         DAC_CLK   : out std_logic := '0';
 
+        CoilDrive : out std_logic_vector(31 downto 0) := (others => '0');
+
         adcCnv          : out std_logic                    := '0';
         adcSck_p        : out std_logic                    := '0';
         adcSck_n        : out std_logic                    := '0';
@@ -308,6 +310,8 @@ begin
             DAC_LD_B  => DAC_LD_B,
             DAC_CLR_B => DAC_CLR_B,
             DAC_CLK   => DAC_CLK,
+
+            CoilDrive => CoilDrive,
 
             adcCnv        => adcCnv,
             adcSck        => adcSck,
