@@ -1,5 +1,6 @@
 import socket
 import struct
+import binascii
 import numpy as np
 #import matplotlib.pyplot as plt
 from pyqtgraph.Qt import QtGui, QtCore
@@ -38,26 +39,56 @@ msgFromServer = sock.recvfrom(bufferSize)
 msg = "Message from Server {}".format(msgFromServer[0])
 print(msg)
 
-# Set up for data receive
-nPer = 10  # MUST MATCH SAME VALUE IN testgui_server.py
-structPackFmtStr = '!{}f'.format(nPer)
-bufferSize = struct.calcsize(structPackFmtStr)
+## Set up for data receive
+## For sine-wave dummy data (floats)
+#nPer = 10  # MUST MATCH SAME VALUE IN testgui_server.py
+#structPackFmtStr = '!{}f'.format(nPer)
+#bufferSize = struct.calcsize(structPackFmtStr)
+
+# For DWA data emulator (sending 32 bits, e.g. CAFE805E
+bufferSize = 4  # number of bytes to receive
+encoding = 'utf-8'  
+# want result to be a string like 'CAFE805E'
+
+lastLine = ''
+
+def parseDwaHeader(line1, line2):
+    # line1 and line2 are strings, each a header line
+    # from the DWA data stream
+    # for example:
+    #  line1 = 'CAFE805E'
+    #  line2 = '8FF18000'
+    
+    # FIXME: add check to make sure that line1 starts with CAFE
 
 
 def update():
     global curve, pdata, p, sock, data
     
     # NOW READ DATA (data is a byte string, e.g. b'hi\nthere')
-    #encoding = 'utf-8'  # FIXME...
     try:
         data, addr = sock.recvfrom(bufferSize)
         #print(data)
         #print(type(data))
-        vals = struct.unpack(structPackFmtStr, data)
+
+        ##### For sine wave data
+        #vals = struct.unpack(structPackFmtStr, data)  
+        #pdata = np.append(pdata, vals) 
+        ######
+
+        #### For DWA data
+        dataStr = binascii.hexlify(data).decode('utf-8').upper()
+        print("dataStr = {}".format(dataStr))
+        # parse the data string
+        
+        if lastLine.startswith('CAFE'):
+            parseHeader(lastLine, dataStr)
+
+        lastLine = dataStr
+        
         #print("vals = ")
         #print("len(vals) = {}".format(len(vals)))
         #print(vals)
-        pdata = np.append(pdata, vals)
         #print("len(pdata) = {}".format(len(pdata)))
     except socket.timeout:
         sock.close()

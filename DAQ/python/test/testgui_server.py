@@ -2,6 +2,7 @@
 import socket
 import struct
 import math
+import binascii
 
 localIP = "127.0.0.1"
 localPort = 20001
@@ -37,36 +38,52 @@ while(True):
         print("Client requested data. Will start sending data now...")
         break
 
+def sendDummyDataSine(sock):
+    # Read data from a file
+    filename = 'testgui_data_sine.dat'
+    f = open(filename, "rb")
+    # read all data into a list (without newlines)
+    # https://stackoverflow.com/questions/12330522/how-to-read-a-file-without-newlines
+    data = f.read().splitlines()
+    data = [float(tok) for tok in data]
+    f.close()
+    
+    # Stream data over UDP, N data points at a time
+    nPer = 10  # number of points to send per transmission
+    nData = len(data)
+    iimax = math.floor(nData/nPer)
+    #print("nData = {}".format(nData))
+    #print("iimax = {}".format(iimax))
+    
+    for ii in range(iimax):
+        idmin = ii*nPer
+        idmax = (ii+1)*nPer
+        dataToSend = data[idmin:idmax]      
+        bytesToSend = struct.pack('!{}f'.format(nPer), *dataToSend)
+        #print("ids = {}:{}".format(idmin, idmax))
+        sock.sendto(bytesToSend, address)
 
-# Read data from a file
-filename = 'testgui_data.dat'
-f = open(filename, "rb")
-# read all data into a list (without newlines)
-# https://stackoverflow.com/questions/12330522/how-to-read-a-file-without-newlines
-data = f.read().splitlines()
-data = [float(tok) for tok in data]
-f.close()
 
-# Stream data over UDP, N data points at a time
-nPer = 10  # number of points to send per transmission
-nData = len(data)
-iimax = math.floor(nData/nPer)
-#print("nData = {}".format(nData))
-#print("iimax = {}".format(iimax))
+def sendDummyDataDwa(sock):
+    # Read data from a file
+    filename = 'mmTest1F.python.txt'
+    f = open(filename, "rb")
+    # read all data into a list (without newlines)
+    # https://stackoverflow.com/questions/12330522/how-to-read-a-file-without-newlines
+    data = f.read().splitlines()
+    f.close()
+    
+    # Send data in file one line at a time
+    for datum in data:
+        dataToSend = datum
+        #bytesToSend = struct.pack('!{}f'.format(nPer), *dataToSend)
+        bytesToSend = binascii.unhexlify(dataToSend)  # convert string to bytes.  e.g. dataToSend is 'CAFE805E' and bytesToSend is b'\xca\xfe\x80^'
+        #print("ids = {}:{}".format(idmin, idmax))
+        sock.sendto(bytesToSend, address)
 
-for ii in range(iimax):
-    idmin = ii*nPer
-    idmax = (ii+1)*nPer
-    dataToSend = data[idmin:idmax]      
-    #dataToSend = data[ii*nPer:(ii+1)*nPer]
-    bytesToSend = struct.pack('!{}f'.format(nPer), *dataToSend)
-    #print("ids = {}:{}".format(idmin, idmax))
-    sock.sendto(bytesToSend, address)
 
-#while (data):
-#    if (sock.sendto(data, address)):
-#        print("sending...")
-#        data = f.read(bufferSize)
+#sendDummyDataSine(sock)
+sendDummyDataDwa(sock)
 sock.close()
 
 
