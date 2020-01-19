@@ -202,6 +202,8 @@ def dwaGetConfigParameters(configFile):
     config["ctrl_adc_nSamples"] = cp.get(SECTION, "ctrl_adc_nSamples")
     config["adcAutoDc_chSel"] = cp.get(SECTION, "adcAutoDc_chSel")
     config["adcHScale"] = cp.get(SECTION, "adcHScale")
+    config["stimMag"] = cp.get(SECTION, "stimMag")
+    config["relays_enable"] = cp.get(SECTION, "relays_enable")
 
     return config
 
@@ -229,6 +231,8 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     ctrl_adc_nSamples = config["ctrl_adc_nSamples"]
     adcAutoDc_chSel = config["adcAutoDc_chSel"]
     adcHScale = config["adcHScale"]
+    stimMag = config["stimMag"]
+    relays_enable = config["relays_enable"]
 
 
     s = tcpOpen(verbose=verbose)
@@ -254,7 +258,10 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     time.sleep(sleepSec)
     dwaRegWrite(s, '0000000B',adcHScale, verbose=verbose)
     time.sleep(sleepSec)
-
+    dwaRegWrite(s, '0000000C',stimMag, verbose=verbose)
+    time.sleep(sleepSec)
+    dwaRegWrite(s, '0000000E',relays_enable, verbose=verbose)
+    time.sleep(sleepSec)
     tcpClose(s, verbose=verbose)
 
 def dwaStart(verbose=0):
