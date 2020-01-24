@@ -299,6 +299,7 @@ proc bitgen {} {
         write_mem_info -force $proj_dir/${proj_name}_${build_date}_${build_time}_${post_route_wns}ns.mmi
         get_property SLACK [get_timing_paths -max_paths 20 -nworst 7 -setup]
     }
+    # bootgen -image output.bif -arch zynq -o /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/BOOT.bin
 }
 
 proc writeGdrive {} {

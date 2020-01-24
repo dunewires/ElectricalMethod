@@ -167,7 +167,8 @@ architecture STRUCTURE of dwa_ps_pl_top is
     signal M00_AXI_0_rvalid     : STD_LOGIC;
     signal M00_AXI_0_rready     : STD_LOGIC;
     signal peripheral_aresetn_0 : STD_LOGIC_VECTOR ( 0 to 0 );
-    signal aclk                 : STD_LOGIC;
+    signal S_AXI_ACLK_100       : STD_LOGIC;
+    signal S_AXI_ACLK_10        : STD_LOGIC;
 
     signal regFromDwa      : SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
     signal regFromDwa_strb : std_logic_vector(31 downto 0);
@@ -178,10 +179,10 @@ architecture STRUCTURE of dwa_ps_pl_top is
     signal adcDataSerial : std_logic_vector(3 downto 0) := (others => '0');
     signal adcSrcSyncClk : std_logic                    := '0';
     signal adcSck        : std_logic                    := '0';
-    
+
 begin
 
-    adcSerialInbuf_gen :for adcSerial_indx in 3 downto 0 generate
+    adcSerialInbuf_gen : for adcSerial_indx in 3 downto 0 generate
         IBUFDS_ADCSDIN : IBUFDS
             generic map (
                 DIFF_TERM    => true,
@@ -257,14 +258,15 @@ begin
             M00_AXI_0_wready              => M00_AXI_0_wready,
             M00_AXI_0_wstrb(3 downto 0)   => M00_AXI_0_wstrb(3 downto 0),
             M00_AXI_0_wvalid              => M00_AXI_0_wvalid,
-            aclk                          => aclk,
+            aclk                          => S_AXI_ACLK_100,
+            FCLK_CLK1_0                   => S_AXI_ACLK_10,
             peripheral_aresetn_0(0)       => peripheral_aresetn_0(0)
         );
 
 
     dwa_registers_v1_0_S00_AXI_1 : entity duneDwa.dwa_registers_v1_0_S00_AXI
         port map (
-            S_AXI_ACLK    => aclk,
+            S_AXI_ACLK    => S_AXI_ACLK_100,
             S_AXI_ARESETN => peripheral_aresetn_0(0),
             S_AXI_AWADDR  => M00_AXI_0_AWADDR(6 downto 0),
             S_AXI_AWPROT  => M00_AXI_0_AWPROT,
@@ -297,8 +299,9 @@ begin
             regFromDwa      => regFromDwa,
             regFromDwa_strb => regFromDwa_strb,
 
-            regToDwa   => regToDwa,
-            S_AXI_ACLK => aclk,
+            regToDwa       => regToDwa,
+            S_AXI_ACLK_100 => S_AXI_ACLK_100,
+            S_AXI_ACLK_10  => S_AXI_ACLK_10,
 
 
             led             => led,

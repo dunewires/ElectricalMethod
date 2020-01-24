@@ -12,8 +12,9 @@ entity top_tension_analyzer is
     regFromDwa      : out SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
     regFromDwa_strb : in  std_logic_vector(31 downto 0);
 
-    regToDwa   : in SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
-    S_AXI_ACLK : in std_logic;
+    regToDwa       : in SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
+    S_AXI_ACLK_100 : in std_logic;
+    S_AXI_ACLK_10  : in std_logic;
 
 
     led             : out std_logic_vector(3 downto 0);
@@ -27,7 +28,7 @@ entity top_tension_analyzer is
     DAC_CLK   : out std_logic := '0';
 
     CoilDrive : out std_logic_vector(31 downto 0);
-    
+
     adcCnv        : out std_logic                    := '0';
     adcSck        : out std_logic                    := '0';
     adcDataSerial : in  std_logic_vector(3 downto 0) := (others => '0');
@@ -240,9 +241,9 @@ architecture STRUCT of top_tension_analyzer is
 
   signal mainsTrig_filter : unsigned(17 downto 0);
 
-  signal senseWireData :UNSIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) :=  (others  => (others => '0'));
-  signal senseWireDataStrb :std_logic :=  '0';
-  signal senseWireDataSel           : unsigned(2 downto 0)          := (others => '0');
+  signal senseWireData     : UNSIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+  signal senseWireDataStrb : std_logic                                     := '0';
+  signal senseWireDataSel  : unsigned(2 downto 0)                          := (others => '0');
 
 begin
   led(1) <= sysclk100;
@@ -369,8 +370,8 @@ begin
       DAC_CLR_B => DAC_CLR_B,
       DAC_CLK   => DAC_CLK,
 
-      S_AXI_ACLK => S_AXI_ACLK,
-      sysclk200  => sysclk200
+      S_AXI_ACLK_100 => S_AXI_ACLK_100,
+      sysclk200      => sysclk200
     );
 
   adcReadout_1 : entity duneDwa.adcReadout
@@ -568,7 +569,7 @@ begin
     PORT MAP (
       rst         => not m_axis_resetn,
       wr_clk      => sysclk100,
-      rd_clk      => S_AXI_ACLK,
+      rd_clk      => S_AXI_ACLK_100,
       din         => fifoAutoDC_din,
       wr_en       => fifoAutoDC_wen,
       rd_en       => fifoAutoDC_ren,
