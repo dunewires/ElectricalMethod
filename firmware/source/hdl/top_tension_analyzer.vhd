@@ -27,6 +27,13 @@ entity top_tension_analyzer is
     DAC_CLR_B : out std_logic := '0';
     DAC_CLK   : out std_logic := '0';
 
+    dpotSdi  : out std_logic := '0';
+    dpotSdo  : out std_logic := '0';
+    dpotPr_b : out std_logic := '0';
+    dpotCs_b : out std_logic := '0';
+    dpotSck  : out std_logic := '0';
+    dpotShdn_b  : out std_logic := '0';
+
     CoilDrive : out std_logic_vector(31 downto 0);
 
     adcCnv        : out std_logic                    := '0';
@@ -245,6 +252,7 @@ architecture STRUCT of top_tension_analyzer is
   signal senseWireDataStrb : std_logic                                     := '0';
   signal senseWireDataSel  : unsigned(2 downto 0)                          := (others => '0');
 
+    signal dpotMag :SLV_VECTOR_TYPE(7 downto 0)(7 downto 0) := (others => (others => '0'));
 begin
   led(1) <= sysclk100;
   led(0) <= ctrl_busy;
@@ -373,6 +381,20 @@ begin
       S_AXI_ACLK_100 => S_AXI_ACLK_100,
       sysclk200      => sysclk200
     );
+
+  dpotInterface_1 : entity work.dpotInterface
+    port map (
+      mag      => dpotMag,
+
+      sdi      => dpotSdi,
+      sdo      => dpotSdo,
+      pr_b     => dpotPr_b,
+      cs_b     => dpotCs_b,
+      sck      => dpotSck,
+      shdn_b      => dpotShdn_b,
+
+      sysClk10 => sysClk10
+    );    
 
   adcReadout_1 : entity duneDwa.adcReadout
     port map (
