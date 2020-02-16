@@ -78,3 +78,11 @@
 16:24:01 INFO  : Invoking Bootgen: bootgen -image output.bif -arch zynq -o /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/BOOT.bin
 16:24:01 INFO  : Overwriting existing bif file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/output.bif
 16:24:02 INFO  : Bootgen command execution is done.
+14:43:07 INFO  : Registering command handlers for SDK TCF services
+14:43:09 INFO  : Launching XSCT server: xsct -n -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/temp_xsdb_launch_script.tcl
+14:43:11 INFO  : XSCT server has started successfully.
+14:43:11 INFO  : Successfully done setting XSCT server connection channel  
+14:43:11 INFO  : Successfully done setting SDK workspace  
+14:48:52 INFO  : Invoking Bootgen: bootgen -image output.bif -arch zynq -o /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/BOOT.bin -w on
+14:48:52 INFO  : Overwriting existing bif file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/output.bif
+14:48:53 INFO  : Bootgen command execution is done.

@@ -1,4 +1,4 @@
-15:43:56 **** Build of configuration Debug for project lwipV4 ****
+14:44:13 **** Build of configuration Debug for project lwipV4 ****
 make pre-build main-build 
 a9-linaro-pre-build-step
  
@@ -9,7 +9,7 @@ arm-none-eabi-gcc -Wall -O0 -g3 -c -fmessage-length=0 -MT"src/i2c_access.o" -mcp
  #include "xparameters.h"
           ^~~~~~~~~~~~~~~
 compilation terminated.
-make: *** [src/i2c_access.o] Error 1
+make: *** [src/subdir.mk:50: src/i2c_access.o] Error 1
 
-15:43:56 Build Finished (took 119ms)
+14:44:13 Build Finished (took 270ms)
 

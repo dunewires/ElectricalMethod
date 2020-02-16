@@ -1,4 +1,4 @@
-15:44:15 **** Build of configuration Debug for project lwip_std ****
+14:44:29 **** Build of configuration Debug for project lwip_std ****
 make pre-build main-build 
 a9-linaro-pre-build-step
  
@@ -54,5 +54,5 @@ arm-none-eabi-size lwip_std.elf  |tee "lwip_std.elf.size"
 Finished building: lwip_std.elf.size
  
 
-15:44:16 Build Finished (took 716ms)
+14:44:30 Build Finished (took 671ms)
 

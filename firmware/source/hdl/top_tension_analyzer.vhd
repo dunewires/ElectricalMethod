@@ -381,19 +381,19 @@ begin
       sysclk200      => sysclk200
     );
 
-  dpotInterface_1 : entity work.dpotInterface
-    port map (
-      mag => dpotMag,
-
-      sdi    => dpotSdi,
-      sdo    => dpotSdo,
-      pr_b   => dpotPr_b,
-      cs_b   => dpotCs_b,
-      sck    => dpotSck,
-      shdn_b => dpotShdn_b,
-
-      sysClk10 => sysClk10
-    );
+--  dpotInterface_1 : entity duneDwa.dpotInterface
+--    port map (
+--      mag => dpotMag,
+--
+--      sdi    => dpotSdi,
+--      sdo    => dpotSdo,
+--      pr_b   => dpotPr_b,
+--      cs_b   => dpotCs_b,
+--      sck    => dpotSck,
+--      shdn_b => dpotShdn_b,
+--
+--      sysClk10 => sysClk10
+--    );
 
   adcReadout_1 : entity duneDwa.adcReadout
     port map (

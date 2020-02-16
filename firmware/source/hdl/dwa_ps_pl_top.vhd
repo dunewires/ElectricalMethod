@@ -120,7 +120,9 @@ architecture STRUCTURE of dwa_ps_pl_top is
             M00_AXI_0_rvalid     : in    STD_LOGIC;
             M00_AXI_0_rready     : out   STD_LOGIC;
             peripheral_aresetn_0 : out   STD_LOGIC_VECTOR ( 0 to 0 );
-            aclk                 : out   STD_LOGIC
+            aclk                 : out   STD_LOGIC;
+            FCLK_CLK1_0 : out STD_LOGIC
+
         );
     end component dwa_ps_bd;
 

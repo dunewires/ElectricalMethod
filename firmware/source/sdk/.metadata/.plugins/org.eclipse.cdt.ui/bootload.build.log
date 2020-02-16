@@ -1,4 +1,4 @@
-15:43:45 **** Build of configuration Debug for project bootload ****
+14:44:00 **** Auto Build of configuration Debug for project bootload ****
 make pre-build main-build 
 a9-linaro-pre-build-step
  
@@ -9,7 +9,7 @@ arm-none-eabi-gcc -Wall -O0 -g3 -c -fmessage-length=0 -MT"src/helloworld.o" -mcp
  #include "xil_printf.h"
           ^~~~~~~~~~~~~~
 compilation terminated.
-make: *** [src/helloworld.o] Error 1
+make: *** [src/subdir.mk:26: src/helloworld.o] Error 1
 
-15:43:45 Build Finished (took 211ms)
+14:44:00 Build Finished (took 370ms)
 

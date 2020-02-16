@@ -1,4 +1,4 @@
-15:43:55 **** Build of configuration Debug for project dwaFsbl ****
+14:44:12 **** Build of configuration Debug for project dwaFsbl ****
 make pre-build main-build 
 a9-linaro-pre-build-step
  
@@ -72,5 +72,5 @@ arm-none-eabi-size dwaFsbl.elf  |tee "dwaFsbl.elf.size"
 Finished building: dwaFsbl.elf.size
  
 
-15:43:56 Build Finished (took 880ms)
+14:44:13 Build Finished (took 815ms)
 
