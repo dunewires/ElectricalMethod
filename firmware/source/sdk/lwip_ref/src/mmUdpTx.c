@@ -53,8 +53,9 @@ int drainDebugFifoUdp(int fifoAddr) {
   int rfifo;
   u8_t *rDFifoB = (u8_t*) &rDFifoData;
   //  xil_printf("start drain fifo %x\r\n", fifoAddr);
-  // Only look at the LS 4 bits changed to all bits since fifo is at 31
-  //statusBit = fifoAddr & 0xF;
+  // Subtract ADC base address to get the bit index of the first ADC EF bit 
+  // eg when AXI register is 18 we will look at the first bit in the status reg
+  statusBit = fifoAddr - 0x18;
   //  xil_printf("start drain fifo %x\r\n", statusBit);
   udpTxbuf[0] = 0xF0;
   udpTxbuf[1] = 0x00;
@@ -72,11 +73,8 @@ int drainDebugFifoUdp(int fifoAddr) {
   // checking status before each write slows the transfer,
   // add programmable full bit to read a larger chunk without the need to check status.
   while (1) {
-    statusFlags = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + (0x001E << 2));
-
-    //if (((statusFlags & 0x000001 << (statusBit*2)) == 0) & (rDFifoTxIndex < rDFifoBufSize-8))
-    // only checking one fifo for now
-    if (((statusFlags & 0x000001)  == 0) & (rDFifoTxIndex < rDFifoBufSize-8))
+    statusFlags = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + (0x0017 << 2));
+    if (((statusFlags & 0x000001 << statusBit) == 0) & (rDFifoTxIndex < rDFifoBufSize-8))
       // Get more data from FIFO
       {
 	rDFifoData = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + (fifoAddr << 2));

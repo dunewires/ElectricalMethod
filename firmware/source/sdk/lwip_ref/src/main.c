@@ -245,8 +245,14 @@ int main()
 		}
 		xemacif_input(echo_netif);
 		transfer_data();
+		drainDebugFifoUdp(0x18);
+		drainDebugFifoUdp(0x19);
+		drainDebugFifoUdp(0x1A);
+		drainDebugFifoUdp(0x1B);
+		drainDebugFifoUdp(0x1C);
+		drainDebugFifoUdp(0x1D);
+		drainDebugFifoUdp(0x1E);
 		drainDebugFifoUdp(0x1F);
-
 	}
 
 	/* never reached */

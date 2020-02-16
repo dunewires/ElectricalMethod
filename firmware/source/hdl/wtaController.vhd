@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Nov 21 19:28:30 2019
+-- Last update : Sun Feb 16 13:59:47 2020
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -23,6 +23,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 library duneDwa;
+use duneDwa.global_def.all;
 library UNISIM;
 use UNISIM.VCOMPONENTS.all;
 
@@ -44,18 +45,18 @@ entity wtaController is
 		acStim_nPeriod : in unsigned(23 downto 0) := (others => '0');
 		adcHScale      : in unsigned(4 downto 0)  := (others => '0');
 
-		adcAutoDc_af     : in  std_logic           := '0';
-		adcAutoDc_wen    : out std_logic           := '0';
-		adcAutoDc_data   : in  signed(15 downto 0) := (others => '0');
-		adcAutoDC_dValid : in  std_logic           := '0';
+		adcAutoDc_af     : in  std_logic_vector(7 downto 0)                := (others => '0');
+		adcAutoDc_wen    : out std_logic                                   := '0';
+		adcAutoDc_data   : in  SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+		adcAutoDC_dValid : in  std_logic                                   := '0';
 
 		mainsAvg_nAvg      : in  unsigned(7 downto 0)  := (others => '0');
 		adcAutoDc_headData : out unsigned(15 downto 0) := (others => '0');
 
-		mainsTrig         : in  std_logic           := '0';
-		mainsMinus_enable : in  std_logic           := '0';
-		mainsMinus_data   : out signed(15 downto 0) := (others => '0');
-		mainsMinus_wen    : out std_logic           := '0';
+		mainsTrig         : in  std_logic                                   := '0';
+		mainsMinus_enable : in  std_logic                                   := '0';
+		mainsMinus_data   : out SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+		mainsMinus_wen    : out std_logic                                   := '0';
 
 		busy  : out std_logic := '0';
 		reset : in  std_logic := '0';
@@ -93,7 +94,7 @@ architecture rtl of wtaController is
 	signal mainsAvgMem_din   : signed(23 downto 0)           := (others => '0');
 	signal mainsAvgMem_dout  : std_logic_vector(23 downto 0) := (others => '0');
 	signal mainsAvgMem_addr  : unsigned(15 downto 0)         := (others => '0');
-	signal divDelay_cnt  : unsigned(7 downto 0)         := (others => '0');
+	signal divDelay_cnt      : unsigned(7 downto 0)          := (others => '0');
 	signal mainsAvgMem_wen   : std_logic                     := '0';
 	signal mainsAvgMem_wstrb : std_logic                     := '0';
 
@@ -127,8 +128,8 @@ begin
 					adc_wstrbCnt     <= (others => '0');
 					mainsAvgMem_addr <= (others => '0');
 
-				when divDelay_s  => 
-					divDelay_cnt  <= divDelay_cnt+1;
+				when divDelay_s =>
+					divDelay_cnt <= divDelay_cnt+1;
 
 				when stimRun_s => -- count the number of clock cycles we stim before ADC readout
 					stimTimeCnt   <= stimTimeCnt+1;
@@ -181,7 +182,7 @@ begin
 				end if;
 				busy <= '0';
 			when stimPrep_s => --wait for FIFO to be ready
-				if not adcAutoDc_af then
+				if not (or(adcAutoDc_af)) then
 					ctrlState_next <= divDelay_s;
 				end if;
 				mainsAvgMem_rsta <= '1';
@@ -267,42 +268,27 @@ begin
 	begin
 		if rising_edge(clk) then
 			if mainsAvg_cnt = x"00" then
-				mainsAvgMem_din <= resize(adcAutoDc_data,mainsAvgMem_din'length);
+				--!! temp set to ch 0 only
+				mainsAvgMem_din <= resize(adcAutoDc_data(0),mainsAvgMem_din'length);
 			else
-				mainsAvgMem_din <= signed(mainsAvgMem_dout) + resize(adcAutoDc_data,mainsAvgMem_din'length);
+				--!! temp set to ch 0 only
+				mainsAvgMem_din <= signed(mainsAvgMem_dout) + resize(adcAutoDc_data(0),mainsAvgMem_din'length);
 			end if;
-			--mainsAvgMem_din <= signed(mainsAvgMem_dout) + adcAutoDc_data;
-			--mainsAvgMem_wen <= adcAutoDC_dValid and mainsAvg_active;
-			--mainsAvgMem_wen <= adcAutoDc_wen and adcAutoDC_dValid and mainsAvg_active;
 
 			-- collect samples once for all frequencies 
 			mainsAvgMem_wstrb <= mainsAvgMem_wen and adcAutoDC_dValid and mainsAvg_active;
-			--mainsAvgMem_addr  <= std_logic_vector(adc_wstrbCnt(8 downto 0));
 
-			-- mainsMinus_data <= adcAutoDc_data - mainsAvgMem_dout(18 downto 3);
-			-- temp just watch avg build.
-			-- mainsMinus_wen <= adcAutoDC_dValid and not mainsAvg_active and adcAutoDc_wen;
-			--mainsMinus_data <= unsigned(mainsAvgMem_dout(18 downto 3));
-			--mainsMinus_wen <= adcAutoDC_dValid and adcAutoDc_wen;
-			--mainsMinus_data(10)  <= '1' when ctrlState = idle_s else '0';
-			--mainsMinus_data(11)  <= '1' when ctrlState = stimPrep_s else '0';
-			--mainsMinus_data(12)  <= '1' when ctrlState = stimRun_s else '0';
-			--mainsMinus_data(13)  <= '1' when ctrlState = mainsSync_s else '0';
-			--mainsMinus_data(14)  <= '1' when ctrlState = adcReadout_s else '0';
-			--mainsMinus_data(15)  <= '1' when ctrlState = mainsAvgLoop_s else '0';
-			--
-			--mainsMinus_data(9 downto 0) <= adc_wstrbCnt(9 downto 0);
-			--mainsMinus_data <= adcAutoDc_data;
-			--mainsMinus_wen <= adcAutoDc_wen and adcAutoDC_dValid and mainsAvg_active;
-			--mainsMinus_data <= unsigned(mainsAvgMem_dout(18 downto 3));
-			--mainsMinus_data(8 downto 0) <= adcAutoDc_data(8 downto 0);
-			if mainsAvg_active then
-				mainsMinus_data <= signed(mainsAvgMem_dout(18 downto 3));
-			elsif (mainsMinus_enable = '1') then
-				mainsMinus_data <= adcAutoDc_data - signed(mainsAvgMem_dout(18 downto 3));
-			else
-				mainsMinus_data <= adcAutoDc_data;
-			end if;
+			-- !!temp disable mains minus until we get the more memory  
+			-- needed for 8 ADC channels 
+			-- ADC data will always bypass to FIFO 
+			-- need to check timing of all this
+			--			if mainsAvg_active then
+			--				mainsMinus_data <= signed(mainsAvgMem_dout(18 downto 3));
+			--			elsif (mainsMinus_enable = '1') then
+			--				mainsMinus_data <= adcAutoDc_data - signed(mainsAvgMem_dout(18 downto 3));
+			--			else
+			mainsMinus_data <= adcAutoDc_data;
+			--			end if;
 
 			mainsMinus_wen <= adcAutoDc_wen and adcAutoDC_dValid and not mainsAvg_active;
 		end if;

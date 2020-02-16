@@ -32,7 +32,7 @@ entity dacInterface is
 		DAC_CLR_B : out std_logic := '0';
 		DAC_CLK   : out std_logic := '0';
 
-		S_AXI_ACLK : in std_logic := '0';
+		S_AXI_ACLK_100 : in std_logic := '0';
 		sysclk200  : in std_logic := '0'
 	);
 end entity dacInterface;
@@ -54,7 +54,7 @@ begin
 			SRTYPE       => "SYNC")      -- Reset Type ("ASYNC" or "SYNC")
 		port map (
 			Q  => DAC_CLK,    -- 1-bit DDR output
-			C  => S_AXI_ACLK, -- 1-bit clock input
+			C  => S_AXI_ACLK_100, -- 1-bit clock input
 			CE => '1',        -- 1-bit clock enable input
 			D1 => DAC_CLK_EN,
 			D2 => '0',
@@ -63,9 +63,9 @@ begin
 		);
 
 	-- load DAC on PS clock
-	load_dac : process (S_AXI_ACLK)
+	load_dac : process (S_AXI_ACLK_100)
 	begin
-		if rising_edge(S_AXI_ACLK) then
+		if rising_edge(S_AXI_ACLK_100) then
 			acStim_mag_del <= acStim_mag;
 			-- TEMP ALWAYS ENABLE
 			DAC_CS_B   <= '0';

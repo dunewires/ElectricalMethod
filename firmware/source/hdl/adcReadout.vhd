@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Dec 19 19:40:38 2019
+-- Last update : Sun Feb 16 14:01:19 2020
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ entity adcReadout is
 		adcSck        : out std_logic := '0';
 		adcDataSerial : in  STD_LOGIC_VECTOR(3 downto 0);
 
-		dataParallel     : out UNSIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0);
+		dataParallel     : out SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0);
 		dataParallelStrb : out std_logic := '0';
 
 		busy          : out std_logic := '0';
@@ -58,7 +58,7 @@ architecture rtl of adcReadout is
 	signal start_del                 : std_logic                    := '0';
 	signal adcSckEnable              : std_logic                    := '0';
 	signal readoutDone               : std_logic                    := '0';
-	signal dataParallelSsclk         : UNSIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
+	signal dataParallelSsclk         : SIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
 
 begin
 
