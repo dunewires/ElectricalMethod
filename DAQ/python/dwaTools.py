@@ -254,7 +254,14 @@ def dwaGetConfigParameters(configFile):
     config["adcHScale"] = cp.get(SECTION, "adcHScale")
     config["stimMag"] = cp.get(SECTION, "stimMag")
     config["relays_enable"] = cp.get(SECTION, "relays_enable")
-    config["Client_IP"] = cp.get(SECTION, "Client_IP", fallback=None)
+    #config["client_IP"] = cp.get(SECTION, "client_IP", fallback=None)
+    if cp.has_option(SECTION, "client_IP"):
+        config["client_IP"] = cp.get(SECTION, "client_IP")
+        if config["client_IP"] == '':
+            config["client_IP"] = None
+    else:
+        config["client_IP"] = None
+    
     return config
 
 def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
@@ -314,8 +321,8 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     time.sleep(sleepSec)
 
     # If there is an IP address in the config file, then set it
-    if config["Client_IP"]:
-        dwaSetUdpAddress(s, config["Client_IP"], verbose=verbose)
+    if config["client_IP"]:
+        dwaSetUdpAddress(s, config["client_IP"], verbose=verbose)
         time.sleep(sleepSec)
 
     tcpClose(s, verbose=verbose)
@@ -367,8 +374,8 @@ def tcpClose(ss, verbose=0):
 def tcpOpen(verbose=1):
     # FIXME: move HOST to a config file
     # IP Address of microzed board
-    HOST = '149.130.136.243'     # Wellesley Lab
-    #HOST = '140.247.123.186'     # J156Lab
+    #HOST = '149.130.136.243'     # Wellesley Lab
+    HOST = '140.247.123.186'     # J156Lab
     PORT = 7
     try:
         # FIXME: should we ue socket.SOCK_DGRAM instead of SOCK_STREAM?
