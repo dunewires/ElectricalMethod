@@ -10,7 +10,6 @@ import time
 import struct
 import binascii
 import json, configparser
-import matplotlib.pyplot as plt
 
 # From 
 # https://stackoverflow.com/questions/6727875/hex-string-to-signed-int-in-python-3-2
