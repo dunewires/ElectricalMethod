@@ -4,11 +4,13 @@
 # 2019 December 17
 
 import sys
+import os, errno
 import socket
 import time
 import struct
 import binascii
 import json, configparser
+import matplotlib.pyplot as plt
 
 # From 
 # https://stackoverflow.com/questions/6727875/hex-string-to-signed-int-in-python-3-2
@@ -74,6 +76,43 @@ def hexStrOfSignedInt(signedInt, strLen=4):
     hexStr = fmtStr.format(signedInt).upper()
     return hexStr
 
+def parseUdpDataFile(ff='mmTest1F.python.txt'):
+    with open(ff, 'r') as fh:
+        lines = fh.readlines()
+    #fh.close()
+
+    pdata = []  # voltage [for v(t)]  for a single run
+    vdata = []  # voltage [for v(t)] a list of lists (one list per run)
+
+    lastLine = ''
+    for line in lines:
+
+        if line.startswith('CAFE'):
+            # Update the data set for plotting
+            # fit sine-wave to data from last stimulation frequency
+            if len(pdata) > 0:
+                vdata.append(pdata[:])  # add last run to the list
+                
+            lastLine = line
+            continue
+
+        if lastLine.startswith('CAFE'):
+            print("Parsing header")
+            print("  {}".format(lastLine), end="")
+            print("  {}".format(line), end="")
+            headerDict = parseUdpHeader(lastLine, line, verbose=False)
+            print(headerDict)
+            lastLine = ''
+            pdata.clear()  # ready for new data
+            continue 
+               
+        pdata += parseUdpDataLine(line)
+        lastLine = line
+
+    # after all is said and done, append the final run 
+    vdata.append(pdata[:])
+    return vdata
+
 def parseUdpDataLine(line, verbose=False):
     line = line.strip()
     data1 = line[0:4]
@@ -84,7 +123,12 @@ def parseUdpDataLine(line, verbose=False):
     return [twos_complement(data1, bits), twos_complement(data2, bits)]
 
 def parseUdpHeader(hdr1, hdr2, verbose=False):
-    """Parse the two-line header in the DWA UDP stream
+    # this function is mis-named... it does NOT parse the UDP header
+    # it parses the 2-line header of the data stream
+    return parseDwaDataHeader(hdr1, hdr2, verbose=verbose)
+
+def parseDwaDataHeader(hdr1, hdr2, verbose=False):
+    """Parse the two-line data header in the DWA UDP stream
 
     Args:
         hdr1 (str): 8-character string from the DWA data stream
@@ -164,7 +208,13 @@ def parseUdpHeader(hdr1, hdr2, verbose=False):
 
     return headerDict
 
-
+def force_symlink(file1, file2):
+    try:
+        os.symlink(file1, file2)
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            os.remove(file2)
+            os.symlink(file1, file2)
 
 def dwaReset(verbose=0):
     s = tcpOpen(verbose=verbose)
@@ -204,7 +254,7 @@ def dwaGetConfigParameters(configFile):
     config["adcHScale"] = cp.get(SECTION, "adcHScale")
     config["stimMag"] = cp.get(SECTION, "stimMag")
     config["relays_enable"] = cp.get(SECTION, "relays_enable")
-
+    config["Client_IP"] = cp.get(SECTION, "Client_IP", fallback=None)
     return config
 
 def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
@@ -220,7 +270,8 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
 
     config = dwaGetConfigParameters(configFile)
 
-    # FIXME: move these to a config file
+    # FIXME: don't need this section, can just use
+    # the config[] dictionary values directly...
     freqReq_vio = config["freqReq_vio"]
     # dwaCtrl  => (auto mainsMinus_enable m_axis_tready)
     dwaCtrl = config["dwaCtrl"]
@@ -233,7 +284,6 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     adcHScale = config["adcHScale"]
     stimMag = config["stimMag"]
     relays_enable = config["relays_enable"]
-
 
     s = tcpOpen(verbose=verbose)
 
@@ -262,6 +312,12 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     time.sleep(sleepSec)
     dwaRegWrite(s, '0000000E',relays_enable, verbose=verbose)
     time.sleep(sleepSec)
+
+    # If there is an IP address in the config file, then set it
+    if config["Client_IP"]:
+        dwaSetUdpAddress(s, config["Client_IP"], verbose=verbose)
+        time.sleep(sleepSec)
+
     tcpClose(s, verbose=verbose)
 
 def dwaStart(verbose=0):
@@ -310,7 +366,9 @@ def tcpClose(ss, verbose=0):
 
 def tcpOpen(verbose=1):
     # FIXME: move HOST to a config file
-    HOST = '149.130.136.243'
+    # IP Address of microzed board
+    HOST = '149.130.136.243'     # Wellesley Lab
+    #HOST = '140.247.123.186'     # J156Lab
     PORT = 7
     try:
         # FIXME: should we ue socket.SOCK_DGRAM instead of SOCK_STREAM?
@@ -342,7 +400,86 @@ def dwaRegReadTest(address, verbose=0):
     dwaRegRead(s, address, verbose=verbose)
     tcpClose(s)
 
+
+def ipAddressToHexStr(ipStr):
+    """ Convert an IP address in string form to a 32-bit hex str 
+
+    ipStr (str) e.g. '149.130.136.84'
+    hexStr (str) e.g. '95828854'
+    """
+    ipStr = ipStr.strip()
+    toks = ipStr.split('.')
+    if len(toks) != 4:
+        print("EXPECTED AN IP ADDRESS OF THE FORM: XXX.XXX.XXX.XXX")
+        return("00000000")
+    fmtStr = '{{:0{}x}}'.format(2)
+    hexStr = ''
+    for tok in toks:
+        hexStr += fmtStr.format(int(tok)).upper()
+    return hexStr
+
+def dwaSetUdpAddress(ss, address, verbose=0):
+    # IP address where the UDP data will be sent (e.g. IP address of the DAQ computer)
+
+    # "address" can either be an IP string like 149.130.136.84
+    # or it can be a 32-bit hex representation of that string like '95828854'
+
+    if address.find('.') > -1:
+        address = ipAddressToHexStr(address)
+
+    dwaRegComm(ss, payload_header='abcd1234', payload_type='FE170003',
+               address=address, verbose=0)
+
+def dwaRegComm(ss, payload_header='abcd1234', payload_type=None, 
+               address=None, value=None, verbose=0):
+
+    if payload_type == None:
+        print("dwaRegComm: ERROR -- must specify payload_type")
+        sys.exit()
+    if address == None:
+        print("dwaRegComm: ERROR -- must specify address")
+        sys.exit()
+    
+    if value == None:
+        # This is a reg read or a UDP IP address set
+        # https://docs.python.org/2/library/struct.html#byte-order-size-and-alignment
+        # '!' means network byte order (big-endian)
+        # '>' means big-endian
+        packerString = "!L L L"
+        values = ( int(payload_header,16), int(payload_type, 16), int(address, 16) )
+    else:
+        # This a reg write, with a "value" entry
+        packerString = "!L L L L"
+        values = ( int(payload_header,16), int(payload_type, 16), int(address, 16), int(value, 16) )
+
+    try :
+        packer = struct.Struct(packerString)
+        packed_data = packer.pack(*values)
+        print('PAYLOAD_HEADER = {0:s}'.format(payload_header))
+        print('PAYLOAD_TYPE = {0:s}'.format(payload_type))
+        print('ADDRESS = {0:s}'.format(address))
+        print('values = {}'.format(values))
+        #
+        print('Sending...')
+        ss.sendall(packed_data)
+        time.sleep(0.25)
+        #FIXME: don't actually know if msg is sent successfully...
+        print('Message sent successfully')
+    except socket.error:
+        #Send failed
+        print('Send failed')
+        sys.exit()
+    
+    #get reply and print
+    print(dwaRecvTimeout(ss, timeout=2, verbose=verbose))
+    
+
 def dwaRegRead(ss, address, verbose=0):
+    dwaRegComm(ss, payload_header='abcd1234', payload_type='FE170001',
+               address=address, verbose=0)
+
+
+def dwaRegRead2(ss, address, verbose=0):
     try :
         # Send binary data via socket
         # FIXME: put these somewhere more global?
@@ -374,6 +511,7 @@ def dwaRegRead(ss, address, verbose=0):
     
     #get reply and print
     print(dwaRecvTimeout(ss, timeout=2, verbose=verbose))
+
 
 
 def dwaRecvTimeout(ss,timeout=2, verbose=0):
@@ -559,3 +697,15 @@ def freqOfPeriod(period_10ns):
         freqOfPeriod(389105) returns 257.00003855  (Hz)
     """
     return 1./(period_10ns*1e-8)
+
+
+def configStimTimeOfTime(dtSec):
+    # provide a human readable stimulation time and
+    # get back the corresponding hex string
+
+    strLen = 8
+    fmtStr = '{{:0{}x}}'.format(strLen)
+
+    dt10ns = int(dtSec*1e8)
+    hexStr = fmtStr.format(dt10ns).upper()
+    return hexStr
