@@ -86,3 +86,593 @@
 14:48:52 INFO  : Invoking Bootgen: bootgen -image output.bif -arch zynq -o /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/BOOT.bin -w on
 14:48:52 INFO  : Overwriting existing bif file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/output.bif
 14:48:53 INFO  : Bootgen command execution is done.
+12:42:53 INFO  : Registering command handlers for SDK TCF services
+12:42:55 INFO  : Launching XSCT server: xsct -n -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/temp_xsdb_launch_script.tcl
+12:42:59 INFO  : XSCT server has started successfully.
+12:42:59 INFO  : Successfully done setting XSCT server connection channel  
+12:42:59 INFO  : Successfully done setting SDK workspace  
+12:50:48 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+12:50:48 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+12:51:00 INFO  : FPGA configured successfully with bitstream "/home/nate/projects/duneWireTension/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20200303_114115_0.443ns.bit"
+13:09:02 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+13:09:02 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+13:09:14 INFO  : FPGA configured successfully with bitstream "/home/nate/projects/duneWireTension/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20200303_114115_0.443ns.bit"
+13:15:14 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+13:15:14 INFO  : 'fpga -state' command is executed.
+13:15:14 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+13:15:14 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+13:15:14 INFO  : 'jtag frequency' command is executed.
+13:15:14 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+13:15:14 INFO  : Context for 'APU' is selected.
+13:15:15 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+13:15:15 INFO  : 'configparams force-mem-access 1' command is executed.
+13:15:15 INFO  : Context for 'APU' is selected.
+13:15:15 INFO  : 'stop' command is executed.
+13:15:17 INFO  : 'ps7_init' command is executed.
+13:15:17 INFO  : 'ps7_post_config' command is executed.
+13:15:17 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+13:15:17 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+13:15:17 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+13:15:19 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+13:15:19 INFO  : 'configparams force-mem-access 0' command is executed.
+13:15:19 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+13:15:19 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+13:15:19 INFO  : 'con' command is executed.
+13:15:19 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+con
+----------------End of Script----------------
+
+13:15:19 INFO  : Disconnected from the channel tcfchan#1.
+14:18:46 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+14:18:46 INFO  : 'fpga -state' command is executed.
+14:18:46 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+14:18:47 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+14:18:47 INFO  : 'jtag frequency' command is executed.
+14:18:47 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+14:18:47 INFO  : Context for 'APU' is selected.
+14:18:47 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+14:18:47 INFO  : 'configparams force-mem-access 1' command is executed.
+14:18:47 INFO  : Context for 'APU' is selected.
+14:18:47 INFO  : 'stop' command is executed.
+14:18:49 INFO  : 'ps7_init' command is executed.
+14:18:49 INFO  : 'ps7_post_config' command is executed.
+14:18:49 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:18:49 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+14:18:49 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:18:52 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+14:18:52 INFO  : 'configparams force-mem-access 0' command is executed.
+14:18:52 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+14:19:04 INFO  : Disconnected from the channel tcfchan#2.
+14:19:13 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+14:19:13 INFO  : 'fpga -state' command is executed.
+14:19:13 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+14:19:13 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+14:19:13 INFO  : 'jtag frequency' command is executed.
+14:19:13 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+14:19:14 INFO  : Context for 'APU' is selected.
+14:19:15 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+14:19:15 INFO  : 'configparams force-mem-access 1' command is executed.
+14:19:15 INFO  : Context for 'APU' is selected.
+14:19:15 INFO  : 'stop' command is executed.
+14:19:16 INFO  : 'ps7_init' command is executed.
+14:19:17 INFO  : 'ps7_post_config' command is executed.
+14:19:17 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:19:17 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+14:19:17 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:19:19 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+14:19:19 INFO  : 'configparams force-mem-access 0' command is executed.
+14:19:19 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+14:19:19 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:19:19 INFO  : 'con' command is executed.
+14:19:19 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+con
+----------------End of Script----------------
+
+14:19:19 INFO  : Disconnected from the channel tcfchan#3.
+15:08:15 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+15:08:15 INFO  : 'fpga -state' command is executed.
+15:08:15 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+15:08:15 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+15:08:15 INFO  : 'jtag frequency' command is executed.
+15:08:15 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+15:08:15 INFO  : Context for 'APU' is selected.
+15:08:15 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+15:08:15 INFO  : 'configparams force-mem-access 1' command is executed.
+15:08:15 INFO  : Context for 'APU' is selected.
+15:08:15 INFO  : 'stop' command is executed.
+15:08:17 INFO  : 'ps7_init' command is executed.
+15:08:17 INFO  : 'ps7_post_config' command is executed.
+15:08:17 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:08:18 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+15:08:18 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:08:20 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+15:08:20 INFO  : 'configparams force-mem-access 0' command is executed.
+15:08:20 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+15:08:20 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:08:20 INFO  : 'con' command is executed.
+15:08:20 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+con
+----------------End of Script----------------
+
+15:08:20 INFO  : Disconnected from the channel tcfchan#4.
+15:10:52 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+15:10:52 INFO  : 'fpga -state' command is executed.
+15:10:52 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+15:10:52 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+15:10:52 INFO  : 'jtag frequency' command is executed.
+15:10:52 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+15:10:52 INFO  : Context for 'APU' is selected.
+15:10:52 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+15:10:52 INFO  : 'configparams force-mem-access 1' command is executed.
+15:10:53 INFO  : Context for 'APU' is selected.
+15:10:53 INFO  : 'stop' command is executed.
+15:10:55 INFO  : 'ps7_init' command is executed.
+15:10:55 INFO  : 'ps7_post_config' command is executed.
+15:10:55 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:10:55 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+15:10:55 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:10:57 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+15:10:57 INFO  : 'configparams force-mem-access 0' command is executed.
+15:10:57 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+15:10:57 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:10:58 INFO  : 'con' command is executed.
+15:10:58 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+con
+----------------End of Script----------------
+
+15:10:58 INFO  : Disconnected from the channel tcfchan#5.
+15:12:52 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+15:12:52 INFO  : 'fpga -state' command is executed.
+15:12:52 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+15:12:52 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+15:12:52 INFO  : 'jtag frequency' command is executed.
+15:12:52 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+15:12:52 INFO  : Context for 'APU' is selected.
+15:12:55 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+15:12:55 INFO  : 'configparams force-mem-access 1' command is executed.
+15:12:55 INFO  : Context for 'APU' is selected.
+15:12:55 INFO  : 'stop' command is executed.
+15:12:57 INFO  : 'ps7_init' command is executed.
+15:12:57 INFO  : 'ps7_post_config' command is executed.
+15:12:57 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:12:57 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+15:12:57 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:13:00 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+15:13:00 INFO  : 'configparams force-mem-access 0' command is executed.
+15:13:00 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+15:13:00 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:13:00 INFO  : 'con' command is executed.
+15:13:00 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+con
+----------------End of Script----------------
+
+15:13:00 INFO  : Disconnected from the channel tcfchan#6.
+15:21:23 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+15:21:23 INFO  : 'fpga -state' command is executed.
+15:21:23 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+15:21:23 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+15:21:23 INFO  : 'jtag frequency' command is executed.
+15:21:23 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+15:21:23 INFO  : Context for 'APU' is selected.
+15:21:25 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+15:21:25 INFO  : 'configparams force-mem-access 1' command is executed.
+15:21:25 INFO  : Context for 'APU' is selected.
+15:21:25 INFO  : 'stop' command is executed.
+15:21:27 INFO  : 'ps7_init' command is executed.
+15:21:27 INFO  : 'ps7_post_config' command is executed.
+15:21:27 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:21:28 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+15:21:28 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:21:30 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+15:21:30 INFO  : 'configparams force-mem-access 0' command is executed.
+15:21:30 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+15:21:42 INFO  : Disconnected from the channel tcfchan#7.
+15:21:43 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+15:21:44 INFO  : 'fpga -state' command is executed.
+15:21:44 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+15:21:44 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+15:21:44 INFO  : 'jtag frequency' command is executed.
+15:21:44 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+15:21:44 INFO  : Context for 'APU' is selected.
+15:21:46 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+15:21:46 INFO  : 'configparams force-mem-access 1' command is executed.
+15:21:46 INFO  : Context for 'APU' is selected.
+15:21:47 INFO  : 'stop' command is executed.
+15:21:48 INFO  : 'ps7_init' command is executed.
+15:21:48 INFO  : 'ps7_post_config' command is executed.
+15:21:49 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:21:49 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+15:21:49 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:21:51 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+15:21:51 INFO  : 'configparams force-mem-access 0' command is executed.
+15:21:51 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+15:21:51 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:21:51 INFO  : 'con' command is executed.
+15:21:51 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+con
+----------------End of Script----------------
+
+15:21:51 INFO  : Disconnected from the channel tcfchan#8.
+15:26:58 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+15:26:58 INFO  : 'fpga -state' command is executed.
+15:26:58 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+15:26:58 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+15:26:58 INFO  : 'jtag frequency' command is executed.
+15:26:58 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+15:26:58 INFO  : Context for 'APU' is selected.
+15:27:01 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+15:27:01 INFO  : 'configparams force-mem-access 1' command is executed.
+15:27:01 INFO  : Context for 'APU' is selected.
+15:27:01 INFO  : 'stop' command is executed.
+15:27:03 INFO  : 'ps7_init' command is executed.
+15:27:03 INFO  : 'ps7_post_config' command is executed.
+15:27:03 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:27:03 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+15:27:03 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:27:05 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+15:27:05 INFO  : 'configparams force-mem-access 0' command is executed.
+15:27:05 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Debug/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+15:27:18 INFO  : Disconnected from the channel tcfchan#9.
+15:29:47 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+15:29:47 INFO  : 'fpga -state' command is executed.
+15:29:47 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+15:29:47 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+15:29:47 INFO  : 'jtag frequency' command is executed.
+15:29:47 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+15:29:47 INFO  : Context for 'APU' is selected.
+15:29:47 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+15:29:47 INFO  : 'configparams force-mem-access 1' command is executed.
+15:29:47 INFO  : Context for 'APU' is selected.
+15:29:47 INFO  : 'stop' command is executed.
+15:29:49 INFO  : 'ps7_init' command is executed.
+15:29:49 INFO  : 'ps7_post_config' command is executed.
+15:29:49 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:29:49 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+15:29:49 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:29:52 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Release/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+15:29:52 INFO  : 'configparams force-mem-access 0' command is executed.
+15:29:52 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Release/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+15:29:52 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:29:52 INFO  : 'con' command is executed.
+15:29:52 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+con
+----------------End of Script----------------
+
+15:29:52 INFO  : Disconnected from the channel tcfchan#10.
+15:31:37 INFO  : Invoking Bootgen: bootgen -image output.bif -arch zynq -o /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/BOOT.bin -w on
+15:31:37 INFO  : Overwriting existing bif file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/output.bif
+15:31:38 INFO  : Bootgen command execution is done.
+15:46:24 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+14:53:42 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+14:53:42 INFO  : 'fpga -state' command is executed.
+14:53:42 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+14:53:43 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+14:53:43 INFO  : 'jtag frequency' command is executed.
+14:53:43 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+14:53:43 INFO  : Context for 'APU' is selected.
+14:53:43 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+14:53:43 INFO  : 'configparams force-mem-access 1' command is executed.
+14:53:43 INFO  : Context for 'APU' is selected.
+14:53:43 INFO  : 'stop' command is executed.
+14:53:45 INFO  : 'ps7_init' command is executed.
+14:53:45 INFO  : 'ps7_post_config' command is executed.
+14:53:45 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:53:45 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+14:53:45 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:53:48 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Release/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+14:53:48 INFO  : 'configparams force-mem-access 0' command is executed.
+14:53:48 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Release/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+14:54:00 INFO  : Disconnected from the channel tcfchan#11.
+14:54:52 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+14:54:52 INFO  : 'fpga -state' command is executed.
+14:54:52 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+14:54:53 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+14:54:53 INFO  : 'jtag frequency' command is executed.
+14:54:53 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+14:54:53 INFO  : Context for 'APU' is selected.
+14:54:54 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+14:54:54 INFO  : 'configparams force-mem-access 1' command is executed.
+14:54:54 INFO  : Context for 'APU' is selected.
+14:54:54 INFO  : 'stop' command is executed.
+14:54:56 INFO  : 'ps7_init' command is executed.
+14:54:56 INFO  : 'ps7_post_config' command is executed.
+14:54:56 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:54:56 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+14:54:56 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:54:58 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Release/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+14:54:58 INFO  : 'configparams force-mem-access 0' command is executed.
+14:54:58 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Release/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+14:55:11 INFO  : Disconnected from the channel tcfchan#12.
+14:55:17 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+14:55:17 INFO  : 'fpga -state' command is executed.
+14:55:17 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+14:55:17 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+14:55:17 INFO  : 'jtag frequency' command is executed.
+14:55:17 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+14:55:17 INFO  : Context for 'APU' is selected.
+14:55:19 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+14:55:19 INFO  : 'configparams force-mem-access 1' command is executed.
+14:55:19 INFO  : Context for 'APU' is selected.
+14:55:19 INFO  : 'stop' command is executed.
+14:55:21 INFO  : 'ps7_init' command is executed.
+14:55:21 INFO  : 'ps7_post_config' command is executed.
+14:55:21 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:55:21 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+14:55:21 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:55:23 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Release/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+14:55:23 INFO  : 'configparams force-mem-access 0' command is executed.
+14:55:23 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Release/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+14:55:23 INFO  : Memory regions updated for context APU
+14:55:23 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:55:24 INFO  : 'con' command is executed.
+14:55:24 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+con
+----------------End of Script----------------
+
+14:55:24 INFO  : Launch script is exported to file '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/.sdk/launch_scripts/xilinx_c-c++_application_(system_debugger)/system_debugger_using_release_lwip_ref.elf_on_local.tcl'
+14:56:18 INFO  : Disconnected from the channel tcfchan#13.
+14:56:19 INFO  : 'targets -set -filter {jtag_cable_name =~ "Platform Cable USB II 000013e2396701" && level==0} -index 1' command is executed.
+14:56:19 INFO  : 'fpga -state' command is executed.
+14:56:19 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+14:56:19 INFO  : Jtag cable 'Platform Cable USB II 000013e2396701' is selected.
+14:56:19 INFO  : 'jtag frequency' command is executed.
+14:56:19 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl' is done.
+14:56:19 INFO  : Context for 'APU' is selected.
+14:56:21 INFO  : Hardware design information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf'.
+14:56:21 INFO  : 'configparams force-mem-access 1' command is executed.
+14:56:21 INFO  : Context for 'APU' is selected.
+14:56:21 INFO  : 'stop' command is executed.
+14:56:22 INFO  : 'ps7_init' command is executed.
+14:56:22 INFO  : 'ps7_post_config' command is executed.
+14:56:23 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:56:23 INFO  : Processor reset is completed for 'ps7_cortexa9_0'.
+14:56:23 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:56:25 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Release/lwip_ref.elf' is downloaded to processor 'ps7_cortexa9_0'.
+14:56:25 INFO  : 'configparams force-mem-access 0' command is executed.
+14:56:25 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+stop
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+rst -processor
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_ref/Release/lwip_ref.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+14:56:25 INFO  : Memory regions updated for context APU
+14:56:25 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:56:25 INFO  : 'con' command is executed.
+14:56:25 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Platform Cable USB II 000013e2396701"} -index 0
+con
+----------------End of Script----------------
+
+14:56:25 INFO  : Launch script is exported to file '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/.sdk/launch_scripts/xilinx_c-c++_application_(system_debugger)/system_debugger_using_release_lwip_ref.elf_on_local.tcl'
+14:57:26 INFO  : Invoking Bootgen: bootgen -image output.bif -arch zynq -o /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/BOOT.bin -w on
+14:57:27 INFO  : Bootgen command execution is done.
+13:33:13 INFO  : Invoking Bootgen: bootgen -image output.bif -arch zynq -o /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/implementation/BOOT.bin -w on
+13:33:14 INFO  : Bootgen command execution is done.
+14:18:39 WARN  : channel "tcfchan#14" closed

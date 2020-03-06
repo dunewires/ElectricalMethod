@@ -135,17 +135,20 @@ int transfer_mmUdpTx_data(u8_t *txBufData, int  txBufLength, struct udp_pcb *pcb
   return 0;
 }
 
-void start_udp( ){
+void start_udp(u32_t ipAddrSel){
   //struct udp_pcb *ptel_pcb = udp_new();
   int port = mmDataTxUdpPort;
   err_t err;
- 
+  u8_t *ipAddrSelB = (u8_t*) &ipAddrSel;
+
+  if (mmDataTxPcb) {
+    xil_printf("Removing UDP PCB\r\n");
+    udp_remove(mmDataTxPcb);
+  }
+
   //	udp_bind(ptel_pcb, IP_ADDR_ANY, port);
-  IP4_ADDR(&udpDstIpAddr, 140,247,123, 171);//jeff laptop
-   //IP4_ADDR(&udpDstIpAddr, 140,247,132,8);//new pc2
-  //IP4_ADDR(&udpDstIpAddr, 149,130,136,84); //James noether.wellesley.edu
-   //IP4_ADDR(&udpDstIpAddr, 128, 103,   100, 251);//laptop
-  print_ip("MM Data sent to IP  : ", &udpDstIpAddr);
+  IP4_ADDR(&udpDstIpAddr, ipAddrSelB[3],ipAddrSelB[2],ipAddrSelB[1],ipAddrSelB[0]);//jeff laptop
+  print_ip("UDP Data is now sent to IP  : ", &udpDstIpAddr);
   xil_printf("\r\n");
   xil_printf("%s%d\r\n", "using port           : ",port);
 

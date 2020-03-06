@@ -8,6 +8,10 @@ library duneDwa;
 use duneDwa.global_def.all;
 
 entity top_tension_analyzer is
+generic (
+  DATE_CODE: std_logic_vector(31 downto 0);
+  HASH_CODE: std_logic_vector(31 downto 0)
+);
   port (
     regFromDwa      : out SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
     regFromDwa_strb : in  std_logic_vector(31 downto 0);
@@ -494,6 +498,8 @@ begin
   regFromDwa(16)    <= (31 downto 24 => '0', 23 downto 0 => std_logic_vector(acStimX200_nPeriod));
   regFromDwa(17)(0) <= ctrl_busy;
   regFromDwa(18)    <= x"CAFEB0B0";
+  regFromDwa(19)    <= DATE_CODE;
+  regFromDwa(20)    <= HASH_CODE;
 
   freqReq_vio       <= regToDwa(0);
   m_axis_resetn     <= regToDwa(1)(0);

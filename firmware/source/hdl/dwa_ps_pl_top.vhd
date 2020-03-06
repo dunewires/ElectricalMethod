@@ -15,6 +15,10 @@ library duneDwa;
 use duneDwa.global_def.all;
 
 entity dwa_ps_pl_top is
+    generic (
+        DATE_CODE : std_logic_vector(31 downto 0);
+        HASH_CODE : std_logic_vector(31 downto 0)
+    );
 
     port (
         --DWA
@@ -30,12 +34,12 @@ entity dwa_ps_pl_top is
         DAC_CLR_B : out std_logic := '0';
         DAC_CLK   : out std_logic := '0';
 
-        dpotSdi  : out std_logic := '0';
-        dpotSdo  : out std_logic := '0';
-        dpotPr_b : out std_logic := '0';
-        dpotCs_b : out std_logic := '0';
-        dpotSck  : out std_logic := '0';
-        dpotShdn_b  : out std_logic := '0';
+        dpotSdi    : out std_logic := '0';
+        dpotSdo    : out std_logic := '0';
+        dpotPr_b   : out std_logic := '0';
+        dpotCs_b   : out std_logic := '0';
+        dpotSck    : out std_logic := '0';
+        dpotShdn_b : out std_logic := '0';
 
         CoilDrive : out std_logic_vector(31 downto 0) := (others => '0');
 
@@ -121,7 +125,7 @@ architecture STRUCTURE of dwa_ps_pl_top is
             M00_AXI_0_rready     : out   STD_LOGIC;
             peripheral_aresetn_0 : out   STD_LOGIC_VECTOR ( 0 to 0 );
             aclk                 : out   STD_LOGIC;
-            FCLK_CLK1_0 : out STD_LOGIC
+            FCLK_CLK1_0          : out   STD_LOGIC
 
         );
     end component dwa_ps_bd;
@@ -304,6 +308,10 @@ begin
         );
 
     top_tension_analyzer_1 : entity work.top_tension_analyzer
+        generic map (
+            DATE_CODE => DATE_CODE,
+            HASH_CODE => HASH_CODE
+        )
         port map (
             regFromDwa      => regFromDwa,
             regFromDwa_strb => regFromDwa_strb,
@@ -323,12 +331,12 @@ begin
             DAC_CLR_B => DAC_CLR_B,
             DAC_CLK   => DAC_CLK,
 
-            dpotSdi  => dpotSdi,
-            dpotSdo  => dpotSdo,
-            dpotPr_b => dpotPr_b,
-            dpotCs_b => dpotCs_b,
-            dpotSck  => dpotSck,
-            dpotShdn_b  => dpotShdn_b,
+            dpotSdi    => dpotSdi,
+            dpotSdo    => dpotSdo,
+            dpotPr_b   => dpotPr_b,
+            dpotCs_b   => dpotCs_b,
+            dpotSck    => dpotSck,
+            dpotShdn_b => dpotShdn_b,
 
             CoilDrive => CoilDrive,
 

@@ -183,6 +183,11 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) 
     }
     break;
 
+    case 0xFE170003:
+      xil_printf("UDP start \r\n");
+      start_udp(pktAddr);
+      break;
+
   }
   pbuf_free(p);
 
@@ -244,7 +249,7 @@ int start_application() {
 
   xil_printf("Trigger Processor TCP server started @ port %d\n\r", port);
 
-  start_udp();
+  //start_udp(0X8CF77BAB);
 
   return 0;
 }
