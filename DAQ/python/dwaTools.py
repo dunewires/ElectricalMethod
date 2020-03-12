@@ -11,6 +11,10 @@ import struct
 import binascii
 import json, configparser
 
+
+def registerNames():
+    return ['18', '19', '1A', '1B', '1C', '1D', '1E', '1F']
+
 # From 
 # https://stackoverflow.com/questions/6727875/hex-string-to-signed-int-in-python-3-2
 def twos_complement(hexstr, bits):
@@ -321,6 +325,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
 
     # If there is an IP address in the config file, then set it
     if config["client_IP"]:
+        print("Setting UDP address")
         dwaSetUdpAddress(s, config["client_IP"], verbose=verbose)
         time.sleep(sleepSec)
 
@@ -374,6 +379,7 @@ def tcpOpen(verbose=1):
     # FIXME: move HOST to a config file
     # IP Address of microzed board
     #HOST = '149.130.136.243'     # Wellesley Lab
+    #HOST = '140.247.132.37' # NW Lab
     HOST = '140.247.123.186'     # J156Lab
     PORT = 7
     try:
@@ -410,8 +416,15 @@ def dwaRegReadTest(address, verbose=0):
 def ipAddressToHexStr(ipStr):
     """ Convert an IP address in string form to a 32-bit hex str 
 
-    ipStr (str) e.g. '149.130.136.84'
-    hexStr (str) e.g. '95828854'
+    Args:
+        ipStr (str): string representation of IP address e.g. '149.130.136.84'
+    
+    Returns:
+        hexStr (str): string representation of IP in 32-bit hex
+
+    Example:
+        >>> ipAddressToHexStr('149.130.136.8')
+        >>> '95828854'
     """
     ipStr = ipStr.strip()
     toks = ipStr.split('.')
@@ -477,7 +490,8 @@ def dwaRegComm(ss, payload_header='abcd1234', payload_type=None,
         sys.exit()
     
     #get reply and print
-    print(dwaRecvTimeout(ss, timeout=2, verbose=verbose))
+    if payload_type != 'FE170003':
+        print(dwaRecvTimeout(ss, timeout=2, verbose=verbose))
     
 
 def dwaRegRead(ss, address, verbose=0):
