@@ -1,8 +1,0 @@
-
-****** Webtalk v2018.2 (64-bit)
-  **** SW Build 2258646 on Thu Jun 14 20:02:38 MDT 2018
-  **** IP Build 2256618 on Thu Jun 14 22:10:49 MDT 2018
-    ** Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
-
-source /home/nate/projects/duneWireTension/firmware/scripts/.Xil/Vivado-24464-lt2/webtalk/labtool_webtalk.tcl -notrace
-INFO: [Common 17-206] Exiting Webtalk at Thu Apr 11 15:43:10 2019...
