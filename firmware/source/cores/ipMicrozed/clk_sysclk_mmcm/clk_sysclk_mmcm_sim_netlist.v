@@ -1,10 +1,10 @@
-// Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+// Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
-// Tool Version: Vivado v.2018.3 (lin64) Build 2405991 Thu Dec  6 23:36:41 MST 2018
-// Date        : Thu Nov 21 19:02:23 2019
+// Tool Version: Vivado v.2019.2 (lin64) Build 2708876 Wed Nov  6 21:39:14 MST 2019
+// Date        : Mon Apr 20 19:22:07 2020
 // Host        : lt2 running 64-bit CentOS Linux release 7.6.1810 (Core)
-// Command     : write_verilog -force -mode funcsim -rename_top clk_sysclk_mmcm -prefix
-//               clk_sysclk_mmcm_ clk_sysclk_mmcm_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim
+//               /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ipMicrozed/clk_sysclk_mmcm/clk_sysclk_mmcm_sim_netlist.v
 // Design      : clk_sysclk_mmcm
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -59,6 +59,7 @@ module clk_sysclk_mmcm
         .reset(reset));
 endmodule
 
+(* ORIG_REF_NAME = "clk_sysclk_mmcm_clk_wiz" *) 
 module clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz
    (clk_out1,
     clk_out2,

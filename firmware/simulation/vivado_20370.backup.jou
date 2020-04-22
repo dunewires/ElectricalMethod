@@ -1,0 +1,34 @@
+#-----------------------------------------------------------
+# Vivado v2019.2 (64-bit)
+# SW Build 2708876 on Wed Nov  6 21:39:14 MST 2019
+# IP Build 2700528 on Thu Nov  7 00:09:20 MST 2019
+# Start of session at: Mon Apr 20 23:33:27 2020
+# Process ID: 20370
+# Current directory: /home/nate/projects/duneWireTension/ElectricalMethod/firmware/simulation
+# Command line: vivado
+# Log file: /home/nate/projects/duneWireTension/ElectricalMethod/firmware/simulation/vivado.log
+# Journal file: /home/nate/projects/duneWireTension/ElectricalMethod/firmware/simulation/vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.xpr
+update_compile_order -fileset sources_1
+launch_simulation
+open_wave_config /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/tb_adc_emu_behav.wcfg
+source tb_adc_emu.tcl
+source ./scripts/force.tcl
+save_wave_config {/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/tb_adc_emu_behav.wcfg}
+save_wave_config {/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/tb_adc_emu_behav.wcfg}
+restart
+source ./scripts/force.tcl
+run 100 us
+source ./scripts/force.tcl
+run all
+restart
+source ./scripts/force.tcl
+run all
+add_force {/tb_adc_emu/top_tension_analyzer_1/S_AXI_ACLK_100} -radix hex {1 0ns} {0 50000ps} -repeat_every 100000ps
+add_force {/tb_adc_emu/top_tension_analyzer_1/S_AXI_ACLK_100} -radix hex {1 10ns} {0 60000ps} -repeat_every 100000ps
+add_force {/tb_adc_emu/top_tension_analyzer_1/S_AXI_ACLK_10} -radix hex {1 0ns} {0 50000ps} -repeat_every 100000ps
+restart
+source ./scripts/force.tcl
+restart

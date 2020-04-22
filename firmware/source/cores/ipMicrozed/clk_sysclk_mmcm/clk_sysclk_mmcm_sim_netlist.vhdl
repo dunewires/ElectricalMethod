@@ -1,10 +1,10 @@
--- Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+-- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
--- Tool Version: Vivado v.2018.3 (lin64) Build 2405991 Thu Dec  6 23:36:41 MST 2018
--- Date        : Thu Nov 21 19:02:23 2019
+-- Tool Version: Vivado v.2019.2 (lin64) Build 2708876 Wed Nov  6 21:39:14 MST 2019
+-- Date        : Mon Apr 20 19:22:07 2020
 -- Host        : lt2 running 64-bit CentOS Linux release 7.6.1810 (Core)
--- Command     : write_vhdl -force -mode funcsim -rename_top clk_sysclk_mmcm -prefix
---               clk_sysclk_mmcm_ clk_sysclk_mmcm_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim
+--               /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ipMicrozed/clk_sysclk_mmcm/clk_sysclk_mmcm_sim_netlist.vhdl
 -- Design      : clk_sysclk_mmcm
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -27,6 +27,8 @@ entity clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz is
     clk_in1_p : in STD_LOGIC;
     clk_in1_n : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz : entity is "clk_sysclk_mmcm_clk_wiz";
 end clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz;
 
 architecture STRUCTURE of clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz is

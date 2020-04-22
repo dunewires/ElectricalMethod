@@ -8,15 +8,17 @@ library duneDwa;
 use duneDwa.global_def.all;
 
 entity top_tension_analyzer is
-generic (
-  DATE_CODE: std_logic_vector(31 downto 0);
-  HASH_CODE: std_logic_vector(31 downto 0)
-);
+  generic (
+    DATE_CODE : std_logic_vector(31 downto 0);
+    HASH_CODE : std_logic_vector(31 downto 0)
+  );
   port (
     regFromDwa      : out SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
+    --regFromDwa      : out SLV_VECTOR_TYPE_32(31 downto 0);
     regFromDwa_strb : in  std_logic_vector(31 downto 0);
 
     regToDwa       : in SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
+    --regToDwa       : in SLV_VECTOR_TYPE_32(31 downto 0);
     S_AXI_ACLK_100 : in std_logic;
     S_AXI_ACLK_10  : in std_logic;
 
@@ -197,8 +199,8 @@ architecture STRUCT of top_tension_analyzer is
   signal acStim_nPeriod       : unsigned(23 downto 0)         := (others => '0');
   signal acStimX200_periodCnt : unsigned(23 downto 0)         := (others => '0');
   signal acStimX200_nPeriod   : unsigned(23 downto 0)         := (others => '0');
-  signal freqReq              : std_logic_vector(31 downto 0) := (others => '0');
-  signal freqReq_vio          : std_logic_vector(31 downto 0) := (others => '0');
+  signal freqReq              : std_logic_vector(31 downto 0) := (others => '1');
+  signal freqReq_vio          : std_logic_vector(31 downto 0) := (others => '1');
 
   signal m_axis_tvalid : std_logic;
   signal m_axis_tready : std_logic;
@@ -206,22 +208,22 @@ architecture STRUCT of top_tension_analyzer is
   signal m_axis_tid    : std_logic_vector(4 DOWNTO 0);
   signal m_axis_resetn : std_logic;
 
-  signal fifo_adcData_wen    : std_logic_vector(chanList'range)             := (others => '0');
-  signal fifo_adcData_ren    : std_logic_vector(chanList'range)             := (others => '0');
-  signal fifo_adcData_ef     : std_logic_vector(chanList'range)             := (others => '0');
-  signal fifo_adcData_ff     : std_logic_vector(chanList'range)             := (others => '0');
-  signal fifo_adcData_dout   : SLV_VECTOR_TYPE(chanList'range)(17 downto 0) := (others => (others => '0'));
-  signal fifo_adcData_rdBusy : std_logic_vector(chanList'range)             := (others => '0');
+  signal fifo_adcData_wen    : std_logic_vector(chanList'range)   := (others => '0');
+  signal fifo_adcData_ren    : std_logic_vector(chanList'range)   := (others => '0');
+  signal fifo_adcData_ef     : std_logic_vector(chanList'range)   := (others => '0');
+  signal fifo_adcData_ff     : std_logic_vector(chanList'range)   := (others => '0');
+  signal fifo_adcData_dout   : SLV_VECTOR_TYPE_18(chanList'range) := (others => (others => '0'));
+  signal fifo_adcData_rdBusy : std_logic_vector(chanList'range)   := (others => '0');
 
-  signal adcAutoDC_data    : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
-  signal fifoAutoDC_din    : SLV_VECTOR_TYPE(7 downto 0)(15 downto 0)    := (others => (others => '0'));
-  signal fifoAutoDC_wen    : std_logic                                   := '0';
-  signal fifoAutoDC_ren    : std_logic_vector(7 downto 0)                := (others => '0');
-  signal fifoAutoDC_dout   : SLV_VECTOR_TYPE(7 downto 0)(15 downto 0)    := (others => (others => '0'));
-  signal fifoAutoDC_ff     : std_logic_vector(7 downto 0)                := (others => '0');
-  signal fifoAutoDC_rdBusy : std_logic_vector(7 downto 0)                := (others => '0');
-  signal fifoAutoDC_ef     : std_logic_vector(7 downto 0)                := (others => '0');
-  signal adcAutoDc_af      : std_logic_vector(7 downto 0)                := (others => '0');
+  signal adcAutoDC_data    : SIGNED_VECTOR_TYPE_16(7 downto 0) := (others => (others => '0'));
+  signal fifoAutoDC_din    : SLV_VECTOR_TYPE_16(7 downto 0)    := (others => (others => '0'));
+  signal fifoAutoDC_wen    : std_logic                         := '0';
+  signal fifoAutoDC_ren    : std_logic_vector(7 downto 0)      := (others => '0');
+  signal fifoAutoDC_dout   : SLV_VECTOR_TYPE_16(7 downto 0)    := (others => (others => '0'));
+  signal fifoAutoDC_ff     : std_logic_vector(7 downto 0)      := (others => '0');
+  signal fifoAutoDC_rdBusy : std_logic_vector(7 downto 0)      := (others => '0');
+  signal fifoAutoDC_ef     : std_logic_vector(7 downto 0)      := (others => '0');
+  signal adcAutoDc_af      : std_logic_vector(7 downto 0)      := (others => '0');
 
   signal ctrl_freqMin        : std_logic_vector(15 downto 0) := (others => '0');
   signal ctrl_freqMax        : std_logic_vector(15 downto 0) := (others => '0');
@@ -245,17 +247,17 @@ architecture STRUCT of top_tension_analyzer is
   signal mainsSquare_del1, mainsSquare_del2 : std_logic := '0';
   signal mainsTrig                          : std_logic := '0';
 
-  signal mainsMinus_enable : std_logic                                   := '1';
-  signal mainsMinus_data   : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
-  signal mainsMinus_wen    : std_logic                                   := '0';
+  signal mainsMinus_enable : std_logic                         := '1';
+  signal mainsMinus_data   : SIGNED_VECTOR_TYPE_16(7 downto 0) := (others => (others => '0'));
+  signal mainsMinus_wen    : std_logic                         := '0';
 
   signal mainsTrig_filter : unsigned(17 downto 0);
 
-  signal senseWireData     : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
-  signal senseWireDataStrb : std_logic                                     := '0';
-  signal senseWireDataSel  : unsigned(2 downto 0)                          := (others => '0');
+  signal senseWireData     : SIGNED_VECTOR_TYPE_16(7 downto 0) := (others => (others => '0'));
+  signal senseWireDataStrb : std_logic                         := '0';
+  signal senseWireDataSel  : unsigned(2 downto 0)              := (others => '0');
 
-  signal dpotMag : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0) := (others => (others => '0'));
+  signal dpotMag : SLV_VECTOR_TYPE_08(7 downto 0) := (others => (others => '0'));
 begin
   led(1) <= sysclk100;
   led(0) <= ctrl_busy;
@@ -385,36 +387,37 @@ begin
       sysclk200      => sysclk200
     );
 
---  dpotInterface_1 : entity duneDwa.dpotInterface
---    port map (
---      mag => dpotMag,
---
---      sdi    => dpotSdi,
---      sdo    => dpotSdo,
---      pr_b   => dpotPr_b,
---      cs_b   => dpotCs_b,
---      sck    => dpotSck,
---      shdn_b => dpotShdn_b,
---
---      sysClk10 => sysClk10
---    );
+  --  dpotInterface_1 : entity duneDwa.dpotInterface
+  --    port map (
+  --      mag => dpotMag,
+  --
+  --      sdi    => dpotSdi,
+  --      sdo    => dpotSdo,
+  --      pr_b   => dpotPr_b,
+  --      cs_b   => dpotCs_b,
+  --      sck    => dpotSck,
+  --      shdn_b => dpotShdn_b,
+  --
+  --      sysClk10 => sysClk10
+  --    );
 
   adcReadout_1 : entity duneDwa.adcReadout
     port map (
       start  => '0',
       enable => '1',
 
-      adcCnv        => adcCnv,
-      adcSck        => adcSck,
-      adcDataSerial => adcDataSerial,
+      adcCnv => adcCnv,
+      adcSck => adcSck,
+
+      adcDataSerialDwa => adcDataSerial,
+      adcSrcSyncClkDwa => adcSrcSyncClk,
 
       dataParallel     => senseWireData,
       dataParallelStrb => senseWireDataStrb,
 
-      busy          => open,
-      reset         => '0',
-      adcSrcSyncClk => adcSrcSyncClk,
-      sysclk100     => sysclk100
+      busy      => open,
+      reset     => '0',
+      sysclk100 => sysclk100
     );
 
   genCh : for i in 2 downto 0 generate
@@ -458,7 +461,13 @@ begin
     if rising_edge(sysclk100) then
       mainsSquare_del1 <= mainsSquare;
       mainsSquare_del2 <= mainsSquare_del1;
-      mainsTrig        <= '1' when mainsTrig_filter = (mainsTrig_filter'left downto 1 => '0', 0 => '1') else '0';
+      -- not yet supported by xilinx simulation 
+      -- mainsTrig        <= '1' when mainsTrig_filter = (mainsTrig_filter'left downto 1 => '0', 0 => '1') else '0';
+      if mainsTrig_filter = "00" & x"0001" then
+        mainsTrig <= '1';
+      else
+        mainsTrig <= '0' ;
+      end if;
 
       if mainsSquare_del2 = '0' then
         mainsTrig_filter <= (others => '1');
@@ -591,14 +600,14 @@ begin
 
     fifo_autoDatacollection_ch : fifo_autoDatacollection
       PORT MAP (
-        rst         => not m_axis_resetn,
-        wr_clk      => sysclk100,
-        rd_clk      => S_AXI_ACLK_100,
-        din         => fifoAutoDC_din(adc_i),
-        wr_en       => fifoAutoDC_wen,
+        rst    => not m_axis_resetn,
+        wr_clk => sysclk100,
+        rd_clk => S_AXI_ACLK_100,
+        din    => fifoAutoDC_din(adc_i),
+        wr_en  => fifoAutoDC_wen,
 
-        rd_en       => regFromDwa_strb(adc_i + adcRegOfst),
-        dout        => regFromDwa(adc_i + adcRegOfst),
+        rd_en => regFromDwa_strb(adc_i + adcRegOfst),
+        dout  => regFromDwa(adc_i + adcRegOfst),
         -- ADC full bits are the second set of 8 bits
         full        => regFromDwa(adcStatAddr)(adc_i + 8),
         empty       => regFromDwa(adcStatAddr)(adc_i),

@@ -343,6 +343,7 @@ proc bitgen {} {
 }
 
 proc progFlash {} {
+    setup
     global fsbl_elf
     global boot_bin
     global hardware_loc

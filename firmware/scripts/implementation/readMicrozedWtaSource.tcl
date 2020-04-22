@@ -8,6 +8,7 @@
 
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/packages/global_def.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/wtaController.vhd
+read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/adc_dds_io.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/adcReadout.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/dacInterface.vhd
 #read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/dpotInterface.vhd
@@ -29,11 +30,11 @@ read_checkpoint $proj_sources_dir/cores/checkpoints/dwa_ps_bd.dcp
 #                 Xilinx IP
 # --------------------------------------------------------------------------
 # IP for scint timestamp
+read_ip $proj_sources_dir/cores/ipMicrozed/dds_compiler_1khz/dds_compiler_1khz.xci
 read_ip $proj_sources_dir/cores/ipMicrozed/blkMem_mainsAvg/blkMem_mainsAvg.xci
 read_ip $proj_sources_dir/cores/ipMicrozed/clk_sysclk_mmcm/clk_sysclk_mmcm.xci
 read_ip $proj_sources_dir/cores/ipMicrozed/vio_ctrl/vio_ctrl.xci
 read_ip $proj_sources_dir/cores/ipMicrozed/fifo_autoDatacollection/fifo_autoDatacollection.xci
-read_ip $proj_sources_dir/cores/ipMicrozed/fifo_adcData/fifo_adcData.xci
 read_ip $proj_sources_dir/cores/ipMicrozed/ila_xadc/ila_xadc.xci
 read_ip $proj_sources_dir/cores/ipMicrozed/ila_xadc_big/ila_xadc_big.xci
 read_ip $proj_sources_dir/cores/ipMicrozed/xadc_senseWire/xadc_senseWire.xci

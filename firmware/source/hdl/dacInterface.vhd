@@ -40,6 +40,7 @@ end entity dacInterface;
 architecture STRUCT of dacInterface is
 
 	signal acStim_mag_del   : unsigned(11 downto 0)        := (others => '0');
+	signal magShiftReg   : unsigned(11 downto 0)        := (others => '0');
 	signal shiftCnt         : unsigned(3 downto 0)         := (others => '0');
 	signal DAC_CLK_EN       : std_logic                    := '0';
 	signal acStim_periodCnt : unsigned(23 downto 0)        := (others => '0');
@@ -72,15 +73,17 @@ begin
 			DAC_CLK_EN <= '0';
 			if acStim_mag /= acStim_mag_del then
 				shiftCnt <= x"C";
+				magShiftReg <= acStim_mag;
 			elsif shiftCnt /= 0 then
 				DAC_CS_B   <= '0';
 				DAC_CLK_EN <= '1';
 				shiftCnt   <= shiftCnt -1;
+				magShiftReg <= magShiftReg(10 downto 0)	& '0';
+				DAC_SDI <= magShiftReg(11);
 			end if;
 		end if;
 	end process load_dac;
 
-	DAC_SDI <= acStim_mag(to_integer(shiftCnt));
 
 	make_ac_stim : process (sysclk200)
 	begin

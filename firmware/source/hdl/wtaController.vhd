@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Sun Feb 16 13:59:47 2020
+-- Last update : Mon Apr 20 22:11:15 2020
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -39,24 +39,26 @@ entity wtaController is
 
 		ctrlStart : in std_logic := '0';
 
-		freqSet       : out unsigned(31 downto 0) := (others => '0');
+		freqSet       : out unsigned(31 downto 0) := (others => '1');
 		acStim_enable : out std_logic             := '0';
 
 		acStim_nPeriod : in unsigned(23 downto 0) := (others => '0');
 		adcHScale      : in unsigned(4 downto 0)  := (others => '0');
 
-		adcAutoDc_af     : in  std_logic_vector(7 downto 0)                := (others => '0');
-		adcAutoDc_wen    : out std_logic                                   := '0';
-		adcAutoDc_data   : in  SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
-		adcAutoDC_dValid : in  std_logic                                   := '0';
+		adcAutoDc_af  : in  std_logic_vector(7 downto 0) := (others => '0');
+		adcAutoDc_wen : out std_logic                    := '0';
+		--adcAutoDc_data   : in  SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+		adcAutoDc_data   : in SIGNED_VECTOR_TYPE_16(7 downto 0) := (others => (others => '0'));
+		adcAutoDC_dValid : in std_logic                         := '0';
 
 		mainsAvg_nAvg      : in  unsigned(7 downto 0)  := (others => '0');
 		adcAutoDc_headData : out unsigned(15 downto 0) := (others => '0');
 
-		mainsTrig         : in  std_logic                                   := '0';
-		mainsMinus_enable : in  std_logic                                   := '0';
-		mainsMinus_data   : out SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
-		mainsMinus_wen    : out std_logic                                   := '0';
+		mainsTrig         : in std_logic := '0';
+		mainsMinus_enable : in std_logic := '0';
+		--mainsMinus_data   : out SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+		mainsMinus_data : out SIGNED_VECTOR_TYPE_16(7 downto 0) := (others => (others => '0'));
+		mainsMinus_wen  : out std_logic                         := '0';
 
 		busy  : out std_logic := '0';
 		reset : in  std_logic := '0';
@@ -107,7 +109,7 @@ begin
 		if rising_edge(clk) then
 			stimTimeCnt <= (others => '0'); --reset by default
 
-			if reset then
+			if reset = '1' then
 				ctrlState <= idle_s;
 			else
 				ctrlState <= ctrlState_next;
@@ -136,7 +138,7 @@ begin
 					acStim_enable <= not mainsAvg_active;
 
 				when adcReadout_s => -- count the number of samples that go into the readout FIFO
-					if adcAutoDC_dValid then
+					if adcAutoDC_dValid = '1' then
 						adc_wstrbCnt     <= adc_wstrbCnt+1;
 						mainsAvgMem_addr <= mainsAvgMem_addr+1;
 						dwnSampleCnt     <= (others => '0'); -- reset the downsample count
@@ -149,7 +151,7 @@ begin
 				when mainsAvgLoop_s =>
 
 				when adcDownSample_s => -- count the down sample
-					if adcAutoDC_dValid then
+					if adcAutoDC_dValid = '1' then
 						dwnSampleCnt <= dwnSampleCnt+1;
 						-- mainsAvgMem_addr follows adc_wstrbCnt 
 						-- and also gets incremented in down-sample
@@ -164,9 +166,15 @@ begin
 
 	ctrlState_comb : process (all)
 	begin
-		scanDone               <= freqSet > (freqMax & x"0");
-		adc_nSamplesDone       <= adc_wstrbCnt = adc_nSamples;
-		mainsAvg_active        <= '1' when mainsMinus_enable = '1' and (mainsAvg_cnt < mainsAvg_nAvg);
+		scanDone         <= freqSet > (freqMax & x"0");
+		adc_nSamplesDone <= adc_wstrbCnt = adc_nSamples;
+
+		if (mainsMinus_enable = '1') and (mainsAvg_cnt < mainsAvg_nAvg) then
+			mainsAvg_active <= '1';
+		else
+			mainsAvg_active <= '0';
+		end if;
+
 		ctrlState_next         <= ctrlState;
 		adcAutoDc_wen          <= '0';
 		mainsAvgMem_wen        <= '0';
@@ -177,12 +185,12 @@ begin
 		case (ctrlState) is
 
 			when idle_s =>
-				if ctrlStart and not ctrlStart_del then
+				if ctrlStart = '1' and ctrlStart_del = '0' then
 					ctrlState_next <= stimPrep_s;
 				end if;
 				busy <= '0';
 			when stimPrep_s => --wait for FIFO to be ready
-				if not (or(adcAutoDc_af)) then
+				if adcAutoDc_af = x"00" then
 					ctrlState_next <= divDelay_s;
 				end if;
 				mainsAvgMem_rsta <= '1';
@@ -211,7 +219,7 @@ begin
 			when stimRun_s => -- wait before ADC readout
 
 				if stimTime = stimTimeCnt then
-					if mainsMinus_enable then
+					if mainsMinus_enable = '1' then
 						ctrlState_next <= mainsSync_s;
 					else
 						ctrlState_next <= adcReadout_s;
@@ -219,7 +227,7 @@ begin
 				end if;
 
 			when mainsSync_s => -- wait before ADC readout
-				if mainsTrig and not mainsAvgMem_rsta_busy then
+				if mainsTrig = '1' and mainsAvgMem_rsta_busy = '0' then
 					ctrlState_next <= adcReadout_s;
 				end if;
 
@@ -227,7 +235,7 @@ begin
 				adcAutoDc_wen   <= '1';     --0'when mainsAvg_active else '1';
 				mainsAvgMem_wen <= '1';     --0'when mainsAvg_active else '1';
 				if adc_nSamplesDone then    --we have all of the contiguous samples
-					if mainsAvg_active then -- we have finished sampling this freq and can move on
+					if mainsAvg_active = '1' then -- we have finished sampling this freq and can move on
 						ctrlState_next <= mainsAvgInc_s;
 					else
 						if scanDone then
@@ -236,7 +244,7 @@ begin
 							ctrlState_next <= stimPrep_s;
 						end if;
 					end if;
-				elsif adcAutoDC_dValid then
+				elsif adcAutoDC_dValid = '1' then
 					ctrlState_next <= adcDownSample_s;
 				end if;
 
@@ -247,7 +255,7 @@ begin
 				ctrlState_next <= mainsAvgLoop_s;
 
 			when mainsAvgLoop_s =>
-				if mainsAvg_active then -- still averaging
+				if mainsAvg_active = '1' then -- still averaging
 					ctrlState_next <= mainsSync_s;
 				else -- finished averaging now get the stimulus enabled samples
 					ctrlState_next <= stimRun_s;

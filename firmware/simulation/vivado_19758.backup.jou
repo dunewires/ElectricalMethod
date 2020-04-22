@@ -1,0 +1,41 @@
+#-----------------------------------------------------------
+# Vivado v2019.2 (64-bit)
+# SW Build 2708876 on Wed Nov  6 21:39:14 MST 2019
+# IP Build 2700528 on Thu Nov  7 00:09:20 MST 2019
+# Start of session at: Mon Apr 20 23:14:55 2020
+# Process ID: 19758
+# Current directory: /home/nate/projects/duneWireTension/ElectricalMethod/firmware/simulation
+# Command line: vivado
+# Log file: /home/nate/projects/duneWireTension/ElectricalMethod/firmware/simulation/vivado.log
+# Journal file: /home/nate/projects/duneWireTension/ElectricalMethod/firmware/simulation/vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.xpr
+update_compile_order -fileset sources_1
+launch_simulation
+open_wave_config /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/tb_adc_emu_behav.wcfg
+source tb_adc_emu.tcl
+add_force {/tb_adc_emu/regToDwa[0]} -radix hex {00008000 0ns}
+source ./scripts/force.tcl
+run 100 us
+run 100 us
+run 100 us
+run 100 us
+run 100 us
+run 100 us
+run 100 us
+run all
+add_force {/tb_adc_emu/regToDwa[9]} -radix hex {1 10us} -cancel_after 11us
+run 100 us
+run 100 us
+run 100 us
+run 100 us
+add_force {/tb_adc_emu/regToDwa[9]} -radix hex {1 1us} -cancel_after 10us
+run 100 us
+restart
+source ./scripts/force.tcl
+restart
+run all
+restart
+source ./scripts/force.tcl
+restart

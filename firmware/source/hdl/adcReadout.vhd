@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Sun Feb 16 14:01:19 2020
+-- Last update : Tue Apr 21 17:59:50 2020
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -26,42 +26,85 @@ use ieee.numeric_std.all;
 library duneDwa;
 use duneDwa.global_def.all;
 
-library UNISIM; 
-use UNISIM.all; 
-use UNISIM.vcomponents.all; 
+Library UNISIM;
+use UNISIM.vcomponents.all;
 
 entity adcReadout is
 	port (
 		start  : in std_logic := '0';
 		enable : in std_logic := '0';
 
-		adcCnv        : out std_logic := '0';
-		adcSck        : out std_logic := '0';
-		adcDataSerial : in  STD_LOGIC_VECTOR(3 downto 0);
+		adcCnv : out std_logic := '0';
+		adcSck : out std_logic := '0';
 
-		dataParallel     : out SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0);
+		adcDataSerialDwa : in STD_LOGIC_VECTOR(3 downto 0);
+		adcSrcSyncClkDwa : in std_logic := '0';
+
+		dataParallel     : out SIGNED_VECTOR_TYPE_16(7 downto 0);
 		dataParallelStrb : out std_logic := '0';
 
-		busy          : out std_logic := '0';
-		reset         : in  std_logic := '0';
-		adcSrcSyncClk : in  std_logic := '0';
-		sysclk100     : in  std_logic := '0'
+		busy      : out std_logic := '0';
+		reset     : in  std_logic := '0';
+		sysclk100 : in  std_logic := '0'
 	);
 end entity adcReadout;
 architecture rtl of adcReadout is
 
 	type ctrlState_type is (idle_s, adcCnvStart_s, adcCnvWait_s, adcReadout_s,readoutDone_s, samplePeriod_s);
-	signal ctrlState, ctrlState_next : ctrlState_type               := idle_s;
-	signal adcDataSerial_reg         : STD_LOGIC_VECTOR(3 downto 0) := (others => '0');
-	signal sampleCnt                 : unsigned(7 downto 0)         := (others => '0');
-	signal timerCnt                  : unsigned(11 downto 0)         := (others => '0');
-	signal start_del                 : std_logic                    := '0';
-	signal adcSckEnable              : std_logic                    := '0';
-	signal readoutDone               : std_logic                    := '0';
-	signal dataParallelSsclk         : SIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
+	signal ctrlState, ctrlState_next : ctrlState_type        := idle_s;
+	signal sampleCnt                 : unsigned(7 downto 0)  := (others => '0');
+	signal timerCnt                  : unsigned(11 downto 0) := (others => '0');
+	signal start_del                 : std_logic             := '0';
+	signal adcSckEnable              : std_logic             := '0';
+	signal adcSckEnableEmu           : std_logic             := '0';
+	signal readoutDone               : std_logic             := '0';
+	signal dataParallelSsclk         : SIGNED_VECTOR4_TYPE;
+	signal dataParallelSsclkEmu      : SIGNED_VECTOR4_TYPE;
+	signal dataParallelSsclkDwa      : SIGNED_VECTOR4_TYPE;
+	signal adcSrcSyncClkEmu          : std_logic := '0';
+	signal adcSrcSyncClk             : std_logic := '0';
+	signal adcSckEmu                 : std_logic := '0';
+	signal adcDataSerialEmu          : STD_LOGIC_VECTOR(3 downto 0);
 
 begin
 
+	--ADC emulator
+	adc_dds_io_inst : entity work.adc_dds_io
+		port map (
+			adcCnv => adcCnv,
+			adcSck => adcSckEmu,
+
+			adcDataSerial => adcDataSerialEmu,
+			adcSrcSyncClk => adcSrcSyncClkEmu,
+
+			sysclk100 => sysclk100
+		);
+
+	-- choose real DWA ADC or Emulator
+	dataParallelSsclk <= dataParallelSsclkEmu when useAdcEmu else dataParallelSsclkDwa;
+	adcSrcSyncClk     <= adcSrcSyncClkEmu     when useAdcEmu else adcSrcSyncClkDwa;
+
+	--since the sclk can't be used internally we need to generate a version that can
+	--delay the enable signal so it transitions after the falling sysclk100 edge
+	--check the hold time to confirm glitch free operation. Wonder if Vivado will do this for me??
+	--consider just using an enable signal instead of making the clock.
+	shift_sclkEmu_enable : process (sysclk100)
+	begin
+		if falling_edge(sysclk100) then
+			adcSckEnableEmu <= adcSckEnable;
+		end if;
+	end process shift_sclkEmu_enable;
+
+	BUFGCE_sclkEmu : BUFGCE
+		port map (
+			O  => adcSckEmu,       -- 1-bit output: Clock output
+			CE => adcSckEnableEmu, -- 1-bit input: Clock enable input for I0
+			I  => sysclk100        -- 1-bit input: Primary clock
+		);
+
+
+		------------------------------------------------------------------------
+	--nicely timed sclk signal for ADC
 	ODDR_acStim : ODDR
 		generic map(
 			DDR_CLK_EDGE => "SAME_EDGE", -- "OPPOSITE_EDGE" or "SAME_EDGE"
@@ -76,8 +119,9 @@ begin
 			R  => '0', -- 1-bit reset input
 			S  => '0'  -- 1-bit set input
 		);
-	deserial_gen : for adcSer_indx in 3 downto 0 generate
 
+	deserial_gen : for adcSer_indx in 3 downto 0 generate
+		-- latch data using selectIO
 		IDDR_a : IDDR
 			generic map (
 				DDR_CLK_EDGE => "OPPOSITE_EDGE", -- "OPPOSITE_EDGE", "SAME_EDGE"
@@ -87,27 +131,30 @@ begin
 				SRTYPE  => "SYNC"
 			) -- Set/Reset type         :       "SYNC" or "ASYNC"
 			port map (
-				Q1 => dataParallelSsclk(adcSer_indx)(0), -- 1-bit output for positive edge of clock
-				Q2 => open,                              -- 1-bit output for negative edge of clock
-				C  => adcSrcSyncClk,                     -- 1-bit clock input
-				CE => '1',                               -- 1-bit clock enable input
-				D  => adcDataSerial(adcSer_indx),        -- 1-bit DDR data input
-				R  => '0',                               -- 1-bit reset
-				S  => '0'                                -- 1-bit set
+				Q1 => dataParallelSsclkDwa(adcSer_indx)(0), -- 1-bit output for positive edge of clock
+				Q2 => open,                                 -- 1-bit output for negative edge of clock
+				C  => adcSrcSyncClkDwa,                     -- 1-bit clock input
+				CE => '1',                                  -- 1-bit clock enable input
+				D  => adcDataSerialDwa(adcSer_indx),        -- 1-bit DDR data input
+				R  => '0',                                  -- 1-bit reset
+				S  => '0'                                   -- 1-bit set
 			);
-
+		-- shift in serial ADC data
 		paraReg : process (adcSrcSyncClk)
 		begin
 			if rising_edge(adcSrcSyncClk) then
-				dataParallelSsclk(adcSer_indx)(31 downto 1) <= dataParallelSsclk(adcSer_indx)(30 downto 0);
+				dataParallelSsclkEmu(adcSer_indx) <= dataParallelSsclkEmu(adcSer_indx)(30 downto 0) & adcDataSerialEmu(adcSer_indx);
+				--the LSB is clocked in by DDR
+				dataParallelSsclkDwa(adcSer_indx)(31 downto 1) <= dataParallelSsclkDwa(adcSer_indx)(30 downto 0);
 			end if;
 		end process paraReg;
 
+		-- clock domain crossing from source synchronous clock to FPGA system clock
 		cdc : process (sysclk100)
 		begin
 			if rising_edge(sysclk100) then
-				dataParallelStrb                     <= readoutDone;
-				if readoutDone then
+				dataParallelStrb <= readoutDone;
+				if readoutDone = '1' then
 					-- also compatible with 16 bit ADC
 					dataParallel(adcSer_indx * 2)        <= dataParallelSsclk(adcSer_indx)(31 downto 16);
 					dataParallel((adcSer_indx * 2) + 1 ) <= dataParallelSsclk(adcSer_indx)(15 downto 0);
@@ -117,6 +164,7 @@ begin
 
 	end generate deserial_gen;
 
+	-- ADC readout state machine
 	ctrlState_seq : process (sysclk100)
 	begin
 		if rising_edge(sysclk100) then
@@ -133,7 +181,7 @@ begin
 					busy <= '0';
 					--if start and not start_del then
 					-- for now just freerun when enabled
-					if enable then
+					if enable = '1' then
 						sampleCnt <= x"00";
 						timerCnt  <= x"001";
 						ctrlState <= adcCnvStart_s;

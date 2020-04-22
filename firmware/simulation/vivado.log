@@ -1,0 +1,668 @@
+#-----------------------------------------------------------
+# Vivado v2019.2 (64-bit)
+# SW Build 2708876 on Wed Nov  6 21:39:14 MST 2019
+# IP Build 2700528 on Thu Nov  7 00:09:20 MST 2019
+# Start of session at: Tue Apr 21 01:20:58 2020
+# Process ID: 8931
+# Current directory: /home/nate/projects/duneWireTension/ElectricalMethod/firmware/simulation
+# Command line: vivado
+# Log file: /home/nate/projects/duneWireTension/ElectricalMethod/firmware/simulation/vivado.log
+# Journal file: /home/nate/projects/duneWireTension/ElectricalMethod/firmware/simulation/vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.xpr
+CRITICAL WARNING: [Project 1-863] The design checkpoint file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/checkpoints/dwa_ps_bd.dcp was generated for a block design or an IP or BD by an out of context synthesis run and should not directly be used as a source in a Vivado flow to refer to an IP source.  As of 2017.1, the DCP from OOC runs will not contain XDC timing constraints because these are expected to be referred to by the IP .xci or .xcix file source. DCP files prior to 2017.1 will contain incorrect constraints because they were generated with default OOC clock period which will not likely match your top level clock constraints when used in the full design context. 
+ 
+Scanning sources...
+Finished scanning sources
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/nate/opt/Xilinx/Vivado/2019.2/data/ip'.
+WARNING: [IP_Flow 19-2162] IP 'fifo_autoDatacollection' is locked:
+* IP definition 'FIFO Generator (13.2)' for IP 'fifo_autoDatacollection' (customized with software release 2018.3) has a different revision in the IP Catalog.
+WARNING: [IP_Flow 19-2162] IP 'blkMem_mainsAvg' is locked:
+* IP definition 'Block Memory Generator (8.4)' for IP 'blkMem_mainsAvg' (customized with software release 2018.3) has a different revision in the IP Catalog.
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+WARNING: [IP_Flow 19-2162] IP 'ila_xadc' is locked:
+* IP definition 'ILA (Integrated Logic Analyzer) (6.2)' for IP 'ila_xadc' (customized with software release 2018.3) has a different revision in the IP Catalog. * Current project part 'xc7z020clg400-1' and the part 'xc7z020clg400-2' used to customize the IP 'ila_xadc' do not match.
+WARNING: [IP_Flow 19-2162] IP 'fifo_adcData' is locked:
+* IP definition 'FIFO Generator (13.2)' for IP 'fifo_adcData' (customized with software release 2018.2) has a different revision in the IP Catalog. * Current project part 'xc7z020clg400-1' and the part 'xc7vx485tffg1761-2' used to customize the IP 'fifo_adcData' do not match.
+WARNING: [IP_Flow 19-2162] IP 'ila_xadc_big' is locked:
+* IP definition 'ILA (Integrated Logic Analyzer) (6.2)' for IP 'ila_xadc_big' (customized with software release 2018.3) has a different revision in the IP Catalog.
+WARNING: [IP_Flow 19-2162] IP 'vio_ctrl' is locked:
+* Current project part 'xc7z020clg400-1' and the part 'xc7z020clg400-2' used to customize the IP 'vio_ctrl' do not match.
+WARNING: [IP_Flow 19-2162] IP 'xadc_senseWire' is locked:
+* IP definition 'XADC Wizard (3.3)' for IP 'xadc_senseWire' (customized with software release 2018.3) has a different revision in the IP Catalog.
+WARNING: [IP_Flow 19-2162] IP 'ila_0' is locked:
+* IP definition 'ILA (Integrated Logic Analyzer) (6.2)' for IP 'ila_0' (customized with software release 2018.2) has a different revision in the IP Catalog. * Current project part 'xc7z020clg400-1' and the part 'xc7vx485tffg1761-2' used to customize the IP 'ila_0' do not match.
+WARNING: [IP_Flow 19-2162] IP 'dds_compiler_1khz' is locked:
+* IP definition 'DDS Compiler (6.0)' for IP 'dds_compiler_1khz' (customized with software release 2018.3) has a different revision in the IP Catalog.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_rst_ps7_0_100M_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_rst_ps7_0_100M_0/dwa_ps_bd_rst_ps7_0_100M_0.dcp'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_rst_ps7_0_100M_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_rst_ps7_0_100M_0/dwa_ps_bd_rst_ps7_0_100M_0_stub.v'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_rst_ps7_0_100M_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_rst_ps7_0_100M_0/dwa_ps_bd_rst_ps7_0_100M_0_stub.vhdl'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_rst_ps7_0_100M_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_rst_ps7_0_100M_0/dwa_ps_bd_rst_ps7_0_100M_0_sim_netlist.v'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_rst_ps7_0_100M_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_rst_ps7_0_100M_0/dwa_ps_bd_rst_ps7_0_100M_0_sim_netlist.vhdl'. Please regenerate to continue.
+WARNING: [IP_Flow 19-2162] IP 'dwa_ps_bd_rst_ps7_0_100M_0' is locked:
+* This IP has board specific outputs. Current project board 'unset' and the board 'em.avnet.com:microzed_7020:part0:1.1' used to customize the IP 'dwa_ps_bd_rst_ps7_0_100M_0' do not match.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_processing_system7_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_processing_system7_0_0/dwa_ps_bd_processing_system7_0_0.dcp'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_processing_system7_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_processing_system7_0_0/dwa_ps_bd_processing_system7_0_0_stub.v'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_processing_system7_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_processing_system7_0_0/dwa_ps_bd_processing_system7_0_0_stub.vhdl'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_processing_system7_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_processing_system7_0_0/dwa_ps_bd_processing_system7_0_0_sim_netlist.v'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_processing_system7_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_processing_system7_0_0/dwa_ps_bd_processing_system7_0_0_sim_netlist.vhdl'. Please regenerate to continue.
+WARNING: [IP_Flow 19-2162] IP 'dwa_ps_bd_processing_system7_0_0' is locked:
+* This IP has board specific outputs. Current project board 'unset' and the board 'em.avnet.com:microzed_7020:part0:1.1' used to customize the IP 'dwa_ps_bd_processing_system7_0_0' do not match.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_dwa_registers_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_dwa_registers_0_0/dwa_ps_bd_dwa_registers_0_0.dcp'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_dwa_registers_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_dwa_registers_0_0/dwa_ps_bd_dwa_registers_0_0_stub.v'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_dwa_registers_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_dwa_registers_0_0/dwa_ps_bd_dwa_registers_0_0_stub.vhdl'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_dwa_registers_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_dwa_registers_0_0/dwa_ps_bd_dwa_registers_0_0_sim_netlist.v'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_dwa_registers_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_dwa_registers_0_0/dwa_ps_bd_dwa_registers_0_0_sim_netlist.vhdl'. Please regenerate to continue.
+WARNING: [IP_Flow 19-2162] IP 'dwa_ps_bd_dwa_registers_0_0' is locked:
+* IP definition 'dwa_registers (1.0)' for IP 'dwa_ps_bd_dwa_registers_0_0' (customized with software release 2018.3) was not found in the IP Catalog.
+WARNING: [IP_Flow 19-2162] IP 'dwa_ps_bd_auto_pc_0' is locked:
+* IP definition 'AXI Protocol Converter (2.1)' for IP 'dwa_ps_bd_auto_pc_0' (customized with software release 2018.3) has a different revision in the IP Catalog.
+INFO: [Common 17-344] 'open_project' was cancelled
+open_project /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.xpr
+CRITICAL WARNING: [Project 1-863] The design checkpoint file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/checkpoints/dwa_ps_bd.dcp was generated for a block design or an IP or BD by an out of context synthesis run and should not directly be used as a source in a Vivado flow to refer to an IP source.  As of 2017.1, the DCP from OOC runs will not contain XDC timing constraints because these are expected to be referred to by the IP .xci or .xcix file source. DCP files prior to 2017.1 will contain incorrect constraints because they were generated with default OOC clock period which will not likely match your top level clock constraints when used in the full design context. 
+ 
+Scanning sources...
+Finished scanning sources
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/nate/opt/Xilinx/Vivado/2019.2/data/ip'.
+WARNING: [IP_Flow 19-2162] IP 'fifo_autoDatacollection' is locked:
+* IP definition 'FIFO Generator (13.2)' for IP 'fifo_autoDatacollection' (customized with software release 2018.3) has a different revision in the IP Catalog.
+WARNING: [IP_Flow 19-2162] IP 'blkMem_mainsAvg' is locked:
+* IP definition 'Block Memory Generator (8.4)' for IP 'blkMem_mainsAvg' (customized with software release 2018.3) has a different revision in the IP Catalog.
+WARNING: [IP_Flow 19-2162] IP 'ila_xadc' is locked:
+* IP definition 'ILA (Integrated Logic Analyzer) (6.2)' for IP 'ila_xadc' (customized with software release 2018.3) has a different revision in the IP Catalog. * Current project part 'xc7z020clg400-1' and the part 'xc7z020clg400-2' used to customize the IP 'ila_xadc' do not match.
+WARNING: [IP_Flow 19-2162] IP 'fifo_adcData' is locked:
+* IP definition 'FIFO Generator (13.2)' for IP 'fifo_adcData' (customized with software release 2018.2) has a different revision in the IP Catalog. * Current project part 'xc7z020clg400-1' and the part 'xc7vx485tffg1761-2' used to customize the IP 'fifo_adcData' do not match.
+WARNING: [IP_Flow 19-2162] IP 'ila_xadc_big' is locked:
+* IP definition 'ILA (Integrated Logic Analyzer) (6.2)' for IP 'ila_xadc_big' (customized with software release 2018.3) has a different revision in the IP Catalog.
+WARNING: [IP_Flow 19-2162] IP 'vio_ctrl' is locked:
+* Current project part 'xc7z020clg400-1' and the part 'xc7z020clg400-2' used to customize the IP 'vio_ctrl' do not match.
+WARNING: [IP_Flow 19-2162] IP 'xadc_senseWire' is locked:
+* IP definition 'XADC Wizard (3.3)' for IP 'xadc_senseWire' (customized with software release 2018.3) has a different revision in the IP Catalog.
+WARNING: [IP_Flow 19-2162] IP 'ila_0' is locked:
+* IP definition 'ILA (Integrated Logic Analyzer) (6.2)' for IP 'ila_0' (customized with software release 2018.2) has a different revision in the IP Catalog. * Current project part 'xc7z020clg400-1' and the part 'xc7vx485tffg1761-2' used to customize the IP 'ila_0' do not match.
+WARNING: [IP_Flow 19-2162] IP 'dds_compiler_1khz' is locked:
+* IP definition 'DDS Compiler (6.0)' for IP 'dds_compiler_1khz' (customized with software release 2018.3) has a different revision in the IP Catalog.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_rst_ps7_0_100M_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_rst_ps7_0_100M_0/dwa_ps_bd_rst_ps7_0_100M_0.dcp'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_rst_ps7_0_100M_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_rst_ps7_0_100M_0/dwa_ps_bd_rst_ps7_0_100M_0_stub.v'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_rst_ps7_0_100M_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_rst_ps7_0_100M_0/dwa_ps_bd_rst_ps7_0_100M_0_stub.vhdl'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_rst_ps7_0_100M_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_rst_ps7_0_100M_0/dwa_ps_bd_rst_ps7_0_100M_0_sim_netlist.v'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_rst_ps7_0_100M_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_rst_ps7_0_100M_0/dwa_ps_bd_rst_ps7_0_100M_0_sim_netlist.vhdl'. Please regenerate to continue.
+WARNING: [IP_Flow 19-2162] IP 'dwa_ps_bd_rst_ps7_0_100M_0' is locked:
+* This IP has board specific outputs. Current project board 'unset' and the board 'em.avnet.com:microzed_7020:part0:1.1' used to customize the IP 'dwa_ps_bd_rst_ps7_0_100M_0' do not match.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_processing_system7_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_processing_system7_0_0/dwa_ps_bd_processing_system7_0_0.dcp'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_processing_system7_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_processing_system7_0_0/dwa_ps_bd_processing_system7_0_0_stub.v'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_processing_system7_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_processing_system7_0_0/dwa_ps_bd_processing_system7_0_0_stub.vhdl'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_processing_system7_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_processing_system7_0_0/dwa_ps_bd_processing_system7_0_0_sim_netlist.v'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_processing_system7_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_processing_system7_0_0/dwa_ps_bd_processing_system7_0_0_sim_netlist.vhdl'. Please regenerate to continue.
+WARNING: [IP_Flow 19-2162] IP 'dwa_ps_bd_processing_system7_0_0' is locked:
+* This IP has board specific outputs. Current project board 'unset' and the board 'em.avnet.com:microzed_7020:part0:1.1' used to customize the IP 'dwa_ps_bd_processing_system7_0_0' do not match.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_dwa_registers_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_dwa_registers_0_0/dwa_ps_bd_dwa_registers_0_0.dcp'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_dwa_registers_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_dwa_registers_0_0/dwa_ps_bd_dwa_registers_0_0_stub.v'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_dwa_registers_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_dwa_registers_0_0/dwa_ps_bd_dwa_registers_0_0_stub.vhdl'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_dwa_registers_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_dwa_registers_0_0/dwa_ps_bd_dwa_registers_0_0_sim_netlist.v'. Please regenerate to continue.
+WARNING: [IP_Flow 19-3664] IP 'dwa_ps_bd_dwa_registers_0_0' generated file not found '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_dwa_registers_0_0/dwa_ps_bd_dwa_registers_0_0_sim_netlist.vhdl'. Please regenerate to continue.
+WARNING: [IP_Flow 19-2162] IP 'dwa_ps_bd_dwa_registers_0_0' is locked:
+* IP definition 'dwa_registers (1.0)' for IP 'dwa_ps_bd_dwa_registers_0_0' (customized with software release 2018.3) was not found in the IP Catalog.
+WARNING: [IP_Flow 19-2162] IP 'dwa_ps_bd_auto_pc_0' is locked:
+* IP definition 'AXI Protocol Converter (2.1)' for IP 'dwa_ps_bd_auto_pc_0' (customized with software release 2018.3) has a different revision in the IP Catalog.
+open_project: Time (s): cpu = 00:00:13 ; elapsed = 00:00:06 . Memory (MB): peak = 6840.426 ; gain = 70.777 ; free physical = 2827 ; free virtual = 17693
+update_compile_order -fileset sources_1
+WARNING: [IP_Flow 19-3899] Cannot get the environment domain name variable for the component vendor name. Setting the vendor name to 'user.org'.
+launch_simulation
+Command: launch_simulation 
+INFO: [Vivado 12-5698] Checking validity of IPs in the design for the 'XSim' simulator...
+INFO: [Vivado 12-5682] Launching behavioral simulation in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+INFO: [Vivado 12-4795] Using compiled simulation libraries for IPs
+INFO: [SIM-utils-51] Simulation object is 'sim_1'
+INFO: [USF-XSim-7] Finding pre-compiled libraries...
+INFO: [USF-XSim-11] File '/home/nate/opt/Xilinx/Vivado/2019.2/data/xsim/xsim.ini' copied to run dir:'/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+INFO: [SIM-utils-54] Inspecting design source files for 'tb_adc_emu' in fileset 'sim_1'...
+WARNING: [SIM-utils-52] IP component XML file does not exist: '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_auto_pc_0/dwa_ps_bd_auto_pc_0.xml'
+INFO: [USF-XSim-97] Finding global include files...
+INFO: [USF-XSim-98] Fetching design files from 'sim_1'...
+INFO: [USF-XSim-2] XSim::Compile design
+INFO: [USF-XSim-61] Executing 'COMPILE and ANALYZE' step in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+xvlog --incr --relax -prj tb_adc_emu_vlog.prj
+xvhdl --incr --relax -prj tb_adc_emu_vhdl.prj
+INFO: [USF-XSim-69] 'compile' step finished in '2' seconds
+INFO: [USF-XSim-3] XSim::Elaborate design
+INFO: [USF-XSim-61] Executing 'ELABORATE' step in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+xelab -wto 3787bf8d046f446d9f08c2fc73b2295d --incr --debug typical --relax --mt 8 -L xbip_utils_v3_0_9 -L axi_utils_v2_0_5 -L xbip_pipe_v3_0_5 -L xbip_bram18k_v3_0_5 -L mult_gen_v12_0_14 -L xbip_dsp48_wrapper_v3_0_4 -L xbip_dsp48_addsub_v3_0_5 -L xbip_dsp48_multadd_v3_0_5 -L dds_compiler_v6_0_17 -L xil_defaultlib -L fifo_generator_v13_2_3 -L blk_mem_gen_v8_4_2 -L duneDwa -L unisims_ver -L unimacro_ver -L secureip -L xpm --snapshot tb_adc_emu_behav duneDwa.tb_adc_emu duneDwa.glbl -log elaborate.log
+Vivado Simulator 2019.2
+Copyright 1986-1999, 2001-2019 Xilinx, Inc. All Rights Reserved.
+Running: /home/nate/opt/Xilinx/Vivado/2019.2/bin/unwrapped/lnx64.o/xelab -wto 3787bf8d046f446d9f08c2fc73b2295d --incr --debug typical --relax --mt 8 -L xbip_utils_v3_0_9 -L axi_utils_v2_0_5 -L xbip_pipe_v3_0_5 -L xbip_bram18k_v3_0_5 -L mult_gen_v12_0_14 -L xbip_dsp48_wrapper_v3_0_4 -L xbip_dsp48_addsub_v3_0_5 -L xbip_dsp48_multadd_v3_0_5 -L dds_compiler_v6_0_17 -L xil_defaultlib -L fifo_generator_v13_2_3 -L blk_mem_gen_v8_4_2 -L duneDwa -L unisims_ver -L unimacro_ver -L secureip -L xpm --snapshot tb_adc_emu_behav duneDwa.tb_adc_emu duneDwa.glbl -log elaborate.log 
+Using 8 slave threads.
+Starting static elaboration
+Pass Through NonSizing Optimizer
+Completed static elaboration
+INFO: [XSIM 43-4323] No Change in HDL. Linking previously generated obj files to create kernel
+INFO: [USF-XSim-69] 'elaborate' step finished in '2' seconds
+INFO: [USF-XSim-4] XSim::Simulate design
+INFO: [USF-XSim-61] Executing 'SIMULATE' step in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+INFO: [USF-XSim-98] *** Running xsim
+   with args "tb_adc_emu_behav -key {Behavioral:sim_1:Functional:tb_adc_emu} -tclbatch {tb_adc_emu.tcl} -view {/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/tb_adc_emu_behav.wcfg} -log {simulate.log}"
+INFO: [USF-XSim-8] Loading simulator feature
+Vivado Simulator 2019.2
+Time resolution is 1 ps
+open_wave_config /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/tb_adc_emu_behav.wcfg
+source tb_adc_emu.tcl
+# set curr_wave [current_wave_config]
+# if { [string length $curr_wave] == 0 } {
+#   if { [llength [get_objects]] > 0} {
+#     add_wave /
+#     set_property needs_save false [current_wave_config]
+#   } else {
+#      send_msg_id Add_Wave-1 WARNING "No top level signals found. Simulator will start without a wave window. If you want to open a wave window go to 'File->New Waveform Configuration' or type 'create_wave_config' in the TCL console."
+#   }
+# }
+# run 1000ns
+Block Memory Generator module tb_adc_emu.top_tension_analyzer_1.wtaController_inst.blkMem_mainsAvg_inst.inst.native_mem_module.blk_mem_gen_v8_4_2_inst is using a behavioral model for simulation which will not precisely model memory collision behavior.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+INFO: [USF-XSim-96] XSim completed. Design snapshot 'tb_adc_emu_behav' loaded.
+INFO: [USF-XSim-97] XSim simulation ran for 1000ns
+launch_simulation: Time (s): cpu = 00:00:15 ; elapsed = 00:00:11 . Memory (MB): peak = 6980.129 ; gain = 88.078 ; free physical = 2713 ; free virtual = 17581
+source ./scripts/force.tcl
+# add_force {/tb_adc_emu/top_tension_analyzer_1/S_AXI_ACLK_10} -radix hex {1 0ns} {0 50000ps} -repeat_every 100000ps
+# add_force {/tb_adc_emu/top_tension_analyzer_1/S_AXI_ACLK_100} -radix hex {1 0ns} {0 5000ps} -repeat_every 10000ps
+# add_force {/tb_adc_emu/regFromDwa_strb[24]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[25]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[26]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[27]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[28]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[29]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[30]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[31]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regToDwa[0]} -radix hex {00008000 0ns}
+# add_force {/tb_adc_emu/regToDwa[2]} -radix hex {00000005 0ns}
+# add_force {/tb_adc_emu/regToDwa[4]} -radix hex {00000800 0ns}
+# add_force {/tb_adc_emu/regToDwa[5]} -radix hex {900 0ns}
+# add_force {/tb_adc_emu/regToDwa[6]} -radix hex {20 0ns}
+# add_force {/tb_adc_emu/regToDwa[7]} -radix hex {8 0ns}
+# add_force {/tb_adc_emu/regToDwa[8]} -radix hex {10 0ns}
+# add_force {/tb_adc_emu/regToDwa[9]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regToDwa[10]} -radix hex {7 0ns}
+# add_force {/tb_adc_emu/regToDwa[11]} -radix hex {1d 0ns}
+# add_force {/tb_adc_emu/regToDwa[12]} -radix hex {10 0ns}
+# add_force {/tb_adc_emu/regToDwa[14]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regToDwa[1]} -radix hex {0 0ns}
+# run 10 us
+Warning: [Unisim MMCME2_ADV-20] Input CLKIN1 period and attribute CLKIN1_PERIOD are not same. Instance tb_adc_emu.top_tension_analyzer_1.clk_sysclk_mmcm_inst.inst.mmcm_adv_inst 
+# add_force {/tb_adc_emu/regToDwa[1]} -radix hex {1 0ns}
+# run 10 us
+# add_force {/tb_adc_emu/regToDwa[9]} -radix hex {1 0ns}
+# run 10 us
+# add_force {/tb_adc_emu/regToDwa[9]} -radix hex {0 0ns}
+force26
+run all
+run: Time (s): cpu = 00:01:06 ; elapsed = 00:08:09 . Memory (MB): peak = 6993.992 ; gain = 6.730 ; free physical = 2315 ; free virtual = 17535
+source ./scripts/drainFifo.tcl
+# add_force {/tb_adc_emu/regFromDwa_strb[24]} -radix hex {1 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[25]} -radix hex {1 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[26]} -radix hex {1 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[27]} -radix hex {1 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[28]} -radix hex {1 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[29]} -radix hex {1 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[30]} -radix hex {1 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[31]} -radix hex {1 0ns}
+force34
+run all
+run: Time (s): cpu = 00:00:49 ; elapsed = 00:02:35 . Memory (MB): peak = 6993.992 ; gain = 0.000 ; free physical = 2240 ; free virtual = 17529
+source ./scripts/collectFifo.tcl
+# add_force {/tb_adc_emu/regFromDwa_strb[24]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[25]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[26]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[27]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[28]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[29]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[30]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[31]} -radix hex {0 0ns}
+force42
+run all
+run: Time (s): cpu = 00:00:43 ; elapsed = 00:01:59 . Memory (MB): peak = 6993.992 ; gain = 0.000 ; free physical = 2112 ; free virtual = 17464
+upgrade_ip -srcset dds_compiler_1khz -vlnv xilinx.com:ip:dds_compiler:6.0 [get_ips  dds_compiler_1khz] -log ip_upgrade.log
+Upgrading 'dds_compiler_1khz'
+INFO: [Project 1-386] Moving file '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.srcs/sources_1/ip/dds_compiler_1khz/dds_compiler_1khz.xci' from fileset 'dds_compiler_1khz' to fileset 'sources_1'.
+INFO: [IP_Flow 19-3422] Upgraded dds_compiler_1khz (DDS Compiler 6.0) from revision 17 to revision 19
+INFO: [IP_Flow 19-1686] Generating 'Instantiation Template' target for IP 'dds_compiler_1khz'...
+INFO: [Coretcl 2-1525] Wrote upgrade log to '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/ip_upgrade.log'.
+export_ip_user_files -of_objects [get_ips dds_compiler_1khz] -no_script -sync -force -quiet
+set_property -dict [list CONFIG.Channels {8} CONFIG.Output_Frequency1 {0.0050} CONFIG.Output_Frequency2 {0.0040} CONFIG.Output_Frequency3 {0.0030} CONFIG.Output_Frequency4 {0.0020} CONFIG.Output_Frequency5 {0.0010} CONFIG.Output_Frequency6 {0.00050} CONFIG.Output_Frequency7 {0.00010} CONFIG.Output_Frequency8 {0.00005} CONFIG.Frequency_Resolution {0.4} CONFIG.Noise_Shaping {Auto} CONFIG.Phase_Width {25} CONFIG.Output_Width {15} CONFIG.DATA_Has_TLAST {Not_Required} CONFIG.S_PHASE_Has_TUSER {Not_Required} CONFIG.M_DATA_Has_TUSER {Not_Required} CONFIG.M_PHASE_Has_TUSER {Not_Required} CONFIG.PINC1 {11010001101101} CONFIG.PINC2 {10100111110001} CONFIG.PINC3 {1111101110101} CONFIG.PINC4 {1010011111000} CONFIG.PINC5 {101001111100} CONFIG.PINC6 {10100111110} CONFIG.PINC7 {100001100} CONFIG.PINC8 {10000110}] [get_ips dds_compiler_1khz]
+generate_target all [get_files  /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.srcs/sources_1/ip/dds_compiler_1khz/dds_compiler_1khz.xci]
+INFO: [IP_Flow 19-1686] Generating 'Instantiation Template' target for IP 'dds_compiler_1khz'...
+INFO: [IP_Flow 19-1686] Generating 'Synthesis' target for IP 'dds_compiler_1khz'...
+INFO: [IP_Flow 19-1686] Generating 'Simulation' target for IP 'dds_compiler_1khz'...
+INFO: [IP_Flow 19-1686] Generating 'C Simulation' target for IP 'dds_compiler_1khz'...
+INFO: [IP_Flow 19-1686] Generating 'Test Bench' target for IP 'dds_compiler_1khz'...
+INFO: [IP_Flow 19-1686] Generating 'Change Log' target for IP 'dds_compiler_1khz'...
+WARNING: [Vivado 12-4154] User modified property 'UsedInSynthesis' (with value '1') was detected on '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.srcs/sources_1/ip/dds_compiler_1khz/demo_tb/tb_dds_compiler_1khz.vhd'.
+WARNING: [Vivado 12-4152] One or more user modified properties were detected. The reset_target command can be used to reset the targets data which will also reset all target properties.
+catch { config_ip_cache -export [get_ips -all dds_compiler_1khz] }
+export_ip_user_files -of_objects [get_files /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.srcs/sources_1/ip/dds_compiler_1khz/dds_compiler_1khz.xci] -no_script -sync -force -quiet
+create_ip_run [get_files -of_objects [get_fileset sources_1] /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.srcs/sources_1/ip/dds_compiler_1khz/dds_compiler_1khz.xci]
+launch_runs -jobs 4 dds_compiler_1khz_synth_1
+[Tue Apr 21 13:16:27 2020] Launched dds_compiler_1khz_synth_1...
+Run output will be captured here: /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.runs/dds_compiler_1khz_synth_1/runme.log
+launch_runs: Time (s): cpu = 00:00:01 ; elapsed = 00:00:10 . Memory (MB): peak = 7135.586 ; gain = 0.000 ; free physical = 2346 ; free virtual = 17685
+export_simulation -of_objects [get_files /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.srcs/sources_1/ip/dds_compiler_1khz/dds_compiler_1khz.xci] -directory /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.ip_user_files/sim_scripts -ip_user_files_dir /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.ip_user_files -ipstatic_source_dir /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.ip_user_files/ipstatic -lib_map_path [list {modelsim=/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.cache/compile_simlib/modelsim} {questa=/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.cache/compile_simlib/questa} {ies=/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.cache/compile_simlib/ies} {xcelium=/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.cache/compile_simlib/xcelium} {vcs=/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.cache/compile_simlib/vcs} {riviera=/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet
+update_compile_order -fileset sources_1
+restart
+INFO: [Simtcl 6-17] Simulation restarted
+save_wave_config {/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/tb_adc_emu_behav.wcfg}
+close_sim
+INFO: [Simtcl 6-16] Simulation closed
+close_sim: Time (s): cpu = 00:12:41 ; elapsed = 00:00:12 . Memory (MB): peak = 7308.570 ; gain = 0.000 ; free physical = 2919 ; free virtual = 17813
+launch_simulation
+Command: launch_simulation 
+INFO: [Vivado 12-5698] Checking validity of IPs in the design for the 'XSim' simulator...
+INFO: [Vivado 12-5682] Launching behavioral simulation in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+INFO: [Vivado 12-4795] Using compiled simulation libraries for IPs
+INFO: [SIM-utils-51] Simulation object is 'sim_1'
+INFO: [USF-XSim-7] Finding pre-compiled libraries...
+INFO: [USF-XSim-11] File '/home/nate/opt/Xilinx/Vivado/2019.2/data/xsim/xsim.ini' copied to run dir:'/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+INFO: [SIM-utils-54] Inspecting design source files for 'tb_adc_emu' in fileset 'sim_1'...
+WARNING: [SIM-utils-52] IP component XML file does not exist: '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_auto_pc_0/dwa_ps_bd_auto_pc_0.xml'
+INFO: [USF-XSim-97] Finding global include files...
+INFO: [USF-XSim-98] Fetching design files from 'sim_1'...
+INFO: [USF-XSim-2] XSim::Compile design
+INFO: [USF-XSim-61] Executing 'COMPILE and ANALYZE' step in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+xvlog --incr --relax -prj tb_adc_emu_vlog.prj
+xvhdl --incr --relax -prj tb_adc_emu_vhdl.prj
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.srcs/sources_1/ip/dds_compiler_1khz/sim/dds_compiler_1khz.vhd" into library xil_defaultlib
+INFO: [VRFC 10-3107] analyzing entity 'dds_compiler_1khz'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/packages/global_def.vhd" into library duneDwa
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/dacInterface.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'dacInterface'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/adc_dds_io.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'adc_dds_io'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/adcReadout.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'adcReadout'
+ERROR: [VRFC 10-2989] 'adcdataserialemu' is not declared [/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/adcReadout.vhd:111]
+ERROR: [VRFC 10-3095] actual of formal out port 'adcdataserial' cannot be an expression [/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/adcReadout.vhd:111]
+ERROR: [VRFC 10-2989] 'adcdataserialemu' is not declared [/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/adcReadout.vhd:121]
+ERROR: [VRFC 10-3782] unit 'rtl' ignored due to previous errors [/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/adcReadout.vhd:52]
+INFO: [VRFC 10-3070] VHDL file '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/adcReadout.vhd' ignored due to errors
+INFO: [USF-XSim-69] 'compile' step finished in '4' seconds
+INFO: [USF-XSim-99] Step results log file:'/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim/xvhdl.log'
+ERROR: [USF-XSim-62] 'compile' step failed with error(s). Please check the Tcl console output or '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim/xvhdl.log' file for more information.
+ERROR: [Vivado 12-4473] Detected error while running simulation. Please correct the issue and retry this operation.
+launch_simulation: Time (s): cpu = 00:00:06 ; elapsed = 00:00:06 . Memory (MB): peak = 7308.570 ; gain = 0.000 ; free physical = 2917 ; free virtual = 17814
+ERROR: [Common 17-39] 'launch_simulation' failed due to earlier errors.
+launch_simulation
+Command: launch_simulation 
+INFO: [Vivado 12-5698] Checking validity of IPs in the design for the 'XSim' simulator...
+INFO: [Vivado 12-5682] Launching behavioral simulation in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+INFO: [Vivado 12-4795] Using compiled simulation libraries for IPs
+INFO: [SIM-utils-51] Simulation object is 'sim_1'
+INFO: [USF-XSim-7] Finding pre-compiled libraries...
+INFO: [USF-XSim-11] File '/home/nate/opt/Xilinx/Vivado/2019.2/data/xsim/xsim.ini' copied to run dir:'/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+INFO: [SIM-utils-54] Inspecting design source files for 'tb_adc_emu' in fileset 'sim_1'...
+WARNING: [SIM-utils-52] IP component XML file does not exist: '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_auto_pc_0/dwa_ps_bd_auto_pc_0.xml'
+INFO: [USF-XSim-97] Finding global include files...
+INFO: [USF-XSim-98] Fetching design files from 'sim_1'...
+INFO: [USF-XSim-2] XSim::Compile design
+INFO: [USF-XSim-61] Executing 'COMPILE and ANALYZE' step in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+xvlog --incr --relax -prj tb_adc_emu_vlog.prj
+xvhdl --incr --relax -prj tb_adc_emu_vhdl.prj
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.srcs/sources_1/ip/dds_compiler_1khz/sim/dds_compiler_1khz.vhd" into library xil_defaultlib
+INFO: [VRFC 10-3107] analyzing entity 'dds_compiler_1khz'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/packages/global_def.vhd" into library duneDwa
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/dacInterface.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'dacInterface'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/adc_dds_io.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'adc_dds_io'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/adcReadout.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'adcReadout'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/wtaController.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'wtaController'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/top_tension_analyzer.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'top_tension_analyzer'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/simulation/source/tb_adc_emu.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'tb_adc_emu'
+INFO: [USF-XSim-69] 'compile' step finished in '3' seconds
+INFO: [USF-XSim-3] XSim::Elaborate design
+INFO: [USF-XSim-61] Executing 'ELABORATE' step in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+xelab -wto 3787bf8d046f446d9f08c2fc73b2295d --incr --debug typical --relax --mt 8 -L xbip_utils_v3_0_10 -L axi_utils_v2_0_6 -L xbip_pipe_v3_0_6 -L xbip_bram18k_v3_0_6 -L mult_gen_v12_0_16 -L xbip_dsp48_wrapper_v3_0_4 -L xbip_dsp48_addsub_v3_0_6 -L xbip_dsp48_multadd_v3_0_6 -L dds_compiler_v6_0_19 -L xil_defaultlib -L fifo_generator_v13_2_3 -L blk_mem_gen_v8_4_2 -L duneDwa -L unisims_ver -L unimacro_ver -L secureip -L xpm --snapshot tb_adc_emu_behav duneDwa.tb_adc_emu duneDwa.glbl -log elaborate.log
+Vivado Simulator 2019.2
+Copyright 1986-1999, 2001-2019 Xilinx, Inc. All Rights Reserved.
+Running: /home/nate/opt/Xilinx/Vivado/2019.2/bin/unwrapped/lnx64.o/xelab -wto 3787bf8d046f446d9f08c2fc73b2295d --incr --debug typical --relax --mt 8 -L xbip_utils_v3_0_10 -L axi_utils_v2_0_6 -L xbip_pipe_v3_0_6 -L xbip_bram18k_v3_0_6 -L mult_gen_v12_0_16 -L xbip_dsp48_wrapper_v3_0_4 -L xbip_dsp48_addsub_v3_0_6 -L xbip_dsp48_multadd_v3_0_6 -L dds_compiler_v6_0_19 -L xil_defaultlib -L fifo_generator_v13_2_3 -L blk_mem_gen_v8_4_2 -L duneDwa -L unisims_ver -L unimacro_ver -L secureip -L xpm --snapshot tb_adc_emu_behav duneDwa.tb_adc_emu duneDwa.glbl -log elaborate.log 
+Using 8 slave threads.
+Starting static elaboration
+Pass Through NonSizing Optimizer
+Completed static elaboration
+Starting simulation data flow analysis
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling package std.standard
+Compiling package std.textio
+Compiling package ieee.std_logic_1164
+Compiling package ieee.numeric_std
+Compiling package ieee.math_real
+Compiling package dunedwa.global_def
+Compiling package unisim.vcomponents
+Compiling package ieee.vital_timing
+Compiling package ieee.vital_primitives
+Compiling package unisim.vpkg
+Compiling package xbip_utils_v3_0_10.xbip_utils_v3_0_10_pkg
+Compiling package xbip_utils_v3_0_10.xcc_utils_v3_0
+Compiling package dds_compiler_v6_0_19.dds_compiler_v6_0_19_viv_comp
+Compiling package ieee.std_logic_arith
+Compiling package ieee.std_logic_signed
+Compiling package dds_compiler_v6_0_19.pkg_dds_compiler_v6_0_19
+Compiling package dds_compiler_v6_0_19.dds_compiler_v6_0_19_hdl_comps
+Compiling package xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv_comp
+Compiling package axi_utils_v2_0_6.axi_utils_v2_0_6_pkg
+Compiling package axi_utils_v2_0_6.global_util_pkg
+Compiling package axi_utils_v2_0_6.axi_utils_comps
+Compiling package ieee.std_logic_unsigned
+Compiling package dds_compiler_v6_0_19.pkg_betas
+Compiling package dds_compiler_v6_0_19.pkg_alphas
+Compiling package vl.vl_types
+Compiling module duneDwa.glbl
+Compiling module unisims_ver.IBUFDS
+Compiling module unisims_ver.MMCME2_ADV(CLKFBOUT_MULT_F=4.0,C...
+Compiling module unisims_ver.BUFG
+Compiling module xil_defaultlib.clk_sysclk_mmcm_clk_wiz
+Compiling module xil_defaultlib.clk_sysclk_mmcm
+Compiling architecture oddr_v of entity unisim.ODDR [\ODDR(ddr_clk_edge="SAME_EDGE")(...]
+Compiling architecture struct of entity dunedwa.dacInterface [dacinterface_default]
+Compiling architecture iddr_v of entity unisim.IDDR [\IDDR(1,13)(1,4)\]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_has_ce=1...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.lut_ram [\lut_ram(init_val=("UUUUUUUUUUUU...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.dds_compiler_v6_0_19_rdy [\dds_compiler_v6_0_19_rdy(c_has_...]
+Compiling architecture fdre_v of entity unisim.FDRE [fdre_default]
+Compiling architecture fdse_v of entity unisim.FDSE [fdse_default]
+Compiling architecture synth of entity dds_compiler_v6_0_19.dither_wrap [\dither_wrap(ci_phase_err_width=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_has_ce=1...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_has_ce=1...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_has_ce=1...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.pipe_add [\pipe_add(c_width=25,c_seg_width...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.lut_ram [\lut_ram(init_val=("UUUUUUUUUUUU...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.accum [\accum(c_xdevicefamily="zynq",c_...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.sin_cos [\sin_cos(c_xdevicefamily="zynq",...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_has_ce=1...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_has_ce=1...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.dds_compiler_v6_0_19_core [\dds_compiler_v6_0_19_core(c_xde...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.dds_compiler_v6_0_19_viv [\dds_compiler_v6_0_19_viv(c_xdev...]
+Compiling architecture xilinx of entity dds_compiler_v6_0_19.dds_compiler_v6_0_19 [\dds_compiler_v6_0_19(c_xdevicef...]
+Compiling architecture dds_compiler_1khz_arch of entity xil_defaultlib.dds_compiler_1khz [dds_compiler_1khz_default]
+Compiling architecture behav of entity dunedwa.adc_dds_io [adc_dds_io_default]
+Compiling architecture rtl of entity dunedwa.adcReadout [adcreadout_default]
+Compiling module blk_mem_gen_v8_4_2.blk_mem_gen_v8_4_2_output_stage(...
+Compiling module blk_mem_gen_v8_4_2.blk_mem_gen_v8_4_2_output_stage(...
+Compiling module blk_mem_gen_v8_4_2.blk_mem_gen_v8_4_2_softecc_outpu...
+Compiling module blk_mem_gen_v8_4_2.blk_mem_gen_v8_4_2_mem_module(C_...
+Compiling module blk_mem_gen_v8_4_2.blk_mem_gen_v8_4_2(C_FAMILY="zyn...
+Compiling module xil_defaultlib.blkMem_mainsAvg
+Compiling architecture rtl of entity dunedwa.wtaController [wtacontroller_default]
+Compiling module fifo_generator_v13_2_3.fifo_generator_v13_2_3_sync_stag...
+Compiling module fifo_generator_v13_2_3.fifo_generator_v13_2_3_sync_stag...
+Compiling module fifo_generator_v13_2_3.fifo_generator_v13_2_3_bhv_ver_a...
+Compiling module fifo_generator_v13_2_3.fifo_generator_v13_2_3_bhv_ver_p...
+Compiling module fifo_generator_v13_2_3.fifo_generator_v13_2_3_CONV_VER(...
+Compiling module fifo_generator_v13_2_3.fifo_generator_vlog_beh(C_DATA_C...
+Compiling module xil_defaultlib.fifo_autoDatacollection
+Compiling architecture struct of entity dunedwa.top_tension_analyzer [\top_tension_analyzer(date_code=...]
+Compiling architecture tb of entity dunedwa.tb_adc_emu
+Built simulation snapshot tb_adc_emu_behav
+run_program: Time (s): cpu = 00:00:11 ; elapsed = 00:00:20 . Memory (MB): peak = 7308.570 ; gain = 0.000 ; free physical = 2920 ; free virtual = 17816
+INFO: [USF-XSim-69] 'elaborate' step finished in '19' seconds
+INFO: [USF-XSim-4] XSim::Simulate design
+INFO: [USF-XSim-61] Executing 'SIMULATE' step in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+INFO: [USF-XSim-98] *** Running xsim
+   with args "tb_adc_emu_behav -key {Behavioral:sim_1:Functional:tb_adc_emu} -tclbatch {tb_adc_emu.tcl} -view {/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/tb_adc_emu_behav.wcfg} -log {simulate.log}"
+INFO: [USF-XSim-8] Loading simulator feature
+Vivado Simulator 2019.2
+Time resolution is 1 ps
+open_wave_config /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/tb_adc_emu_behav.wcfg
+source tb_adc_emu.tcl
+# set curr_wave [current_wave_config]
+# if { [string length $curr_wave] == 0 } {
+#   if { [llength [get_objects]] > 0} {
+#     add_wave /
+#     set_property needs_save false [current_wave_config]
+#   } else {
+#      send_msg_id Add_Wave-1 WARNING "No top level signals found. Simulator will start without a wave window. If you want to open a wave window go to 'File->New Waveform Configuration' or type 'create_wave_config' in the TCL console."
+#   }
+# }
+# run 1000ns
+Block Memory Generator module tb_adc_emu.top_tension_analyzer_1.wtaController_inst.blkMem_mainsAvg_inst.inst.native_mem_module.blk_mem_gen_v8_4_2_inst is using a behavioral model for simulation which will not precisely model memory collision behavior.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+xsim: Time (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 7308.570 ; gain = 0.000 ; free physical = 2865 ; free virtual = 17769
+INFO: [USF-XSim-96] XSim completed. Design snapshot 'tb_adc_emu_behav' loaded.
+INFO: [USF-XSim-97] XSim simulation ran for 1000ns
+launch_simulation: Time (s): cpu = 00:00:26 ; elapsed = 00:00:31 . Memory (MB): peak = 7308.570 ; gain = 0.000 ; free physical = 2865 ; free virtual = 17769
+run all
+Warning: [Unisim MMCME2_ADV-20] Input CLKIN1 period and attribute CLKIN1_PERIOD are not same. Instance tb_adc_emu.top_tension_analyzer_1.clk_sysclk_mmcm_inst.inst.mmcm_adv_inst 
+run: Time (s): cpu = 00:00:57 ; elapsed = 00:02:26 . Memory (MB): peak = 7308.570 ; gain = 0.000 ; free physical = 2854 ; free virtual = 17791
+save_wave_config {/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/tb_adc_emu_behav.wcfg}
+close_sim
+INFO: [Simtcl 6-16] Simulation closed
+close_sim: Time (s): cpu = 00:02:26 ; elapsed = 00:00:12 . Memory (MB): peak = 7398.617 ; gain = 0.000 ; free physical = 2908 ; free virtual = 17811
+launch_simulation
+Command: launch_simulation 
+INFO: [Vivado 12-5698] Checking validity of IPs in the design for the 'XSim' simulator...
+INFO: [Vivado 12-5682] Launching behavioral simulation in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+INFO: [Vivado 12-4795] Using compiled simulation libraries for IPs
+INFO: [SIM-utils-51] Simulation object is 'sim_1'
+INFO: [USF-XSim-7] Finding pre-compiled libraries...
+INFO: [USF-XSim-11] File '/home/nate/opt/Xilinx/Vivado/2019.2/data/xsim/xsim.ini' copied to run dir:'/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+INFO: [SIM-utils-54] Inspecting design source files for 'tb_adc_emu' in fileset 'sim_1'...
+WARNING: [SIM-utils-52] IP component XML file does not exist: '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ip_repo/src/dwa_ps_bd_auto_pc_0/dwa_ps_bd_auto_pc_0.xml'
+INFO: [USF-XSim-97] Finding global include files...
+INFO: [USF-XSim-98] Fetching design files from 'sim_1'...
+INFO: [USF-XSim-2] XSim::Compile design
+INFO: [USF-XSim-61] Executing 'COMPILE and ANALYZE' step in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+xvlog --incr --relax -prj tb_adc_emu_vlog.prj
+xvhdl --incr --relax -prj tb_adc_emu_vhdl.prj
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/packages/global_def.vhd" into library duneDwa
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/dacInterface.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'dacInterface'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/adc_dds_io.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'adc_dds_io'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/adcReadout.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'adcReadout'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/wtaController.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'wtaController'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/hdl/top_tension_analyzer.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'top_tension_analyzer'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/simulation/source/tb_adc_emu.vhd" into library duneDwa
+INFO: [VRFC 10-3107] analyzing entity 'tb_adc_emu'
+INFO: [USF-XSim-69] 'compile' step finished in '3' seconds
+INFO: [USF-XSim-3] XSim::Elaborate design
+INFO: [USF-XSim-61] Executing 'ELABORATE' step in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+xelab -wto 3787bf8d046f446d9f08c2fc73b2295d --incr --debug typical --relax --mt 8 -L xbip_utils_v3_0_10 -L axi_utils_v2_0_6 -L xbip_pipe_v3_0_6 -L xbip_bram18k_v3_0_6 -L mult_gen_v12_0_16 -L xbip_dsp48_wrapper_v3_0_4 -L xbip_dsp48_addsub_v3_0_6 -L xbip_dsp48_multadd_v3_0_6 -L dds_compiler_v6_0_19 -L xil_defaultlib -L fifo_generator_v13_2_3 -L blk_mem_gen_v8_4_2 -L duneDwa -L unisims_ver -L unimacro_ver -L secureip -L xpm --snapshot tb_adc_emu_behav duneDwa.tb_adc_emu duneDwa.glbl -log elaborate.log
+Vivado Simulator 2019.2
+Copyright 1986-1999, 2001-2019 Xilinx, Inc. All Rights Reserved.
+Running: /home/nate/opt/Xilinx/Vivado/2019.2/bin/unwrapped/lnx64.o/xelab -wto 3787bf8d046f446d9f08c2fc73b2295d --incr --debug typical --relax --mt 8 -L xbip_utils_v3_0_10 -L axi_utils_v2_0_6 -L xbip_pipe_v3_0_6 -L xbip_bram18k_v3_0_6 -L mult_gen_v12_0_16 -L xbip_dsp48_wrapper_v3_0_4 -L xbip_dsp48_addsub_v3_0_6 -L xbip_dsp48_multadd_v3_0_6 -L dds_compiler_v6_0_19 -L xil_defaultlib -L fifo_generator_v13_2_3 -L blk_mem_gen_v8_4_2 -L duneDwa -L unisims_ver -L unimacro_ver -L secureip -L xpm --snapshot tb_adc_emu_behav duneDwa.tb_adc_emu duneDwa.glbl -log elaborate.log 
+Using 8 slave threads.
+Starting static elaboration
+Pass Through NonSizing Optimizer
+Completed static elaboration
+Starting simulation data flow analysis
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling package std.standard
+Compiling package std.textio
+Compiling package ieee.std_logic_1164
+Compiling package ieee.numeric_std
+Compiling package ieee.math_real
+Compiling package dunedwa.global_def
+Compiling package unisim.vcomponents
+Compiling package ieee.vital_timing
+Compiling package ieee.vital_primitives
+Compiling package unisim.vpkg
+Compiling package xbip_utils_v3_0_10.xbip_utils_v3_0_10_pkg
+Compiling package xbip_utils_v3_0_10.xcc_utils_v3_0
+Compiling package dds_compiler_v6_0_19.dds_compiler_v6_0_19_viv_comp
+Compiling package ieee.std_logic_arith
+Compiling package ieee.std_logic_signed
+Compiling package dds_compiler_v6_0_19.pkg_dds_compiler_v6_0_19
+Compiling package dds_compiler_v6_0_19.dds_compiler_v6_0_19_hdl_comps
+Compiling package xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv_comp
+Compiling package axi_utils_v2_0_6.axi_utils_v2_0_6_pkg
+Compiling package axi_utils_v2_0_6.global_util_pkg
+Compiling package axi_utils_v2_0_6.axi_utils_comps
+Compiling package ieee.std_logic_unsigned
+Compiling package dds_compiler_v6_0_19.pkg_betas
+Compiling package dds_compiler_v6_0_19.pkg_alphas
+Compiling package vl.vl_types
+Compiling module duneDwa.glbl
+Compiling module unisims_ver.IBUFDS
+Compiling module unisims_ver.MMCME2_ADV(CLKFBOUT_MULT_F=4.0,C...
+Compiling module unisims_ver.BUFG
+Compiling module xil_defaultlib.clk_sysclk_mmcm_clk_wiz
+Compiling module xil_defaultlib.clk_sysclk_mmcm
+Compiling architecture oddr_v of entity unisim.ODDR [\ODDR(ddr_clk_edge="SAME_EDGE")(...]
+Compiling architecture struct of entity dunedwa.dacInterface [dacinterface_default]
+Compiling architecture iddr_v of entity unisim.IDDR [\IDDR(1,13)(1,4)\]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_has_ce=1...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.lut_ram [\lut_ram(init_val=("UUUUUUUUUUUU...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.dds_compiler_v6_0_19_rdy [\dds_compiler_v6_0_19_rdy(c_has_...]
+Compiling architecture fdre_v of entity unisim.FDRE [fdre_default]
+Compiling architecture fdse_v of entity unisim.FDSE [fdse_default]
+Compiling architecture synth of entity dds_compiler_v6_0_19.dither_wrap [\dither_wrap(ci_phase_err_width=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_has_ce=1...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_has_ce=1...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_has_ce=1...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.pipe_add [\pipe_add(c_width=25,c_seg_width...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.lut_ram [\lut_ram(init_val=("UUUUUUUUUUUU...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.accum [\accum(c_xdevicefamily="zynq",c_...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_latency=...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.sin_cos [\sin_cos(c_xdevicefamily="zynq",...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_has_ce=1...]
+Compiling architecture synth of entity xbip_pipe_v3_0_6.xbip_pipe_v3_0_6_viv [\xbip_pipe_v3_0_6_viv(c_has_ce=1...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.dds_compiler_v6_0_19_core [\dds_compiler_v6_0_19_core(c_xde...]
+Compiling architecture synth of entity dds_compiler_v6_0_19.dds_compiler_v6_0_19_viv [\dds_compiler_v6_0_19_viv(c_xdev...]
+Compiling architecture xilinx of entity dds_compiler_v6_0_19.dds_compiler_v6_0_19 [\dds_compiler_v6_0_19(c_xdevicef...]
+Compiling architecture dds_compiler_1khz_arch of entity xil_defaultlib.dds_compiler_1khz [dds_compiler_1khz_default]
+Compiling architecture behav of entity dunedwa.adc_dds_io [adc_dds_io_default]
+Compiling architecture rtl of entity dunedwa.adcReadout [adcreadout_default]
+Compiling module blk_mem_gen_v8_4_2.blk_mem_gen_v8_4_2_output_stage(...
+Compiling module blk_mem_gen_v8_4_2.blk_mem_gen_v8_4_2_output_stage(...
+Compiling module blk_mem_gen_v8_4_2.blk_mem_gen_v8_4_2_softecc_outpu...
+Compiling module blk_mem_gen_v8_4_2.blk_mem_gen_v8_4_2_mem_module(C_...
+Compiling module blk_mem_gen_v8_4_2.blk_mem_gen_v8_4_2(C_FAMILY="zyn...
+Compiling module xil_defaultlib.blkMem_mainsAvg
+Compiling architecture rtl of entity dunedwa.wtaController [wtacontroller_default]
+Compiling module fifo_generator_v13_2_3.fifo_generator_v13_2_3_sync_stag...
+Compiling module fifo_generator_v13_2_3.fifo_generator_v13_2_3_sync_stag...
+Compiling module fifo_generator_v13_2_3.fifo_generator_v13_2_3_bhv_ver_a...
+Compiling module fifo_generator_v13_2_3.fifo_generator_v13_2_3_bhv_ver_p...
+Compiling module fifo_generator_v13_2_3.fifo_generator_v13_2_3_CONV_VER(...
+Compiling module fifo_generator_v13_2_3.fifo_generator_vlog_beh(C_DATA_C...
+Compiling module xil_defaultlib.fifo_autoDatacollection
+Compiling architecture struct of entity dunedwa.top_tension_analyzer [\top_tension_analyzer(date_code=...]
+Compiling architecture tb of entity dunedwa.tb_adc_emu
+Built simulation snapshot tb_adc_emu_behav
+run_program: Time (s): cpu = 00:00:11 ; elapsed = 00:00:20 . Memory (MB): peak = 7398.617 ; gain = 0.000 ; free physical = 2814 ; free virtual = 17752
+INFO: [USF-XSim-69] 'elaborate' step finished in '20' seconds
+INFO: [USF-XSim-4] XSim::Simulate design
+INFO: [USF-XSim-61] Executing 'SIMULATE' step in '/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/project_1.sim/sim_1/behav/xsim'
+INFO: [USF-XSim-98] *** Running xsim
+   with args "tb_adc_emu_behav -key {Behavioral:sim_1:Functional:tb_adc_emu} -tclbatch {tb_adc_emu.tcl} -view {/home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/tb_adc_emu_behav.wcfg} -log {simulate.log}"
+INFO: [USF-XSim-8] Loading simulator feature
+Vivado Simulator 2019.2
+Time resolution is 1 ps
+open_wave_config /home/nate/projects/duneWireTension/vivadoProjects/cores2018/project_1/tb_adc_emu_behav.wcfg
+source tb_adc_emu.tcl
+# set curr_wave [current_wave_config]
+# if { [string length $curr_wave] == 0 } {
+#   if { [llength [get_objects]] > 0} {
+#     add_wave /
+#     set_property needs_save false [current_wave_config]
+#   } else {
+#      send_msg_id Add_Wave-1 WARNING "No top level signals found. Simulator will start without a wave window. If you want to open a wave window go to 'File->New Waveform Configuration' or type 'create_wave_config' in the TCL console."
+#   }
+# }
+# run 1000ns
+Block Memory Generator module tb_adc_emu.top_tension_analyzer_1.wtaController_inst.blkMem_mainsAvg_inst.inst.native_mem_module.blk_mem_gen_v8_4_2_inst is using a behavioral model for simulation which will not precisely model memory collision behavior.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+WARNING: Behavioral models for independent clock FIFO configurations do not model synchronization delays. The behavioral models are functionally correct, and will represent the behavior of the configured FIFO. See the FIFO Generator User Guide for more information.
+INFO: [USF-XSim-96] XSim completed. Design snapshot 'tb_adc_emu_behav' loaded.
+INFO: [USF-XSim-97] XSim simulation ran for 1000ns
+launch_simulation: Time (s): cpu = 00:00:19 ; elapsed = 00:00:28 . Memory (MB): peak = 7398.617 ; gain = 0.000 ; free physical = 2794 ; free virtual = 17734
+source ./scripts/force.tcl
+# add_force {/tb_adc_emu/top_tension_analyzer_1/S_AXI_ACLK_10} -radix hex {1 0ns} {0 50000ps} -repeat_every 100000ps
+# add_force {/tb_adc_emu/top_tension_analyzer_1/S_AXI_ACLK_100} -radix hex {1 0ns} {0 5000ps} -repeat_every 10000ps
+# add_force {/tb_adc_emu/regFromDwa_strb[24]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[25]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[26]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[27]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[28]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[29]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[30]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regFromDwa_strb[31]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regToDwa[0]} -radix hex {00008000 0ns}
+# add_force {/tb_adc_emu/regToDwa[2]} -radix hex {00000005 0ns}
+# add_force {/tb_adc_emu/regToDwa[4]} -radix hex {00000800 0ns}
+# add_force {/tb_adc_emu/regToDwa[5]} -radix hex {900 0ns}
+# add_force {/tb_adc_emu/regToDwa[6]} -radix hex {20 0ns}
+# add_force {/tb_adc_emu/regToDwa[7]} -radix hex {8 0ns}
+# add_force {/tb_adc_emu/regToDwa[8]} -radix hex {10 0ns}
+# add_force {/tb_adc_emu/regToDwa[9]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regToDwa[10]} -radix hex {7 0ns}
+# add_force {/tb_adc_emu/regToDwa[11]} -radix hex {1d 0ns}
+# add_force {/tb_adc_emu/regToDwa[12]} -radix hex {10 0ns}
+# add_force {/tb_adc_emu/regToDwa[14]} -radix hex {0 0ns}
+# add_force {/tb_adc_emu/regToDwa[1]} -radix hex {0 0ns}
+# run 10 us
+Warning: [Unisim MMCME2_ADV-20] Input CLKIN1 period and attribute CLKIN1_PERIOD are not same. Instance tb_adc_emu.top_tension_analyzer_1.clk_sysclk_mmcm_inst.inst.mmcm_adv_inst 
+# add_force {/tb_adc_emu/regToDwa[1]} -radix hex {1 0ns}
+# run 10 us
+# add_force {/tb_adc_emu/regToDwa[9]} -radix hex {1 0ns}
+# run 10 us
+# add_force {/tb_adc_emu/regToDwa[9]} -radix hex {0 0ns}
+force68
+run all
+run: Time (s): cpu = 00:00:23 ; elapsed = 00:01:21 . Memory (MB): peak = 7398.617 ; gain = 0.000 ; free physical = 2708 ; free virtual = 17695
+run 100 us
+run 100 us
+run 100 us
+run all
+close_sim
+INFO: [Simtcl 6-16] Simulation closed
+close_sim: Time (s): cpu = 00:01:28 ; elapsed = 00:00:12 . Memory (MB): peak = 7398.617 ; gain = 0.000 ; free physical = 1840 ; free virtual = 16843
+exit
+INFO: [Common 17-206] Exiting Vivado at Tue Apr 21 16:09:41 2020...
