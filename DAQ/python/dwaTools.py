@@ -48,6 +48,9 @@ def twos_complement(hexstr, bits):
         value -= 1 << bits
     return value
 
+def unsignedIntOfHexString(hexstr):
+    base = 16
+    return int(hexstr, base)
 
 def hexStrOfSignedInt(signedInt, strLen=4):
     """Convert a signed integer to a hex string using two's complement
