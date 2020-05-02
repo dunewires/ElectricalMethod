@@ -317,8 +317,8 @@ begin
             regFromDwa_strb => regFromDwa_strb,
 
             regToDwa       => regToDwa,
-            S_AXI_ACLK_100 => S_AXI_ACLK_100,
-            S_AXI_ACLK_10  => S_AXI_ACLK_10,
+            dwaClk100 => S_AXI_ACLK_100,
+            dwaClk10  => S_AXI_ACLK_10,
 
 
             led             => led,

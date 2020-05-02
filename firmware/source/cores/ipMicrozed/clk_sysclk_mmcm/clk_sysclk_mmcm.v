@@ -56,21 +56,21 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// clk_out1__25.00000______0.000______50.0______151.619_____97.786
-// clk_out2__50.00000______0.000______50.0______131.873_____97.786
-// clk_out3__100.00000______0.000______50.0______114.523_____97.786
-// clk_out4__200.00000______0.000______50.0______100.010_____97.786
-// clk_out5__400.00000______0.000______50.0_______87.396_____97.786
-// clk_out6__10.00000______0.000______50.0______181.846_____97.786
+// clk_out1__25.00000______0.000______50.0______191.696____114.212
+// clk_out2__50.00000______0.000______50.0______167.017____114.212
+// clk_out3__100.00000______0.000______50.0______144.719____114.212
+// clk_out4__200.00000______0.000______50.0______126.455____114.212
+// clk_out5__400.00000______0.000______50.0______111.164____114.212
+// clk_out6__10.00000______0.000______50.0______229.362____114.212
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
 //----------------------------------------------------------------------------
-// __primary_____________200____________0.010
+// __primary_____________100____________0.010
 
 `timescale 1ps/1ps
 
-(* CORE_GENERATION_INFO = "clk_sysclk_mmcm,clk_wiz_v6_0_4_0_0,{component_name=clk_sysclk_mmcm,use_phase_alignment=true,use_min_o_jitter=false,use_max_i_jitter=false,use_dyn_phase_shift=false,use_inclk_switchover=false,use_dyn_reconfig=false,enable_axi=0,feedback_source=FDBK_AUTO,PRIMITIVE=MMCM,num_out_clk=6,clkin1_period=5.000,clkin2_period=10.0,use_power_down=false,use_reset=true,use_locked=true,use_inclk_stopped=false,feedback_type=SINGLE,CLOCK_MGR_TYPE=NA,manual_override=false}" *)
+(* CORE_GENERATION_INFO = "clk_sysclk_mmcm,clk_wiz_v6_0_4_0_0,{component_name=clk_sysclk_mmcm,use_phase_alignment=true,use_min_o_jitter=false,use_max_i_jitter=false,use_dyn_phase_shift=false,use_inclk_switchover=false,use_dyn_reconfig=false,enable_axi=0,feedback_source=FDBK_AUTO,PRIMITIVE=MMCM,num_out_clk=6,clkin1_period=10.000,clkin2_period=10.000,use_power_down=false,use_reset=true,use_locked=true,use_inclk_stopped=false,feedback_type=SINGLE,CLOCK_MGR_TYPE=NA,manual_override=false}" *)
 
 module clk_sysclk_mmcm 
  (
@@ -85,8 +85,7 @@ module clk_sysclk_mmcm
   input         reset,
   output        locked,
  // Clock in ports
-  input         clk_in1_p,
-  input         clk_in1_n
+  input         clk_in1
  );
 
   clk_sysclk_mmcm_clk_wiz inst
@@ -102,8 +101,7 @@ module clk_sysclk_mmcm
   .reset(reset), 
   .locked(locked),
  // Clock in ports
-  .clk_in1_p(clk_in1_p),
-  .clk_in1_n(clk_in1_n)
+  .clk_in1(clk_in1)
   );
 
 endmodule

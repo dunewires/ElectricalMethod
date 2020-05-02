@@ -174,6 +174,6 @@ set_property PACKAGE_PIN H16 [get_ports adcSrcSyncClk_p]
 set_property IOSTANDARD LVCMOS25 [get_ports mainsSquare]
 set_property PACKAGE_PIN G18 [get_ports mainsSquare]
 
-# temp clock false paths.  Replace with sync fifos
+# temp clock false paths.  Replace with sync clock
 set_false_path -from [get_clocks aclk] -to [get_clocks BB_CLK]
 set_false_path -from [get_clocks BB_CLK] -to [get_clocks aclk]

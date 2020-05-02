@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (lin64) Build 2708876 Wed Nov  6 21:39:14 MST 2019
-// Date        : Mon Apr 20 19:22:07 2020
+// Date        : Tue Apr 21 23:52:24 2020
 // Host        : lt2 running 64-bit CentOS Linux release 7.6.1810 (Core)
 // Command     : write_verilog -force -mode funcsim
 //               /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ipMicrozed/clk_sysclk_mmcm/clk_sysclk_mmcm_sim_netlist.v
@@ -22,8 +22,7 @@ module clk_sysclk_mmcm
     clk_out6,
     reset,
     locked,
-    clk_in1_p,
-    clk_in1_n);
+    clk_in1);
   output clk_out1;
   output clk_out2;
   output clk_out3;
@@ -32,11 +31,9 @@ module clk_sysclk_mmcm
   output clk_out6;
   input reset;
   output locked;
-  input clk_in1_p;
-  input clk_in1_n;
+  input clk_in1;
 
-  (* DIFF_TERM = 0 *) (* IBUF_LOW_PWR *) wire clk_in1_n;
-  (* DIFF_TERM = 0 *) (* IBUF_LOW_PWR *) wire clk_in1_p;
+  wire clk_in1;
   wire clk_out1;
   wire clk_out2;
   wire clk_out3;
@@ -47,8 +44,7 @@ module clk_sysclk_mmcm
   wire reset;
 
   clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz inst
-       (.clk_in1_n(clk_in1_n),
-        .clk_in1_p(clk_in1_p),
+       (.clk_in1(clk_in1),
         .clk_out1(clk_out1),
         .clk_out2(clk_out2),
         .clk_out3(clk_out3),
@@ -69,8 +65,7 @@ module clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz
     clk_out6,
     reset,
     locked,
-    clk_in1_p,
-    clk_in1_n);
+    clk_in1);
   output clk_out1;
   output clk_out2;
   output clk_out3;
@@ -79,12 +74,10 @@ module clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz
   output clk_out6;
   input reset;
   output locked;
-  input clk_in1_p;
-  input clk_in1_n;
+  input clk_in1;
 
+  wire clk_in1;
   wire clk_in1_clk_sysclk_mmcm;
-  wire clk_in1_n;
-  wire clk_in1_p;
   wire clk_out1;
   wire clk_out1_clk_sysclk_mmcm;
   wire clk_out2;
@@ -118,14 +111,8 @@ module clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz
        (.I(clkfbout_clk_sysclk_mmcm),
         .O(clkfbout_buf_clk_sysclk_mmcm));
   (* BOX_TYPE = "PRIMITIVE" *) 
-  (* CAPACITANCE = "DONT_CARE" *) 
-  (* IBUF_DELAY_VALUE = "0" *) 
-  (* IFD_DELAY_VALUE = "AUTO" *) 
-  IBUFDS #(
-    .IOSTANDARD("DEFAULT")) 
-    clkin1_ibufgds
-       (.I(clk_in1_p),
-        .IB(clk_in1_n),
+  BUFG clkin1_bufg
+       (.I(clk_in1),
         .O(clk_in1_clk_sysclk_mmcm));
   (* BOX_TYPE = "PRIMITIVE" *) 
   BUFG clkout1_buf
@@ -154,10 +141,10 @@ module clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz
   (* BOX_TYPE = "PRIMITIVE" *) 
   MMCME2_ADV #(
     .BANDWIDTH("OPTIMIZED"),
-    .CLKFBOUT_MULT_F(4.000000),
+    .CLKFBOUT_MULT_F(8.000000),
     .CLKFBOUT_PHASE(0.000000),
     .CLKFBOUT_USE_FINE_PS("FALSE"),
-    .CLKIN1_PERIOD(5.000000),
+    .CLKIN1_PERIOD(10.000000),
     .CLKIN2_PERIOD(0.000000),
     .CLKOUT0_DIVIDE_F(32.000000),
     .CLKOUT0_DUTY_CYCLE(0.500000),
@@ -188,7 +175,7 @@ module clk_sysclk_mmcm_clk_sysclk_mmcm_clk_wiz
     .CLKOUT6_DUTY_CYCLE(0.500000),
     .CLKOUT6_PHASE(0.000000),
     .CLKOUT6_USE_FINE_PS("FALSE"),
-    .COMPENSATION("ZHOLD"),
+    .COMPENSATION("BUF_IN"),
     .DIVCLK_DIVIDE(1),
     .IS_CLKINSEL_INVERTED(1'b0),
     .IS_PSEN_INVERTED(1'b0),

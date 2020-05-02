@@ -13,14 +13,14 @@ entity top_tension_analyzer is
     HASH_CODE : std_logic_vector(31 downto 0)
   );
   port (
-    regFromDwa      : out SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
+    regFromDwa : out SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
     --regFromDwa      : out SLV_VECTOR_TYPE_32(31 downto 0);
-    regFromDwa_strb : in  std_logic_vector(31 downto 0);
+    regFromDwa_strb : in std_logic_vector(31 downto 0);
 
-    regToDwa       : in SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
+    regToDwa : in SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
     --regToDwa       : in SLV_VECTOR_TYPE_32(31 downto 0);
-    S_AXI_ACLK_100 : in std_logic;
-    S_AXI_ACLK_10  : in std_logic;
+    dwaClk100 : in std_logic;
+    dwaClk10  : in std_logic;
 
 
     led             : out std_logic_vector(3 downto 0);
@@ -55,34 +55,6 @@ end top_tension_analyzer;
 
 architecture STRUCT of top_tension_analyzer is
 
-  ------------------------------------------------------------------------------
-  --  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
-  --   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
-  ------------------------------------------------------------------------------
-  -- clk_out1____25.000______0.000______50.0______191.696____114.212
-  -- clk_out2____50.000______0.000______50.0______167.017____114.212
-  -- clk_out3___100.000______0.000______50.0______144.719____114.212
-  -- clk_out4___200.000______0.000______50.0______126.455____114.212
-  -- clk_out5___400.000______0.000______50.0______111.164____114.212
-  -- clk_out6____12.500______0.000______50.0______219.618____114.212
-  component clk_sysclk_mmcm
-    port
-    ( -- Clock in ports
-      -- Clock out ports
-      clk_out1 : out std_logic;
-      clk_out2 : out std_logic;
-      clk_out3 : out std_logic;
-      clk_out4 : out std_logic;
-      clk_out5 : out std_logic;
-      clk_out6 : out std_logic;
-      -- Status and control signals
-      reset     : in  std_logic;
-      locked    : out std_logic;
-      clk_in1_P : in  std_logic;
-      clk_in1_N : in  std_logic
-    );
-  end component;
-
   COMPONENT fifo_autoDatacollection
     PORT (
       rst         : IN  STD_LOGIC;
@@ -99,95 +71,6 @@ architecture STRUCT of top_tension_analyzer is
       rd_rst_busy : OUT STD_LOGIC
     );
   END COMPONENT;
-
-  COMPONENT xadc_senseWire
-    PORT (
-      m_axis_tvalid : OUT STD_LOGIC;
-      m_axis_tready : IN  STD_LOGIC;
-      m_axis_tdata  : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-      m_axis_tid    : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
-      m_axis_aclk   : IN  STD_LOGIC;
-      s_axis_aclk   : IN  STD_LOGIC;
-      m_axis_resetn : IN  STD_LOGIC;
-
-      vp_in  : IN STD_LOGIC;
-      vn_in  : IN STD_LOGIC;
-      vauxp0 : IN STD_LOGIC;
-      vauxn0 : IN STD_LOGIC;
-      vauxp8 : IN STD_LOGIC;
-      vauxn8 : IN STD_LOGIC;
-
-      channel_out : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
-      eoc_out     : OUT STD_LOGIC;
-      alarm_out   : OUT STD_LOGIC;
-      eos_out     : OUT STD_LOGIC;
-      busy_out    : OUT STD_LOGIC
-    );
-  END COMPONENT;
-
-  COMPONENT fifo_adcData
-    PORT (
-      clk   : IN  STD_LOGIC;
-      srst  : IN  STD_LOGIC;
-      din   : IN  STD_LOGIC_VECTOR(17 DOWNTO 0);
-      wr_en : IN  STD_LOGIC;
-      rd_en : IN  STD_LOGIC;
-      dout  : OUT STD_LOGIC_VECTOR(17 DOWNTO 0);
-      full  : OUT STD_LOGIC;
-      empty : OUT STD_LOGIC
-    );
-  END COMPONENT;
-
-  COMPONENT ila_xadc
-
-    PORT (
-      clk    : IN STD_LOGIC;
-      probe0 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-      probe1 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-      probe2 : IN STD_LOGIC_VECTOR(4 DOWNTO 0)
-    );
-  END COMPONENT ;
-
-  COMPONENT ila_xadc_big
-
-    PORT (
-      clk    : IN STD_LOGIC;
-      probe0 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-      probe1 : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-      probe2 : IN STD_LOGIC_VECTOR(4 DOWNTO 0)
-    );
-  END COMPONENT ;
-
-  COMPONENT vio_ctrl
-    PORT (
-      clk         : IN  STD_LOGIC;
-      probe_in0   : IN  STD_LOGIC_VECTOR(31 DOWNTO 0);
-      probe_in1   : IN  STD_LOGIC_VECTOR(31 DOWNTO 0);
-      probe_in2   : IN  STD_LOGIC_VECTOR(0 DOWNTO 0);
-      probe_out0  : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
-      probe_out1  : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-      probe_out2  : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-      probe_out3  : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-      probe_out4  : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-      probe_out5  : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-      probe_out6  : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-      probe_out7  : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
-      probe_out8  : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-      probe_out9  : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-      probe_out10 : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
-      probe_out11 : OUT STD_LOGIC_VECTOR(4 DOWNTO 0)
-    );
-  END COMPONENT ;
-
-  type chanList_t is array(natural range <>) of std_logic_vector(4 downto 0);
-  constant chanList : chanList_t(2 downto 0) := ("11000","10000","00011");
-
-  signal sysclk25  : std_logic := '0';
-  signal sysclk50  : std_logic := '0';
-  signal sysclk100 : std_logic := '0';
-  signal sysclk200 : std_logic := '0';
-  signal sysclk400 : std_logic := '0';
-  signal sysclk10  : std_logic := '0';
 
   signal auto            : std_logic := '0';
   signal acStimX200      : std_logic := '0';
@@ -208,22 +91,15 @@ architecture STRUCT of top_tension_analyzer is
   signal m_axis_tid    : std_logic_vector(4 DOWNTO 0);
   signal m_axis_resetn : std_logic;
 
-  signal fifo_adcData_wen    : std_logic_vector(chanList'range)   := (others => '0');
-  signal fifo_adcData_ren    : std_logic_vector(chanList'range)   := (others => '0');
-  signal fifo_adcData_ef     : std_logic_vector(chanList'range)   := (others => '0');
-  signal fifo_adcData_ff     : std_logic_vector(chanList'range)   := (others => '0');
-  signal fifo_adcData_dout   : SLV_VECTOR_TYPE_18(chanList'range) := (others => (others => '0'));
-  signal fifo_adcData_rdBusy : std_logic_vector(chanList'range)   := (others => '0');
-
-  signal adcAutoDC_data    : SIGNED_VECTOR_TYPE_16(7 downto 0) := (others => (others => '0'));
-  signal fifoAutoDC_din    : SLV_VECTOR_TYPE_16(7 downto 0)    := (others => (others => '0'));
-  signal fifoAutoDC_wen    : std_logic                         := '0';
-  signal fifoAutoDC_ren    : std_logic_vector(7 downto 0)      := (others => '0');
-  signal fifoAutoDC_dout   : SLV_VECTOR_TYPE_16(7 downto 0)    := (others => (others => '0'));
-  signal fifoAutoDC_ff     : std_logic_vector(7 downto 0)      := (others => '0');
-  signal fifoAutoDC_rdBusy : std_logic_vector(7 downto 0)      := (others => '0');
-  signal fifoAutoDC_ef     : std_logic_vector(7 downto 0)      := (others => '0');
-  signal adcAutoDc_af      : std_logic_vector(7 downto 0)      := (others => '0');
+  signal adcAutoDC_data    : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+  signal fifoAutoDC_din    : SLV_VECTOR_TYPE(7 downto 0)(15 downto 0)    := (others => (others => '0'));
+  signal fifoAutoDC_wen    : std_logic                                   := '0';
+  signal fifoAutoDC_ren    : std_logic_vector(7 downto 0)                := (others => '0');
+  signal fifoAutoDC_dout   : SLV_VECTOR_TYPE(7 downto 0)(15 downto 0)    := (others => (others => '0'));
+  signal fifoAutoDC_ff     : std_logic_vector(7 downto 0)                := (others => '0');
+  signal fifoAutoDC_rdBusy : std_logic_vector(7 downto 0)                := (others => '0');
+  signal fifoAutoDC_ef     : std_logic_vector(7 downto 0)                := (others => '0');
+  signal adcAutoDc_af      : std_logic_vector(7 downto 0)                := (others => '0');
 
   signal ctrl_freqMin        : std_logic_vector(15 downto 0) := (others => '0');
   signal ctrl_freqMax        : std_logic_vector(15 downto 0) := (others => '0');
@@ -236,13 +112,18 @@ architecture STRUCT of top_tension_analyzer is
   signal ctrl_acStim_nPeriod : unsigned(31 downto 0)         := (others => '0');
   signal ctrl_adcFifo_af     : std_logic                     := '0';
   signal adcAutoDc_wen       : std_logic                     := '0';
-  signal adcAutoDc_headData  : unsigned(15 downto 0)         := (others => '0');
+  signal headData            : unsigned(15 downto 0)         := (others => '0');
+  signal headDataStrb        : std_logic                     := '0';
   signal adcAutoDc_chSel     : std_logic_vector(3 downto 0)  := (others => '0');
   signal crtl_finish         : std_logic                     := '0';
   signal ctrl_busy           : std_logic                     := '0';
   signal ctrl_busy_del       : std_logic                     := '0';
   signal adcHScale           : unsigned(4 downto 0)          := (others => '0');
   signal adcAutoDC_dValid    : std_logic                     := '0';
+
+  signal adcStart : std_logic := '0';
+  signal adcBusy  : std_logic := '0';
+  signal adcDone  : std_logic := '0';
 
   signal mainsSquare_del1, mainsSquare_del2 : std_logic := '0';
   signal mainsTrig                          : std_logic := '0';
@@ -253,34 +134,18 @@ architecture STRUCT of top_tension_analyzer is
 
   signal mainsTrig_filter : unsigned(17 downto 0);
 
-  signal senseWireData     : SIGNED_VECTOR_TYPE_16(7 downto 0) := (others => (others => '0'));
-  signal senseWireDataStrb : std_logic                         := '0';
-  signal senseWireDataSel  : unsigned(2 downto 0)              := (others => '0');
+  signal senseWireData     : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+  signal senseWireDataStrb : std_logic                                   := '0';
+  signal senseWireDataSel  : unsigned(2 downto 0)                        := (others => '0');
 
   signal dpotMag : SLV_VECTOR_TYPE_08(7 downto 0) := (others => (others => '0'));
+
 begin
-  led(1) <= sysclk100;
+  led(1) <= dwaClk100;
   led(0) <= ctrl_busy;
   led(3) <= '1';
   led(2) <= acStimX200;
 
-
-  clk_sysclk_mmcm_inst : clk_sysclk_mmcm
-    port map (
-      -- Clock out ports  
-      clk_out1 => open,
-      clk_out2 => open,
-      clk_out3 => sysclk100,
-      clk_out4 => sysclk200,
-      clk_out5 => open,
-      clk_out6 => sysclk10,
-      -- Status and control signals                
-      reset  => '0',
-      locked => open,
-      -- Clock in ports
-      clk_in1_P => BB_CLK_P,
-      clk_in1_N => BB_CLK_N
-    );
   --  ODDR_acStim : ODDR
   --    generic map(
   --      DDR_CLK_EDGE => "SAME_EDGE", -- "OPPOSITE_EDGE" or "SAME_EDGE"
@@ -335,173 +200,6 @@ begin
   --      I => acStim       -- Buffer input
   --    );
 
-
-  -- the 32 bit division takes forever
-  compute_n_periods : process (sysclk10)
-    variable acStim_nPeriod_all : unsigned(31 downto 0 );
-  begin
-    if rising_edge(sysclk10) then
-      if auto ='1' then
-        freqReq       <= std_logic_vector(ctrl_freqSet);
-        acStim_enable <= ctrl_acStim_enable;
-      else
-        freqReq       <= freqReq_vio;
-        acStim_enable <= '1';
-      end if;
-      acStimX200_nPeriod <= (x"7A1200"/ unsigned(freqReq(23 downto 0)));
-      -- trim off 8 MSbs because we don't need to go below ~10Hz
-      acStim_nPeriod_all := (x"5F5E1000"/unsigned(freqReq));
-      acStim_nPeriod     <= acStim_nPeriod_all(acStim_nPeriod'range);
-    end if;
-  end process compute_n_periods;
-
-  make_ac_stimX200 : process (sysclk200)
-  begin
-    if rising_edge(sysclk200) then
-      -- Default Increment
-      acStimX200_periodCnt <= acStimX200_periodCnt +1;
-      -- need the > to catch when the nPeriod decreases at the wrong time
-
-      if acStimX200_periodCnt >= acStimX200_nPeriod then
-        -- dont use the enable here to keep the filter working
-        acStimX200           <= not acStimX200;
-        acStimX200_periodCnt <= (acStimX200_periodCnt'left downto 1 => '0', 0 => '1'); --x"000001";
-      end if;
-
-    end if;
-  end process make_ac_stimX200;
-
-  dacInterface_inst : entity work.dacInterface
-    port map (
-      acStim_mag     => acStim_mag,
-      acStim_nPeriod => acStim_nPeriod,
-      acStim_enable  => acStim_enable,
-
-      DAC_SDI   => DAC_SDI,
-      DAC_CS_B  => DAC_CS_B,
-      DAC_LD_B  => DAC_LD_B,
-      DAC_CLR_B => DAC_CLR_B,
-      DAC_CLK   => DAC_CLK,
-
-      S_AXI_ACLK_100 => S_AXI_ACLK_100,
-      sysclk200      => sysclk200
-    );
-
-  --  dpotInterface_1 : entity duneDwa.dpotInterface
-  --    port map (
-  --      mag => dpotMag,
-  --
-  --      sdi    => dpotSdi,
-  --      sdo    => dpotSdo,
-  --      pr_b   => dpotPr_b,
-  --      cs_b   => dpotCs_b,
-  --      sck    => dpotSck,
-  --      shdn_b => dpotShdn_b,
-  --
-  --      sysClk10 => sysClk10
-  --    );
-
-  adcReadout_1 : entity duneDwa.adcReadout
-    port map (
-      start  => '0',
-      enable => '1',
-
-      adcCnv => adcCnv,
-      adcSck => adcSck,
-
-      adcDataSerialDwa => adcDataSerial,
-      adcSrcSyncClkDwa => adcSrcSyncClk,
-
-      dataParallel     => senseWireData,
-      dataParallelStrb => senseWireDataStrb,
-
-      busy      => open,
-      reset     => '0',
-      sysclk100 => sysclk100
-    );
-
-  genCh : for i in 2 downto 0 generate
-
-    --  fifo_adcData_ch : fifo_adcData
-    --    PORT MAP (
-    --      clk   => sysclk100,
-    --      srst  => not m_axis_resetn,
-    --      din   => "00" & m_axis_tdata,
-    --      wr_en => fifo_adcData_wen(i),
-    --      rd_en => fifo_adcData_ren(i),
-    --      dout  => fifo_adcData_dout(i),
-    --      full  => fifo_adcData_ff(i),
-    --      empty => fifo_adcData_ef(i)
-    --    );
-
-    fifo_adcData_ren(i) <= fifo_adcData_rdBusy(i) and not fifo_adcData_ef(i);
-    fifo_adcData_wen(i) <= m_axis_tvalid when m_axis_tid = chanList(i) else '0';
-
-    sortAdcCh : process ( sysclk100)
-    begin
-      if rising_edge(sysclk100) then
-        fifo_adcData_rdBusy(i) <= (fifo_adcData_ff(i) or fifo_adcData_rdBusy(i)) and
-          not fifo_adcData_ef(i);
-      end if;
-    end process sortAdcCh;
-
-    --  ila_xadc_ch : ila_xadc
-    --    PORT MAP (
-    --      clk       => sysclk100,
-    --      probe0(0) => fifo_adcData_ren(i),
-    --      probe1    => fifo_adcData_dout(i)(15 downto 0),
-    --      probe2    => m_axis_tid
-    --    );
-
-  end generate genCh;
-
-
-  trigGen : process (sysclk100)
-  begin
-    if rising_edge(sysclk100) then
-      mainsSquare_del1 <= mainsSquare;
-      mainsSquare_del2 <= mainsSquare_del1;
-      -- not yet supported by xilinx simulation 
-      -- mainsTrig        <= '1' when mainsTrig_filter = (mainsTrig_filter'left downto 1 => '0', 0 => '1') else '0';
-      if mainsTrig_filter = "00" & x"0001" then
-        mainsTrig <= '1';
-      else
-        mainsTrig <= '0' ;
-      end if;
-
-      if mainsSquare_del2 = '0' then
-        mainsTrig_filter <= (others => '1');
-      elsif mainsTrig_filter /= (mainsTrig_filter'range => '0') then
-        mainsTrig_filter <= mainsTrig_filter-1;
-      end if;
-    end if;
-  end process;
-  ----------------------------------------------------------------------------
-  -- Auto sweep the stimulus frequency
-  ----------------------------------------------------------------------------
-  -- vio_ctrl_inst : vio_ctrl
-  --   PORT MAP (
-  --     clk => sysclk10,
-  --     --probe_in0(31 downto 24)  => x"00",
-  --     probe_in0(31 downto 0) => std_logic_vector(acStim_nPeriod),
-  --     --probe_in1(31 downto 24)  => x"00",
-  --     probe_in1(31 downto 0) => std_logic_vector(acStimX200_nPeriod),
-  --     --probe_out0(31 downto 24) => open,
-  --     probe_in2(0)            => ctrl_busy,
-  --     probe_out0(31 downto 0) => freqReq_vio,
-  --     probe_out1(0)           => m_axis_resetn,
-  --     probe_out2(0)           => m_axis_tready,
-  --     probe_out3(0)           => auto,
-  --     probe_out4              => ctrl_freqMin,
-  --     probe_out5              => ctrl_freqMax,
-  --     probe_out6              => ctrl_freqStep,
-  --     probe_out7              => ctrl_stimTime,
-  --     probe_out8              => ctrl_adc_nSamples,
-  --     probe_out9(0)           => ctrl_ctrlStart,
-  --     probe_out10             => adcAutoDc_chSel,
-  --     unsigned(probe_out11)   => adcHScale
-  --   );
-
   -- Register decoder
   regFromDwa(15)    <= (31 downto 24 => '0', 23 downto 0 => std_logic_vector(acStim_nPeriod));
   regFromDwa(16)    <= (31 downto 24 => '0', 23 downto 0 => std_logic_vector(acStimX200_nPeriod));
@@ -519,7 +217,7 @@ begin
   ctrl_freqMax      <= regToDwa(5)(15 DOWNTO 0);
   ctrl_freqStep     <= regToDwa(6)(15 DOWNTO 0);
   ctrl_stimTime     <= regToDwa(7);
-  ctrl_adc_nSamples <= regToDwa(8)(15 DOWNTO 0);
+  adcCnv_nCnv       <= regToDwa(8)(15 DOWNTO 0);
   ctrl_ctrlStart    <= regToDwa(9)(0);
   adcAutoDc_chSel   <= regToDwa(10)(3 DOWNTO 0);
   adcHScale         <= unsigned(regToDwa(11)(4 DOWNTO 0));
@@ -527,82 +225,181 @@ begin
   senseWireDataSel  <= unsigned(regToDwa(13)(2 DOWNTO 0));
   CoilDrive         <= regToDwa(14);
 
+  -- convert requested stim frequency to number of 100Mhz clocks
+  -- move this to the processor!
+  compute_n_periods : process (dwaClk10)
+    variable acStim_nPeriod_all : unsigned(31 downto 0 );
+  begin
+    if rising_edge(dwaClk10) then
+      if auto ='1' then
+        freqReq       <= std_logic_vector(ctrl_freqSet);
+        acStim_enable <= ctrl_acStim_enable;
+      else
+        freqReq       <= freqReq_vio;
+        acStim_enable <= '1';
+      end if;
 
+      acStimX200_nPeriod <= (x"7A1200"/ unsigned(freqReq(23 downto 0)));
+      -- trim off 8 MSbs because we don't need to go below ~10Hz
+      -- acStim_nPeriod_all := (x"5F5E1000"/unsigned(freqReq));
+      -- acStim_nPeriod     <= acStim_nPeriod_all(acStim_nPeriod'range);
+      -- use the acStim_nPeriod as the basis for the other freq to maintain exact sync
+      -- this will produce a greater error in the actual freq being measured.
+      acStim_nPeriod <= acStimX200_nPeriod * 200;
+      adcCnv_nPeriod <= acStimX200_nPeriod * 10; --  let's start with a fixed 20 samples/period
+    end if;
+  end process compute_n_periods;
+
+  make_ac_stimX200 : process (dwaClk100)
+  begin
+    if rising_edge(dwaClk100) then
+      -- Default Increment
+      acStimX200_periodCnt <= acStimX200_periodCnt +1;
+      -- need the > to catch when the nPeriod decreases at the wrong time
+
+      if acStimX200_periodCnt >= acStimX200_nPeriod then
+        -- dont use the enable here to keep the filter working
+        acStimX200           <= not acStimX200;
+        acStimX200_periodCnt <= (acStimX200_periodCnt'left downto 1 => '0', 0 => '1'); --x"000001";
+      end if;
+
+    end if;
+  end process make_ac_stimX200;
+
+  -- gain DPOT
+  --  dpotInterface_1 : entity duneDwa.dpotInterface
+  --    port map (
+  --      mag => dpotMag,
+  --
+  --      sdi    => dpotSdi,
+  --      sdo    => dpotSdo,
+  --      pr_b   => dpotPr_b,
+  --      cs_b   => dpotCs_b,
+  --      sck    => dpotSck,
+  --      shdn_b => dpotShdn_b,
+  --
+  --      sysClk10 => sysClk10
+  --    );
+
+  -- mains trigger noise filter
+  trigGen : process (dwaClk100)
+  begin
+    if rising_edge(dwaClk100) then
+      mainsSquare_del1 <= mainsSquare;
+      mainsSquare_del2 <= mainsSquare_del1;
+      -- not yet supported by xilinx simulation 
+      -- mainsTrig        <= '1' when mainsTrig_filter = (mainsTrig_filter'left downto 1 => '0', 0 => '1') else '0';
+      if mainsTrig_filter = "00" & x"0001" then
+        mainsTrig <= '1';
+      else
+        mainsTrig <= '0' ;
+      end if;
+
+      if mainsSquare_del2 = '0' then
+        mainsTrig_filter <= (others => '1');
+      elsif mainsTrig_filter /= (mainsTrig_filter'range => '0') then
+        mainsTrig_filter <= mainsTrig_filter-1;
+      end if;
+    end if;
+  end process;
+
+  -- stimulus frequency generation via DAC
+  dacInterface_inst : entity work.dacInterface
+    port map (
+      acStim_mag     => acStim_mag,
+      acStim_nPeriod => acStim_nPeriod,
+      acStim_enable  => acStim_enable,
+
+      DAC_SDI   => DAC_SDI,
+      DAC_CS_B  => DAC_CS_B,
+      DAC_LD_B  => DAC_LD_B,
+      DAC_CLR_B => DAC_CLR_B,
+      DAC_CLK   => DAC_CLK,
+
+      dwaClk100 => dwaClk100
+    );
+
+  -- frequency scan and header generator
+  -- move to processor 
   wtaController_inst : entity duneDwa.wtaController
     port map (
-      freqMin      => unsigned(ctrl_freqMin),
-      freqMax      => unsigned(ctrl_freqMax),
-      freqStep     => unsigned(ctrl_freqStep),
-      stimTime     => unsigned(ctrl_stimTime),
-      adc_nSamples => unsigned(ctrl_adc_nSamples),
+      adcCnv_nCnv    => unsigned(adcCnv_nCnv),
+      adcCnv_nPeriod => adcCnv_nPeriod,
+      acStim_nPeriod => acStim_nPeriod,
+
+      freqMin  => unsigned(ctrl_freqMin),
+      freqMax  => unsigned(ctrl_freqMax),
+      freqStep => unsigned(ctrl_freqStep),
+
+      stimTime => unsigned(ctrl_stimTime),
 
       ctrlStart => ctrl_ctrlStart,
+      ctrlBusy  => ctrl_busy,
 
       freqSet       => ctrl_freqSet,
       acStim_enable => ctrl_acStim_enable,
 
-      acStim_nPeriod => acStim_nPeriod,
-      adcHScale      => adcHScale,
+      adcAutoDc_af => adcAutoDc_af,
+      headData     => headData,
+      headDataStrb => headDataStrb,
 
-      adcAutoDc_af  => adcAutoDc_af,
-      adcAutoDc_wen => adcAutoDc_wen, -- controller enable the writing
-                                      --!! the current version only uses ADC Ch 0 for the mains minus data
-      adcAutoDc_data   => adcAutoDc_data,
-      adcAutoDc_dValid => adcAutoDC_dValid, -- feedback  to the controller that the ADC has sampled the selected channel 
+      adcStart => adcStart,
+      adcBusy  => adcBusy,
+      adcDone  => adcDone,
 
-      mainsAvg_nAvg      => x"08",
-      adcAutoDc_headData => adcAutoDc_headData,
-
-      mainsTrig         => mainsTrig,
-      mainsMinus_enable => mainsMinus_enable,
-      mainsMinus_data   => mainsMinus_data,
-      mainsMinus_wen    => mainsMinus_wen,
-
-      busy  => ctrl_busy,
-      reset => not m_axis_resetn,
-      clk   => sysclk100
+      reset     => not m_axis_resetn,
+      status    => x"abc",
+      dwaClk100 => dwaClk100
     );
 
-  readoutModeMuxing : process (sysclk100)
-  begin
-    if rising_edge(sysclk100) then
-      -- Write header if MSb is 1,  ADC is 12 bits so there is no real data here
-      adcAutoDC_data <= senseWireData; --sync with valid signal
-      if adcAutoDc_headData(15) = '1' then
-        adcAutoDC_dValid <= '0';
-        for i in 7 downto 0 loop
-          fifoAutoDC_din(i) <= std_logic_vector(adcAutoDc_headData);
-        end loop;
-        fifoAutoDC_wen <= '1';
-      else
-        adcAutoDC_dValid <= senseWireDataStrb;
-        for j in 7 downto 0 loop
-          fifoAutoDC_din(j) <= std_logic_vector(mainsMinus_data(j));
-        end loop;
-        --             fifoAutoDC_wen <= (fifo_adcData_wen(to_integer(unsigned(adcAutoDc_chSel))) and adcAutoDc_wen);
-        fifoAutoDC_wen <= mainsMinus_wen;
-      end if;
+  -- on adcStart get all of the samples at the current frequency
+  adcReadout_inst : entity duneDwa.adcReadout
+    port map (
+      adcCnv_nCnv    => unsigned(adcCnv_nCnv),
+      adcCnv_nPeriod => adcCnv_nPeriod,
+      acStim_nPeriod => acStim_nPeriod,
 
-      --fifoAutoDC_wen <= fifo_adcData_wen(to_integer(unsigned(adcAutoDc_chSel)));
-      --fifoAutoDC_din <= m_axis_tdata;
+      adcStart => adcStart,
+      trigger  => not DAC_LD_B,
+      adcBusy  => adcBusy,
+      adcDone  => adcDone,
 
-      -- start readout process when Programmable Pull
-      fifoAutoDC_rdBusy <= (crtl_finish or(adcAutoDc_af) or fifoAutoDC_rdBusy) and
-        not fifoAutoDC_ef;
-      --trigger a readout at end of test
-      ctrl_busy_del <= ctrl_busy;
-      crtl_finish   <= ctrl_busy_del and not ctrl_busy;
+      adcCnv => adcCnv,
+      adcSck => adcSck,
 
-    end if;
-  end process readoutModeMuxing;
+      adcDataSerialDwa => adcDataSerial,
+      adcSrcSyncClkDwa => adcSrcSyncClk,
 
+      dataParallel     => senseWireData,
+      dataParallelStrb => senseWireDataStrb,
+
+      reset     => not m_axis_resetn,
+      dwaClk100 => dwaClk100
+    );
+
+  --for each of the 8 channels
   adcMemFifoGen : for adc_i in 7 downto 0 generate
 
+    -- mux between header data and adc data
+    readoutModeMuxing : process (dwaClk100)
+    begin
+      if rising_edge(dwaClk100) then
+        if headDataStrb then
+          fifoAutoDC_din(adc_i) <= std_logic_vector(headData);
+          fifoAutoDC_wen        <= '1';
+        else
+          fifoAutoDC_din(adc_i) <= std_logic_vector(senseWireData(adc_i)) ;
+          fifoAutoDC_wen        <= senseWireDataStrb;
+        end if;
+      end if;
+    end process readoutModeMuxing;
+
+    -- store data for AXI read
     fifo_autoDatacollection_ch : fifo_autoDatacollection
       PORT MAP (
         rst    => not m_axis_resetn,
-        wr_clk => sysclk100,
-        rd_clk => S_AXI_ACLK_100,
+        wr_clk => dwaClk100,
+        rd_clk => dwaClk100,
         din    => fifoAutoDC_din(adc_i),
         wr_en  => fifoAutoDC_wen,
 

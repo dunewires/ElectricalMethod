@@ -32,8 +32,7 @@ entity dacInterface is
 		DAC_CLR_B : out std_logic := '0';
 		DAC_CLK   : out std_logic := '0';
 
-		S_AXI_ACLK_100 : in std_logic := '0';
-		sysclk200  : in std_logic := '0'
+		dwaClk100 : in std_logic := '0'
 	);
 end entity dacInterface;
 
@@ -44,7 +43,7 @@ architecture STRUCT of dacInterface is
 	signal shiftCnt         : unsigned(3 downto 0)         := (others => '0');
 	signal DAC_CLK_EN       : std_logic                    := '0';
 	signal acStim_periodCnt : unsigned(23 downto 0)        := (others => '0');
-	signal acStim           : std_logic_vector(3 downto 0) := (others => '0');
+	signal acStim,acStim_del           : std_logic                    := '0';
 
 
 begin
@@ -55,7 +54,7 @@ begin
 			SRTYPE       => "SYNC")      -- Reset Type ("ASYNC" or "SYNC")
 		port map (
 			Q  => DAC_CLK,    -- 1-bit DDR output
-			C  => S_AXI_ACLK_100, -- 1-bit clock input
+			C  => dwaClk100, -- 1-bit clock input
 			CE => '1',        -- 1-bit clock enable input
 			D1 => DAC_CLK_EN,
 			D2 => '0',
@@ -64,9 +63,9 @@ begin
 		);
 
 	-- load DAC on PS clock
-	load_dac : process (S_AXI_ACLK_100)
+	load_dac : process (dwaClk100)
 	begin
-		if rising_edge(S_AXI_ACLK_100) then
+		if rising_edge(dwaClk100) then
 			acStim_mag_del <= acStim_mag;
 			-- TEMP ALWAYS ENABLE
 			DAC_CS_B   <= '0';
@@ -85,20 +84,20 @@ begin
 	end process load_dac;
 
 
-	make_ac_stim : process (sysclk200)
+	make_ac_stim : process (dwaClk100)
 	begin
-		if rising_edge(sysclk200) then
+		if rising_edge(dwaClk100) then
 			acStim_periodCnt <= acStim_periodCnt +1;
 
 			if acStim_periodCnt >= acStim_nPeriod then
 				-- dont use the enable here to keep the filter working
-				acStim(0)        <= not acStim(0) and acStim_enable;
+				acStim_del       <= not acStim and acStim_enable;
 				acStim_periodCnt <= (acStim_periodCnt'left downto 1 => '0', 0 => '1'); --x"000001";
 			end if;
-			-- need to add disable during dhift in
-			acStim(3 downto 1) <= acStim(2 downto 0);
-			DAC_LD_B           <= acStim(3) or not acStim(0);
-			DAC_CLR_B          <= not acStim(3) or acStim(0);
+			--pulse leading edge
+			DAC_LD_B           <= acStim_del or not acStim;
+			--pulse  trailing edge
+			DAC_CLR_B          <= not acStim_del or acStim;
 
 		end if;
 	end process make_ac_stim;

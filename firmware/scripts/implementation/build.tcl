@@ -319,6 +319,7 @@ proc bitgen {} {
     global proj_dir
     global proj_name
     global post_route_wns
+    global proj_sources_dir
     global target
     global build_name
     global fsbl_elf
