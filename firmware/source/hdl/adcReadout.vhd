@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Sat May  2 00:20:06 2020
+-- Last update : Thu May 14 01:12:54 2020
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -31,9 +31,9 @@ use UNISIM.vcomponents.all;
 
 entity adcReadout is
 	port (
-		adcCnv_nCnv        : in unsigned (15 downto 0) := (others := '0');
-		adcCnv_nPeriod     : in unsigned(23 downto 0)  := (others := '0');
-		acStimX200_nPeriod : in unsigned(23 downto 0)  := (others := '0');
+		adcCnv_nCnv        : in unsigned(15 downto 0) := (others => '0');
+		adcCnv_nPeriod     : in unsigned(23 downto 0)  := (others => '0');
+		acStim_nHPeriod : in unsigned(23 downto 0)  := (others => '0');
 
 		adcStart : in std_logic := '0';
 		trigger  : in std_logic := '0';
@@ -46,7 +46,7 @@ entity adcReadout is
 		adcDataSerialDwa : in STD_LOGIC_VECTOR(3 downto 0);
 		adcSrcSyncClkDwa : in std_logic := '0';
 
-		dataParallel     : out SIGNED_VECTOR_TYPE_16(7 downto 0);
+		dataParallel     : out SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0);
 		dataParallelStrb : out std_logic := '0';
 
 		reset : in  std_logic := '0';
@@ -57,21 +57,22 @@ end entity adcReadout;
 architecture rtl of adcReadout is
 
 	type ctrlState_type is (idle_s, adcCnvStart_s, adcCnvWait_s, adcReadout_s,readoutDone_s);
-	signal ctrlState, ctrlState_next : ctrlState_type        := idle_s;
+	signal ctrlState : ctrlState_type        := idle_s;
 	signal timerCnt                  : unsigned(11 downto 0) := (others => '0');
 	signal adcSckEnable              : std_logic             := '0';
 	signal adcSckEnableEmu           : std_logic             := '0';
-	signal dataParallelSsclk         : SIGNED_VECTOR4_TYPE;
-	signal dataParallelSsclkEmu      : SIGNED_VECTOR4_TYPE;
-	signal dataParallelSsclkDwa      : SIGNED_VECTOR4_TYPE;
+	signal dataParallelSsclk         : SIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
+	signal dataParallelSsclkEmu      : SIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
+	signal dataParallelSsclkDwa      : SIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
 	signal adcSrcSyncClkEmu          : std_logic := '0';
 	signal adcSrcSyncClk             : std_logic := '0';
 	signal adcSckEmu                 : std_logic := '0';
 	signal adcDataSerialEmu          : STD_LOGIC_VECTOR(3 downto 0);
 
 	signal cnvSyncStrb  : std_logic             := '0';
-	signal cnvPeriodCnt : unsigned(24 downto 0) := (others => '0');
-	signal cnvCnt       : unsigned(15 downto 0) := (others => '0');
+	signal cnvPeriodCnt : unsigned(23 downto 0) := (others => '0');
+	-- start out at max cnvCnt so we power up doneCnv
+	signal cnvCnt       : unsigned(15 downto 0) := (others => '1');
 
 
 begin
@@ -179,19 +180,19 @@ begin
 		variable doneCnv  : boolean := false;
 	begin
 		if rising_edge(dwaClk100) then
-			firstCnv    := not or(cnvCnt); -- waiting for the first cnv
+			firstCnv    := not (or(cnvCnt)) = '1'; -- waiting for the first cnv
 			doneCnv     := cnvCnt > adcCnv_nCnv;
 			cnvSyncStrb <= '0';
 			adcBusy        <= '0' when doneCnv else '1';
 
 			-- reset the sampling sequence
 			if adcStart then
-				cnvCnt <= x"00";
+				cnvCnt <= (others => '0');
 
 			elsif not doneCnv then
 				--get the samples
 				--trigger can be mains or stim clk	
-				if (trigger and firstCnv) or              -- use the trigger to set off the first cnv
+				if (trigger = '1' and firstCnv) or              -- use the trigger to set off the first cnv
 					((cnvPeriodCnt >= adcCnv_nPeriod) and -- use the period count for the remaining cnvs
 						not firstCnv) then
 					cnvPeriodCnt <= x"000001"; --reset to 1
@@ -247,7 +248,6 @@ begin
 					if timerCnt = x"020" then
 						timerCnt  <= x"001";
 						ctrlState <= readoutDone_s;
-						cnvCnt    <= cnvCnt + 1;
 					else
 						timerCnt <= timerCnt+1;
 					end if;

@@ -19,7 +19,7 @@ entity adc_dds_io is
     adcDataSerial    : out STD_LOGIC_VECTOR(3 downto 0);
     adcSrcSyncClk : out std_logic := '0';
 
-    sysclk100 : in std_logic := '0'
+    dwaClk100 : in std_logic := '0'
   );
 end adc_dds_io;
 
@@ -35,9 +35,9 @@ architecture behav of adc_dds_io is
 
   --  signal ENABLE     : boolean := false;
 
-  signal adcDataPar : SLV_VECTOR4_TYPE := (others => (others => '0'));
+  signal adcDataPar : SLV_VECTOR_TYPE(3 downto 0)(31 downto 0) := (others => (others => '0'));
 
-  signal sinGenData : SIGNED_VECTOR8_TYPE  := (others => (others => '0'));
+  signal sinGenData : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
   signal sinGenChan : unsigned(2 downto 0) := "000";
   signal tvalid     : std_logic            := '0';
   signal adcCnv_del : std_logic            := '0';
@@ -47,14 +47,14 @@ begin
 
   dds_compiler_1khz_inst : dds_compiler_1khz
     port map (
-      aclk               => sysclk100,
+      aclk               => dwaClk100,
       m_axis_data_tvalid => tvalid,
       m_axis_data_tdata  => tdata
     );
 
-  getSinData : process (sysclk100)
+  getSinData : process (dwaClk100)
   begin
-    if rising_edge(sysclk100) then
+    if rising_edge(dwaClk100) then
       -- remember last adcCnv state, used to find cnv edge
       adcCnv_del <= adcCnv;
       -- get the sine date from the generator
