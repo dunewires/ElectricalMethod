@@ -1,12 +1,18 @@
---
--- VHDL Package Header nova_feb.register_address_map
---
--- Created:
---          by - nate.nate (heplpc2)
---          at - 14:48:24 06/29/10
---
--- using Mentor Graphics HDL Designer(TM) 2009.1 (Build 12)
---
+--------------------------------------------------------------------------------
+-- Title       : DWA Global Definitions
+-- Project     : DUNE DWA
+--------------------------------------------------------------------------------
+-- File        : headerGenerator.vhd
+-- Author      : Nathan Felt felt@fas.harvard.edu
+-- Company     : Harvard University LPPC
+-- Created     : Thu May  2 11:04:21 2019
+-- Last update : Tue Jun  9 00:35:51 2020
+-- Platform    : DWA microZed
+-- Standard    : VHDL-2008
+-------------------------------------------------------------------------------
+-- Description: Definitions of a parameterized system
+--------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
@@ -19,22 +25,52 @@ package global_def is
 	-- ADC AXI offset address
 	constant adcRegOfst  : integer := 24;
 	constant adcStatAddr : integer := 23;
-	constant useAdcEmu: boolean := true;
+	constant useAdcEmu   : boolean := true;
 
 	type TARGET_TYPE is (COSMIC_TS,TEST_BEAM,V_SLICE,BENCHTOP);
-	-- Vivado sim does not support unconstrained arrays :(
-	-- it's only been 12 years, give them time!
-	--type SLV_VECTOR_TYPE_32 is array (natural range <>) of std_logic_vector(31 downto 0);
-	--type SLV_VECTOR_TYPE_18 is array (natural range <>) of std_logic_vector(17 downto 0);
-	--type SLV_VECTOR_TYPE_16 is array (natural range <>) of std_logic_vector(15 downto 0);
-	--type SLV_VECTOR_TYPE_08 is array (natural range <>) of std_logic_vector(7 downto 0);
+
 	type SLV_VECTOR_TYPE is array (natural range <>) of std_logic_vector;
 
-	--type SLV_VECTOR4_TYPE is array (3 downto 0) of std_logic_vector(31 downto 0);
-	--type UNSIGNED_VECTOR_TYPE_16 is array (natural range <>) of unsigned(15 downto 0);
 	type UNSIGNED_VECTOR_TYPE is array (natural range <>) of unsigned;
 	type SIGNED_VECTOR_TYPE is array (natural range <>) of signed;
-	--type SIGNED_VECTOR8_TYPE is array  (7 downto 0) of signed(15 downto 0);
-	--type SIGNED_VECTOR4_TYPE is array  (3 downto 0) of signed(31 downto 0);
 	--type INTEGER_VECTOR_TYPE is array (natural range <>) of integer;
+
+	-- put all Processing System AXI registers here
+	type fromDwaRegType is record
+		freqReqAxi       : unsigned(23 downto 0);
+		reset_b          : boolean;
+		auto             : unsigned(23 downto 0);
+		freqMin          : unsigned(23 downto 0);
+		freqMax          : unsigned(23 downto 0);
+		freqStep         : unsigned(23 downto 0);
+		stimTime         : unsigned(23 downto 0);
+		ctrlStart        : boolean;
+		acStim_mag       : unsigned(23 downto 0);
+		senseWireDataSel : unsigned(23 downto 0);
+		CoilDrive        : std_logic_vector(23 downto 0);
+		ctrl_busy        : boolean;
+		DATE_CODE        : unsigned(23 downto 0);
+		HASH_CODE        : unsigned(23 downto 0);
+		headARdy         : boolean;
+		headAData        : std_logic_vector(31 downto 0);
+	end record;
+
+	type fromDaqRegType is record
+		freqReqAxi       : unsigned(23 downto 0);
+		reset_b          : boolean;
+		auto             : unsigned(23 downto 0);
+		freqMin          : unsigned(23 downto 0);
+		freqMax          : unsigned(23 downto 0);
+		freqStep         : unsigned(23 downto 0);
+		stimTime         : unsigned(23 downto 0);
+		ctrlStart        : boolean;
+		acStim_mag       : unsigned(23 downto 0);
+		senseWireDataSel : unsigned(23 downto 0);
+		CoilDrive        : std_logic_vector(23 downto 0);
+		ctrl_busy        : boolean;
+
+		headARen : boolean;
+	end record;
+
+
 end global_def;
