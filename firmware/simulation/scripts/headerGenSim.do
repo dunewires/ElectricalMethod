@@ -12,6 +12,6 @@
 vsim -voptargs="+acc" -L duneDwa  duneDwa.tb_headerGenerator 
 
 # start wave before force to catch anything that happens there
-do $scripts/headerGenWave.do
-do $scripts/headerGenForce.do
+do scripts/headerGenWave.do
+do scripts/headerGenForce.do
 run 200ns

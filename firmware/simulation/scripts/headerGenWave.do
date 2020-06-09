@@ -9,6 +9,7 @@ add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerat
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/fromDaqReg
 add wave -noupdate -expand -group TOP -expand -group headerGen -expand /tb_headergenerator/headerGenerator_inst/headADataList
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/dwaClk100
+add wave -noupdate /tb_headergenerator/headerGenerator_inst/nHeadALog
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {234022327936 fs} 0}
 quietly wave cursor active 1
@@ -26,4 +27,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits fs
 update
-WaveRestoreZoom {0 fs} {645165449 fs}
+WaveRestoreZoom {0 fs} {259272096 fs}
