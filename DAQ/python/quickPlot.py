@@ -13,7 +13,7 @@ if narg < 2:
     filename = 'mmTest1F.python.txt'
 else:
     filename = sys.argv[1]
-
+    
 # if filename is a timestamp, then plot *all* registers
 try:
     froot = os.path.basename(filename)
@@ -29,7 +29,7 @@ except ValueError:
 print
 
 if multiRegister:
-    filelist = glob.glob('{}*'.format(filename))
+    filelist = glob.glob('{}*.txt'.format(filename))
     filelist.sort()
     nReg = len(filelist)
     print("filelist")
@@ -53,6 +53,7 @@ def getRegNameOfFilename(fname):
 
 if multiRegister:
     fig, axs = plt.subplots(4,2)
+    axs[0,0].set_title(filename)
     for nn in range(nReg):
         v = dwa.parseUdpDataFile(filelist[nn])
         ids = idsOfN(nn)
@@ -63,6 +64,8 @@ if multiRegister:
             axs[ids[0], ids[1]].yaxis.set_label_position("right")
         regName = getRegNameOfFilename(filelist[nn])
         axs[ids[0], ids[1]].set_ylabel(regName)
+        axs[ids[0], ids[1]].set_ylim(-17500, 17500)
+        #axs[ids[0], ids[1]].set_xlim(0,1000)
 
 else:
     v = dwa.parseUdpDataFile(filename)
@@ -72,4 +75,4 @@ else:
         plt.plot(v[iv])
 
 plt.show()
-
+plt.savefig('junk.png')

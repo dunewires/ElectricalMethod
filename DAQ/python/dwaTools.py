@@ -48,9 +48,57 @@ def twos_complement(hexstr, bits):
         value -= 1 << bits
     return value
 
+def signedIntOfUnsignedInt(v, bits):
+    """ convert an unsigned int to a signed int (2s complement) 
+    """
+    if v & (1 << (bits-1)):
+        v -= 1 << bits
+    return v
+
+def unsignedIntOfSignedInt(v, bits):
+    """ convert a signed int (2s complement) to an unsigned int
+    """
+    if v < 0:
+        v += (1 << bits)
+    return v
+
 def unsignedIntOfHexString(hexstr):
+    """ convert a hex string into an unsigned integer
+    """
     base = 16
     return int(hexstr, base)
+
+def hexStrOfAdcVal(v):
+    """Create a hex string from an ADC value
+    Converts a 16-bit signed integer (2s complement) to a hex string
+    * first, bit shift right by one (16bit --> 15 bit)
+    * then convert this 15bit number to a hex string
+    Args:
+        v (signed int): 16-bit ADC value (an integer from -32768 to 32767, inclusive)
+    Returns:
+        hexStr (str): string representation of the 15bit ADC value, in hex
+
+    Example:
+        >>> hexStrOfAdcVal(-2123)
+        >>> '7BDA'
+        >>> hexStrOfAdcVal(2123)
+        >>> '0425'
+    """
+    v = unsignedIntOfSignedInt(v, 16)
+    v = v >> 1
+    return '{:04X}'.format(v)
+    
+def adcValOfHexStr(hs):
+    # assumes:
+    # * hex string represents the 15 MSb of the ADC value
+    # * ADC value will be a signed integer
+    # hs = "hex string" e.g. '7BDA'
+    hexBase = 16
+    v = int(hs, hexBase)
+    v = v << 1
+    v = signedIntOfUnsignedInt(v, 16)
+    return v
+
 
 def hexStrOfSignedInt(signedInt, strLen=4):
     """Convert a signed integer to a hex string using two's complement
@@ -81,6 +129,67 @@ def hexStrOfSignedInt(signedInt, strLen=4):
     fmtStr = '{{:0{}x}}'.format(strLen)
     hexStr = fmtStr.format(signedInt).upper()
     return hexStr
+
+def makeAdcDataLine(adc1=None, adc2=None, bitsToDrop=1):
+
+    if adc1 is None:
+        print("ERROR: must provide at least one ADC value")
+        return "..ERROR."
+
+    bits = 16
+    
+    if adc1 < 0:
+        adc1 += (1 << bits)   # twos-complement
+    adc1 = adc1 >> bitsToDrop # bit shift right
+
+    if adc2 is None:
+        adc2 = 0
+
+    if adc2 < 0:
+        adc2 += (1 << bits)
+    adc2 = adc2 >> bitsToDrop
+
+    # create and return the hex string
+    return '{:04x}{:04x}'.format(adc1, adc2).upper()
+
+
+def hexStrOfAdc15Bit(adc):
+    """Make hex string from 15MSb of a 16-bit ADC value """
+    # assumes that the adc value represents a signed integer
+    bits = 16
+    
+    if adc < 0:
+        adc += (1 << bits)   # twos-complement
+    adc = adc >> 1 # drop the LSb
+    return '{:04x}'.format(adc).upper()
+    
+def intOfAdcHexStr15Bit(hexStr):
+    bits = 15
+    signedInt = twos_complement(hexStr, bits)     # convert hexStr to an integer
+    signedInt = signedInt << 1  # bit shift left by one bit
+    return signedInt
+
+
+def isHeaderLine(testStr):
+    """Check if string is a header frame delimiter string (MSb=1) 
+
+    testStr is a header if the MSb is 1
+    we check this by converting the first character in the hex string
+    to a 4-bit integer and check if the MSb of that integer is 1
+
+    e.g. if first character is 0xA then that is 0b1010
+    we then bit-shift 3 right to get 0b0001 which is "True"
+    but if the first character were 0x7, then that is 0b0111
+    we then bit-shift 3 right to get 0b0000 which is "False"
+
+    e.g. 
+    testStr = 'A13F' is a header line since 0xA = 0b1010 (MSb is 1)
+    testStr =  '81B' is a header line since 0x8 = 0b1000 (MSb is 1)
+    testStr = '7AF2' is not a header  since 0x7 = 0b0111 (MSb is 0)
+    """
+    hexChar = testStr[0]   # take first character of the string
+    base = 16 # hexadecimal
+    return int(hexChar, base) >> 3  # convert to an integer and bit-shift 3 right
 
 def parseUdpDataFile(ff='mmTest1F.python.txt'):
     with open(ff, 'r') as fh:
@@ -156,6 +265,10 @@ def parseDwaDataHeader(hdr1, hdr2, verbose=False):
     # Get rid of leading/trailing whitespace
     hdr1 = hdr1.strip()
     hdr2 = hdr2.strip()
+    if verbose:
+        print("  hdr1 = [{}]".format(hdr1))
+        print("  hdr2 = [{}]".format(hdr2))
+    
 
     # Dictionary to hold the parsed header information
     headerDict = {}
@@ -206,6 +319,7 @@ def parseDwaDataHeader(hdr1, hdr2, verbose=False):
     adcSampPer_us = 2.0
     if verbose:
         print("  adcSampPer_str   =  [{}]".format(adcSampPer_str))
+        print("  adcSampPer (b)   =  [0b{:016b}]".format(int(adcSampPer_str, base16)))
         print("  nAdcSampSkip (b) =  [0b{:016b}]".format(nAdcSampSkip))
         print("  nAdcSampSkip (d) =  [{}]".format(nAdcSampSkip))
 
@@ -241,7 +355,7 @@ def dwaGetConfigParameters(configFile):
     # [1, 1, 2, 3, 5, 8, 13
     # see: https://stackoverflow.com/questions/335695/lists-in-configparser
 
-    cp = configparser.ConfigParser()
+    cp = configparser.ConfigParser(inline_comment_prefixes="#")
     cp.read(configFile)
 
     config = {}
@@ -441,6 +555,22 @@ def ipAddressToHexStr(ipStr):
         hexStr += fmtStr.format(int(tok)).upper()
     return hexStr
 
+def hexStrToIpAddressStr(hexStr):
+    """convert hex string representation of IP to IP string
+    Example:
+        >>> hexStrToIpAddressStr('6C3134FC')
+        >>> '149.130.136.8'
+    """
+    hexStr = hexStr.strip()
+    toks = [hexStr[ii:ii+2] for ii in range(0,len(hexStr),2)]
+    if len(toks) != 4:
+        print("EXPECTED A HEX STRING WITH 8 CHARACTERS: XXXXXXXX")
+        return("000.000.000.000")
+    hexBase = 16
+    ipVals = [int(tok,hexBase) for tok in toks]
+    ipStr = '{}.{}.{}.{}'.format(*ipVals)
+    return ipStr
+    
 def dwaSetUdpAddress(ss, address, verbose=0):
     # IP address where the UDP data will be sent (e.g. IP address of the DAQ computer)
 
