@@ -37,7 +37,7 @@ end entity headerGenerator;
 architecture rtl of headerGenerator is
 
 	-- set the number of header words here
-	constant nHeadA    : integer                      := 5;
+	constant nHeadA    : integer                      := 6;
 	constant tempA     : std_logic_vector(7 downto 0) := "11001101";
 	constant nHeadALog : integer                      := integer(log2(real(nHeadA +1)));
 
@@ -45,10 +45,14 @@ architecture rtl of headerGenerator is
 	signal headAPktCnt   : unsigned(23 downto 0)                           := (others => '0');
 	signal headADataList : slv_vector_type(nHeadA-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
+        --fixme: this should come from elsewhere... perhaps global_def.vhd
+        constant dataRegister : std_logic_vector(7 downto 0) := x"FF";
+        
 begin
 	--header data indexed list with 0 at bottom of list
 	headADataList <= (
 			x"AAAAAAAA",
+                        x"10" & x"0000" & dataRegister,
 			x"AB" & std_logic_vector(headAPktCnt),
 			tempA & std_logic_vector(fromDaqReg.freqMax),
 			"0100101" & '1' & std_logic_vector(fromDaqReg.freqStep(23 downto 4)) & "0100",
