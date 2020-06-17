@@ -43,7 +43,6 @@ architecture rtl of headerGenerator is
 
 	-- set the number of header words here
 	constant nHeadA    : integer                      := 4;
-	--constant tempA     : std_logic_vector(7 downto 0) := "11001101";
         -- number of bits needed for headACnt
 	constant nHeadALog : integer                      := integer(log2(real(nHeadA +1)));
 
@@ -53,7 +52,7 @@ architecture rtl of headerGenerator is
 
         --------------------------
 	-- Setup for Header F
-	constant nHeadF    : integer                      := 7; -- # of headerwords
+	constant nHeadF    : integer                      := 23; -- # of headerwords
 	constant nHeadFLog : integer                      := integer(log2(real(nHeadF +1)));
 
 	signal headFCnt      : unsigned(nHeadFLog-1 downto 0)                  := (others => '0');
@@ -83,24 +82,37 @@ begin
           x"AAAAAAAA" -- header delimiter (end)
 	);
 
+                --2A # clientIp_16MSb 16 MSb of client_IP  16bit
+                --2B # clientIp_16LSb 16 LSb of client_IP  16bit
+                --2E # relayMask_16MSb (which relays are active). Valid for v2 only
+                --2F # relayMask_16LSb (which relays are active). Valid for v2 only
+                --?? # v3 has 192 bits (64+32)*2 (8 lines of 24 bits)
+        
         headFDataList <= (
           x"FFFF" & std_logic_vector(to_unsigned(nHeadF-2, 16)), -- header delimiter (start)
-          --x"20" & [[[dwaCtrl]]], 
-          --x"21" & [[[fixedPeriod]]], 
+          x"00" & std_logic_vector(internalDwaReg.runOdometer),
+          x"01" & std_logic_vector(internalDwaReg.fpgaSerialNum),
+          x"02" & std_logic_vector(internalDwaReg.firmwareId_date(47 downto 24)), --24MSb
+          x"03" & std_logic_vector(internalDwaReg.firmwareId_date(23 downto  0)),  --24LSb
+          x"04" & x"00" & std_logic_vector(internalDwaReg.firmwareId_hash(31 downto 16)), --16MSb
+          x"05" & x"00" & std_logic_vector(internalDwaReg.firmwareId_hash(15 downto  0)),  --16LSb
+          --
+          x"20" & std_logic_vector(internalDwaReg.dwaCtrl),
+          x"21" & std_logic_vector(internalDwaReg.fixedPeriod), 
           x"22" & std_logic_vector(internalDwaReg.freqMin),  -- fixme: is this really period?
           x"23" & std_logic_vector(internalDwaReg.freqMax),
           x"24" & std_logic_vector(internalDwaReg.freqStep),
-          --x"25 & ???? & [[[adcAutoDc_chSel]]],
-          --x"26" & [[[number of cycles per frequency]]],
-          --x"27" & [[[ADC samples per cycle]]],
-          x"28" & std_logic_vector(internalDwaReg.acStim_mag),  -- fixme: verify!!!
-          --x"2A" & x"00"  & client_IP (16 MSb)
-          --x"2B" & x"00"  & client_IP (16 LSb)
-          x"2C" & std_logic_vector(internalDwaReg.stimTime),
-          --x"2D" & std_logic_vector(internalDwaReg.activeChannels), --fixme: active
-                                                               --channel mask
-          --x"2E" & x"00" & std_logic_vector(relayMask(xxx downto yyy)), 
-          --x"2F" & x"00" & std_logic_vector(relayMask(xxx downto yyy)),
+          x"25" & x"00" & std_logic_vector(internalDwaReg.adcAutoDc_chSel),
+          x"26" & std_logic_vector(internalDwaReg.cyclesPerFreq),
+          x"27" & x"00" & std_logic_vector(internalDwaReg.adcSamplesPerCycle),
+          x"28" & x"000" & std_logic_vector(internalDwaReg.acStim_mag), 
+          -- 29 not used?
+          x"2A" & x"00" & std_logic_vector(internalDwaReg.clientIp(31 downto 16)), --16MSb
+          x"2B" & x"00" & std_logic_vector(internalDwaReg.clientIp(15 downto  0)), --16LSb
+          x"2C" & std_logic_vector(internalDwaReg.ctrl_stimTime),
+          x"2D" & x"0000" & internalDwaReg.activeChannels,
+          x"2E" & x"00" & internalDwaReg.relayMask(31 downto 16), 
+          x"2F" & x"00" & internalDwaReg.relayMask(15 downto  0),
           x"FFFFFFFF" -- header delimiter (end)
         );    
 

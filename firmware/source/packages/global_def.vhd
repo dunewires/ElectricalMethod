@@ -45,47 +45,54 @@ package global_def is
 		freqStep         : unsigned(23 downto 0); 
 		stimTime         : unsigned(23 downto 0);
 		ctrlStart        : boolean;
-		acStim_mag       : unsigned(23 downto 0);
+		--acStim_mag       : unsigned(23 downto 0); -- replaced
 		senseWireDataSel : unsigned(23 downto 0);
 		CoilDrive        : std_logic_vector(23 downto 0);
 		ctrl_busy        : boolean;
-		DATE_CODE        : unsigned(23 downto 0);
-		HASH_CODE        : unsigned(23 downto 0);
+		--DATE_CODE        : unsigned(23 downto 0);
+		--HASH_CODE        : unsigned(23 downto 0);
 
-                -- james' entries start
+                -- James' entries start
                 --- which register is this data coming from? (A, F, C, D, E, 0-7)
                 dataRegister     : std_logic_vector(7 downto 0);
                 --- total number of runs with this board (non-volatile)
                 runOdometer      : unsigned(23 downto 0);
                 --- 24 LSb of the 64-bit FPGA serial number
                 fpgaSerialNum    : unsigned(23 downto 0);
+                --- Firmware identifier (date) YYMMDDHHMMSS (in hex)
+		firmwareId_date  : unsigned(47 downto 0);
+                --- Firmware identifier (git hash) use 32 bits
+		firmwareId_hash  : unsigned(31 downto 0);
                 --- dwaCtrl (still used?  how many bits?)
                 dwaCtrl          : unsigned(23 downto 0); --bits???
                 --- fixedPeriod 24bit in units of 10ns
                 fixedPeriod      : unsigned(23 downto 0);
-
-                --- Are these the same as freqMin, freqMax, freqStep????
+                --- is this still relevant for v3???
+                adcAutoDc_chSel    : unsigned(15 downto 0); -- bits???
+                --- Number of stimulus cycles per frequency (unitless)
+                cyclesPerFreq      : unsigned(23 downto 0);  -- bits???
+                --- Number of ADC samples per simulus cycle (unitless)
+                adcSamplesPerCycle : unsigned(15 downto 0); -- bits???
+                --- AC Stimulus magnitude (12bit DAC value)
+                acStim_mag         : unsigned(11 downto 0);
+                -- Client IP address (where UDP data is sent)
+                clientIp           : unsigned(31 downto 0);
+                --- After switching to a new frequency, how long to wait before
+                --- acquiring data (24bits, units=1.28 microseconds)
+                ctrl_stimTime      : unsigned(23 downto 0);
+                --- Channel mask indicating which sense channels are active (8bit)
+                activeChannels     : std_logic_vector(7 downto 0);
+                --- Mask indicating which relays are active
+                --- in v2 thi sis 32 bits.  In v3 will be 192 bits!!!
+                relayMask          : std_logic_vector(31 downto 0);
+                                                               
+               --- Are these the same as freqMin, freqMax, freqStep????
                 --22 # stimPeriodMin 24bit in units of 10 ns
                 --23 # stimPeriodMax 24bit in units of 10 ns
                 --24 # stimPeriodStep (??-bit in units of ??)
                 --25 # adcAutoDc_chSel
-                adcAutoDc_chSel  : unsigned(16 downto 0); -- bits???
-                --26 # number of cycles per frequency (???-bits, unitless)
-                nCycPerFreq : unsigned(23 downto 0);  -- bits???
-                --27 # ADC samples per cycle (???-bits, unitless)
-                adcSampPerCycle : unsigned(16 downto 0); -- bits???
-                --28 # stimMag (12bit DAC value)
-                --2A # clientIp_16MSb 16 MSb of client_IP  16bit
-                --2B # clientIp_16LSb 16 LSb of client_IP  16bit
-                --2C # ctrl_stimTime (24bits, units=??) (coarser than 10ns)
-                --2D # activeChannels (channel mask for the active channels (8bit)
-                --2E # relayMask_16MSb (which relays are active). Valid for v2 only
-                --2F # relayMask_16LSb (which relays are active). Valid for v2 only
-                --?? # v3 has 192 bits (64+32)*2 (8 lines of 24 bits)
-                                                               
-
                 
-                -- james' entries end
+                -- James' entries end
 
         end record;
         
