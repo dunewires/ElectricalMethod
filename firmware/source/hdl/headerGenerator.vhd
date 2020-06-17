@@ -41,39 +41,34 @@ end entity headerGenerator;
 
 architecture rtl of headerGenerator is
 
-	-- set the number of header words here
-	constant nHeadA    : integer                      := 4;
-        -- number of bits needed for headACnt
-	constant nHeadALog : integer                      := integer(log2(real(nHeadA +1)));
-
+	constant nHeadA      : integer  := 4; -- # of header words (incl. 2 delimiters)
+	constant nHeadALog   : integer  := integer(log2(real(nHeadA +1)));
 	signal headACnt      : unsigned(nHeadALog-1 downto 0)                  := (others => '0');
 	signal headAPktCnt   : unsigned(23 downto 0)                           := (others => '0');
 	signal headADataList : slv_vector_type(nHeadA-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
         --------------------------
 	-- Setup for Header F
-	constant nHeadF    : integer                      := 23; -- # of headerwords
-	constant nHeadFLog : integer                      := integer(log2(real(nHeadF +1)));
-
+	constant nHeadF      : integer  := 23; -- # of header words (incl. 2 delimiters)
+	constant nHeadFLog   : integer  := integer(log2(real(nHeadF +1)));
 	signal headFCnt      : unsigned(nHeadFLog-1 downto 0)                  := (others => '0');
 	signal headFPktCnt   : unsigned(23 downto 0)                           := (others => '0');
 	signal headFDataList : slv_vector_type(nHeadF-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
         --------------------------
 	-- Setup for Header C
-	constant nHeadC    : integer                      := 3; -- # of headerwords
-	constant nHeadCLog : integer                      := integer(log2(real(nHeadC +1)));
-
+	constant nHeadC      : integer  := 6; -- # of header words (incl. 2 delimiters)
+	constant nHeadCLog   : integer  := integer(log2(real(nHeadC +1)));
 	signal headCCnt      : unsigned(nHeadCLog-1 downto 0)                  := (others => '0');
 	signal headCPktCnt   : unsigned(23 downto 0)                           := (others => '0');
 	signal headCDataList : slv_vector_type(nHeadC-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
-        -- FIXME:
-        -- currently headAPktCnt is not used in the "Type A" header...
-
+        signal adcSamplesPerFreq : unsigned(39 downto 0) := (others => '0');
         
 begin
- 
+
+        adcSamplesPerFreq <= internalDwaReg.adcSamplesPerCycle * internalDwaReg.cyclesPerFreq;
+  
 	--header data indexed list with 0 at bottom of list
 	headADataList <= (
           x"AAAA" & std_logic_vector(to_unsigned(nHeadA-2, 16)), -- header delimiter (start)
@@ -82,12 +77,6 @@ begin
           x"AAAAAAAA" -- header delimiter (end)
 	);
 
-                --2A # clientIp_16MSb 16 MSb of client_IP  16bit
-                --2B # clientIp_16LSb 16 LSb of client_IP  16bit
-                --2E # relayMask_16MSb (which relays are active). Valid for v2 only
-                --2F # relayMask_16LSb (which relays are active). Valid for v2 only
-                --?? # v3 has 192 bits (64+32)*2 (8 lines of 24 bits)
-        
         headFDataList <= (
           x"FFFF" & std_logic_vector(to_unsigned(nHeadF-2, 16)), -- header delimiter (start)
           x"00" & std_logic_vector(internalDwaReg.runOdometer),
@@ -99,9 +88,9 @@ begin
           --
           x"20" & std_logic_vector(internalDwaReg.dwaCtrl),
           x"21" & std_logic_vector(internalDwaReg.fixedPeriod), 
-          x"22" & std_logic_vector(internalDwaReg.freqMin),  -- fixme: is this really period?
-          x"23" & std_logic_vector(internalDwaReg.freqMax),
-          x"24" & std_logic_vector(internalDwaReg.freqStep),
+          x"22" & std_logic_vector(internalDwaReg.stimPeriodMin),  -- fixme: is this really period?
+          x"23" & std_logic_vector(internalDwaReg.stimPeriodMax),
+          x"24" & std_logic_vector(internalDwaReg.stimPeriodStep),
           x"25" & x"00" & std_logic_vector(internalDwaReg.adcAutoDc_chSel),
           x"26" & std_logic_vector(internalDwaReg.cyclesPerFreq),
           x"27" & x"00" & std_logic_vector(internalDwaReg.adcSamplesPerCycle),
@@ -113,16 +102,19 @@ begin
           x"2D" & x"0000" & internalDwaReg.activeChannels,
           x"2E" & x"00" & internalDwaReg.relayMask(31 downto 16), 
           x"2F" & x"00" & internalDwaReg.relayMask(15 downto  0),
+          --# relay mask in v3 has 192 bits (64+32)*2 (8 lines of 24 bits) !!!
           x"FFFFFFFF" -- header delimiter (end)
         );    
-
+        
         headCDataList <= ( -- Frequency Data Frame
           x"CCCC" & std_logic_vector(to_unsigned(nHeadC-2, 16)),
           x"11" & x"0000" & internalDwaReg.dataRegister, -- Register ID (same as in "A" frame)
-          --x"40" & x"00" & Counter, this register, this run. 16bit
-          --x"41" & x"00" &  total # of ADC samples for this frequency. 16bit (not samples per cycle)
-          --x"42" & Stimulus frequency period in units of 10 ns. 24bit
-          --x"43" & Sampling period in units of 10 ns. 24bit
+          --x"40" & x"00" & internalDwaReg.freqCounter, -- FIXME: how to
+                                                      -- implement for per-register, per-run. 16bit
+          --FIXME: the following product can overflow...
+          x"41" & std_logic_vector(adcSamplesPerFreq(23 downto 0)),
+          x"42" & std_logic_vector(internalDwaReg.stimPeriodActive),
+          x"43" & std_logic_vector(internalDwaReg.adcSamplingPeriod),
           x"CCCCCCCC"
         ); 
         
