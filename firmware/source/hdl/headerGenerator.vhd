@@ -23,8 +23,9 @@ use duneDwa.global_def.all;
 
 entity headerGenerator is
 	port (
-		fromDaqReg : in  fromDaqRegType;
-		fromDwaReg : out fromDwaRegType;
+		fromDaqReg     : in fromDaqRegType;
+		toDaqReg       : inout toDaqRegType;
+		internalDwaReg : in internalDwaRegType;
 
 		headAStart : in boolean ; -- UDP Frame 
 		headFStart : in boolean ; -- Run Frame
@@ -68,27 +69,17 @@ architecture rtl of headerGenerator is
 	signal headCPktCnt   : unsigned(23 downto 0)                           := (others => '0');
 	signal headCDataList : slv_vector_type(nHeadC-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
-        
-        -- fixme: the following should come from elsewhere... perhaps global_def.vhd
-        constant dataRegister : std_logic_vector(7 downto 0) := x"FF";
-        constant udpPacketCounter: integer  := 562;  -- do we need to specify bits??
         -- FIXME:
         -- currently headAPktCnt is not used in the "Type A" header...
 
         
 begin
-	--fixme: these values should be set elsewhere...
-        fromDwaReg.freqMin     <= x"abcd12";
-        fromDwaReg.freqMax     <= x"dcba12";
-        fromDwaReg.freqStep    <= x"cafe66";
-        fromDwaReg.acStim_mag  <= x"dead66";
-        fromDwaReg.stimTime    <= x"beef66";
-  
+ 
 	--header data indexed list with 0 at bottom of list
 	headADataList <= (
           x"AAAA" & std_logic_vector(to_unsigned(nHeadA-2, 16)), -- header delimiter (start)
-          x"10" & x"00" & std_logic_vector(to_unsigned(udpPacketCounter,16)), -- UDP pkt counter
-          x"11" & x"0000" & dataRegister, -- Register ID
+          x"10" & x"00" & std_logic_vector(fromDaqReg.udpPacketCounter),   -- UDP pkt counter
+          x"11" & x"0000" & internalDwaReg.dataRegister, -- Register ID
           x"AAAAAAAA" -- header delimiter (end)
 	);
 
@@ -96,17 +87,17 @@ begin
           x"FFFF" & std_logic_vector(to_unsigned(nHeadF-2, 16)), -- header delimiter (start)
           --x"20" & [[[dwaCtrl]]], 
           --x"21" & [[[fixedPeriod]]], 
-          x"22" & std_logic_vector(fromDwaReg.freqMin),  -- fixme: is this really period?
-          x"23" & std_logic_vector(fromDwaReg.freqMax),
-          x"24" & std_logic_vector(fromDwaReg.freqStep),
+          x"22" & std_logic_vector(internalDwaReg.freqMin),  -- fixme: is this really period?
+          x"23" & std_logic_vector(internalDwaReg.freqMax),
+          x"24" & std_logic_vector(internalDwaReg.freqStep),
           --x"25 & ???? & [[[adcAutoDc_chSel]]],
           --x"26" & [[[number of cycles per frequency]]],
           --x"27" & [[[ADC samples per cycle]]],
-          x"28" & std_logic_vector(fromDwaReg.acStim_mag),  -- fixme: verify!!!
+          x"28" & std_logic_vector(internalDwaReg.acStim_mag),  -- fixme: verify!!!
           --x"2A" & x"00"  & client_IP (16 MSb)
           --x"2B" & x"00"  & client_IP (16 LSb)
-          x"2C" & std_logic_vector(fromDwaReg.stimTime),
-          --x"2D" & std_logic_vector(fromDwaReg.activeChannels), --fixme: active
+          x"2C" & std_logic_vector(internalDwaReg.stimTime),
+          --x"2D" & std_logic_vector(internalDwaReg.activeChannels), --fixme: active
                                                                --channel mask
           --x"2E" & x"00" & std_logic_vector(relayMask(xxx downto yyy)), 
           --x"2F" & x"00" & std_logic_vector(relayMask(xxx downto yyy)),
@@ -115,7 +106,7 @@ begin
 
         headCDataList <= ( -- Frequency Data Frame
           x"CCCC" & std_logic_vector(to_unsigned(nHeadC-2, 16)),
-          x"11" & x"0000" & dataRegister, -- Register ID (same as in "A" frame)
+          x"11" & x"0000" & internalDwaReg.dataRegister, -- Register ID (same as in "A" frame)
           --x"40" & x"00" & Counter, this register, this run. 16bit
           --x"41" & x"00" &  total # of ADC samples for this frequency. 16bit (not samples per cycle)
           --x"42" & Stimulus frequency period in units of 10 ns. 24bit
@@ -135,56 +126,56 @@ begin
 	begin
 		if rising_edge(dwaClk100) then
 			if reset then-- reset takes priority
-				fromDwaReg.headARdy <= false;
+				toDaqReg.headARdy <= false;
 				headACnt            <= (others => '0');
-				fromDwaReg.headFRdy <= false;
+				toDaqReg.headFRdy <= false;
 				headFCnt            <= (others => '0');
 			else
 
                                 -- Handle Header A
-				if fromDwaReg.headARdy then --currently sending header data
+				if toDaqReg.headARdy then --currently sending header data
 					if fromDaqReg.headARen then
 						if headACnt /= 0 then --prevent simulation index error on underflow.
 							headACnt <= headACnt-1; --get the next header word
 						else
-							fromDwaReg.headARdy <= false; -- the header is finished
+							toDaqReg.headARdy <= false; -- the header is finished
 						end if;
 					end if;
 
 				elsif headAStart then -- not busy so wait for signal to begin
-					fromDwaReg.headARdy <= true;
+					toDaqReg.headARdy <= true;
 					headACnt            <= to_unsigned(nHeadA-1,headACnt'length); -- resetting counter will initiate readout
 					headAPktCnt         <= headAPktCnt+1;
 				end if;
 
                                 -- Handle Header F
-				if fromDwaReg.headFRdy then --currently sending header data
+				if toDaqReg.headFRdy then --currently sending header data
 					if fromDaqReg.headFRen then
 						if headFCnt /= 0 then --prevent simulation index error on underflow.
 							headFCnt <= headFCnt-1; --get the next header word
 						else
-							fromDwaReg.headFRdy <= false; -- the header is finished
+							toDaqReg.headFRdy <= false; -- the header is finished
 						end if;
 					end if;
 
 				elsif headFStart then -- not busy so wait for signal to begin
-					fromDwaReg.headFRdy <= true;
+					toDaqReg.headFRdy <= true;
 					headFCnt            <= to_unsigned(nHeadF-1,headFCnt'length); -- resetting counter will initiate readout
 					headFPktCnt         <= headFPktCnt+1;
 				end if;
 
                                 -- Handle Header C
-				if fromDwaReg.headCRdy then --currently sending header data
+				if toDaqReg.headCRdy then --currently sending header data
 					if fromDaqReg.headCRen then
 						if headCCnt /= 0 then --prevent simulation index error on underflow.
 							headCCnt <= headCCnt-1; --get the next header word
 						else
-							fromDwaReg.headCRdy <= false; -- the header is finished
+							toDaqReg.headCRdy <= false; -- the header is finished
 						end if;
 					end if;
 
 				elsif headCStart then -- not busy so wait for signal to begin
-					fromDwaReg.headCRdy <= true;
+					toDaqReg.headCRdy <= true;
 					headCCnt            <= to_unsigned(nHeadC-1,headCCnt'length); -- resetting counter will initiate readout
 					headCPktCnt         <= headCPktCnt+1;
 				end if;
@@ -195,8 +186,8 @@ begin
 		end if;
 	end process sendHeader;
 
-	fromDwaReg.headAData <= headADataList(to_integer(headACnt)); --mux selected header word
-        fromDwaReg.headFData <= headFDataList(to_integer(headFCnt)); 
-        fromDwaReg.headCData <= headCDataList(to_integer(headCCnt)); 
+	toDaqReg.headAData <= headADataList(to_integer(headACnt)); --mux selected header word
+        toDaqReg.headFData <= headFDataList(to_integer(headFCnt)); 
+        toDaqReg.headCData <= headCDataList(to_integer(headCCnt)); 
         
 end architecture rtl;

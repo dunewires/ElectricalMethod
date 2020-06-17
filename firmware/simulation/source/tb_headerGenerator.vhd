@@ -28,8 +28,9 @@ architecture tb of tb_headerGenerator is
   -----------------------------------------------------------------------
   -- Timing constants
   -----------------------------------------------------------------------
-  signal fromDaqReg : fromDaqRegType;
-  signal fromDwaReg : fromDwaRegType;
+  signal fromDaqReg     : fromDaqRegType;
+  signal toDaqReg       : toDaqRegType;
+  signal internalDwaReg : internalDwaRegType;
 
   signal headAStart : boolean := false;
   signal headFStart : boolean := false;
@@ -42,8 +43,9 @@ begin
 
   headerGenerator_inst : entity duneDwa.headerGenerator
     port map (
-      fromDaqReg => fromDaqReg,
-      fromDwaReg => fromDwaReg,
+      fromDaqReg     => fromDaqReg,
+      toDaqReg       => toDaqReg,
+      internalDwaReg => internalDwaReg,
 
       headAStart => headAStart,
       headFStart => headFStart,
