@@ -57,7 +57,7 @@ architecture rtl of headerGenerator is
 
         --------------------------
 	-- Setup for Header C
-	constant nHeadC      : integer  := 6; -- # of header words (incl. 2 delimiters)
+	constant nHeadC      : integer  := 7; -- # of header words (incl. 2 delimiters)
 	constant nHeadCLog   : integer  := integer(log2(real(nHeadC +1)));
 	signal headCCnt      : unsigned(nHeadCLog-1 downto 0)                  := (others => '0');
 	signal headCPktCnt   : unsigned(23 downto 0)                           := (others => '0');
@@ -109,10 +109,9 @@ begin
         headCDataList <= ( -- Frequency Data Frame
           x"CCCC" & std_logic_vector(to_unsigned(nHeadC-2, 16)),
           x"11" & x"0000" & internalDwaReg.dataRegister, -- Register ID (same as in "A" frame)
-          --x"40" & x"00" & internalDwaReg.freqCounter, -- FIXME: how to
-                                                      -- implement for per-register, per-run. 16bit
+          x"40" & std_logic_vector(internalDwaReg.stimPeriodCounter),
           --FIXME: the following product can overflow...
-          x"41" & std_logic_vector(adcSamplesPerFreq(23 downto 0)),
+          x"41" & std_logic_vector(adcSamplesPerFreq(23 downto 0)), 
           x"42" & std_logic_vector(internalDwaReg.stimPeriodActive),
           x"43" & std_logic_vector(internalDwaReg.adcSamplingPeriod),
           x"CCCCCCCC"

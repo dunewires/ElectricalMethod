@@ -72,6 +72,7 @@ package global_def is
                 stimPeriodMax      : unsigned(23 downto 0);
                 stimPeriodStep     : unsigned(23 downto 0);
                 stimPeriodActive   : unsigned(23 downto 0);
+                stimPeriodCounter  : unsigned(23 downto 0); -- bits???
                 --- is this still relevant for v3???
                 adcAutoDc_chSel    : unsigned(15 downto 0); -- bits???
                 --- Number of stimulus cycles per frequency (unitless)

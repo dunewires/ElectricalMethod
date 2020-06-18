@@ -31,6 +31,7 @@ force -freeze sim:/tb_headergenerator/internalDwaReg.activeChannels 8'h09 0
 force -freeze sim:/tb_headergenerator/internalDwaReg.relayMask 32'h91817161 0
 #
 force -freeze sim:/tb_headergenerator/internalDwaReg.stimPeriodActive 24'h647681 0
+force -freeze sim:/tb_headergenerator/internalDwaReg.stimPeriodCounter 24'h121213 0
 force -freeze sim:/tb_headergenerator/internalDwaReg.adcSamplingPeriod 24'h424344 0
 
 
