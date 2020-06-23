@@ -41,6 +41,9 @@ end entity headerGenerator;
 
 architecture rtl of headerGenerator is
 
+        type ctrlState_type is (idle_s, genAdcData_s, genRunHdr_s, genStatusHdr_s);
+        signal ctrlState : ctrlState_type := idle_s;
+  
 	constant nHeadA      : integer  := 4; -- # of header words (incl. 2 delimiters)
 	constant nHeadALog   : integer  := integer(log2(real(nHeadA +1)));
 	signal headACnt      : unsigned(nHeadALog-1 downto 0)                  := (others => '0');
@@ -124,73 +127,110 @@ begin
          --"01001101010000111110101010101010"
 
 
-        
-	sendHeader : process (dwaClk100)
-	begin
-		if rising_edge(dwaClk100) then
-			if reset then-- reset takes priority
-				toDaqReg.headARdy <= false;
-				headACnt            <= (others => '0');
-				toDaqReg.headFRdy <= false;
-				headFCnt            <= (others => '0');
-			else
+        --- Data generator state machine
+        ctrlState_seq : process (dwaClk100)
+        begin
+          if rising_edge(dwaClk100) thenn
+            -- set defaults
 
-                                -- Handle Header A
-				if toDaqReg.headARdy then --currently sending header data
-					if fromDaqReg.headARen then
-						if headACnt /= 0 then --prevent simulation index error on underflow.
-							headACnt <= headACnt-1; --get the next header word
-						else
-							toDaqReg.headARdy <= false; -- the header is finished
-						end if;
-					end if;
+            case (ctrlState) is
+              when idle_s =>
+                if sendRunHdrStrb then
+                  ctrlState <= genRunHdr_s;
+                elsif sendAdcDataStrb then
+                  ctrlState <= genAdcData_s;
+                elsif sendStatusHdrStrb then
+                  ctrlState <= genStatusHdr_s;
+                else
+                  ctrlState <= idle_s; -- default
+                end if;
 
-				elsif headAStart then -- not busy so wait for signal to begin
-					toDaqReg.headARdy <= true;
-					headACnt            <= to_unsigned(nHeadA-1,headACnt'length); -- resetting counter will initiate readout
-					headAPktCnt         <= headAPktCnt+1;
-				end if;
+              when genRunHdr_s =>
+                if
 
-                                -- Handle Header F
-				if toDaqReg.headFRdy then --currently sending header data
-					if fromDaqReg.headFRen then
-						if headFCnt /= 0 then --prevent simulation index error on underflow.
-							headFCnt <= headFCnt-1; --get the next header word
-						else
-							toDaqReg.headFRdy <= false; -- the header is finished
-						end if;
-					end if;
+                
+              when others =>
+                ctrlState <= idle_s;
 
-				elsif headFStart then -- not busy so wait for signal to begin
-					toDaqReg.headFRdy <= true;
-					headFCnt            <= to_unsigned(nHeadF-1,headFCnt'length); -- resetting counter will initiate readout
-					headFPktCnt         <= headFPktCnt+1;
-				end if;
+            end case;
+          end if;
+        end process ctrlState_seq;
 
-                                -- Handle Header C
-				if toDaqReg.headCRdy then --currently sending header data
-					if fromDaqReg.headCRen then
-						if headCCnt /= 0 then --prevent simulation index error on underflow.
-							headCCnt <= headCCnt-1; --get the next header word
-						else
-							toDaqReg.headCRdy <= false; -- the header is finished
-						end if;
-					end if;
+-- how to mux multiple header types into a single line???
 
-				elsif headCStart then -- not busy so wait for signal to begin
-					toDaqReg.headCRdy <= true;
-					headCCnt            <= to_unsigned(nHeadC-1,headCCnt'length); -- resetting counter will initiate readout
-					headCPktCnt         <= headCPktCnt+1;
-				end if;
-
-                                
-
-			end if;
-		end if;
-	end process sendHeader;
-
-	toDaqReg.headAData <= headADataList(to_integer(headACnt)); --mux selected header word
-        toDaqReg.headFData <= headFDataList(to_integer(headFCnt)); 
-        toDaqReg.headCData <= headCDataList(to_integer(headCCnt)); 
-        
 end architecture rtl;
+
+
+--	toDaqReg.dataForUdpTrans <= headADataList(to_integer(headACnt)); --mux selected header word
+          
+
+
+--        sendHeader : process (dwaClk100)
+--	begin
+--		if rising_edge(dwaClk100) then
+--			if reset then-- reset takes priority
+--				toDaqReg.headARdy <= false;
+--				headACnt            <= (others => '0');
+--				toDaqReg.headFRdy <= false;
+--				headFCnt            <= (others => '0');
+--			else
+--
+--                                -- Handle Header A
+--				if toDaqReg.headARdy then --currently sending header data
+--					if fromDaqReg.headARen then
+--						if headACnt /= 0 then --prevent simulation index error on underflow.
+--							headACnt <= headACnt-1; --get the next header word
+--						else
+--							toDaqReg.headARdy <= false; -- the header is finished
+--						end if;
+--					end if;
+--
+--				elsif headAStart then -- not busy so wait for signal to begin
+--					toDaqReg.headARdy <= true;
+--					headACnt            <= to_unsigned(nHeadA-1,headACnt'length); -- resetting counter will initiate readout
+--					headAPktCnt         <= headAPktCnt+1;
+--				end if;
+--
+--                                -- Handle Header F
+--				if toDaqReg.headFRdy then --currently sending header data
+--					if fromDaqReg.headFRen then
+--						if headFCnt /= 0 then --prevent simulation index error on underflow.
+--							headFCnt <= headFCnt-1; --get the next header word
+--						else
+--							toDaqReg.headFRdy <= false; -- the header is finished
+--						end if;
+--					end if;
+--
+--				elsif headFStart then -- not busy so wait for signal to begin
+--					toDaqReg.headFRdy <= true;
+--					headFCnt            <= to_unsigned(nHeadF-1,headFCnt'length); -- resetting counter will initiate readout
+--					headFPktCnt         <= headFPktCnt+1;
+--				end if;
+--
+--                                -- Handle Header C
+--				if toDaqReg.headCRdy then --currently sending header data
+--					if fromDaqReg.headCRen then
+--						if headCCnt /= 0 then --prevent simulation index error on underflow.
+--							headCCnt <= headCCnt-1; --get the next header word
+--						else
+--							toDaqReg.headCRdy <= false; -- the header is finished
+--						end if;
+--					end if;
+--
+--				elsif headCStart then -- not busy so wait for signal to begin
+--					toDaqReg.headCRdy <= true;
+--					headCCnt            <= to_unsigned(nHeadC-1,headCCnt'length); -- resetting counter will initiate readout
+--					headCPktCnt         <= headCPktCnt+1;
+--				end if;
+--
+--                                
+--
+--			end if;
+--		end if;
+--	end process sendHeader;
+
+--	toDaqReg.headAData <= headADataList(to_integer(headACnt)); --mux selected header word
+--      toDaqReg.headFData <= headFDataList(to_integer(headFCnt)); 
+--      toDaqReg.headCData <= headCDataList(to_integer(headCCnt)); 
+        
+--end architecture rtl;
