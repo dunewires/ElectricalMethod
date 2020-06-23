@@ -162,8 +162,6 @@ end architecture rtl;
 
 
 --	toDaqReg.dataForUdpTrans <= headADataList(to_integer(headACnt)); --mux selected header word
-          
-
 
 --        sendHeader : process (dwaClk100)
 --	begin
