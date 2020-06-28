@@ -110,15 +110,16 @@ package global_def is
         end record;
         
 	type toDaqRegType is record
-		headARdy         : boolean;
-		headFRdy         : boolean;
-		headCRdy         : boolean;
-		headERdy         : boolean;
+            -- fixme, this entire record is not needed...
+            headARdy         : boolean;
+--		headFRdy         : boolean;
+--		headCRdy         : boolean;
+--		headERdy         : boolean;
 
-		headAData        : std_logic_vector(31 downto 0);
-		headFData        : std_logic_vector(31 downto 0);
-		headCData        : std_logic_vector(31 downto 0);
-		headEData        : std_logic_vector(31 downto 0);
+--		headAData        : std_logic_vector(31 downto 0);
+--		headFData        : std_logic_vector(31 downto 0);
+--		headCData        : std_logic_vector(31 downto 0);
+--		headEData        : std_logic_vector(31 downto 0);
 	end record;
 
 	type fromDaqRegType is record
@@ -142,10 +143,10 @@ package global_def is
                 stimPeriodStep   : unsigned(23 downto 0);
                 -- end james' additions
                 
-		headARen         : boolean;
-		headFRen         : boolean;
-		headCRen         : boolean;
-		headERen         : boolean;
+--		headARen         : boolean;
+--		headFRen         : boolean;
+--		headCRen         : boolean;
+--		headERen         : boolean;
 	end record;
 
 

@@ -49,15 +49,6 @@ architecture rtl of headerGenerator is
         signal ctrlState   : ctrlState_type := idle_s;
 
         signal requestType : std_logic_vector(3 downto 0);
-
-
-        -- debug values
-        signal isInIdle : boolean := true;
-        signal isInA    : boolean := false;
-        signal isInC    : boolean := false;
-        signal isInD    : boolean := false;
-        signal isInE    : boolean := false;
-        signal isInF    : boolean := false;
         
         ----------------- below this line is old -- do not use
 	constant nHeadA      : integer  := 4; -- # of header words (incl. 2 delimiters)
@@ -181,7 +172,6 @@ begin
 
                     when genAFrame_s =>
                         -- clock out the A header
-                        isInA <= true;
                         if dataAvail then 
                             if internalDwaReg.udpRen then
                                 if headCnt > 0 then
@@ -200,39 +190,34 @@ begin
                             end if;
                         else
                             dataAvail <= true;
-                            headCnt   <= to_unsigned(nHeadA, headCnt'length);
+                            headCnt   <= to_unsigned(nHeadA-1, headCnt'length);
                         end if;
                         
                     when genEFrame_s =>
                         -- clock out the F header
-                        isInE <= true;
 
                         -- return to idle
                         ctrlState <= idle_s;
 
                     when genFFrame_s =>
                         -- clock out the E header
-                        isInF <= true;
                              
                         -- return to idle
                         ctrlState <= idle_s;
                         
                     when genCFrame_s =>
                         -- send out the frequency header
-                        isInC <= true;
 
                         -- next, go to the ADC data state
                         ctrlState <= genDFrame_s;
 
                     when genDFrame_s =>
                         -- send out the ADC data
-                        isInD <= true;
 
                         -- return to idle
                         ctrlState <= idle_s;
 
                     when others =>
-                        isInIdle <= true;
                         ctrlState <= idle_s;
 
                 end case;
