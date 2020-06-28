@@ -109,9 +109,8 @@ package global_def is
 
         end record;
         
-	type toDaqRegType is record
-            -- fixme, this entire record is not needed...
-            headARdy         : boolean;
+--	type toDaqRegType is record
+--            headARdy         : boolean;
 --		headFRdy         : boolean;
 --		headCRdy         : boolean;
 --		headERdy         : boolean;
@@ -120,7 +119,7 @@ package global_def is
 --		headFData        : std_logic_vector(31 downto 0);
 --		headCData        : std_logic_vector(31 downto 0);
 --		headEData        : std_logic_vector(31 downto 0);
-	end record;
+--	end record;
 
 	type fromDaqRegType is record
 		freqReqAxi       : unsigned(23 downto 0);

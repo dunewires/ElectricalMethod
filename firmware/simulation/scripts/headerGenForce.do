@@ -34,11 +34,15 @@ force -freeze sim:/tb_headergenerator/internalDwaReg.stimPeriodActive 24'h647681
 force -freeze sim:/tb_headergenerator/internalDwaReg.stimPeriodCounter 24'h121213 0
 force -freeze sim:/tb_headergenerator/internalDwaReg.adcSamplingPeriod 24'h424344 0
 #
-force -freeze sim:/tb_headergenerator/internalDwaReg.sendRunHdr TRUE {50 ns} -cancel {70 ns}
-force -freeze sim:/tb_headergenerator/internalDwaReg.udpRen TRUE  {100 ns} -cancel {300 ns}
+#force -freeze sim:/tb_headergenerator/internalDwaReg.sendRunHdr TRUE {50 ns} -cancel {70 ns}
+#force -freeze sim:/tb_headergenerator/internalDwaReg.sendAdcData TRUE {50 ns} -cancel {70 ns}
+force -freeze sim:/tb_headergenerator/internalDwaReg.sendStatusHdr TRUE {50 ns} -cancel {70 ns}
+#
+force -freeze sim:/tb_headergenerator/internalDwaReg.udpRen TRUE  {100 ns} -cancel {141 ns}
+force -freeze sim:/tb_headergenerator/internalDwaReg.udpRen TRUE  {180 ns} -cancel {450 ns}
 
 # PS signals
-#force -freeze sim:/tb_headergenerator/fromDaqReg.udpPacketCounter 16'h002A 0
+force -freeze sim:/tb_headergenerator/fromDaqReg.udpPacketCounter 16'h002A 0
 ##
 #force -freeze sim:/tb_headergenerator/fromDaqReg.headARen FALSE 0
 #force -freeze sim:/tb_headergenerator/fromDaqReg.headARen TRUE {101 ns} -cancel {111 ns}
