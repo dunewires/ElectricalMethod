@@ -28,13 +28,8 @@ entity headerGenerator is
 		internalDwaReg  : in internalDwaRegType;
 
                 dataWord        : out std_logic_vector(31 downto 0)  := (others => '0');
-                requestComplete : out std_logic := '0';
-                dataAvail       : out std_logic := '0';
-                
-                sendAdcData     : in boolean; 
-                sendRunHdr      : in boolean; 
-                sendStatusHdr   : in boolean; 
-
+                requestComplete : out boolean := false;
+                dataAvail       : out boolean := false;
 
                 --headAStart : in boolean ; -- UDP Frame 
 		--headFStart : in boolean ; -- Run Frame
@@ -50,19 +45,10 @@ end entity headerGenerator;
 
 architecture rtl of headerGenerator is
 
-        type ctrlState_type is (idle_s, genAFrame_s, genCFrame_s, genCFrame_s, genE_Frame_s, genFFrame_s);
+        type ctrlState_type is (idle_s, genAFrame_s, genCFrame_s, genDFrame_s, genEFrame_s, genFFrame_s);
         signal ctrlState   : ctrlState_type := idle_s;
 
-        signal requestType : std_logic_vector(15 downto 0);
-        
-	constant nHeadA    : integer               := 4; -- # of header words (incl. 2 delimiters)
-	constant nHeadC    : integer               := 7; -- # of header words (incl. 2 delimiters)
-	--constant nHeadE    : integer               := ??; -- # of header words (incl. 2 delimiters)
-	constant nHeadF    : integer               := 23; -- # of header words (incl. 2 delimiters)
-
-        -- FIXME: headCnt should use the largest of nHeadA, nHeadC, nHeadE, nHeadF
-        constant nHeadLog  : integer               := integer(log2(real(nHeadF + 1)));
-        signal   headCnt   : unsigned(nHeadLog-1 downto 0) := (others => '0');
+        signal requestType : std_logic_vector(3 downto 0);
 
 
         -- debug values
@@ -74,28 +60,34 @@ architecture rtl of headerGenerator is
         signal isInF    : boolean := false;
         
         ----------------- below this line is old -- do not use
-	--constant nHeadA      : integer  := 4; -- # of header words (incl. 2 delimiters)
-	--constant nHeadALog   : integer  := integer(log2(real(nHeadA +1)));
-	--signal headACnt      : unsigned(nHeadALog-1 downto 0)                  := (others => '0');
-	----signal headAPktCnt   : unsigned(23 downto 0)                           := (others => '0');
-	--signal headADataList : slv_vector_type(nHeadA-1 downto 0)(31 downto 0) := (others => (others => '0'));
+	constant nHeadA      : integer  := 4; -- # of header words (incl. 2 delimiters)
+	constant nHeadALog   : integer  := integer(log2(real(nHeadA +1)));
+	signal headACnt      : unsigned(nHeadALog-1 downto 0)                  := (others => '0');
+	--signal headAPktCnt   : unsigned(23 downto 0)                           := (others => '0');
+	signal headADataList : slv_vector_type(nHeadA-1 downto 0)(31 downto 0) := (others => (others => '0'));
         --
         ----------------------------
 	---- Setup for Header F
-	--constant nHeadF      : integer  := 23; -- # of header words (incl. 2 delimiters)
-	--constant nHeadFLog   : integer  := integer(log2(real(nHeadF +1)));
-	--signal headFCnt      : unsigned(nHeadFLog-1 downto 0)                  := (others => '0');
-	----signal headFPktCnt   : unsigned(23 downto 0)                           := (others => '0');
-	--signal headFDataList : slv_vector_type(nHeadF-1 downto 0)(31 downto 0) := (others => (others => '0'));
+	constant nHeadF      : integer  := 23; -- # of header words (incl. 2 delimiters)
+	constant nHeadFLog   : integer  := integer(log2(real(nHeadF +1)));
+	signal headFCnt      : unsigned(nHeadFLog-1 downto 0)                  := (others => '0');
+	--signal headFPktCnt   : unsigned(23 downto 0)                           := (others => '0');
+	signal headFDataList : slv_vector_type(nHeadF-1 downto 0)(31 downto 0) := (others => (others => '0'));
         --
         ----------------------------
 	---- Setup for Header C
-	--constant nHeadC      : integer  := 7; -- # of header words (incl. 2 delimiters)
-	--constant nHeadCLog   : integer  := integer(log2(real(nHeadC +1)));
-	--signal headCCnt      : unsigned(nHeadCLog-1 downto 0)                  := (others => '0');
-	----signal headCPktCnt   : unsigned(23 downto 0)                           := (others => '0');
-	--signal headCDataList : slv_vector_type(nHeadC-1 downto 0)(31 downto 0) := (others => (others => '0'));
+	constant nHeadC      : integer  := 7; -- # of header words (incl. 2 delimiters)
+	constant nHeadCLog   : integer  := integer(log2(real(nHeadC +1)));
+	signal headCCnt      : unsigned(nHeadCLog-1 downto 0)                  := (others => '0');
+	--signal headCPktCnt   : unsigned(23 downto 0)                           := (others => '0');
+	signal headCDataList : slv_vector_type(nHeadC-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
+
+        -- FIXME: headCnt should use the largest of nHeadA, nHeadC, nHeadE, nHeadF
+        constant nHeadLog  : integer               := integer(log2(real(nHeadF + 1)));
+        signal   headCnt   : unsigned(nHeadLog-1 downto 0) := (others => '0');
+
+        
         signal adcSamplesPerFreq : unsigned(39 downto 0) := (others => '0');
         
 begin
@@ -170,106 +162,82 @@ begin
                     
                     when idle_s =>
 
-                        if sendRunHdr then
+                        if internalDwaReg.sendRunHdr then
                             requestType <= x"F";
                             ctrlState <= genAFrame_s;
 
-                        elsif sendAdcData then
+                        elsif internalDwaReg.sendAdcData then
                             requestType <= x"D";
                             ctrlState <= genAFrame_s;
 
-                        elsif sendStatusHdr then
+                        elsif internalDwaReg.sendStatusHdr then
                             requestType <= x"E";
                             ctrlState <= genAFrame_s;
 
                         else
                             requestType <= x"0";
                             ctrlState <= idle_s; -- default
-
                         end if;
 
                     when genAFrame_s =>
                         -- clock out the A header
                         isInA <= true;
                         if dataAvail then 
-                            if dataRen then
+                            if internalDwaReg.udpRen then
                                 if headCnt > 0 then
                                     headCnt <= headCnt - 1;
                                     dataWord <= headADataList(to_integer(headCnt));
                                 else
                                     dataAvail <= false; -- A header is finished
-                                    if requestType = x"D" then -- choose next state
-                                        ctrlState <= genCFrame_s;
-                                    elsif requestType = x"E" then
-                                        ctrlState <=  genEFrame_s;
-                                    elsif requestType = x"F" then
-                                        ctrlStatetate <= genFFrame_s;
-                                    end if;
+                                    -- choose next state
+                                    case requestType is
+                                        when x"D"   => ctrlState <= genCFrame_s;
+                                        when x"F"   => ctrlState <= genFFrame_s;
+                                        when x"E"   => ctrlState <= genEFrame_s;
+                                        when others => ctrlState <= idle_s;
+                                    end case;
                                 end if;
-                            else
-                                dataAvail <= true;
-                                headCnt   <= to_unsigned(nHeadA, headCnt'length);
-                       end if;
+                            end if;
+                        else
+                            dataAvail <= true;
+                            headCnt   <= to_unsigned(nHeadA, headCnt'length);
+                        end if;
+                        
+                    when genEFrame_s =>
+                        -- clock out the F header
+                        isInE <= true;
 
---      -- Handle Header F
---	if toDaqReg.headFRdy then --currently sending header data
---		if fromDaqReg.headFRen then
---	        	if headFCnt /= 0 then --prevent simulation index error on underflow.
---				headFCnt <= headFCnt-1; --get the next header word
---			else
---				toDaqReg.headFRdy <= false; -- the header is finished
---			end if;
---		end if;
---
---	elsif headFStart then -- not busy so wait for signal to begin
---		toDaqReg.headFRdy <= true;
---      	headFCnt            <= to_unsigned(nHeadF-1,headFCnt'length); -- resetting counter will initiate readout
---		headFPktCnt         <= headFPktCnt+1;
---	end if;
+                        -- return to idle
+                        ctrlState <= idle_s;
 
+                    when genFFrame_s =>
+                        -- clock out the E header
+                        isInF <= true;
                              
-                             -- determine which state to go to next based on requestType
-                             case requestType is
-                                 when x"D" => ctrlState <= genCFrame_s;
-                                 when x"F" => ctrlState <= genFFrame_s;
-                                 when x"E" => ctrlState <= genEFrame_s;
-                             end case;
+                        -- return to idle
+                        ctrlState <= idle_s;
+                        
+                    when genCFrame_s =>
+                        -- send out the frequency header
+                        isInC <= true;
 
-                            when genEFrame_s =>
-                                -- clock out the F header
-                                isInE <= true;
+                        -- next, go to the ADC data state
+                        ctrlState <= genDFrame_s;
 
-                             -- return to idle
-                             ctrlState <= idle_s;
+                    when genDFrame_s =>
+                        -- send out the ADC data
+                        isInD <= true;
 
-                            when genFFrame_s =>
-                                -- clock out the E header
-                                isInF <= true;
-                             
-                                -- return to idle
-                                ctrlState <= idle_s;
+                        -- return to idle
+                        ctrlState <= idle_s;
 
-                            when genCFrame_s =>
-                                -- send out the frequency header
-                                isInC <= true;
+                    when others =>
+                        isInIdle <= true;
+                        ctrlState <= idle_s;
 
-                                -- next, go to the ADC data state
-                                ctrlState <= genDFrame_s;
-
-                            when genDFrame_s =>
-                                -- send out the ADC data
-                                isInD <= true;
-
-                                -- return to idle
-                                ctrlState <= idle_s;
-
-                            when others =>
-                                isInIdle <= true;
-                                ctrlState <= idle_s;
-
-                        end case;
-                end if;
-            end process ctrlState_seq;
+                end case;
+            end if;
+        end process ctrlState_seq;
 
 -- how to mux multiple header types into a single line???
 

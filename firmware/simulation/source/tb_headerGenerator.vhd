@@ -32,9 +32,9 @@ architecture tb of tb_headerGenerator is
   signal toDaqReg       : toDaqRegType;
   signal internalDwaReg : internalDwaRegType;
 
-  signal headAStart : boolean := false;
-  signal headFStart : boolean := false;
-  signal headCStart : boolean := false;
+--  signal headAStart : boolean := false;
+--  signal headFStart : boolean := false;
+--  signal headCStart : boolean := false;
 
   signal reset     : boolean   := false;
   signal dwaClk100 : std_logic := '0';
@@ -47,9 +47,9 @@ begin
       toDaqReg       => toDaqReg,
       internalDwaReg => internalDwaReg,
 
-      headAStart => headAStart,
-      headFStart => headFStart,
-      headCStart => headCStart,
+--      headAStart => headAStart,
+--      headFStart => headFStart,
+--      headCStart => headCStart,
 
       reset     => reset,
       dwaClk100 => dwaClk100
