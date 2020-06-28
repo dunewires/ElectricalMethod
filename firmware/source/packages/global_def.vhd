@@ -53,6 +53,11 @@ package global_def is
 		--HASH_CODE        : unsigned(23 downto 0);
 
                 -- James' entries start
+                udpRen             : std_logic := '0';
+                sendRunHdr         : std_logic := '0';
+                sendAdcData        : std_logic := '0';
+                sendStatusHdr      : std_logic := '0';
+                
                 --- which register is this data coming from? (A, F, C, D, E, 0-7)
                 dataRegister       : std_logic_vector(7 downto 0);
                 --- total number of runs with this board (non-volatile)

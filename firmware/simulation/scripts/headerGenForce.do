@@ -36,30 +36,31 @@ force -freeze sim:/tb_headergenerator/internalDwaReg.adcSamplingPeriod 24'h42434
 
 
 # PS signals
-force -freeze sim:/tb_headergenerator/fromDaqReg.udpPacketCounter 16'h002A 0
-#
-force -freeze sim:/tb_headergenerator/fromDaqReg.headARen FALSE 0
-force -freeze sim:/tb_headergenerator/fromDaqReg.headARen TRUE {101 ns} -cancel {111 ns}
-force -freeze sim:/tb_headergenerator/fromDaqReg.headARen TRUE {121 ns} -cancel {151 ns}
-force -freeze sim:/tb_headergenerator/fromDaqReg.headARen TRUE {181 ns} -cancel {191 ns}
-#
-force -freeze sim:/tb_headergenerator/fromDaqReg.headFRen FALSE 0
-force -freeze sim:/tb_headergenerator/fromDaqReg.headFRen TRUE {201 ns} -cancel {251 ns}
-force -freeze sim:/tb_headergenerator/fromDaqReg.headFRen TRUE {261 ns} -cancel {291 ns}
-force -freeze sim:/tb_headergenerator/fromDaqReg.headFRen TRUE {301 ns} -cancel {601 ns}
-# ADD MORE STROBES TO READ OUT ALL OF THE F-HEADER LINES
-#
-force -freeze sim:/tb_headergenerator/fromDaqReg.headCRen FALSE 0
-force -freeze sim:/tb_headergenerator/fromDaqReg.headCRen TRUE {371 ns} -cancel {381 ns}
-force -freeze sim:/tb_headergenerator/fromDaqReg.headCRen TRUE {401 ns} -cancel {471 ns}
+#force -freeze sim:/tb_headergenerator/fromDaqReg.udpPacketCounter 16'h002A 0
+##
+#force -freeze sim:/tb_headergenerator/fromDaqReg.headARen FALSE 0
+#force -freeze sim:/tb_headergenerator/fromDaqReg.headARen TRUE {101 ns} -cancel {111 ns}
+#force -freeze sim:/tb_headergenerator/fromDaqReg.headARen TRUE {121 ns} -cancel {151 ns}
+#force -freeze sim:/tb_headergenerator/fromDaqReg.headARen TRUE {181 ns} -cancel {191 ns}
+##
+#force -freeze sim:/tb_headergenerator/fromDaqReg.headFRen FALSE 0
+#force -freeze sim:/tb_headergenerator/fromDaqReg.headFRen TRUE {201 ns} -cancel {251 ns}
+#force -freeze sim:/tb_headergenerator/fromDaqReg.headFRen TRUE {261 ns} -cancel {291 ns}
+#force -freeze sim:/tb_headergenerator/fromDaqReg.headFRen TRUE {301 ns} -cancel {601 ns}
+##
+#force -freeze sim:/tb_headergenerator/fromDaqReg.headCRen FALSE 0
+#force -freeze sim:/tb_headergenerator/fromDaqReg.headCRen TRUE {371 ns} -cancel {381 ns}
+#force -freeze sim:/tb_headergenerator/fromDaqReg.headCRen TRUE {401 ns} -cancel {471 ns}
 
 # Clocks
 force -freeze sim:/tb_headergenerator/dwaClk100 1 0, 0 {5 ns} -r 10 ns
 
 # other
-force -freeze sim:/tb_headergenerator/headAStart true 50ns -cancel 60ns
-force -freeze sim:/tb_headergenerator/headFStart true 150ns -cancel 160ns
-force -freeze sim:/tb_headergenerator/headCStart true 350ns -cancel 360ns
+force -freeze sim:/tb_headergenerator/sendRunHdr true 50ns -cancel 70ns
+force -freeze sim:/tb_headergenerator/dataRen true 100ns -cancel 200ns
+#force -freeze sim:/tb_headergenerator/headAStart true 50ns -cancel 60ns
+#force -freeze sim:/tb_headergenerator/headFStart true 150ns -cancel 160ns
+#force -freeze sim:/tb_headergenerator/headCStart true 350ns -cancel 360ns
 
 
 
