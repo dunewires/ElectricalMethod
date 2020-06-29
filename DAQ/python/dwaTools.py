@@ -10,7 +10,7 @@ import time
 import struct
 import binascii
 import json, configparser
-
+import numpy as np
 
 def registerNames():
     return ['18', '19', '1A', '1B', '1C', '1D', '1E', '1F']
@@ -152,6 +152,27 @@ def makeAdcDataLine(adc1=None, adc2=None, bitsToDrop=1):
     # create and return the hex string
     return '{:04x}{:04x}'.format(adc1, adc2).upper()
 
+
+def genDummyAdcData(nsamples, ncycles):
+    ''' make dummy adc data
+    ADC samples are 15-bit (15MSb of the 16-bit ADC value)
+    2 ADC samples per output line
+    output lines are hex strings
+    '''
+    if nsamples % 2:  # ensure that nsamples is even
+        nsamples += 1
+
+    xx = np.linspace(0, 2*np.pi*ncycles, num=nsamples)
+    yy = 2**14 * np.sin(xx)
+    yy = yy.astype(np.int)
+
+    #print(yy)
+    # convert to hex strings
+    yy = [hexStrOfAdcVal(y) for y in yy]
+
+    # merge every pair
+    yy = [a+b for a,b in zip(yy[0::2], yy[1::2])]
+    return yy
 
 def hexStrOfAdc15Bit(adc):
     """Make hex string from 15MSb of a 16-bit ADC value """
