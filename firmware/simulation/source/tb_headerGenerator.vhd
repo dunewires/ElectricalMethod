@@ -29,9 +29,30 @@ architecture tb of tb_headerGenerator is
   -- Timing constants
   -----------------------------------------------------------------------
   signal fromDaqReg     : fromDaqRegType;
---  signal toDaqReg       : toDaqRegType;
+  signal toDaqReg       : toDaqRegType;
   signal internalDwaReg : internalDwaRegType;
 
+  signal runOdometer        : unsigned(23 downto 0);
+  signal fpgaSerialNum      : unsigned(23 downto 0);             
+
+  signal udpDataRen         : boolean;
+  signal sendRunHdr         : boolean;
+  signal sendAdcData        : boolean;
+  signal sendStatusHdr      : boolean;
+
+  signal firmwareId_date    : unsigned(47 downto 0);
+  signal firmwareId_hash    : unsigned(31 downto 0);
+  signal stimPeriodActive   : unsigned(23 downto 0);
+  signal stimPeriodCounter  : unsigned(23 downto 0);
+  signal adcSamplingPeriod  : unsigned(23 downto 0);
+
+  signal adcDataRdy   : std_logic_vector(7 downto 0);
+  signal adcDataRen   : std_logic_vector(7 downto 0);
+  signal adcData      : slv_vector_type(7 downto 0)(31 downto 0);
+  
+  signal udpRequestComplete :  boolean := false;
+  signal udpDataRdy         :  boolean := false;
+  
   signal reset     : boolean   := false;
   signal dwaClk100 : std_logic := '0';
 
@@ -40,9 +61,31 @@ begin
   headerGenerator_inst : entity duneDwa.headerGenerator
     port map (
       fromDaqReg     => fromDaqReg,
---      toDaqReg       => toDaqReg,
+      toDaqReg       => toDaqReg,
       internalDwaReg => internalDwaReg,
 
+
+      runOdometer          =>   runOdometer,
+      fpgaSerialNum        =>   fpgaSerialNum,
+      
+      udpDataRen           =>   udpDataRen,         
+      sendRunHdr           =>   sendRunHdr,        
+      sendAdcData          =>   sendAdcData,        
+      sendStatusHdr        =>   sendStatusHdr,      
+
+      firmwareId_date      =>   firmwareId_date,    
+      firmwareId_hash      =>   firmwareId_hash,    
+      stimPeriodActive     =>   stimPeriodActive,  
+      stimPeriodCounter    =>   stimPeriodCounter,  
+      adcSamplingPeriod    =>   adcSamplingPeriod,  
+
+      adcDataRdy           =>   adcDataRdy,         
+      adcDataRen           =>   adcDataRen,         
+      adcData              =>   adcData,            
+
+      udpRequestComplete   =>   udpRequestComplete, 
+      --udpDataRdy           =>   udpDataRdy,
+      
       reset     => reset,
       dwaClk100 => dwaClk100
     );
