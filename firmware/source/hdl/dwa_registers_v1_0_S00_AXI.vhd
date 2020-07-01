@@ -6,6 +6,8 @@ use duneDwa.global_def.all;
 
 entity dwa_registers_v1_0_S00_AXI is
 	generic (
+		dateCode : std_logic_vector(31 downto 0);
+		hashCode : std_logic_vector(31 downto 0)
 		-- Users to add parameters here
 
 		-- User parameters ends
@@ -83,10 +85,9 @@ entity dwa_registers_v1_0_S00_AXI is
 		-- accept the read data and response information.
 		S_AXI_RREADY : in std_logic;
 
-		regFromDwa : in  SLV_VECTOR_TYPE(31 downto 0)(C_S_AXI_DATA_WIDTH-1 downto 0);
-		regFromDwa_strb : out  std_logic_vector(31 downto 0);
+		toDaqReg   : in  toDaqRegType;
+		fromDaqReg : out fromDaqRegType
 
-		regToDwa   : out SLV_VECTOR_TYPE(31 downto 0)(C_S_AXI_DATA_WIDTH-1 downto 0)
 	);
 end dwa_registers_v1_0_S00_AXI;
 
@@ -248,8 +249,10 @@ begin
 		variable loc_addr : std_logic_vector(OPT_MEM_ADDR_BITS downto 0);
 	begin
 		if rising_edge(S_AXI_ACLK) then
+			-- reg0 moved here so it is not sticky 
+			-- used for any pulsed signals e.g. reset & start
+			slv_reg0  <= (others => '0');
 			if S_AXI_ARESETN = '0' then
-				slv_reg0  <= (others => '0');
 				slv_reg1  <= (others => '0');
 				slv_reg2  <= (others => '0');
 				slv_reg3  <= (others => '0');
@@ -665,9 +668,11 @@ begin
 		variable loc_addr : std_logic_vector(OPT_MEM_ADDR_BITS downto 0);
 	begin
 		-- Address decoding for reading registers
-		loc_addr := axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
-		regFromDwa_strb <= (others => '0');
-		regFromDwa_strb(to_integer(unsigned(loc_addr))) <= axi_rvalid;
+		loc_addr                                        := axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
+		
+		--regFromDwa_strb                                 <= (others => '0');
+		--regFromDwa_strb(to_integer(unsigned(loc_addr))) <= axi_rvalid;
+
 		case loc_addr is
 			when b"00000" =>
 				reg_data_out <= slv_reg0;
@@ -701,39 +706,14 @@ begin
 				reg_data_out <= slv_reg14;
 			when b"01111" =>
 				reg_data_out <= slv_reg15;
-			when b"10000" =>
 				-- Registers 16 to 31 have been changed to be driven by the DWA (read only)
-				reg_data_out <= regFromDwa(16);
 			when b"10001" =>
-				reg_data_out <= regFromDwa(17);
-			when b"10010" =>
-				reg_data_out <= regFromDwa(18);
+				reg_data_out(0)           <= '1' when toDaqReg.ctrlBusy else '0';
+				reg_data_out(31 downto 1) <= (others => '0');
 			when b"10011" =>
-				reg_data_out <= regFromDwa(19);
+				reg_data_out <= dateCode;
 			when b"10100" =>
-				reg_data_out <= regFromDwa(20);
-			when b"10101" =>
-				reg_data_out <= regFromDwa(21);
-			when b"10110" =>
-				reg_data_out <= regFromDwa(22);
-			when b"10111" =>
-				reg_data_out <= regFromDwa(23);
-			when b"11000" =>
-				reg_data_out <= regFromDwa(24);
-			when b"11001" =>
-				reg_data_out <= regFromDwa(25);
-			when b"11010" =>
-				reg_data_out <= regFromDwa(26);
-			when b"11011" =>
-				reg_data_out <= regFromDwa(27);
-			when b"11100" =>
-				reg_data_out <= regFromDwa(28);
-			when b"11101" =>
-				reg_data_out <= regFromDwa(29);
-			when b"11110" =>
-				reg_data_out <= regFromDwa(30);
-			when b"11111" =>
-				reg_data_out <= regFromDwa(31);
+				reg_data_out <= hashCode;
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;
@@ -760,22 +740,18 @@ begin
 
 	-- Add user logic here
 	-- DWA just gets a copy of the register
-	regToDwa(0)  <= slv_reg0;
-	regToDwa(1)  <= slv_reg1;
-	regToDwa(2)  <= slv_reg2;
-	regToDwa(3)  <= slv_reg3;
-	regToDwa(4)  <= slv_reg4;
-	regToDwa(5)  <= slv_reg5;
-	regToDwa(6)  <= slv_reg6;
-	regToDwa(7)  <= slv_reg7;
-	regToDwa(8)  <= slv_reg8;
-	regToDwa(9)  <= slv_reg9;
-	regToDwa(10) <= slv_reg10;
-	regToDwa(11) <= slv_reg11;
-	regToDwa(12) <= slv_reg12;
-	regToDwa(13) <= slv_reg13;
-	regToDwa(14) <= slv_reg14;
-	regToDwa(15) <= slv_reg15;
+	fromDaqReg.reset          <= slv_reg0(0)= '1';
+	fromDaqReg.ctrlStart      <= slv_reg0(1)= '1';
+	fromDaqReg.auto           <= slv_reg1(0)= '1';
+	fromDaqReg.stimPeriodReq  <= unsigned(slv_reg3(23 downto 0));
+	fromDaqReg.stimPeriodMin  <= unsigned(slv_reg4(23 downto 0));
+	fromDaqReg.stimPeriodMax  <= unsigned(slv_reg5(23 downto 0));
+	fromDaqReg.stimPeriodStep <= unsigned(slv_reg6(23 downto 0));
+	fromDaqReg.stimRampTime   <= unsigned(slv_reg7(23 downto 0));
+	fromDaqReg.stimMag        <= unsigned(slv_reg8(23 downto 0));
+	fromDaqReg.nAdcStimPeriod <= unsigned(slv_reg10(23 downto 0));
+	fromDaqReg.nAdcStimPeriodSamp <= unsigned(slv_reg11(23 downto 0));
+	fromDaqReg.coilDrive      <= slv_reg14;
 	-- User logic ends
 
 end arch_imp;

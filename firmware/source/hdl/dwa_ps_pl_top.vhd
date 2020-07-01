@@ -16,8 +16,8 @@ use duneDwa.global_def.all;
 
 entity dwa_ps_pl_top is
     generic (
-        DATE_CODE : std_logic_vector(31 downto 0);
-        HASH_CODE : std_logic_vector(31 downto 0)
+        dateCode : std_logic_vector(31 downto 0);
+        hashCode : std_logic_vector(31 downto 0)
     );
 
     port (
@@ -183,11 +183,8 @@ architecture STRUCTURE of dwa_ps_pl_top is
     signal S_AXI_ACLK_100       : STD_LOGIC;
     signal S_AXI_ACLK_10        : STD_LOGIC;
 
-    signal regFromDwa      : SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
-    signal regFromDwa_strb : std_logic_vector(31 downto 0);
-
-
-    signal regToDwa : SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
+    signal fromDaqReg : fromDaqRegType;
+    signal toDaqReg   : toDaqRegType;
 
     signal adcDataSerial : std_logic_vector(3 downto 0) := (others => '0');
     signal adcSrcSyncClk : std_logic                    := '0';
@@ -278,6 +275,10 @@ begin
 
 
     dwa_registers_v1_0_S00_AXI_1 : entity duneDwa.dwa_registers_v1_0_S00_AXI
+        generic map (
+            dateCode => dateCode,
+            hashCode => hashCode
+        )
         port map (
             S_AXI_ACLK    => S_AXI_ACLK_100,
             S_AXI_ARESETN => peripheral_aresetn_0(0),
@@ -301,22 +302,18 @@ begin
             S_AXI_RVALID  => M00_AXI_0_RVALID,
             S_AXI_RREADY  => M00_AXI_0_RREADY,
 
-            regFromDwa      => regFromDwa,
-            regFromDwa_strb => regFromDwa_strb,
+            fromDaqReg => fromDaqReg,
+            toDaqReg   => toDaqReg,
 
-            regToDwa => regToDwa
         );
 
     top_tension_analyzer_1 : entity work.top_tension_analyzer
-        generic map (
-            DATE_CODE => DATE_CODE,
-            HASH_CODE => HASH_CODE
-        )
-        port map (
-            regFromDwa      => regFromDwa,
-            regFromDwa_strb => regFromDwa_strb,
 
-            regToDwa       => regToDwa,
+        port map (
+            fromDaqReg => fromDaqReg,
+            toDaqReg   => toDaqReg,
+
+
             dwaClk100 => S_AXI_ACLK_100,
             dwaClk10  => S_AXI_ACLK_10,
 
@@ -343,11 +340,7 @@ begin
             adcCnv        => adcCnv,
             adcSck        => adcSck,
             adcDataSerial => adcDataSerial,
-            adcSrcSyncClk => adcSrcSyncClk,
-
-
-            BB_CLK_P => BB_CLK_P,
-            BB_CLK_N => BB_CLK_N
+            adcSrcSyncClk => adcSrcSyncClk
 
         );
 

@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Jun  9 00:35:51 2020
+-- Last update : Tue Jun 30 00:32:29 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -51,7 +51,8 @@ package global_def is
 		ctrl_busy        : boolean;
 		--DATE_CODE        : unsigned(23 downto 0);
 		--HASH_CODE        : unsigned(23 downto 0);
-
+                --updated in ctrl
+                adcStart :boolean;
                 -- James' entries start
                 udpRen             : boolean;
                 sendRunHdr         : boolean;
@@ -128,12 +129,13 @@ package global_def is
 		--freqMin          : unsigned(23 downto 0);
 		--freqMax          : unsigned(23 downto 0);
 		--freqStep         : unsigned(23 downto 0);
-		stimTime         : unsigned(23 downto 0);
-		ctrlStart        : boolean;
 		acStim_mag       : unsigned(23 downto 0);
 		senseWireDataSel : unsigned(23 downto 0);
 		CoilDrive        : std_logic_vector(23 downto 0);
-		ctrl_busy        : boolean;
+        -- changed in ctrl
+		stimTime         : unsigned(23 downto 0);
+		ctrlStart        : boolean;
+		ctrlBusy        : boolean;
                 -- start james' additions
                 --- overall UDP packet count this run (not per register)
                 udpPacketCounter : unsigned(15 downto 0); 

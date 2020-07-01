@@ -120,19 +120,19 @@ proc setup {} {
 # Array index                                            0  1  2  3  4  5  6  7
 set datetime_arr [clock format [clock seconds] -format {%Y %y %m %d %H %M %S %s}]
  
-# Get the datecode in the yy-mm-dd-HH format
-set datecode [lindex $datetime_arr 1][lindex $datetime_arr 2][lindex $datetime_arr 3][lindex $datetime_arr 4]
+# Get the dateCode in the yy-mm-dd-HH format
+set dateCode [lindex $datetime_arr 1][lindex $datetime_arr 2][lindex $datetime_arr 3][lindex $datetime_arr 4]
 # Show this in the log
-puts DATECODE=$datecode
+puts dateCode=$dateCode
  
 # Get the git hashtag for this project
 #if needed use the git dir command git --git-dir /foo/bar/.git log
 set git_hash [exec git log -1 --pretty='%h']
 # Show this in the log
-puts HASHCODE=$git_hash
+puts hashCode=$git_hash
  
 # Set the generics
-set_property generic "DATE_CODE=32'h$datecode HASH_CODE=32'h$git_hash" [current_fileset]
+set_property generic "dateCode=32'h$dateCode hashCode=32'h$git_hash" [current_fileset]
 
 }
 
