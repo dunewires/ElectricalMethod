@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Jul  1 18:36:58 2020
+-- Last update : Wed Jul  1 21:32:50 2020
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -61,7 +61,7 @@ begin
 	ctrlState_seq : process (dwaClk100)
 	begin
 		if rising_edge(dwaClk100) then
-			scanDone            <= freqSet > (freqMax & x"0");
+			scanDone            <= acStimX200_nHPeriod > fromDaqReg.stimPeriodMax;
 			fromDaqReg.ctrlBusy <= true;
 			ctrlStart_del       <= fromDaqReg.ctrlStart;
 
