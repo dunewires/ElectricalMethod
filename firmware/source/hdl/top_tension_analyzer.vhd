@@ -351,5 +351,36 @@ begin
       );
   end generate adcFifoGen;
 
+  headerGenerator_inst : entity duneDwa.headerGenerator
+    port map (
+      fromDaqReg         => fromDaqReg,
+      toDaqReg           => toDaqReg,
+      internalDwaReg     => open,
+
+      runOdometer        => (others => '0'),
+      fpgaSerialNum      => (others => '0'),
+
+      udpDataRen         => false, --fromDaq
+      sendRunHdr         => sendRunHdr,
+      sendAdcData        => sendAdcData,
+      sendStatusHdr      => false,
+
+      firmwareId_date    => (others => '0'),
+      firmwareId_hash    => (others => '0'),
+      stimPeriodActive   => (others => '0'),
+      stimPeriodCounter  => acStim_nHPeriod(22 downto 0) & '0',
+
+      adcSamplingPeriod  => adcCnv_nPeriod,
+
+      adcDataRdy         => fifoAdcData_ef,
+      adcDataRen         => fifoAdcData_ren,
+      adcData            => fifoAdcData_dout,
+
+      udpRequestComplete => open,
+
+      reset              => false,--fromDaq
+      dwaClk100          => dwaClk100
+    );  
+
 end STRUCT;
 

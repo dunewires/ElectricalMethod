@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Jun  9 00:35:52 2020
+-- Last update : Thu Jul  2 01:03:10 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -62,8 +62,6 @@ begin
     port map (
       fromDaqReg     => fromDaqReg,
       toDaqReg       => toDaqReg,
-      internalDwaReg => internalDwaReg,
-
 
       runOdometer          =>   runOdometer,
       fpgaSerialNum        =>   fpgaSerialNum,

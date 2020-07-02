@@ -63,6 +63,7 @@ vcom -64 -2008 -work duneDwa  \
 "../source/hdl/wtaController.vhd" \
 "../source/hdl/adc_dds_io.vhd" \
 "../source/hdl/adcReadout.vhd" \
+"../source/hdl/headerGenerator.vhd" \
 "../source/hdl/top_tension_analyzer.vhd" \
 "./source/tb_adc_emu.vhd" \
 

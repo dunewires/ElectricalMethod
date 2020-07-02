@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Sun Jun  28 15:41:00 2020
+-- Last update : Thu Jul  2 01:02:52 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -36,7 +36,6 @@ entity headerGenerator is
             -- records
             fromDaqReg      : in fromDaqRegType;
             toDaqReg        : out toDaqRegType;
-            internalDwaReg  : in internalDwaRegType;
 
             ---------------------------
             -- this will come from PS
