@@ -30,7 +30,7 @@ architecture tb of tb_headerGenerator is
   -----------------------------------------------------------------------
   signal fromDaqReg     : fromDaqRegType;
   signal toDaqReg       : toDaqRegType;
-  signal internalDwaReg : internalDwaRegType;
+  --signal internalDwaReg : internalDwaRegType;
 
   signal runOdometer        : unsigned(23 downto 0);
   signal fpgaSerialNum      : unsigned(23 downto 0);             

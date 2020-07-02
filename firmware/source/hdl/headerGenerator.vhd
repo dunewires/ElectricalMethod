@@ -28,7 +28,6 @@ use duneDwa.global_def.all;
 -- * register ID should also be tracked by this code block (not an input)
 -- * adcSamplesPerFrequency  can overflow (it's the product of adcSamplesPerCycle
 --   and cyclesPerFreq
--- * 
 
 entity headerGenerator is
 	port (
@@ -61,7 +60,7 @@ entity headerGenerator is
             
             -- For ADC data access
             adcDataRdy   : in  std_logic_vector(7 downto 0);
-            adcDataRen   : out std_logic_vector(7 downto 0);
+            adcDataRen   : out std_logic_vector(7 downto 0) := (others => '0');
             adcData      : in slv_vector_type(7 downto 0)(31 downto 0);
 
             udpRequestComplete : out boolean := false;
@@ -90,7 +89,7 @@ architecture rtl of headerGenerator is
         signal registerId    : std_logic_vector(7 downto 0) := (others => '0');
         
         signal udpHdrRen     : boolean := false;
-        signal adcIdx        : unsigned(2 downto 0);
+        signal adcIdx        : integer := 7;
         
         ----------------- below this line is old -- do not use
 	constant nHeadA      : integer  := 4; -- # of header words (incl. 2 delimiters)
@@ -100,7 +99,7 @@ architecture rtl of headerGenerator is
 
         ----------------------------
 	---- Setup for Header F
-	constant nHeadF      : integer  := 23; -- # of header words (incl. 2 delimiters)
+	constant nHeadF      : integer  := 21; -- # of header words (incl. 2 delimiters)
 	constant nHeadFLog   : integer  := integer(log2(real(nHeadF +1)));
 	signal headFCnt      : unsigned(nHeadFLog-1 downto 0)                  := (others => '0');
 	signal headFDataList : slv_vector_type(nHeadF-1 downto 0)(31 downto 0) := (others => (others => '0'));
@@ -146,19 +145,19 @@ begin
         x"03" & std_logic_vector(firmwareId_date(23 downto  0)),  --24LSb
         x"04" & x"00" & std_logic_vector(firmwareId_hash(31 downto 16)), --16MSb
         x"05" & x"00" & std_logic_vector(firmwareId_hash(15 downto  0)),  --16LSb
-        x"20" & std_logic_vector(fromDaqReg.dwaCtrl),
+        --x"20" & std_logic_vector(fromDaqReg.dwaCtrl),
         x"21" & std_logic_vector(fromDaqReg.fixedPeriod), 
         x"22" & std_logic_vector(fromDaqReg.stimPeriodMin),  -- fixme: is this really period?
         x"23" & std_logic_vector(fromDaqReg.stimPeriodMax),
         x"24" & std_logic_vector(fromDaqReg.stimPeriodStep),
-        x"25" & x"00" & std_logic_vector(fromDaqReg.adcAutoDc_chSel),
+        --x"25" & x"00" & std_logic_vector(fromDaqReg.adcAutoDc_chSel),
         x"26" & std_logic_vector(fromDaqReg.cyclesPerFreq),
         x"27" & x"00" & std_logic_vector(fromDaqReg.adcSamplesPerCycle),
         x"28" & x"000" & std_logic_vector(fromDaqReg.acStim_mag), 
         -- 29 not used?
         x"2A" & x"00" & std_logic_vector(fromDaqReg.clientIp(31 downto 16)), --16MSb
         x"2B" & x"00" & std_logic_vector(fromDaqReg.clientIp(15 downto  0)), --16LSb
-        x"2C" & std_logic_vector(fromDaqReg.ctrl_stimTime),
+        x"2C" & std_logic_vector(fromDaqReg.stimTime),
         x"2D" & x"0000" & fromDaqReg.activeChannels,
         x"2E" & x"00" & fromDaqReg.relayMask(31 downto 16), 
         x"2F" & x"00" & fromDaqReg.relayMask(15 downto  0),
@@ -194,11 +193,16 @@ begin
     -- combinatorial logic of other signals
     adcSamplesPerFreq <= fromDaqReg.adcSamplesPerCycle * fromDaqReg.cyclesPerFreq;
 
-    -- handle the udpDataRen signal from PS since it must be use dfor ADC dta
-    -- and header data
-    --udpHdrRen <= false when (requestType = RQST_ADC)  else udpDataRen;
-    --adcDataRen 
-    udpHdrRen <= udpDataRen;
+    -- the PS udpDataRen signal is used for ADC and header data
+    udpHdrRen     <= false when (ctrlState = genDFrame_s) else udpDataRen;
+    adcDataRen(0) <= BOOL2SL(udpDataRen) when ( (adcIdx = 0) and (ctrlState = genDFrame_s) ) else '0';
+    adcDataRen(1) <= BOOL2SL(udpDataRen) when ( (adcIdx = 1) and (ctrlState = genDFrame_s) ) else '0';
+    adcDataRen(2) <= BOOL2SL(udpDataRen) when ( (adcIdx = 2) and (ctrlState = genDFrame_s) ) else '0';
+    adcDataRen(3) <= BOOL2SL(udpDataRen) when ( (adcIdx = 3) and (ctrlState = genDFrame_s) ) else '0';
+    adcDataRen(4) <= BOOL2SL(udpDataRen) when ( (adcIdx = 4) and (ctrlState = genDFrame_s) ) else '0';
+    adcDataRen(5) <= BOOL2SL(udpDataRen) when ( (adcIdx = 5) and (ctrlState = genDFrame_s) ) else '0';
+    adcDataRen(6) <= BOOL2SL(udpDataRen) when ( (adcIdx = 6) and (ctrlState = genDFrame_s) ) else '0';
+    adcDataRen(7) <= BOOL2SL(udpDataRen) when ( (adcIdx = 7) and (ctrlState = genDFrame_s) ) else '0';
     
     --- Data generator state machine
     ctrlState_seq : process (dwaClk100)
@@ -218,7 +222,7 @@ begin
                     elsif sendAdcData then
                         ctrlState   <= genAFrame_s;
                         requestType <= RQST_ADC;
-                        registerId  <= x"07";
+                        registerId  <= std_logic_vector(to_unsigned(adcIdx, registerId'length));
                         
                     elsif sendStatusHdr then
                         ctrlState   <= genAFrame_s;
@@ -239,7 +243,7 @@ begin
                                 headCnt <= headCnt - 1;
                                 toDaqReg.udpDataWord <= headADataList(to_integer(headCnt-1));
                             else
-                                --- A header is done...
+                                -- "A" header is done...
                                 -- choose next state
                                 case requestType is
                                     when RQST_ADC =>
@@ -304,19 +308,30 @@ begin
                     end if;
 
                 when genDFrame_s =>
-                    -- send out the ADC data
-                    -- FIXME: how to do this?
-                    -- loop over all 8 channels (0-7)
-                    -- toDaqReg.chanIndex <= (udpDataWordT)
-
-                    -- do the following when done sending data
-                    ctrlState <= udpPldEnd_s; -- all done -- return to idle
+                    -- send out the ADC data for a single ADC channel
+                    -- toDaqReg.chanIndex <= (udpDataWord)
+                    adcDataRen         <= (others => '0');
+                    adcDataRen(adcIdx) <= '1';
+                    if adcDataRdy(adcIdx) then
+                        toDaqReg.udpDataWord <= adcData(adcIdx)(31 downto 0);
+                    else -- no more data to get
+                        ctrlState <= udpPldEnd_s; -- all done with this ADC channel
+                    end if;
 
                 when udpPldEnd_s =>
                     toDaqReg.udpDataRdy <= false;  -- UDP payload all done
                     udpCnt := udpCnt + 1; -- increment UDP counter
-                    ctrlState <= idle_s;  -- head to idle
-                    
+                    -- if reqeust type is ADC data and adcIdx is still > 0
+                    -- then do the next adc
+                    if (requestType = RQST_ADC) and (adcIdx > 0) then
+                        adcIdx    <= adcIdx - 1;
+                        registerId <= std_logic_vector(to_unsigned(adcIdx-1, registerId'length));
+                        ctrlState <= genAFrame_s;
+                    else
+                        adcIdx    <= 7;   -- reset adcIdx
+                        ctrlState <= idle_s;  -- return to idle
+                    end if;                    
+
                 when others =>
                     -- should never get here...
                     ctrlState <= idle_s;

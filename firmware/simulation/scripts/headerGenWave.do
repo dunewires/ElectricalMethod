@@ -5,6 +5,10 @@ add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerat
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/sendStatusHdr
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/ctrlState
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/udpDataRen
+add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/udpHdrRen
+add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/registerId
+add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/adcIdx
+add wave -noupdate -expand -group TOP -expand -group headerGen -expand /tb_headergenerator/headerGenerator_inst/adcDataRen
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/toDaqReg.udpDataWord
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/toDaqReg.udpDataRdy
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/udpRequestComplete
@@ -14,10 +18,10 @@ add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerat
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/headCCnt
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/toDaqReg
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/fromDaqReg
-add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/internalDwaReg
-add wave -noupdate -expand -group TOP -expand -group headerGen -expand /tb_headergenerator/headerGenerator_inst/headADataList
-add wave -noupdate -expand -group TOP -expand -group headerGen -expand /tb_headergenerator/headerGenerator_inst/headFDataList
-add wave -noupdate -expand -group TOP -expand -group headerGen -expand /tb_headergenerator/headerGenerator_inst/headCDataList
+add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/headADataList
+add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/headEDataList
+add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/headFDataList
+add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/headCDataList
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/dwaClk100
 add wave -noupdate /tb_headergenerator/headerGenerator_inst/nHeadALog
 add wave -noupdate /tb_headergenerator/headerGenerator_inst/nHeadFLog

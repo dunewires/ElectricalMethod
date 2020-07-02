@@ -45,8 +45,6 @@ package global_def is
         coilDrive : std_logic_vector(31 downto 0);
 
         -- start james' additions
-        --- which register is this data coming from? (A, F, C, D, E, 0-7)
-        --dataRegister       : std_logic_vector(7 downto 0);
         --- dwaCtrl (still used?  how many bits?)
         fixedPeriod    : unsigned(23 downto 0); -- 10ns
         stimPeriodReq  : unsigned(23 downto 0); --nf
