@@ -16,18 +16,15 @@ architecture tb of tb_adc_emu is
   -----------------------------------------------------------------------
   constant BB_CLK_period    : time := 50 ns;
   constant dwaClk100_period : time := 10 ns;
-  constant dwaClk10_period : time := 100 ns;
+  constant dwaClk10_period  : time := 100 ns;
   constant T_HOLD           : time := 10 ns;
   constant T_STROBE         : time := BB_CLK_period - (1 ns);
 
 
   signal end_of_simulation : boolean := false;
 
-  --signal    regFromDwa      : SLV_VECTOR_TYPE_32(31 downto 0)(31 downto 0);
-  signal regFromDwa      : SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
-  signal regFromDwa_strb : std_logic_vector(31 downto 0);
-  --signal    regToDwa       : SLV_VECTOR_TYPE_32(31 downto 0)(31 downto 0);
-  signal regToDwa        : SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
+  signal fromDaqReg : fromDaqRegType;
+  signal toDaqReg   : toDaqRegType;
   signal dwaClk100       : std_logic;
   signal dwaClk10        : std_logic;
   signal led             : std_logic_vector(3 downto 0);
@@ -49,20 +46,13 @@ architecture tb of tb_adc_emu is
   signal adcSck          : std_logic                    := '0';
   signal adcDataSerial   : std_logic_vector(3 downto 0) := (others => '0');
   signal adcSrcSyncClk   : std_logic                    := '0';
-  signal BB_CLK_P        : std_logic;
-  signal BB_CLK_N        : std_logic;
 
 begin
 
   top_tension_analyzer_1 : entity duneDwa.top_tension_analyzer
-    generic map (
-      DATE_CODE => x"abcd1234",
-      HASH_CODE => x"cafe1234"
-    )
     port map (
-      regFromDwa      => regFromDwa,
-      regFromDwa_strb => regFromDwa_strb,
-      regToDwa        => regToDwa,
+      fromDaqReg      => fromDaqReg,
+      toDaqReg        => toDaqReg,
       dwaClk100       => dwaClk100,
       dwaClk10        => dwaClk10,
       led             => led,
@@ -83,9 +73,7 @@ begin
       adcCnv          => adcCnv,
       adcSck          => adcSck,
       adcDataSerial   => adcDataSerial,
-      adcSrcSyncClk   => adcSrcSyncClk,
-      BB_CLK_P        => BB_CLK_P,
-      BB_CLK_N        => BB_CLK_N
+      adcSrcSyncClk   => adcSrcSyncClk
     );
 
 

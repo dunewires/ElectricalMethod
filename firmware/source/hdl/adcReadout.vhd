@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu May 14 01:12:54 2020
+-- Last update : Wed Jul  1 22:15:38 2020
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ entity adcReadout is
 		dataParallel     : out SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0);
 		dataParallelStrb : out std_logic := '0';
 
-		reset : in  std_logic := '0';
+		reset : in  boolean  := false;
 
 		dwaClk100 : in std_logic := '0'
 	);

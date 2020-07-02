@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Jul  1 21:43:28 2020
+-- Last update : Wed Jul  1 23:06:58 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -20,8 +20,8 @@ use IEEE.MATH_REAL.all;
 
 library duneDwa;
 
-
 package global_def is
+    function bool2Sl(BOOL_IN : boolean) return std_logic;
     -- ADC AXI offset address
     constant adcRegOfst  : integer := 24;
     constant adcStatAddr : integer := 23;
@@ -40,7 +40,7 @@ package global_def is
 
     type fromDaqRegType is record
         reset     : boolean;
-        auto      : unsigned(23 downto 0);
+        auto      : boolean;
         ctrlStart : boolean;
         coilDrive : std_logic_vector(31 downto 0);
 
@@ -48,7 +48,6 @@ package global_def is
         --- which register is this data coming from? (A, F, C, D, E, 0-7)
         --dataRegister       : std_logic_vector(7 downto 0);
         --- dwaCtrl (still used?  how many bits?)
-        dwaCtrl        : unsigned(23 downto 0); --bits???
         fixedPeriod    : unsigned(23 downto 0); -- 10ns
         stimPeriodReq  : unsigned(23 downto 0); --nf
         stimPeriodMin  : unsigned(23 downto 0); -- 10ns
@@ -67,15 +66,30 @@ package global_def is
         clientIp : unsigned(31 downto 0);
         --- After switching to a new frequency, how long to wait before
         --- acquiring data (24bits, units=1.28 microseconds)
-        ctrl_stimTime : unsigned(23 downto 0);
+        stimTime : unsigned(23 downto 0);
         --- Channel mask indicating which sense channels are active (8bit)
         activeChannels : std_logic_vector(7 downto 0);
         --- Mask indicating which relays are active
         --- in v2 this is 32 bits.  In v3 will be 192 bits!!!
         relayMask : std_logic_vector(31 downto 0);
-        --adcSamplingPeriod  : unsigned(23 downto 0);
-        -- James' entries end
+    --adcSamplingPeriod  : unsigned(23 downto 0);
+    -- James' entries end
     end record; -- fromDaqRegType
 
+end global_def;
+
+
+package body global_def is
+
+    function bool2Sl (BOOL_IN : boolean) return std_logic is
+        variable SL_OUT : std_logic;
+    begin
+        if BOOL_IN then
+            SL_OUT := '1';
+        else
+            SL_OUT := '0';
+        end if;
+        return SL_OUT;
+    end function BOOL2SL;
 
 end global_def;

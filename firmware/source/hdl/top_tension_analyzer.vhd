@@ -82,13 +82,14 @@ architecture STRUCT of top_tension_analyzer is
   signal freqReq    : std_logic_vector(31 downto 0) := (others => '1');
   signal freqReqAxi : std_logic_vector(31 downto 0) := (others => '1');
 
-  signal fifoAutoDC_din    : SLV_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
-  signal fifoAutoDC_wen    : std_logic                                := '0';
-  signal fifoAutoDC_ren    : std_logic_vector(7 downto 0)             := (others => '0');
-  signal fifoAutoDC_dout   : SLV_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
-  signal fifoAutoDC_ff     : std_logic_vector(7 downto 0)             := (others => '0');
-  signal fifoAutoDC_rdBusy : std_logic_vector(7 downto 0)             := (others => '0');
-  signal fifoAutoDC_ef     : std_logic_vector(7 downto 0)             := (others => '0');
+  signal fifoAdcData_din    : SLV_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+  signal fifoAdcData_wen    : std_logic                                := '0';
+  signal fifoAdcData_ren    : std_logic_vector(7 downto 0)             := (others => '0');
+  signal fifoAdcData_dout   : SLV_VECTOR_TYPE(7 downto 0)(31 downto 0) := (others => (others => '0'));
+  signal fifoAdcData_ff     : std_logic_vector(7 downto 0)             := (others => '0');
+  signal fifoAdcData_rdBusy : std_logic_vector(7 downto 0)             := (others => '0');
+  signal fifoAdcData_ef     : std_logic_vector(7 downto 0)             := (others => '0');
+  signal fifoAdcData_pf     : std_logic_vector(7 downto 0)             := (others => '0');
   signal adcAutoDc_af      : std_logic_vector(7 downto 0)             := (others => '0');
 
   signal adcStart : std_logic := '0';
@@ -107,9 +108,12 @@ architecture STRUCT of top_tension_analyzer is
 
   signal dpotMag : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0) := (others => (others => '0'));
 
+  signal sendRunHdr : boolean  := false;
+  signal sendAdcData :boolean  := false;
+
 begin
   led(1) <= dwaClk100;
-  led(0) <= ctrl_busy;
+  led(0) <= '1' when toDaqReg.ctrlBusy else '0';
   led(3) <= '1';
   led(2) <= acStimX200;
 
@@ -172,10 +176,10 @@ begin
   compute_n_periods : process (dwaClk10)
     variable acStim_nHPeriod_all : unsigned(47 downto 0 );
     variable adcCnv_nPeriod_all  : unsigned(47 downto 0 );
-    variable adcCnv_nCnv_all     : unsigned(31 downto 0 );
+    variable adcCnv_nCnv_all     : unsigned(39 downto 0 );
   begin
     if rising_edge(dwaClk10) then
-      if fromDaqReg.auto ='1' then
+      if fromDaqReg.auto then
         acStimX200_nHPeriod <= acStimX200_nHPeriodAuto;
       else
         acStimX200_nHPeriod <= fromDaqReg.stimPeriodReq;
@@ -197,7 +201,7 @@ begin
       -- 50 = 8
       -- 25 = 16
       -- find the number of total canversions for each frequency
-      adcCnv_nCnv_all := fromDaqReg.nAdcStimPeriod * fromDaqReg.nAdcStimPeriodSamp;
+      adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
 
       acStim_nHPeriod <= acStim_nHPeriod_all(23 downto 0);
       adcCnv_nPeriod  <= adcCnv_nPeriod_all(23 downto 0);
@@ -325,41 +329,27 @@ begin
     );
 
   --for each of the 8 channels
-  adcMemFifoGen : for adc_i in 7 downto 0 generate
-
-    -- mux between header data and adc data
-    readoutModeMuxing : process (dwaClk100)
-    begin
-      if rising_edge(dwaClk100) then
-        if headDataStrb then
-          fifoAutoDC_din(adc_i) <= headData;
-          fifoAutoDC_wen        <= '1';
-        else
-          fifoAutoDC_din(adc_i) <= std_logic_vector(senseWireData(adc_i)) ;
-          fifoAutoDC_wen        <= senseWireDataStrb;
-        end if;
-      end if;
-    end process readoutModeMuxing;
+  adcFifoGen : for adc_i in 7 downto 0 generate
 
     -- store data for AXI read
-    fifo_autoDatacollection_ch : fifo_autoDatacollection
+    fifoAdcData_ch : fifo_autoDatacollection
       PORT MAP (
-        rst    => fromDaqReg.reset,
+        rst    => bool2Sl(fromDaqReg.reset),
         wr_clk => dwaClk100,
         rd_clk => dwaClk100,
-        din    => fifoAutoDC_din(adc_i),
-        wr_en  => fifoAutoDC_wen,
+        din    => std_logic_vector(senseWireData(adc_i)),
+        wr_en  => senseWireDataStrb,
 
-        rd_en => regFromDwa_strb(adc_i + adcRegOfst),
-        dout  => regFromDwa(adc_i + adcRegOfst),
+        rd_en => fifoAdcData_ren(adc_i),
+        dout  => fifoAdcData_dout(adc_i),
         -- ADC full bits are the second set of 8 bits
-        full        => regFromDwa(adcStatAddr)(adc_i + 8),
-        empty       => regFromDwa(adcStatAddr)(adc_i),
-        prog_full   => adcAutoDc_af(adc_i),
+        full        => fifoAdcData_ff(adc_i),
+        empty       => fifoAdcData_ef(adc_i),
+        prog_full   => fifoAdcData_pf(adc_i),
         wr_rst_busy => open,
         rd_rst_busy => open
       );
-  end generate adcMemFifoGen;
+  end generate adcFifoGen;
 
 end STRUCT;
 
