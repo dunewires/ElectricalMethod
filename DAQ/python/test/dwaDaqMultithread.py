@@ -35,6 +35,7 @@ import pyqtgraph as pg
 
 #import dwaGui  ## for GUI made in Qt Creator
 import dwaTools as dwa
+import DwaDataParser as ddp
 
 class WorkerSignals(qtc.QObject):
     '''
@@ -59,6 +60,9 @@ class WorkerSignals(qtc.QObject):
     newdata
        'tuple' of (registerID, datax, datay)  where data is a list
 
+    newUdpPayload
+       'dict' of data from UDP transmission
+
     '''
     finished = qtc.pyqtSignal()
     error = qtc.pyqtSignal(tuple)
@@ -66,6 +70,7 @@ class WorkerSignals(qtc.QObject):
     progress = qtc.pyqtSignal(int)
     data = qtc.pyqtSignal(tuple)
     newdata = qtc.pyqtSignal(tuple)
+    newUdpPayload = qtc.pyqtSignal(dict)
     status = qtc.pyqtSignal(tuple)
     
 class Worker(qtc.QRunnable):
@@ -99,7 +104,8 @@ class Worker(qtc.QRunnable):
         # this will be passed on to self.fn so that function
         # has access to the callback
         #kwargs['progress_callback'] = self.signals.progress
-        kwargs['newdata_callback'] = self.signals.newdata
+        #kwargs['newdata_callback'] = self.signals.newdata
+        kwargs['newdata_callback'] = self.signals.newUdpPayload
         
     @qtc.pyqtSlot()
     def run(self):
@@ -143,19 +149,25 @@ class MainWindow(qtw.QMainWindow):
         self.label = qtw.QLabel("Multi-register GUI")
         self.button = qtw.QPushButton("Acquire")
         self.button.pressed.connect(self.execute)
+        self.outputText = qtw.QPlainTextEdit()
         #self.bar = qtw.QProgressBar()
-
-        self.registers = ['18','19','1A','1B','1C','1D','1E','1F']
+        
+        #self.registers = ['18','19','1A','1B','1C','1D','1E','1F']
+        # *data* registers (e.g. wire readouts)
+        # Fix me: do this programatically -- can loop over with "for item in ddp.Registers:"
+        self.registers = [ddp.Registers.D0, ddp.Registers.D1, ddp.Registers.D2,
+                          ddp.Registers.D3, ddp.Registers.D4, ddp.Registers.D5,
+                          ddp.Registers.D6, ddp.Registers.D7]
         self.pws = {}  # plot widgets
         for reg in self.registers:
             self.pws[reg] = pg.PlotWidget()
-            self.pws[reg].setTitle(reg)
+            self.pws[reg].setTitle(reg.name)
         #self.pws['1A'] = pg.PlotWidget()
         #self.pws['1F'] = pg.PlotWidget()
         ##self.pw.setBackground('w')
         
-        #layout.addWidget(self.text)
         layout.addWidget(self.label)
+        layout.addWidget(self.outputText)
         layout.addWidget(self.button)
         #layout.addWidget(self.bar)
 
@@ -189,11 +201,16 @@ class MainWindow(qtw.QMainWindow):
         #self.timer.timeout.connect(self.recurring_timer)
         #self.timer.start()
 
+        # Create instance of data parser to handle incoming data
+        self.dwaDataParser = ddp.DwaDataParser()
+        
         # Configuration for the UDP connection
         UDP_IP = ''     # '' is a symbolic name meaning all available interfaces
         UDP_PORT = 6008 # port (set to match the hard-coded value on the FPGA)
         self.udpServerAddressPort = (UDP_IP, UDP_PORT)
-        self.udpBufferSize = 1024*1 # max data to be received at once (bytes?)
+        # See this for UDP buffer size limits
+        # https://stackoverflow.com/questions/16460261/linux-udp-max-size-of-receive-buffer
+        self.udpBufferSize = 1024*4 # max data to be received at once (bytes?)
         self.udpEnc = 'utf-8'  # encoding
         self.udpTimeoutSec = 20
        
@@ -206,35 +223,20 @@ class MainWindow(qtw.QMainWindow):
             self.myy[reg] = list(np.sin(self.myx[reg]))
             self.mycurves[reg] = self.pws[reg].plot(self.myx[reg], self.myy[reg])
 
+        self.registerOfVal = {}
+        for reg in ddp.Registers:
+            self.registerOfVal[reg.value] = reg
+            
+        self.currentRunDict = {}
+            
     # end of __init__ for class MainWindow
         
-    def print_output(self, s):
+    def printOutput(self, s):
         print(s)
 
-    def thread_complete(self):
+    def threadComplete(self):
         print("THREAD COMPLETE!")
 
-
-
-    def parseUdpHeader(self, lines):
-        # Parse the 2-line UDP header to extract the
-        # UDP transmission number and microzed register number
-        # return as a dictionary
-        # 
-        # e.g. lines = ['F000002C', '0000001A']
-        # where the '2C' is the UDP transmission number in hex (2C = 2 x 16**1 + 12 x 16**0 = 44 decimal)
-        # and the '1A' is the register number that the data is coming from on the microzed
-        # valid register numbers are
-        #     ['18', '19', '1A', '1B', '1C', '1D', '1E', '1F']
-        # 
-        # FIXME: eventually, parse out the status bits as well (currently not used)
-        # 
-        print("self.parseUdpHeader: ")
-        print(lines)
-        dd = {}
-        dd['reg'] = lines[1][-2:]  
-        dd['ntx'] = dwa.unsignedIntOfHexString(lines[0][-2:])
-        return dd
         
     def start_acquisition(self, newdata_callback):
         # initiate a DWA acquisition
@@ -249,115 +251,63 @@ class MainWindow(qtw.QMainWindow):
 
         # Set up UDP connection
         sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: necessary?
-        sock.bind( self.udpServerAddressPort )
+        # If the following 2 lines are uncommented, then testing with testgui_server.py
+        # fails....
+        #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: necessary?
+        #sock.bind( self.udpServerAddressPort ) # is this for servers only????
         sock.settimeout(self.udpTimeoutSec)    # if no new data comes from server, quit
+
+        # During testing, send 'begin' to start the UDP server
+        msgFromClient = "begin"
+        bytesToSend = str.encode(msgFromClient)
+        print('sending message = [{}]'.format(msgFromClient))
+        sock.sendto(bytesToSend, self.udpServerAddressPort)
+        print("waiting for response")
+        msgFromServer = sock.recvfrom(1024)
+        msg = "Message from Server {}".format(msgFromServer[0])
+        print(msg)
         
-        lastDataString = {}
-        dataHeaderDict = {}
-        lastMaxTimes = {}
-        nRx = {}      # track number of udp transmissions received
-        for reg in self.registers:
-            nRx[reg] = 0 
+        # Code to parse the incoming FPGA data stream
+
+        #nRx = {}      # track number of udp transmissions received
+        #for reg in self.registers:
+        #    nRx[reg] = 0 
        
         while True:
             try:
                 data, addr = sock.recvfrom(self.udpBufferSize)
                 print("")
                 #print(data)                
-
-                #### For DWA data
                 udpDataStr = binascii.hexlify(data).decode(self.udpEnc).upper()
                 
                 # Break up string into 8-character chunks
                 chunkLength = 8
                 dataStrings = [udpDataStr[ii:ii+chunkLength]
                              for ii in range(0, len(udpDataStr), chunkLength)]
+                print("dataStrings = ")
+                print(dataStrings)
 
-                # the first 2 lines are the UDP header
-                #print("dataStrings = ")
-                #print(dataStrings)
-                udpHeader = [dataStrings.pop(0), dataStrings.pop(0)]
-                udpHeaderDict = self.parseUdpHeader(udpHeader)
-
-                reg = udpHeaderDict['reg']  # which register sent this data?
-                nRx[reg] += 1
-
-                print("{:05d} udpDataStr = {}".format(nRx[reg], udpDataStr))
-                print('udpHeaderDict = ')
-                print(udpHeaderDict)
-                #print("dataStrings = ")
-                #print(dataStrings)
-
-                # parse the data string
-
-                new_data_x = []
-                new_data_y = []
-                # FIXME: use the dt in the data header to reconstruct the time
-                # each line of data contains 2 ADC samples...
-                #if (len(self.myx[reg]) > 0):
-                #    lastMaxTime = self.myx[reg][-1]  # fixme: is this kosher?
-                #else:
-                #    lastMaxTime = 0
-                #if reg == '1E':
-                #    print("")
-                #    print("lastMaxTime = {}".format(lastMaxTime))
+                self.dwaDataParser.parse(dataStrings)
+                print('\n\n')
+                print('self.dwaDataParser.dwaPayload = ')
+                print(self.dwaDataParser.dwaPayload)
+                newdata_callback.emit(self.dwaDataParser.dwaPayload)
                     
-                nADC = 0  # number of ADC data lines so far in this UDP transmission
-                for ds in dataStrings:
-
-                    if ds.startswith('CAFE'):
-                        print("  CAFE: new frequency")
-                        lastDataString[reg] = ds
-                        if len(self.myy[reg]) > 0:
-                            # reset data arrays
-                            pass
-                        continue
-                        
-                    if lastDataString[reg].startswith('CAFE'):
-                        print("")
-                        print("Parsing header")
-                        print("   {}".format(lastDataString[reg]), end="")
-                        print("   {}".format(ds), end="")
-    
-                        # FIXME: should move dwa.parseUdpHeader into this class
-                        # and should rename parseUdpHeader() since we are not actually
-                        # parsing a UDP header, we are parsing a DATA header!
-                        dataHeaderDict[reg] = dwa.parseUdpHeader(lastDataString[reg],
-                                                                 ds, verbose=False)
-                        print(dataHeaderDict[reg])
-                        lastDataString[reg] = ''
-    
-                        # erase old timeseries data
-                        self.myx[reg].clear()
-                        self.myy[reg].clear()
-                        lastMaxTimes[reg] = 0 # FIXME
-                        continue
-    
-                    dt = dataHeaderDict[reg]['DT_us']
-                    #dt = 1   # FIXME!!!!
-                    #if (reg == '1E'):
-                    #    print('lastMaxTime = {}'.format(lastMaxTime))
-                    #    print("dt = {}".format(dt))
-                    print('    lastMaxTimes[{}] = {}'.format(reg, lastMaxTimes[reg]))
-                    print('    nADC = {}'.format(nADC))
-                    #new_data_x += [lastMaxTimes[reg]+dt*(nADC*2+1),
-                    #               lastMaxTimes[reg]+dt*(nADC*2+2)]
-                    new_data_x += [lastMaxTimes[reg]+dt*1,
-                                   lastMaxTimes[reg]+dt*2]
-                    new_data_y += dwa.parseUdpDataLine(ds)  
-                    print('    new_data_x = {}'.format(new_data_x))
-                    lastMaxTimes[reg] = new_data_x[-1]
-                    #print(new_data_x)
-                    nADC += 1
-                    lastDataString[reg] = ds
-    
-                print("new_data_x = ")
-                print(new_data_x)
-                print("new_data_y = ")
-                print(new_data_y)
-                data_tup = (reg, new_data_x, new_data_y)
-                newdata_callback.emit(data_tup)
+                #reg = udpHeaderDict['reg']  # which register sent this data?
+                #nRx[reg] += 1
+                #
+                #print("{:05d} udpDataStr = {}".format(nRx[reg], udpDataStr))
+                #print('udpHeaderDict = ')
+                #print(udpHeaderDict)
+                ##print("dataStrings = ")
+                ##print(dataStrings)
+                #
+                #print("new_data_x = ")
+                #print(new_data_x)
+                #print("new_data_y = ")
+                #print(new_data_y)
+                #data_tup = (reg, new_data_x, new_data_y)
+                #newdata_callback.emit(data_tup)
                     
             except socket.timeout:
                 print("  UDP Timeout")
@@ -368,19 +318,39 @@ class MainWindow(qtw.QMainWindow):
             finally:
                 pass
 
-    def process_new_data(self, tup):
-        # new data arrived from udp receiver
-        # add it to memory, update plots, trigger analysis if appropriate
-        print("process_new_data()")
-        print(tup)
-        reg = tup[0]
-        print("new data from register %s" % reg)
-        self.myx[reg] += tup[1]
-        self.myy[reg] += tup[2]
+    #def process_new_data(self, tup):
+    #    # new data arrived from udp receiver
+    #    # add it to memory, update plots, trigger analysis if appropriate
+    #    print("process_new_data()")
+    #    print(tup)
+    #    reg = tup[0]
+    #    print("new data from register %s" % reg)
+    #    self.myx[reg] += tup[1]
+    #    self.myy[reg] += tup[2]
+    #
+    #    # update plot
+    #    self.mycurves[reg].setData(self.myx[reg], self.myy[reg])
 
-        # update plot
-        self.mycurves[reg].setData(self.myx[reg], self.myy[reg])
+    def processUdpPayload(self, udpDict):
+        # new UDP payload has arrived from DWA.
+        # Deal with it (update plots, or status, or ...)
+        print('\n\n')
+        print("processUdpPayload()")
+        print(udpDict)
 
+        self.outputText.appendPlainText(str(udpDict))
+                
+        kk = udpDict.keys()
+        print(kk)
+
+        # Check to see if this is an ADC data transfer:
+        if ddp.Frame.ADC_DATA in udpDict:
+            self.outputText.appendPlainText("\nFOUND ADC DATA\n")
+            # update the relevant plot...
+            regId = udpDict[ddp.Frame.FREQ]['Register_ID_Freq']
+            reg = self.registerOfVal[regId]
+            self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
+        
     def process_new_amplitude(self, tup):
         # a full time-series is complete and processed
         # so now plot the amplitude vs. frequency data
@@ -389,9 +359,10 @@ class MainWindow(qtw.QMainWindow):
     def execute(self):
         # Pass the function to execute
         worker = Worker(self.start_acquisition)  # could have args/kwargs too..
-        worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(self.thread_complete)
-        worker.signals.newdata.connect(self.process_new_data)
+        worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.threadComplete)
+        worker.signals.newUdpPayload.connect(self.processUdpPayload)
+        #worker.signals.newdata.connect(self.process_new_data)
         #worker.signals.progress.connect(self.update_progress)
 
         # execute
