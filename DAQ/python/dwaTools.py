@@ -432,31 +432,53 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     relays_enable = config["relays_enable"]
 
     s = tcpOpen(verbose=verbose)
-
     sleepSec = 0.2
 
+    #fromDaqReg.reset          <= slv_reg0(0)= '1';
+    # this is handled in dwaReset()
+
+    #fromDaqReg.ctrlStart      <= slv_reg0(1)= '1';
+    # not sure what this one is...  is it dwaStart()???
+    #fromDaqReg.auto           <= slv_reg1(0)= '1';
+    # not sure what this one is...
+    # 
+    #fromDaqReg.stimFreqReq  <= unsigned(slv_reg3(23 downto 0));
     time.sleep(sleepSec)
-    dwaRegWrite(s, '00000000',freqReq_vio, verbose=verbose)
-    time.sleep(sleepSec)
-    dwaRegWrite(s, '00000002',dwaCtrl, verbose=verbose)
+    dwaRegWrite(s, '00000003', freqReq_vio, verbose=verbose)
+    #fromDaqReg.stimFreqMin  <= unsigned(slv_reg4(23 downto 0));
     time.sleep(sleepSec)
     dwaRegWrite(s, '00000004',ctrl_freqMin, verbose=verbose)
+    #fromDaqReg.stimFreqMax  <= unsigned(slv_reg5(23 downto 0));
     time.sleep(sleepSec)
     dwaRegWrite(s, '00000005',ctrl_freqMax, verbose=verbose)
+    #fromDaqReg.stimFreqStep <= unsigned(slv_reg6(23 downto 0));
     time.sleep(sleepSec)
     dwaRegWrite(s, '00000006',ctrl_freqStep, verbose=verbose)
+    #fromDaqReg.stimRampTime   <= unsigned(slv_reg7(23 downto 0));
     time.sleep(sleepSec)
     dwaRegWrite(s, '00000007',ctrl_stimTime, verbose=verbose)
+    #fromDaqReg.stimMag        <= unsigned(slv_reg8(23 downto 0));
     time.sleep(sleepSec)
-    dwaRegWrite(s, '00000008',ctrl_adc_nSamples, verbose=verbose)
+    dwaRegWrite(s, '00000008',stimMag, verbose=verbose)
+    #fromDaqReg.nAdcStimPeriod <= unsigned(slv_reg10(23 downto 0));
     time.sleep(sleepSec)
-    dwaRegWrite(s, '0000000A',adcAutoDc_chSel, verbose=verbose)
+    dwaRegWrite(s, '0000000A',nAdcStimPeriod, verbose=verbose)
+    #fromDaqReg.nAdcStimPeriodSamp <= unsigned(slv_reg11(23 downto 0));
     time.sleep(sleepSec)
-    dwaRegWrite(s, '0000000B',adcHScale, verbose=verbose)
-    time.sleep(sleepSec)
-    dwaRegWrite(s, '0000000C',stimMag, verbose=verbose)
-    time.sleep(sleepSec)
-    dwaRegWrite(s, '0000000E',relays_enable, verbose=verbose)
+    dwaRegWrite(s, '0000000B',nAdcStimPeriodSamp, verbose=verbose)
+
+    #fromDaqReg.coilDrive      <= slv_reg14;
+
+    #time.sleep(sleepSec)
+    #dwaRegWrite(s, '00000002',dwaCtrl, verbose=verbose)
+    #time.sleep(sleepSec)
+    #dwaRegWrite(s, '00000008',ctrl_adc_nSamples, verbose=verbose)
+    #time.sleep(sleepSec)
+    #dwaRegWrite(s, '0000000A',adcAutoDc_chSel, verbose=verbose)
+    #time.sleep(sleepSec)
+    #dwaRegWrite(s, '0000000B',adcHScale, verbose=verbose)
+    #time.sleep(sleepSec)
+    #dwaRegWrite(s, '0000000E',relays_enable, verbose=verbose)
     time.sleep(sleepSec)
 
     # If there is an IP address in the config file, then set it
