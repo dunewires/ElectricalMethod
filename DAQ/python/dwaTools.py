@@ -359,9 +359,7 @@ def force_symlink(file1, file2):
 
 def dwaReset(verbose=0):
     s = tcpOpen(verbose=verbose)
-    dwaRegWrite(s, '00000001', '00000000', verbose=verbose)
-    time.sleep(0.2)
-    dwaRegWrite(s, '00000001', '00000001', verbose=verbose)
+    dwaRegWrite(s, '00000000', '00000001', verbose=verbose)
     time.sleep(0.2)
     tcpClose(s)
 
