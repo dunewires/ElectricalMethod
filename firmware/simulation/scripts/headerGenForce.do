@@ -22,19 +22,24 @@ force -freeze sim:/tb_headergenerator/stimPeriodCounter 24'h121213 0
 force -freeze sim:/tb_headergenerator/adcSamplingPeriod 24'h424344 0
 #
 #force -freeze sim:/tb_headergenerator/sendRunHdr TRUE {50 ns} -cancel {70 ns}
-force -freeze sim:/tb_headergenerator/sendAdcData TRUE {50 ns} -cancel {70 ns}
+#force -freeze sim:/tb_headergenerator/sendRunHdr TRUE {500 ns} -cancel {520 ns}
 #force -freeze sim:/tb_headergenerator/sendStatusHdr TRUE {50 ns} -cancel {70 ns}
+#force -freeze sim:/tb_headergenerator/sendAdcData TRUE {50 ns} -cancel {70 ns}
+force -freeze sim:/tb_headergenerator/sendAdcData TRUE {500 ns} -cancel {520 ns}
 #
-force -freeze sim:/tb_headergenerator/udpDataRen TRUE {100 ns} -cancel {140 ns}
-force -freeze sim:/tb_headergenerator/udpDataRen TRUE {180 ns} -cancel {450 ns}
+force -freeze sim:/tb_headergenerator/udpDataRen TRUE {100 ns} -cancel {170 ns}
+force -freeze sim:/tb_headergenerator/udpDataRen TRUE {200 ns} -cancel {280 ns}
+force -freeze sim:/tb_headergenerator/udpDataRen TRUE {290 ns} -cancel {450 ns}
+force -freeze sim:/tb_headergenerator/udpDataRen TRUE {510 ns} -cancel {900 ns}
 
 # PS signals
-#force -freeze sim:/tb_headergenerator/fromDaqReg.udpPacketCounter 16'h002A 0
 #force -freeze sim:/tb_headergenerator/fromDaqReg.dwaCtrl 24'h0C0C0C 0
+force -freeze sim:/tb_headergenerator/fromDaqReg.coilDrive 24'h000001 0
 force -freeze sim:/tb_headergenerator/fromDaqReg.fixedPeriod 24'h0F0F0F 0
-force -freeze sim:/tb_headergenerator/fromDaqReg.stimPeriodMin 24'hABCD12 0
-force -freeze sim:/tb_headergenerator/fromDaqReg.stimPeriodMax 24'hDCBA12 0
-force -freeze sim:/tb_headergenerator/fromDaqReg.stimPeriodStep 24'hCAFE66 0
+force -freeze sim:/tb_headergenerator/fromDaqReg.stimFreqReq 24'hBABABA 0
+force -freeze sim:/tb_headergenerator/fromDaqReg.stimFreqMin 24'hABCD12 0
+force -freeze sim:/tb_headergenerator/fromDaqReg.stimFreqMax 24'hDCBA12 0
+force -freeze sim:/tb_headergenerator/fromDaqReg.stimFreqStep 24'hCAFE66 0
 force -freeze sim:/tb_headergenerator/fromDaqReg.acStim_mag 24'hDEAD66 0
 force -freeze sim:/tb_headergenerator/fromDaqReg.stimTime 24'hBEEF66 0
 #force -freeze sim:/tb_headergenerator/fromDaqReg.adcAutoDc_chSel 16'h0102 0

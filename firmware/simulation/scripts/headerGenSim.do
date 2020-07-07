@@ -15,4 +15,4 @@ vsim -voptargs="+acc" -L duneDwa  duneDwa.tb_headerGenerator
 
 do scripts/headerGenWave.do
 do scripts/headerGenForce.do
-run 800ns
+run 1000ns

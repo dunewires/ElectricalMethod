@@ -12,7 +12,8 @@ add wave -noupdate -expand -group TOP -expand -group headerGen /tb_jbtest/jbtest
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_jbtest/jbtest_inst/dataRdy
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_jbtest/jbtest_inst/dataWord
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_jbtest/jbtest_inst/dwaClk100
-add wave -noupdate -expand -group TOP -expand -group headerGen /tb_jbtest/jbtest_inst/headDataList
+add wave -noupdate -expand -group TOP -expand -group headerGen /tb_jbtest/jbtest_inst/headDataListA
+add wave -noupdate -expand -group TOP -expand -group headerGen /tb_jbtest/jbtest_inst/headDataListB
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {234022327936 fs} 0}
 quietly wave cursor active 1

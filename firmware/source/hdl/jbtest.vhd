@@ -20,19 +20,22 @@ end entity jbtest;
 
 architecture rtl of jbtest is
 
-    type     state_type is (idle_s, stateA_s, state_s);
+    type     state_type is (idle_s, stateA_s, stateB_s);
     signal   state_reg    : state_type := idle_s;
     signal   state_next   : state_type := idle_s;
     
-    constant nHead        : integer  := 4; -- # of header words (incl. 2 delimiters)
-    constant nHeadLog     : integer  := integer(log2(real(nHead +1)));
-    signal   headDataList : slv_vector_type(nHead-1 downto 0)(31 downto 0) := (others => (others => '0'));
+    constant nHeadA        : integer  := 4; -- # of header words (incl. 2 delimiters)
+    constant nHeadALog     : integer  := integer(log2(real(nHeadA + 1)));
+    constant nHeadB        : integer  := 3; -- # of header words (incl. 2 delimiters)
+    constant nHeadBLog     : integer  := integer(log2(real(nHeadB + 1)));
+    signal   headDataListA : slv_vector_type(nHeadA-1 downto 0)(31 downto 0) := (others => (others => '0'));
+    signal   headDataListB : slv_vector_type(nHeadB-1 downto 0)(31 downto 0) := (others => (others => '0'));
     
-    signal   headCnt_reg   : unsigned(nHeadLog downto 0) := (others => '0');
-    signal   headCnt_next  : unsigned(nHeadLog downto 0) := (others => '0');
+    signal   headCnt_reg   : unsigned(nHeadALog downto 0) := (others => '0');
+    signal   headCnt_next  : unsigned(nHeadALog downto 0) := (others => '0');
     signal   onEnter       : boolean := true;
-    signal   dataWord_reg  : std_logic_vector(31 downto 0);
-    signal   dataWord_next : std_logic_vector(31 downto 0);
+    --signal   dataWord_reg  : std_logic_vector(31 downto 0);
+    --signal   dataWord_next : std_logic_vector(31 downto 0);
 
     signal   dataRdy_reg   : boolean := false;
     signal   dataRdy_next  : boolean := false;
@@ -40,11 +43,17 @@ architecture rtl of jbtest is
 begin
 
     --header data indexed list with 0 at bottom of list
-    headDataList <= (
+    headDataListA <= (
         x"AAAAAAAA",
         x"BBBBBBBB",
         x"CCCCCCCC",
         x"DDDDDDDD"
+    );
+
+    headDataListB <= (
+        x"EEEEEEEE",
+        x"22222222",
+        x"44444444"
     );
 
     -- fsmd state and data registers
@@ -54,7 +63,7 @@ begin
             state_reg    <= state_next;
             headCnt_reg  <= headCnt_next;
             dataRdy_reg  <= dataRdy_next;
-            dataWord_reg <= dataWord_next;
+            --dataWord_reg <= dataWord_next;
         end if;
     end process state_seq;
 
@@ -63,7 +72,7 @@ begin
     begin
         -- set defaults
         state_next    <= state_reg;
-        dataWord_next <= dataWord_reg;
+        --dataWord_next <= dataWord_reg;
         dataRdy_next  <= dataRdy_reg;
         
         case state_reg is
@@ -71,16 +80,23 @@ begin
                 dataRdy_next <= false;
                 if sendRunHdr then
                     dataRdy_next <= true;
-                    headCnt_next <= to_unsigned(nHead-1, headCnt_next'length);
+                    headCnt_next <= to_unsigned(nHeadA-1, headCnt_next'length);
                     state_next <= stateA_s;
                 end if;
 
             when stateA_s =>
-                dataWord_next <= headDataList(to_integer(headCnt_reg));
                 if headCnt_reg=0 then
-                    state_next <= idle_s; -- choose next state
+                    state_next <= stateB_s; -- choose next state
+                    headCnt_next <= to_unsigned(nHeadB-1, headCnt_next'length);
                 else
                     headCnt_next  <= headCnt_reg - 1;
+                end if;
+
+            when stateB_s =>
+                if headCnt_reg=0 then
+                    state_next <= idle_s;
+                else
+                    headCnt_next <= headCnt_reg - 1;
                 end if;
 
             when others =>
@@ -91,7 +107,9 @@ begin
     
     -- output
     dataRdy  <= dataRdy_reg;
-    dataWord <= dataWord_reg;
-    
+    dataWord <= headDataListA(to_integer(headCnt_reg)) when state_reg = stateA_s else
+                headDataListB(to_integer(headCnt_reg)) when state_reg = stateB_s else
+                x"77777777";
+
 end architecture rtl;
 
