@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Jul  1 23:06:58 2020
+-- Last update : Tue Jul  7 13:27:56 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -42,15 +42,17 @@ package global_def is
         reset     : boolean;
         auto      : boolean;
         ctrlStart : boolean;
+        udpDataDone   : boolean;
+        udpDataRen   : boolean;
         coilDrive : std_logic_vector(31 downto 0);
 
         -- start james' additions
         --- dwaCtrl (still used?  how many bits?)
         fixedPeriod    : unsigned(23 downto 0); -- 10ns
-        stimPeriodReq  : unsigned(23 downto 0); --nf
-        stimPeriodMin  : unsigned(23 downto 0); -- 10ns
-        stimPeriodMax  : unsigned(23 downto 0); -- 10ns
-        stimPeriodStep : unsigned(23 downto 0); -- 10ns
+        stimFreqReq  : unsigned(23 downto 0); --nf
+        stimFreqMin  : unsigned(23 downto 0); -- 10ns
+        stimFreqMax  : unsigned(23 downto 0); -- 10ns
+        stimFreqStep : unsigned(23 downto 0); -- 10ns
 
         --stimPeriodActive   : unsigned(23 downto 0);
         --stimPeriodCounter  : unsigned(23 downto 0); -- bits???

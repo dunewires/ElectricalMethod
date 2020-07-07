@@ -116,43 +116,44 @@ architecture arch_imp of dwa_registers_v1_0_S00_AXI is
 	---- Signals for user logic register space example
 	--------------------------------------------------
 	---- Number of Slave Registers 32
-	signal slv_reg0     : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg1     : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg2     : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg3     : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg4     : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg5     : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg6     : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg7     : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg8     : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg9     : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg10    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg11    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg12    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg13    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg14    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg15    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg16    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg17    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg18    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg19    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg20    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg21    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg22    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg23    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg24    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg25    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg26    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg27    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg28    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg29    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg30    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg31    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg_rden : std_logic;
-	signal slv_reg_wren : std_logic;
-	signal reg_data_out : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal byte_index   : integer;
-	signal aw_en        : std_logic;
+	signal slv_reg0       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg1       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg2       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg3       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg4       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg5       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg6       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg7       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg8       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg9       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg10      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg11      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg12      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg13      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg14      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg15      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg16      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg17      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg18      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg19      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg20      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg21      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg22      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg23      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg24      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg25      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg26      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg27      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg28      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg29      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg30      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg31      : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg_rden   : std_logic;
+	signal slv_reg_wren   : std_logic;
+	signal reg_data_out   : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal byte_index     : integer;
+	signal aw_en          : std_logic;
+	signal udpDataStatSel : std_logic;
 
 begin
 	-- I/O Connections assignments
@@ -251,7 +252,7 @@ begin
 		if rising_edge(S_AXI_ACLK) then
 			-- reg0 moved here so it is not sticky 
 			-- used for any pulsed signals e.g. reset & start
-			slv_reg0  <= (others => '0');
+			slv_reg0 <= (others => '0');
 			if S_AXI_ARESETN = '0' then
 				slv_reg1  <= (others => '0');
 				slv_reg2  <= (others => '0');
@@ -668,8 +669,10 @@ begin
 		variable loc_addr : std_logic_vector(OPT_MEM_ADDR_BITS downto 0);
 	begin
 		-- Address decoding for reading registers
-		loc_addr                                        := axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
-		
+		loc_addr              := axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
+		fromDaqReg.udpDataRen <= '0';
+		udpDataStatSel <= '0';
+
 		--regFromDwa_strb                                 <= (others => '0');
 		--regFromDwa_strb(to_integer(unsigned(loc_addr))) <= axi_rvalid;
 
@@ -706,7 +709,7 @@ begin
 				reg_data_out <= slv_reg14;
 			when b"01111" =>
 				reg_data_out <= slv_reg15;
-				-- Registers 16 to 31 have been changed to be driven by the DWA (read only)
+			-- Registers 16 to 31 have been changed to be driven by the DWA (read only)
 			when b"10001" =>
 				reg_data_out(0)           <= '1' when toDaqReg.ctrlBusy else '0';
 				reg_data_out(31 downto 1) <= (others => '0');
@@ -714,6 +717,13 @@ begin
 				reg_data_out <= dateCode;
 			when b"10100" =>
 				reg_data_out <= hashCode;
+			when b"10111" =>
+				reg_data_out <= (31 downto 1 => '0', 0 => toDaqReg.udpDataRdy);
+				udpDataStatSel <= '1';
+			when b"11000" =>
+				reg_data_out <= toDaqReg.udpDataWord;
+				-- When udp word is read, send comb slv_reg_rden to DWA PL
+				fromDaqReg.udpDataRen <= slv_reg_rden;
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;
@@ -724,14 +734,19 @@ begin
 	begin
 		if (rising_edge (S_AXI_ACLK)) then
 			if ( S_AXI_ARESETN = '0' ) then
-				axi_rdata <= (others => '0');
+				axi_rdata       <= (others => '0');
+				udpReadBusy     <= '0';
+				udpReadBusy_del <= '0';
 			else
+				udpReadBusy_del <= udpReadBusy;
 				if (slv_reg_rden = '1') then
 					-- When there is a valid read address (S_AXI_ARVALID) with 
 					-- acceptance of read address by the slave (axi_arready), 
 					-- output the read dada 
 					-- Read address mux
 					axi_rdata <= reg_data_out; -- register read data
+					-- update state of udpReadBusy each time it is read by PS	
+					udpReadBusy <= udpDataStatSel and toDaqReg.udpDataRdy;
 				end if;
 			end if;
 		end if;
@@ -740,18 +755,21 @@ begin
 
 	-- Add user logic here
 	-- DWA just gets a copy of the register
-	fromDaqReg.reset          <= slv_reg0(0)= '1';
-	fromDaqReg.ctrlStart      <= slv_reg0(1)= '1';
-	fromDaqReg.auto           <= slv_reg1(0)= '1';
-	fromDaqReg.stimPeriodReq  <= unsigned(slv_reg3(23 downto 0));
-	fromDaqReg.stimPeriodMin  <= unsigned(slv_reg4(23 downto 0));
-	fromDaqReg.stimPeriodMax  <= unsigned(slv_reg5(23 downto 0));
-	fromDaqReg.stimPeriodStep <= unsigned(slv_reg6(23 downto 0));
-	fromDaqReg.stimRampTime   <= unsigned(slv_reg7(23 downto 0));
-	fromDaqReg.stimMag        <= unsigned(slv_reg8(23 downto 0));
-	fromDaqReg.nAdcStimPeriod <= unsigned(slv_reg10(23 downto 0));
+	fromDaqReg.reset      <= slv_reg0(0)= '1';
+	fromDaqReg.ctrlStart  <= slv_reg0(1)= '1';
+	fromDaqReg.auto       <= slv_reg1(0)= '1';
+	fromDaqReg.udpDataRen <= slv_reg1(0)= '1';
+	-- udpDataDone when PS has read the status at the end of the data payload
+	fromDaqReg.udpDataDone        <= not udpReadBusy and udpReadBusy_del;
+	fromDaqReg.stimFreqReq        <= unsigned(slv_reg3(23 downto 0));
+	fromDaqReg.stimFreqMin        <= unsigned(slv_reg4(23 downto 0));
+	fromDaqReg.stimFreqMax        <= unsigned(slv_reg5(23 downto 0));
+	fromDaqReg.stimFreqStep       <= unsigned(slv_reg6(23 downto 0));
+	fromDaqReg.stimRampTime       <= unsigned(slv_reg7(23 downto 0));
+	fromDaqReg.stimMag            <= unsigned(slv_reg8(23 downto 0));
+	fromDaqReg.nAdcStimPeriod     <= unsigned(slv_reg10(23 downto 0));
 	fromDaqReg.nAdcStimPeriodSamp <= unsigned(slv_reg11(23 downto 0));
-	fromDaqReg.coilDrive      <= slv_reg14;
+	fromDaqReg.coilDrive          <= slv_reg14;
 	-- User logic ends
 
 end arch_imp;
