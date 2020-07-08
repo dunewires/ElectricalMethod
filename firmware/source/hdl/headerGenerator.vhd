@@ -100,7 +100,7 @@ architecture rtl of headerGenerator is
 
         ----------------------------
 	---- Setup for Header C
-	constant nHeadC      : integer  := 7; -- # of header words (incl. 2 delimiters)
+	constant nHeadC      : integer  := 8; -- # of header words (incl. 2 delimiters)
 	constant nHeadCLog   : integer  := integer(log2(real(nHeadC +1)));
 	signal headCDataList : slv_vector_type(nHeadC-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
@@ -177,7 +177,8 @@ begin
         x"41" & std_logic_vector(adcSamplesPerFreq(23 downto 0)), 
         x"42" & std_logic_vector(stimPeriodActive),
         x"43" & std_logic_vector(adcSamplingPeriod),
-        x"CCCCCCCC"
+        x"CCCCCCCC",
+        x"DDDD" & x"5151" -- FIXME: this shoould be in the genDFrame_s...
     ); 
 
     headEDataList <= ( -- Status frame
@@ -209,11 +210,11 @@ begin
     --adcDataRen(7) <= BOOL2SL(udpDataRen) when ( (adcIdx = 7) and (state_reg = genDFrame_s) ) else '0';
 
     -- MUX header and ADC data onto the output data word
-    toDaqReg.udpDataWord <= headADataList(to_integer(headCnt_reg)) when state_reg = genAFrame_s else
-                            headCDataList(to_integer(headCnt_reg)) when state_reg = genCFrame_s else
-                            headEDataList(to_integer(headCnt_reg)) when state_reg = genEFrame_s else
-                            headFDataList(to_integer(headCnt_reg)) when state_reg = genFFrame_s else
-                            x"00000000";  -- FIXME: do we need an else???
+--    toDaqReg.udpDataWord <= headADataList(to_integer(headCnt_reg)) when state_reg = genAFrame_s else
+--                            headCDataList(to_integer(headCnt_reg)) when state_reg = genCFrame_s else
+--                            headEDataList(to_integer(headCnt_reg)) when state_reg = genEFrame_s else
+--                            headFDataList(to_integer(headCnt_reg)) when state_reg = genFFrame_s else
+--                            x"00000000";  -- FIXME: do we need an else???
 --        type state_type is (idle_s, udpPldEnd_s, genAFrame_s, genCFrame_s, genDFrame_s, genEFrame_s, genFFrame_s);
 
     registerId <=  REG_RUN     when rqstType = RQST_RUN else
@@ -281,6 +282,8 @@ begin
 
             when genAFrame_s =>
                 -- clock out the A header
+                toDaqReg.udpDataWord <= headADataList(to_integer(headCnt_reg));
+
                 if udpHdrRen then
                     if headCnt_reg > 0 then
                         headCnt_next <= headCnt_reg - 1;
@@ -308,6 +311,8 @@ begin
 
             when genEFrame_s =>
                 -- clock out the E header
+                toDaqReg.udpDataWord <= headEDataList(to_integer(headCnt_reg));
+
                 if udpHdrRen then
                     if headCnt_reg > 0 then
                         headCnt_next <= headCnt_reg - 1;
@@ -319,6 +324,7 @@ begin
 
             when genFFrame_s =>
                 -- clock out the F header
+                toDaqReg.udpDataWord <= headFDataList(to_integer(headCnt_reg));
                 if udpHdrRen then
                     if headCnt_reg > 0 then
                         headCnt_next <= headCnt_reg -1;
@@ -330,6 +336,8 @@ begin
 
             when genCFrame_s =>
                 -- clock out the C header (frequency header)
+                toDaqReg.udpDataWord <= headCDataList(to_integer(headCnt_reg));
+
                 if udpHdrRen then
                     if headCnt_reg > 0 then
                         headCnt_next <= headCnt_reg - 1;
@@ -348,11 +356,16 @@ begin
 
             when genDFrame_s =>
                 -- send out the ADC data for a single ADC channel
-                --dmux read enable
-                adcDataRen(adcIdx) <= fromDaqReg.udpDataRen;
-                -- mux ADC channels to udpDataWord
-                toDaqReg.udpDataWord <= adcData(adcIdx);
-
+                if adcDataRdy(adcIdx) = '1' then
+                    --dmux read enable
+                    adcDataRen(adcIdx) <= BOOL2SL(fromDaqReg.udpDataRen);
+                    -- mux adcIdx channels to udpDataWord
+                    toDaqReg.udpDataWord <= adcData(adcIdx);
+                else
+                    state_next <= udpPldEnd_s;
+                    toDaqReg.udpDataWord <= x"DDDDDDDD";
+                end if;
+                
             when udpPldEnd_s =>
                 -- if request type is ADC data and adcIdx is still > 0
                 -- then do the next adc
