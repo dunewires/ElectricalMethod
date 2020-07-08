@@ -9,6 +9,7 @@ add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerat
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/udpHdrRen
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/headCnt_next
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/registerId
+add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/rqstType
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/adcIdx
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/adcDataRen
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/udpDataRdy_reg
@@ -16,7 +17,7 @@ add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerat
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/headCnt_reg
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/toDaqReg.udpDataRdy
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/toDaqReg.udpDataWord
-add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/udpRequestComplete
+add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/fromDaqReg.udpDataDone
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/udpCnt_next
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/udpCnt_reg
 add wave -noupdate -expand -group TOP -expand -group headerGen /tb_headergenerator/headerGenerator_inst/udpPktCnt

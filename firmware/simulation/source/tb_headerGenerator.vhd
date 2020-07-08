@@ -50,9 +50,6 @@ architecture tb of tb_headerGenerator is
   signal adcDataRen   : std_logic_vector(7 downto 0);
   signal adcData      : slv_vector_type(7 downto 0)(31 downto 0);
   
-  signal udpRequestComplete :  boolean := false;
-  signal udpDataRdy         :  boolean := false;
-  
   signal reset     : boolean   := false;
   signal dwaClk100 : std_logic := '0';
 
@@ -81,9 +78,6 @@ begin
       adcDataRen           =>   adcDataRen,         
       adcData              =>   adcData,            
 
-      udpRequestComplete   =>   udpRequestComplete, 
-      --udpDataRdy           =>   udpDataRdy,
-      
       reset     => reset,
       dwaClk100 => dwaClk100
     );

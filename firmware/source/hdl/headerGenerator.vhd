@@ -28,7 +28,6 @@ use duneDwa.global_def.all;
 -- * register ID should also be tracked by this code block (not an input)
 -- * adcSamplesPerFrequency  can overflow (it's the product of adcSamplesPerCycle
 --   and cyclesPerFreq
--- * remove headACnt, headCCnt headFCnt, etc...  and headALog, headCLog, etc...
 
 entity headerGenerator is
 	port (
@@ -64,9 +63,6 @@ entity headerGenerator is
             adcDataRen   : out std_logic_vector(7 downto 0) := (others => '0');
             adcData      : in slv_vector_type(7 downto 0)(31 downto 0);
 
-            udpRequestComplete : out boolean := false;
-            --udpDataRdy         : out boolean := false;
-            
             reset     : in boolean;  --   := false;
             dwaClk100 : in std_logic -- := '0'
         );
@@ -94,49 +90,43 @@ architecture rtl of headerGenerator is
         ----------------- below this line is old -- do not use
 	constant nHeadA      : integer  := 4; -- # of header words (incl. 2 delimiters)
 	constant nHeadALog   : integer  := integer(log2(real(nHeadA +1)));
-	signal headACnt      : unsigned(nHeadALog-1 downto 0)                  := (others => '0');
 	signal headADataList : slv_vector_type(nHeadA-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
         ----------------------------
 	---- Setup for Header F
 	constant nHeadF      : integer  := 21; -- # of header words (incl. 2 delimiters)
 	constant nHeadFLog   : integer  := integer(log2(real(nHeadF +1)));
-	signal headFCnt      : unsigned(nHeadFLog-1 downto 0)                  := (others => '0');
 	signal headFDataList : slv_vector_type(nHeadF-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
         ----------------------------
 	---- Setup for Header C
 	constant nHeadC      : integer  := 7; -- # of header words (incl. 2 delimiters)
 	constant nHeadCLog   : integer  := integer(log2(real(nHeadC +1)));
-	signal headCCnt      : unsigned(nHeadCLog-1 downto 0)                  := (others => '0');
 	signal headCDataList : slv_vector_type(nHeadC-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
         ----------------------------
 	---- Setup for Header E
 	constant nHeadE      : integer  := 3; -- # of header words (incl. 2 delimiters)
 	constant nHeadElog   : integer  := integer(log2(real(nHeadE +1)));
-	signal headECnt      : unsigned(nHeadELog-1 downto 0)                  := (others => '0');
 	signal headEDataList : slv_vector_type(nHeadE-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
-        
-        -- FIXME: headCnt should use the largest of nHeadA, nHeadC, nHeadE, nHeadF
+        -- FIXME: headCnt_reg and _next should use the largest of nHeadA, nHeadC, nHeadE, nHeadF
         constant nHeadLog  : integer               := integer(log2(real(nHeadF + 1)));
         -- FIXME: this doesn't work right ...
         -- let nHeadF = 21.  Then int(log2(22)) = int(4.46) = 4.  But we need 5
         -- bits to encode the number 21... (10101)
-        --signal   headCnt   : unsigned(nHeadLog-1 downto 0) := (others => '0');
         signal   headCnt_reg  : unsigned(nHeadLog downto 0) := (others => '0');
         signal   headCnt_next : unsigned(nHeadLog downto 0) := (others => '0');
 
         signal   udpDataRdy_reg  : boolean := false;
         signal   udpDataRdy_next : boolean := false;
 
-        signal adcRegNum : unsigned(3 downto 0) := (others =>'0'); 
-        signal adcSamplesPerFreq : unsigned(39 downto 0) := (others => '0');
-
-        signal udpCnt_reg   : unsigned(15 downto 0) := (others => '0');
-        signal udpCnt_next  : unsigned(15 downto 0) := (others => '0');
-        signal udpPktCnt    : unsigned(15 downto 0) := (others => '0');
+        signal   adcRegNum         : unsigned(3 downto 0) := (others =>'0'); 
+        signal   adcSamplesPerFreq : unsigned(39 downto 0) := (others => '0');
+                  
+        signal   udpCnt_reg   : unsigned(15 downto 0) := (others => '0');
+        signal   udpCnt_next  : unsigned(15 downto 0) := (others => '0');
+        signal   udpPktCnt    : unsigned(15 downto 0) := (others => '0');
         
 begin
 
@@ -226,6 +216,12 @@ begin
                             x"00000000";  -- FIXME: do we need an else???
 --        type state_type is (idle_s, udpPldEnd_s, genAFrame_s, genCFrame_s, genDFrame_s, genEFrame_s, genFFrame_s);
 
+    registerId <=  REG_RUN     when rqstType = RQST_RUN else
+                   REG_STATUS  when rqstType = RQST_STATUS else       
+                   std_logic_vector(to_unsigned(adcIdx, registerId'length)) when rqstType = RQST_ADC else
+               x"00"; -- FIXME: what should default be???
+
+                   
     toDaqReg.udpDataRdy <= udpDataRdy_reg;
     udpPktCnt <= udpCnt_reg;
 
@@ -260,21 +256,21 @@ begin
                     state_next      <= genAFrame_s;
                     headCnt_next   <= to_unsigned(nHeadA-1, headCnt_next'length); 
                     rqstType        <= RQST_RUN;
-                    registerId      <= REG_RUN;
+                    --registerId      <= REG_RUN;
 
                 elsif sendAdcData then
                     udpDataRdy_next <= true;
                     state_next      <= genAFrame_s;
                     headCnt_next    <= to_unsigned(nHeadA-1, headCnt_next'length);
                     rqstType        <= RQST_ADC;
-                    registerId      <= std_logic_vector(to_unsigned(adcIdx, registerId'length));
+                    --registerId      <= std_logic_vector(to_unsigned(adcIdx, registerId'length));
                     
                 elsif sendStatusHdr then
                     udpDataRdy_next <= true;
                     state_next      <= genAFrame_s;
                     headCnt_next    <= to_unsigned(nHeadA-1, headCnt_next'length);
                     rqstType        <= RQST_STATUS;
-                    registerId      <= REG_STATUS;
+                    --registerId      <= REG_STATUS;
 
                 else
                     -- FIXME: RAISE EXCEPTION? (should never get here...)
@@ -338,9 +334,11 @@ begin
                     else
                         -- C header is finished
                         state_next <= genDFrame_s; -- ADC data is next
-                    --compute number of ADC data lines from nCycles and
+                    -- could compute number of ADC data lines from nCycles and
                     -- samples per cycle (and 2 samples per line)
                     -- plus 2 delimiter lines
+                    -- but since we are not indexing into a data list, maybe there
+                    -- is no need to set headCnt_next here...
                     -- FIXME: set correct number of lines
                     --headCnt_next <= to_unsigned(20-1, headCnt_next'length);
                     end if;
@@ -358,17 +356,19 @@ begin
                 --end if;
 
             when udpPldEnd_s =>
-                udpCnt_next <= udpCnt_reg + 1; -- increment UDP counter
                 -- if request type is ADC data and adcIdx is still > 0
                 -- then do the next adc
-                if (rqstType = RQST_ADC) and (adcIdx > 0) then
-                    adcIdx     <= adcIdx - 1;
-                    state_next <= genAFrame_s;
-                    registerId <= std_logic_vector(to_unsigned(adcIdx, registerId'length));
-                else
-                    adcIdx     <= 7;      -- reset adcIdx
-                    state_next <= idle_s; -- return to idle
-                end if;                    
+                if fromDaqReg.udpDataDone then -- confirm that PS received payload
+                    udpCnt_next <= udpCnt_reg + 1; -- increment UDP counter
+                    if (rqstType = RQST_ADC) and (adcIdx > 0) then
+                        adcIdx     <= adcIdx - 1;
+                        state_next <= genAFrame_s;
+                    else
+                        adcIdx     <= 7;      -- reset adcIdx
+                        rqstType   <= RQST_NULL;
+                        state_next <= idle_s; -- return to idle
+                    end if;
+                end if;
 
             when others =>
                 -- should never get here...

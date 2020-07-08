@@ -21,11 +21,13 @@ force -freeze sim:/tb_headergenerator/stimPeriodActive 24'h647681 0
 force -freeze sim:/tb_headergenerator/stimPeriodCounter 24'h121213 0
 force -freeze sim:/tb_headergenerator/adcSamplingPeriod 24'h424344 0
 #
-#force -freeze sim:/tb_headergenerator/sendRunHdr TRUE {50 ns} -cancel {70 ns}
-#force -freeze sim:/tb_headergenerator/sendRunHdr TRUE {500 ns} -cancel {520 ns}
+force -freeze sim:/tb_headergenerator/sendRunHdr TRUE {50 ns} -cancel {70 ns}
+force -freeze sim:/tb_headergenerator/sendRunHdr TRUE {500 ns} -cancel {520 ns}
 #force -freeze sim:/tb_headergenerator/sendStatusHdr TRUE {50 ns} -cancel {70 ns}
 #force -freeze sim:/tb_headergenerator/sendAdcData TRUE {50 ns} -cancel {70 ns}
-force -freeze sim:/tb_headergenerator/sendAdcData TRUE {500 ns} -cancel {520 ns}
+#force -freeze sim:/tb_headergenerator/sendAdcData TRUE {500 ns} -cancel {520 ns}
+#
+force -freeze sim:/tb_headergenerator/fromDaqReg.udpDataDone TRUE {440 ns} -cancel {460 ns}
 #
 force -freeze sim:/tb_headergenerator/udpDataRen TRUE {100 ns} -cancel {170 ns}
 force -freeze sim:/tb_headergenerator/udpDataRen TRUE {200 ns} -cancel {280 ns}
