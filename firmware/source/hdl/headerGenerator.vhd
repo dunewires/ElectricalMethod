@@ -45,7 +45,7 @@ entity headerGenerator is
 
             -----------------------
             -- PL
-            udpDataRen         : in boolean;
+            --udpDataRen         : in boolean;
             sendRunHdr         : in boolean;
             sendAdcData        : in boolean;
             sendStatusHdr      : in boolean;
@@ -84,7 +84,7 @@ architecture rtl of headerGenerator is
         -- 0x0 to 0x7 for ADC data.  0xFF for run header. 0xFE for status header
         signal registerId    : std_logic_vector(7 downto 0) := (others => '0');
         
-        signal udpHdrRen     : boolean := false;
+        --signal udpHdrRen     : boolean := false;
         signal adcIdx        : integer := 7;
         
         ----------------- below this line is old -- do not use
@@ -198,7 +198,7 @@ begin
     adcSamplesPerFreq <= fromDaqReg.adcSamplesPerCycle * fromDaqReg.cyclesPerFreq;
 
     -- the PS udpDataRen signal is used for ADC and header data
-    udpHdrRen     <= false when (state_reg = genDFrame_s) else udpDataRen;
+    --udpHdrRen     <= false when (state_reg = genDFrame_s) else fromDaqReg.udpDataRen;
     -- for loop (inside a combinatorial process) or generate (outside of process)
     --adcDataRen(0) <= BOOL2SL(udpDataRen) when ( (adcIdx = 0) and (state_reg = genDFrame_s) ) else '0';
     --adcDataRen(1) <= BOOL2SL(udpDataRen) when ( (adcIdx = 1) and (state_reg = genDFrame_s) ) else '0';
@@ -284,7 +284,7 @@ begin
                 -- clock out the A header
                 toDaqReg.udpDataWord <= headADataList(to_integer(headCnt_reg));
 
-                if udpHdrRen then
+                if fromDaqReg.udpDataRen then
                     if headCnt_reg > 0 then
                         headCnt_next <= headCnt_reg - 1;
                     else
@@ -313,7 +313,7 @@ begin
                 -- clock out the E header
                 toDaqReg.udpDataWord <= headEDataList(to_integer(headCnt_reg));
 
-                if udpHdrRen then
+                if fromDaqReg.udpDataRen then
                     if headCnt_reg > 0 then
                         headCnt_next <= headCnt_reg - 1;
                     else
@@ -325,7 +325,7 @@ begin
             when genFFrame_s =>
                 -- clock out the F header
                 toDaqReg.udpDataWord <= headFDataList(to_integer(headCnt_reg));
-                if udpHdrRen then
+                if fromDaqReg.udpDataRen then
                     if headCnt_reg > 0 then
                         headCnt_next <= headCnt_reg -1;
                     else
@@ -338,7 +338,7 @@ begin
                 -- clock out the C header (frequency header)
                 toDaqReg.udpDataWord <= headCDataList(to_integer(headCnt_reg));
 
-                if udpHdrRen then
+                if fromDaqReg.udpDataRen then
                     if headCnt_reg > 0 then
                         headCnt_next <= headCnt_reg - 1;
                     else

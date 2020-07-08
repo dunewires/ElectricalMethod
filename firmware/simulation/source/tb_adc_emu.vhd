@@ -47,8 +47,21 @@ architecture tb of tb_adc_emu is
   signal adcDataSerial   : std_logic_vector(3 downto 0) := (others => '0');
   signal adcSrcSyncClk   : std_logic                    := '0';
 
+  signal udpDataRdyDel  : std_logic := '0';
+  
 begin
+    
+   fromDaqReg.udpDataRen <= toDaqReg.udpDataRdy;
 
+   process (dwaClk100)
+   begin
+       if rising_edge(dwaClk100) then
+           udpDataRdyDel <= toDaqReg.udpDataRdy;
+           fromDaqReg.udpDataDone <= udpDataRdyDel and not toDaqReg.udpDataRdy;
+       end if;
+   end process;
+   
+   
   top_tension_analyzer_1 : entity duneDwa.top_tension_analyzer
     port map (
       fromDaqReg      => fromDaqReg,

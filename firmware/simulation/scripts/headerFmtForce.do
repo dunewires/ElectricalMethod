@@ -14,10 +14,10 @@ run 1ns
 force -freeze sim:/tb_adc_emu/fromDaqReg.auto TRUE 0      
 force -freeze sim:/tb_adc_emu/fromDaqReg.coilDrive 32'h00000000 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.fixedPeriod 24'h0F0F0F 0
-force -freeze sim:/tb_adc_emu/fromDaqReg.stimPeriodReq 24'h000100 0
-force -freeze sim:/tb_adc_emu/fromDaqReg.stimPeriodMin 24'h000008 0
-force -freeze sim:/tb_adc_emu/fromDaqReg.stimPeriodMax 24'h000020 0
-force -freeze sim:/tb_adc_emu/fromDaqReg.stimPeriodStep 24'h000008 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqReq 24'h000100 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqMin 24'h000008 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqMax 24'h000020 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqStep 24'h000008 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.cyclesPerFreq 24'h0000008 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.adcSamplesPerCycle 16'h0008 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.acStim_mag 12'h023 0

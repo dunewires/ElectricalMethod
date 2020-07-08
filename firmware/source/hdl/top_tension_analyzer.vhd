@@ -286,7 +286,7 @@ begin
   wtaController_inst : entity duneDwa.wtaController
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg,
+      toDaqReg   => open, --toDaqReg,
 
       acStimX200_nHPeriod => acStimX200_nHPeriodAuto,
       acStim_enable       => acStim_enable,
@@ -355,20 +355,20 @@ begin
     port map (
       fromDaqReg         => fromDaqReg,
       toDaqReg           => toDaqReg,
-      internalDwaReg     => open,
+      --internalDwaReg     => open,
 
       runOdometer        => (others => '0'),
       fpgaSerialNum      => (others => '0'),
 
-      udpDataRen         => false, --fromDaq
+      --udpDataRen         => false, --fromDaq
       sendRunHdr         => sendRunHdr,
       sendAdcData        => sendAdcData,
       sendStatusHdr      => false,
 
       firmwareId_date    => (others => '0'),
       firmwareId_hash    => (others => '0'),
-      stimFreqActive   => (others => '0'),
-      stimFreqCounter  => acStim_nHPeriod(22 downto 0) & '0',
+      stimPeriodActive   => (others => '0'),
+      stimPeriodCounter  => acStim_nHPeriod(22 downto 0) & '0',
 
       adcSamplingPeriod  => adcCnv_nPeriod,
 
@@ -376,7 +376,7 @@ begin
       adcDataRen         => fifoAdcData_ren,
       adcData            => fifoAdcData_dout,
 
-      udpRequestComplete => open,
+      --udpRequestComplete => open,
 
       reset              => false,--fromDaq
       dwaClk100          => dwaClk100
