@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Jul  2 00:22:20 2020
+-- Last update : Wed Jul  8 14:01:58 2020
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -61,7 +61,7 @@ begin
 	ctrlState_seq : process (dwaClk100)
 	begin
 		if rising_edge(dwaClk100) then
-			scanDone          <= acStimX200_nHPeriod > fromDaqReg.stimPeriodMax;
+			scanDone          <= acStimX200_nHPeriod > fromDaqReg.stimFreqMax;
 			toDaqReg.ctrlBusy <= true;
 			ctrlStart_del     <= fromDaqReg.ctrlStart;
 			adcBusy_del       <= adcBusy;
@@ -77,7 +77,7 @@ begin
 
 					when idle_s => --test is done and set freq to the beginning
 						toDaqReg.ctrlBusy   <= false;
-						acStimX200_nHPeriod <= fromDaqReg.stimPeriodMin;
+						acStimX200_nHPeriod <= fromDaqReg.stimFreqMin;
 						timerCnt            <= x"00000000";
 						--turn off stimulus 
 						acStim_enable <= '0';
@@ -111,7 +111,7 @@ begin
 							if scanDone then
 								ctrlState <= idle_s;
 							else
-								acStimX200_nHPeriod <= acStimX200_nHPeriod+fromDaqReg.stimPeriodStep;
+								acStimX200_nHPeriod <= acStimX200_nHPeriod+fromDaqReg.stimFreqStep;
 								ctrlState           <= stimPrep_s;
 							end if;
 						end if;

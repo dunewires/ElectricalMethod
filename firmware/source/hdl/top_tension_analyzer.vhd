@@ -182,7 +182,7 @@ begin
       if fromDaqReg.auto then
         acStimX200_nHPeriod <= acStimX200_nHPeriodAuto;
       else
-        acStimX200_nHPeriod <= fromDaqReg.stimPeriodReq;
+        acStimX200_nHPeriod <= fromDaqReg.stimFreqReq;
       end if;
 
       -- trim off 8 MSbs because we don't need to go below ~10Hz
@@ -367,8 +367,8 @@ begin
 
       firmwareId_date    => (others => '0'),
       firmwareId_hash    => (others => '0'),
-      stimPeriodActive   => (others => '0'),
-      stimPeriodCounter  => acStim_nHPeriod(22 downto 0) & '0',
+      stimFreqActive   => (others => '0'),
+      stimFreqCounter  => acStim_nHPeriod(22 downto 0) & '0',
 
       adcSamplingPeriod  => adcCnv_nPeriod,
 
