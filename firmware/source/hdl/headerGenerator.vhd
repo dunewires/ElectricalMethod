@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Jul  2 01:02:52 2020
+-- Last update : Wed Jul  8 13:31:55 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -199,14 +199,14 @@ begin
     -- the PS udpDataRen signal is used for ADC and header data
     udpHdrRen     <= false when (state_reg = genDFrame_s) else udpDataRen;
     -- for loop (inside a combinatorial process) or generate (outside of process)
-    adcDataRen(0) <= BOOL2SL(udpDataRen) when ( (adcIdx = 0) and (state_reg = genDFrame_s) ) else '0';
-    adcDataRen(1) <= BOOL2SL(udpDataRen) when ( (adcIdx = 1) and (state_reg = genDFrame_s) ) else '0';
-    adcDataRen(2) <= BOOL2SL(udpDataRen) when ( (adcIdx = 2) and (state_reg = genDFrame_s) ) else '0';
-    adcDataRen(3) <= BOOL2SL(udpDataRen) when ( (adcIdx = 3) and (state_reg = genDFrame_s) ) else '0';
-    adcDataRen(4) <= BOOL2SL(udpDataRen) when ( (adcIdx = 4) and (state_reg = genDFrame_s) ) else '0';
-    adcDataRen(5) <= BOOL2SL(udpDataRen) when ( (adcIdx = 5) and (state_reg = genDFrame_s) ) else '0';
-    adcDataRen(6) <= BOOL2SL(udpDataRen) when ( (adcIdx = 6) and (state_reg = genDFrame_s) ) else '0';
-    adcDataRen(7) <= BOOL2SL(udpDataRen) when ( (adcIdx = 7) and (state_reg = genDFrame_s) ) else '0';
+    --adcDataRen(0) <= BOOL2SL(udpDataRen) when ( (adcIdx = 0) and (state_reg = genDFrame_s) ) else '0';
+    --adcDataRen(1) <= BOOL2SL(udpDataRen) when ( (adcIdx = 1) and (state_reg = genDFrame_s) ) else '0';
+    --adcDataRen(2) <= BOOL2SL(udpDataRen) when ( (adcIdx = 2) and (state_reg = genDFrame_s) ) else '0';
+    --adcDataRen(3) <= BOOL2SL(udpDataRen) when ( (adcIdx = 3) and (state_reg = genDFrame_s) ) else '0';
+    --adcDataRen(4) <= BOOL2SL(udpDataRen) when ( (adcIdx = 4) and (state_reg = genDFrame_s) ) else '0';
+    --adcDataRen(5) <= BOOL2SL(udpDataRen) when ( (adcIdx = 5) and (state_reg = genDFrame_s) ) else '0';
+    --adcDataRen(6) <= BOOL2SL(udpDataRen) when ( (adcIdx = 6) and (state_reg = genDFrame_s) ) else '0';
+    --adcDataRen(7) <= BOOL2SL(udpDataRen) when ( (adcIdx = 7) and (state_reg = genDFrame_s) ) else '0';
 
     -- MUX header and ADC data onto the output data word
     toDaqReg.udpDataWord <= headADataList(to_integer(headCnt_reg)) when state_reg = genAFrame_s else
@@ -241,11 +241,13 @@ begin
     end process state_seq;
     
     --- next-state logic and header/ADC indexing
-    process (state_reg, sendRunHdr, sendAdcData, sendStatusHdr, dwaClk100)
+    --process (state_reg, sendRunHdr, sendAdcData, sendStatusHdr, dwaClk100)
+    process (all)
     begin
         -- set defaults
         state_next      <= state_reg;
         udpDataRdy_next <= udpDataRdy_reg;
+        adcDataRen         <= (others => '0');
 
         case (state_reg) is
             
@@ -346,14 +348,10 @@ begin
 
             when genDFrame_s =>
                 -- send out the ADC data for a single ADC channel
-                -- toDaqReg.chanIndex <= (udpDataWord)
-                adcDataRen         <= (others => '0');
-                adcDataRen(adcIdx) <= '1';
-                --if adcDataRdy(adcIdx) then
-                --    toDaqReg.udpDataWord <= adcData(adcIdx)(31 downto 0);
-                --else -- no more data to get
-                --    state_next <= udpPldEnd_s; -- all done with this ADC channel
-                --end if;
+                --dmux read enable
+                adcDataRen(adcIdx) <= fromDaqReg.udpDataRen;
+                -- mux ADC channels to udpDataWord
+                toDaqReg.udpDataWord <= adcData(adcIdx);
 
             when udpPldEnd_s =>
                 -- if request type is ADC data and adcIdx is still > 0
