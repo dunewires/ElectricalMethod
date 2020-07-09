@@ -85,6 +85,7 @@ architecture rtl of headerGenerator is
         
         --signal udpHdrRen     : boolean := false;
         signal adcIdx        : integer := 7;
+        signal adcIdx_next   : integer := 7;
         
         ----------------- below this line is old -- do not use
 	constant nHeadA      : integer  := 4; -- # of header words (incl. 2 delimiters)
@@ -207,6 +208,7 @@ begin
             headCnt_reg     <= headCnt_next;
             udpDataRdy_reg  <= udpDataRdy_next;
             udpCnt_reg      <= udpCnt_next;
+            adcIdx          <= adcIdx_next;
         end if;
     end process state_seq;
     
@@ -333,18 +335,21 @@ begin
                 else
                     state_next <= udpPldEnd_s;
                     toDaqReg.udpDataWord <= x"DDDDDDDD";
+                    udpDataRdy_next <= false;
                 end if;
                 
             when udpPldEnd_s =>
                 -- if request type is ADC data and adcIdx is still > 0
                 -- then do the next adc
+
                 if fromDaqReg.udpDataDone then -- confirm that PS received payload
                     udpCnt_next <= udpCnt_reg + 1; -- increment UDP counter
                     if (rqstType = RQST_ADC) and (adcIdx > 0) then
-                        adcIdx     <= adcIdx - 1;
-                        state_next <= genAFrame_s;
+                        adcIdx_next <= adcIdx - 1;
+                        state_next  <= genAFrame_s;
+                        udpDataRdy_next <= true;
                     else
-                        adcIdx     <= 7;      -- reset adcIdx
+                        adcIdx_next     <= 7;      -- reset adcIdx
                         rqstType   <= RQST_NULL;
                         state_next <= idle_s; -- return to idle
                     end if;

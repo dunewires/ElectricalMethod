@@ -76,7 +76,7 @@ add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaControll
 add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/acStimX200_nHPeriod
 add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/acStim_enable
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/fromDaqReg
-add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/toDaqReg
+add wave -noupdate -expand -group headerGen -childformat {{/tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/toDaqReg.udpDataWord -radix decimal}} -expand -subitemconfig {/tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/toDaqReg.udpDataWord {-format Analog-Step -height 84 -max 1124073872.0 -min -1431699454.0 -radix decimal}} /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/toDaqReg
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/runOdometer
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/fpgaSerialNum
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/sendRunHdr
@@ -151,7 +151,7 @@ add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReado
 add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcBusy
 add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/acStim_nHPeriod
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {301076052 fs} 0}
+WaveRestoreCursors {{Cursor 1} {272250000000 fs} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 208
 configure wave -valuecolwidth 63
@@ -167,4 +167,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits fs
 update
-WaveRestoreZoom {0 fs} {4769172778 fs}
+WaveRestoreZoom {269855413611 fs} {274624586389 fs}

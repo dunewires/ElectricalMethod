@@ -372,7 +372,7 @@ begin
 
       adcSamplingPeriod  => adcCnv_nPeriod,
 
-      adcDataRdy         => fifoAdcData_ef,
+      adcDataRdy         => not(fifoAdcData_ef),
       adcDataRen         => fifoAdcData_ren,
       adcData            => fifoAdcData_dout,
 
