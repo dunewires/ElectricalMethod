@@ -47,7 +47,8 @@ architecture tb of tb_adc_emu is
   signal adcDataSerial   : std_logic_vector(3 downto 0) := (others => '0');
   signal adcSrcSyncClk   : std_logic                    := '0';
 
-  signal udpDataRdyDel  : std_logic := '0';
+  --signal udpDataRdyDel  : std_logic := '0';
+  signal udpDataRdyDel  : boolean := false;
   
 begin
     

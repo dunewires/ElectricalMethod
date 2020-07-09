@@ -23,11 +23,10 @@ use duneDwa.global_def.all;
 
 
 -- FIXME:
--- * UDP counter should be done here (no other source of UDP data).  no
---   reliance on fromDaqReg anymore.
--- * register ID should also be tracked by this code block (not an input)
 -- * adcSamplesPerFrequency  can overflow (it's the product of adcSamplesPerCycle
 --   and cyclesPerFreq
+-- * currently the "DDDD" delimiter is a kluge as it is put in as part of the C
+--   header... Should happen instead in the genDFrame_s state
 
 entity headerGenerator is
 	port (
@@ -134,7 +133,6 @@ begin
     headADataList <= (
         x"AAAA" & std_logic_vector(to_unsigned(nHeadA-2, 16)), -- header delimiter (start)
         x"10" & x"00" & std_logic_vector(udpPktCnt),   -- UDP pkt counter
-        -- LOCAL (handle masks if needed)
         x"11" & x"0000" & registerId, -- Register ID --
         x"AAAAAAAA" -- header delimiter (end)
     );
@@ -170,7 +168,6 @@ begin
     
     headCDataList <= ( -- Frequency Data Frame
         x"CCCC" & std_logic_vector(to_unsigned(nHeadC-2, 16)),
-        -- LOCAL
         x"11" & x"0000" & registerId, -- Register ID (same as in "A" frame)
         x"40" & std_logic_vector(stimPeriodCounter),
         --FIXME: the following product can overflow...
@@ -187,41 +184,13 @@ begin
         x"EEEEEEEE"
     ); 
 
-    -- Examples of ways to construct data lines
-    --x"AB" & std_logic_vector(headAPktCnt),
-    --tempA & std_logic_vector(fromDaqReg.freqMax),
-    --"0100101" & '1' & std_logic_vector(fromDaqReg.freqStep(23 downto 4)) & "0100",
-    --"01001101010000111110101010101010"
-
-
     -- combinatorial logic of other signals
     adcSamplesPerFreq <= fromDaqReg.adcSamplesPerCycle * fromDaqReg.cyclesPerFreq;
-
-    -- the PS udpDataRen signal is used for ADC and header data
-    --udpHdrRen     <= false when (state_reg = genDFrame_s) else fromDaqReg.udpDataRen;
-    -- for loop (inside a combinatorial process) or generate (outside of process)
-    --adcDataRen(0) <= BOOL2SL(udpDataRen) when ( (adcIdx = 0) and (state_reg = genDFrame_s) ) else '0';
-    --adcDataRen(1) <= BOOL2SL(udpDataRen) when ( (adcIdx = 1) and (state_reg = genDFrame_s) ) else '0';
-    --adcDataRen(2) <= BOOL2SL(udpDataRen) when ( (adcIdx = 2) and (state_reg = genDFrame_s) ) else '0';
-    --adcDataRen(3) <= BOOL2SL(udpDataRen) when ( (adcIdx = 3) and (state_reg = genDFrame_s) ) else '0';
-    --adcDataRen(4) <= BOOL2SL(udpDataRen) when ( (adcIdx = 4) and (state_reg = genDFrame_s) ) else '0';
-    --adcDataRen(5) <= BOOL2SL(udpDataRen) when ( (adcIdx = 5) and (state_reg = genDFrame_s) ) else '0';
-    --adcDataRen(6) <= BOOL2SL(udpDataRen) when ( (adcIdx = 6) and (state_reg = genDFrame_s) ) else '0';
-    --adcDataRen(7) <= BOOL2SL(udpDataRen) when ( (adcIdx = 7) and (state_reg = genDFrame_s) ) else '0';
-
-    -- MUX header and ADC data onto the output data word
---    toDaqReg.udpDataWord <= headADataList(to_integer(headCnt_reg)) when state_reg = genAFrame_s else
---                            headCDataList(to_integer(headCnt_reg)) when state_reg = genCFrame_s else
---                            headEDataList(to_integer(headCnt_reg)) when state_reg = genEFrame_s else
---                            headFDataList(to_integer(headCnt_reg)) when state_reg = genFFrame_s else
---                            x"00000000";  -- FIXME: do we need an else???
---        type state_type is (idle_s, udpPldEnd_s, genAFrame_s, genCFrame_s, genDFrame_s, genEFrame_s, genFFrame_s);
 
     registerId <=  REG_RUN     when rqstType = RQST_RUN else
                    REG_STATUS  when rqstType = RQST_STATUS else       
                    std_logic_vector(to_unsigned(adcIdx, registerId'length)) when rqstType = RQST_ADC else
                x"00"; -- FIXME: what should default be???
-
                    
     toDaqReg.udpDataRdy <= udpDataRdy_reg;
     udpPktCnt <= udpCnt_reg;
@@ -382,7 +351,6 @@ begin
                 end if;
 
             when others =>
-                -- should never get here...
                 state_next <= idle_s;
 
         end case;

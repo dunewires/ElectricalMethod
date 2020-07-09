@@ -79,7 +79,6 @@ add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/h
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/toDaqReg
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/runOdometer
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/fpgaSerialNum
-add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/udpDataRen
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/sendRunHdr
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/sendAdcData
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/sendStatusHdr
@@ -97,7 +96,6 @@ add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/h
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/state_next
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/rqstType
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/registerId
-add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/udpHdrRen
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/adcIdx
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/headADataList
 add wave -noupdate -expand -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/headFDataList
