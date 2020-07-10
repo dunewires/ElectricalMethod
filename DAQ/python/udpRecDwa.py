@@ -22,6 +22,7 @@ tokSize = 8 # length of each token (token is a 8-entry HEX value like 'CAFE8030'
 try:
     sock = socket.socket(family=socket.AF_INET,   # internet
                          type=socket.SOCK_DGRAM)  # UDP
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind( (UDP_IP, UDP_PORT) )
 except:
     print("UDP Error: could not setup UDP")
@@ -64,6 +65,14 @@ try:
         for tok in dataToks:
             print(tok)  # Print all toks to screen
             # Certain toks should not be logged to file
+            # FIXME: in general the headers can change
+            # e.g. the "1F" at the end of the second header line will vary
+            # by register.
+            # just skip the first two entries of dataToks as those will
+            # always be the UDP packet header lines
+            # e.g.
+            # udpHeader = dataToks[0:2]
+            # dataToks = dataToks[2:]
             if tok.startswith('F00001'):
                 continue
             if tok == '0000001F':
