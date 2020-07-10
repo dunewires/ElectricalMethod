@@ -303,7 +303,7 @@ begin
             S_AXI_RREADY  => M00_AXI_0_RREADY,
 
             fromDaqReg => fromDaqReg,
-            toDaqReg   => toDaqReg,
+            toDaqReg   => toDaqReg
 
         );
 
