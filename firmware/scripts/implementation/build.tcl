@@ -99,7 +99,7 @@ proc setup {} {
     set fsbl_elf $proj_sources_dir/sdk/dwaFsbl/Debug/dwaFsbl.elf
     set lwip_elf $proj_sources_dir/sdk/lwip_ref/Release/lwip_ref.elf
     set boot_bin $proj_dir/BOOT.bin
-    set hardware_loc TCP:127.0.0.1:3123
+    set hardware_loc TCP:127.0.0.1:3124
     puts "Target: $target"
     puts "FPGA Part: $part"
     puts "Scripts Directory:  $scriptdir"

@@ -47,16 +47,18 @@ architecture tb of tb_adc_emu is
   signal adcDataSerial   : std_logic_vector(3 downto 0) := (others => '0');
   signal adcSrcSyncClk   : std_logic                    := '0';
 
+  signal daqReadCnt: unsigned(4 downto 0) := (others => '0');
+
   --signal udpDataRdyDel  : std_logic := '0';
   signal udpDataRdyDel  : boolean := false;
   
 begin
     
-   fromDaqReg.udpDataRen <= toDaqReg.udpDataRdy;
-
    process (dwaClk100)
    begin
        if rising_edge(dwaClk100) then
+          daqReadCnt <= daqReadCnt+1;
+           fromDaqReg.udpDataRen <= toDaqReg.udpDataRdy when (daqReadCnt = "00000") else false;
            udpDataRdyDel <= toDaqReg.udpDataRdy;
            fromDaqReg.udpDataDone <= udpDataRdyDel and not toDaqReg.udpDataRdy;
        end if;
@@ -101,8 +103,6 @@ begin
 
       dwaClk100 => dwaClk100
     );
-
-
 
 end tb;
 

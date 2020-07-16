@@ -666,7 +666,7 @@ begin
 	-- and the slave is ready to accept the read address.
 	slv_reg_rden <= axi_arready and S_AXI_ARVALID and (not axi_rvalid) ;
 
-	process (slv_reg0, slv_reg1, slv_reg2, slv_reg3, slv_reg4, slv_reg5, slv_reg6, slv_reg7, slv_reg8, slv_reg9, slv_reg10, slv_reg11, slv_reg12, slv_reg13, slv_reg14, slv_reg15, slv_reg16, slv_reg17, slv_reg18, slv_reg19, slv_reg20, slv_reg21, slv_reg22, slv_reg23, slv_reg24, slv_reg25, slv_reg26, slv_reg27, slv_reg28, slv_reg29, slv_reg30, slv_reg31, axi_araddr, S_AXI_ARESETN, slv_reg_rden)
+	process (all)
 		variable loc_addr : std_logic_vector(OPT_MEM_ADDR_BITS downto 0);
 	begin
 		-- Address decoding for reading registers
@@ -719,7 +719,8 @@ begin
 			when b"10100" =>
 				reg_data_out <= hashCode;
 			when b"10111" =>
-				reg_data_out   <= (31 downto 1 => '0', 0 => bool2Sl(toDaqReg.udpDataRdy));
+			    -- PS is expecting a FIFO Empty Flag
+				reg_data_out   <= (31 downto 1 => '1', 0 => bool2Sl(not(toDaqReg.udpDataRdy)));
 				udpDataStatSel <= slv_reg_rden; --when read udpDataRdy
 			when b"11000" =>
 				reg_data_out <= toDaqReg.udpDataWord;
