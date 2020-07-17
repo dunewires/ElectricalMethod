@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Jul  8 13:31:55 2020
+-- Last update : Thu Jul  9 22:32:19 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -155,7 +155,7 @@ begin
         --x"25" & x"00" & std_logic_vector(fromDaqReg.adcAutoDc_chSel),
         x"26" & std_logic_vector(fromDaqReg.cyclesPerFreq),
         x"27" & x"00" & std_logic_vector(fromDaqReg.adcSamplesPerCycle),
-        x"28" & x"000" & std_logic_vector(fromDaqReg.acStim_mag), 
+        x"28" & x"000" & std_logic_vector(fromDaqReg.stimMag), 
         -- 29 not used?
         x"2A" & x"00" & std_logic_vector(fromDaqReg.clientIp(31 downto 16)), --16MSb
         x"2B" & x"00" & std_logic_vector(fromDaqReg.clientIp(15 downto  0)), --16LSb

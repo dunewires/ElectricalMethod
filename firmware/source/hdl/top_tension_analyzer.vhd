@@ -266,7 +266,7 @@ begin
   -- stimulus frequency generation via DAC
   dacInterface_inst : entity work.dacInterface
     port map (
-      acStim_mag      => acStim_mag,
+      acStim_mag      => fromDaqReg.stimMag,
       acStim_nHPeriod => acStim_nHPeriod,
       acStim_enable   => acStim_enable,
       acStim_trigger  => acStim_trigger,
