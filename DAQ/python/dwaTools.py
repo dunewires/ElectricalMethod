@@ -358,6 +358,9 @@ def force_symlink(file1, file2):
             os.symlink(file1, file2)
 
 def dwaReset(verbose=0):
+    #fromDaqReg.reset          <= slv_reg0(0)= '1';
+    # presumably this is handled by dwaReset()?
+
     s = tcpOpen(verbose=verbose)
     dwaRegWrite(s, '00000000', '00000001', verbose=verbose)
     time.sleep(0.2)
@@ -380,7 +383,7 @@ def dwaGetConfigParameters(configFile):
     config = {}
 
     SECTION = "FPGA"
-    # FIXME: move these to a config file
+    config["auto"] = cp.get(SECTION, "auto")
     config["freqReq_vio"] = cp.get(SECTION, "freqReq_vio")
     # dwaCtrl  => (auto mainsMinus_enable m_axis_tready)
     config["dwaCtrl"] = cp.get(SECTION, "dwaCtrl")
@@ -388,11 +391,16 @@ def dwaGetConfigParameters(configFile):
     config["ctrl_freqMax"] = cp.get(SECTION, "ctrl_freqMax")
     config["ctrl_freqStep"] = cp.get(SECTION, "ctrl_freqStep")
     config["ctrl_stimTime"] = cp.get(SECTION, "ctrl_stimTime")
+    config["stimFreqReq"] = cp.get(SECTION, "stimFreqReq")
     config["ctrl_adc_nSamples"] = cp.get(SECTION, "ctrl_adc_nSamples")
     config["adcAutoDc_chSel"] = cp.get(SECTION, "adcAutoDc_chSel")
     config["adcHScale"] = cp.get(SECTION, "adcHScale")
     config["stimMag"] = cp.get(SECTION, "stimMag")
+    config["coilDrive"] = cp.get(SECTION, "coilDrive")
     config["relays_enable"] = cp.get(SECTION, "relays_enable")
+    config["cyclesPerFreq"] = cp.get(SECTION, "cyclesPerFreq")
+    config["adcSamplesPerCycle"] = cp.get(SECTION, "adcSamplesPerCycle")
+    config["activeChannels"] = cp.get(SECTION, "activeChannels")
     #config["client_IP"] = cp.get(SECTION, "client_IP", fallback=None)
     if cp.has_option(SECTION, "client_IP"):
         config["client_IP"] = cp.get(SECTION, "client_IP")
@@ -424,51 +432,60 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     ctrl_freqMin = config["ctrl_freqMin"]
     ctrl_freqMax = config["ctrl_freqMax"]
     ctrl_freqStep = config["ctrl_freqStep"]
+    stimFreqReq = config["stimFreqReq"]
     ctrl_stimTime = config["ctrl_stimTime"]
     ctrl_adc_nSamples = config["ctrl_adc_nSamples"]
     adcAutoDc_chSel = config["adcAutoDc_chSel"]
     adcHScale = config["adcHScale"]
     stimMag = config["stimMag"]
+    coilDrive = config["coilDrive"]
+    cyclesPerFreq = config["cyclesPerFreq"]
+    adcSamplesPerCycle = config["adcSamplesPerCycle"]
+    activeChannels = config["activeChannels"]
     relays_enable = config["relays_enable"]
-
+    auto = config["auto"]
+    
     s = tcpOpen(verbose=verbose)
     sleepSec = 0.2
+    time.sleep(sleepSec)
 
-    #fromDaqReg.reset          <= slv_reg0(0)= '1';
-    # this is handled in dwaReset()
 
-    #fromDaqReg.ctrlStart      <= slv_reg0(1)= '1';
-    # not sure what this one is...  is it dwaStart()???
     #fromDaqReg.auto           <= slv_reg1(0)= '1';
-    # not sure what this one is...
-    # 
+    # is this saying sweep vs. fixed freq?
+    dwaRegWrite(s, '00000001', auto, verbose=verbose)
+    time.sleep(sleepSec)
+
     #fromDaqReg.stimFreqReq  <= unsigned(slv_reg3(23 downto 0));
+    dwaRegWrite(s, '00000003', stimFreqReq, verbose=verbose)
     time.sleep(sleepSec)
-    dwaRegWrite(s, '00000003', freqReq_vio, verbose=verbose)
+
     #fromDaqReg.stimFreqMin  <= unsigned(slv_reg4(23 downto 0));
-    time.sleep(sleepSec)
     dwaRegWrite(s, '00000004',ctrl_freqMin, verbose=verbose)
+    time.sleep(sleepSec)
     #fromDaqReg.stimFreqMax  <= unsigned(slv_reg5(23 downto 0));
-    time.sleep(sleepSec)
     dwaRegWrite(s, '00000005',ctrl_freqMax, verbose=verbose)
+    time.sleep(sleepSec)
     #fromDaqReg.stimFreqStep <= unsigned(slv_reg6(23 downto 0));
-    time.sleep(sleepSec)
     dwaRegWrite(s, '00000006',ctrl_freqStep, verbose=verbose)
+    time.sleep(sleepSec)
     #fromDaqReg.stimRampTime   <= unsigned(slv_reg7(23 downto 0));
-    time.sleep(sleepSec)
     dwaRegWrite(s, '00000007',ctrl_stimTime, verbose=verbose)
+    time.sleep(sleepSec)
     #fromDaqReg.stimMag        <= unsigned(slv_reg8(23 downto 0));
-    time.sleep(sleepSec)
     dwaRegWrite(s, '00000008',stimMag, verbose=verbose)
+    time.sleep(sleepSec)
     #fromDaqReg.nAdcStimPeriod <= unsigned(slv_reg10(23 downto 0));
+    dwaRegWrite(s, '0000000A',cyclesPerFreq, verbose=verbose)
     time.sleep(sleepSec)
-    dwaRegWrite(s, '0000000A',nAdcStimPeriod, verbose=verbose)
     #fromDaqReg.nAdcStimPeriodSamp <= unsigned(slv_reg11(23 downto 0));
+    dwaRegWrite(s, '0000000B',adcSamplesPerCycle, verbose=verbose)
     time.sleep(sleepSec)
-    dwaRegWrite(s, '0000000B',nAdcStimPeriodSamp, verbose=verbose)
 
     #fromDaqReg.coilDrive      <= slv_reg14;
+    dwaRegWrite(s, '0000000E', coilDrive, verbose=verbose)
+    time.sleep(sleepSec)
 
+    ###############
     #time.sleep(sleepSec)
     #dwaRegWrite(s, '00000002',dwaCtrl, verbose=verbose)
     #time.sleep(sleepSec)
@@ -479,7 +496,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     #dwaRegWrite(s, '0000000B',adcHScale, verbose=verbose)
     #time.sleep(sleepSec)
     #dwaRegWrite(s, '0000000E',relays_enable, verbose=verbose)
-    time.sleep(sleepSec)
+    #time.sleep(sleepSec)
 
     # If there is an IP address in the config file, then set it
     if config["client_IP"]:
@@ -487,17 +504,19 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
         dwaSetUdpAddress(s, config["client_IP"], verbose=verbose)
         time.sleep(sleepSec)
 
+    time.sleep(sleepSec)
     tcpClose(s, verbose=verbose)
 
 def dwaStart(verbose=0):
 
     sleepSec = 0.2
 
+    #fromDaqReg.ctrlStart      <= slv_reg0(1)= '1';
+    # presumably this is handled by dwaStart()
+
     s = tcpOpen(verbose=verbose)
     # start
-    dwaRegWrite(s,'00000009','00000001', verbose=verbose)
-    time.sleep(sleepSec)
-    dwaRegWrite(s,'00000009','00000000', verbose=verbose)
+    dwaRegWrite(s,'00000000','00000002', verbose=verbose)
     time.sleep(sleepSec)
 
     tcpClose(s, verbose=verbose)
