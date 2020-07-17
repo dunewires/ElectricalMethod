@@ -23,6 +23,7 @@ import requests
 import time
 import socket
 import binascii
+import datetime
 
 import numpy as np
 
@@ -156,6 +157,8 @@ class MainWindow(qtw.QMainWindow):
         self.registers = [ddp.Registers.D0, ddp.Registers.D1, ddp.Registers.D2,
                           ddp.Registers.D3, ddp.Registers.D4, ddp.Registers.D5,
                           ddp.Registers.D6, ddp.Registers.D7]
+        self.registers_all = [item for item in ddp.Registers]
+
         self.pws = {}  # plot widgets
         for reg in self.registers:
             self.pws[reg] = pg.PlotWidget()
@@ -250,22 +253,35 @@ class MainWindow(qtw.QMainWindow):
         #sock.bind( self.udpServerAddressPort ) # is this for servers only????
         sock.settimeout(self.udpTimeoutSec)    # if no new data comes from server, quit
 
+        # FIXME: remove this when using with DWA
         # During testing, send 'begin' to start the UDP server
-        msgFromClient = "begin"
-        bytesToSend = str.encode(msgFromClient)
-        print('sending message = [{}]'.format(msgFromClient))
-        sock.sendto(bytesToSend, self.udpServerAddressPort)
-        print("waiting for response")
-        msgFromServer = sock.recvfrom(1024)
-        msg = "Message from Server {}".format(msgFromServer[0])
-        print(msg)
+        if False:
+            msgFromClient = "begin"
+            bytesToSend = str.encode(msgFromClient)
+            print('sending message = [{}]'.format(msgFromClient))
+            sock.sendto(bytesToSend, self.udpServerAddressPort)
+            print("waiting for response")
+            msgFromServer = sock.recvfrom(1024)
+            msg = "Message from Server {}".format(msgFromServer[0])
+            print(msg)
         
-        # Code to parse the incoming FPGA data stream
-
         #nRx = {}      # track number of udp transmissions received
         #for reg in self.registers:
         #    nRx[reg] = 0 
-       
+
+        # Generate a unique filename for each register
+        # Generate filehandles for each register
+        # FIXME: move this to a higher level (only do it once...)
+        #def getUniqueFileroot():
+        #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
+        froot = datetime.datetime.now().strftime("udpData/%Y%m%dT%H%M%S")
+        # create new output filenames
+        fnOfReg = {}  # file names for output. Keys are 2-digit hex string (e.g. '03' or 'FF'). values are filenames
+        for reg in self.registers_all:
+            fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
+        print("fnOfReg = ")
+        print(fnOfReg)
+        
         while True:
             try:
                 data, addr = sock.recvfrom(self.udpBufferSize)
@@ -280,10 +296,30 @@ class MainWindow(qtw.QMainWindow):
                 print("dataStrings = ")
                 print(dataStrings)
 
+                # FIXME: this is just to handle the case where DWA transmission
+                # contains the old-style (and now non-standard) header lines...
+                while not dataStrings[0].startswith("AAAA"):
+                    dataStrings.pop(0)
+                
+                # Write the raw udp payload to file
+                # Save incoming data as-is
+                print("Data came from:")
+                rawFH = open("udpstream.txt", 'a')
+                for item in dataStrings:
+                    rawFH.write(f'{item}\n')
+
                 self.dwaDataParser.parse(dataStrings)
                 print('\n\n')
                 print('self.dwaDataParser.dwaPayload = ')
                 print(self.dwaDataParser.dwaPayload)
+
+                # write data to file by register
+                reg = self.dwaDataParser.dwaPayload[ddp.Frame.UDP]['Register_ID_hexStr']
+                with open(fnOfReg[reg], 'a') as regFH:
+                    for item in dataStrings:
+                        regFH.write(f'{item}\n')
+                    regFH.close()
+                
                 newdata_callback.emit(self.dwaDataParser.dwaPayload)
                     
                 #reg = udpHeaderDict['reg']  # which register sent this data?
