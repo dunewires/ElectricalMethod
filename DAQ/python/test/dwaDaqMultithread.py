@@ -150,9 +150,7 @@ class MainWindow(qtw.QMainWindow):
         self.button = qtw.QPushButton("Acquire")
         self.button.pressed.connect(self.execute)
         self.outputText = qtw.QPlainTextEdit()
-        #self.bar = qtw.QProgressBar()
         
-        #self.registers = ['18','19','1A','1B','1C','1D','1E','1F']
         # *data* registers (e.g. wire readouts)
         # Fix me: do this programatically -- can loop over with "for item in ddp.Registers:"
         self.registers = [ddp.Registers.D0, ddp.Registers.D1, ddp.Registers.D2,
@@ -162,21 +160,16 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers:
             self.pws[reg] = pg.PlotWidget()
             self.pws[reg].setTitle(reg.name)
-        #self.pws['1A'] = pg.PlotWidget()
-        #self.pws['1F'] = pg.PlotWidget()
         ##self.pw.setBackground('w')
         
         layout.addWidget(self.label)
         layout.addWidget(self.outputText)
         layout.addWidget(self.button)
-        #layout.addWidget(self.bar)
 
         for nreg, reg in enumerate(self.registers):
             row = nreg/3
             col = nreg % 3
             gl.addWidget(self.pws[reg], row, col)
-        #layout.addWidget(self.pws['1A'])
-        #layout.addWidget(self.pws['1F'])
 
         gl.addLayout(layout, 2, 2)
         
@@ -338,16 +331,22 @@ class MainWindow(qtw.QMainWindow):
         print("processUdpPayload()")
         print(udpDict)
 
-        self.outputText.appendPlainText(str(udpDict))
-                
         kk = udpDict.keys()
         print(kk)
 
+        self.outputText.appendPlainText("UDP Counter: {}".format(udpDict[ddp.Frame.UDP]['UDP_Counter']))
+        
+        # Look for run header frame
+        if ddp.Frame.RUN in udpDict:
+            self.outputText.appendPlainText("\nFOUND RUN HEADER")
+            self.outputText.appendPlainText(str(udpDict))
+                
         # Check to see if this is an ADC data transfer:
         if ddp.Frame.ADC_DATA in udpDict:
             self.outputText.appendPlainText("\nFOUND ADC DATA\n")
             # update the relevant plot...
             regId = udpDict[ddp.Frame.FREQ]['Register_ID_Freq']
+            print('regId = ', regId)
             reg = self.registerOfVal[regId]
             self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
         

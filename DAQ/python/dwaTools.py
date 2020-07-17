@@ -153,7 +153,7 @@ def makeAdcDataLine(adc1=None, adc2=None, bitsToDrop=1):
     return '{:04x}{:04x}'.format(adc1, adc2).upper()
 
 
-def genDummyAdcData(nsamples, ncycles):
+def genDummyAdcData(nsamples, ncycles, phase=0):
     ''' make dummy adc data
     ADC samples are 15-bit (15MSb of the 16-bit ADC value)
     2 ADC samples per output line
@@ -163,7 +163,8 @@ def genDummyAdcData(nsamples, ncycles):
         nsamples += 1
 
     xx = np.linspace(0, 2*np.pi*ncycles, num=nsamples)
-    yy = 2**14 * np.sin(xx)
+    pp = 2*np.pi*phase/8.0
+    yy = 2**14 * np.sin(xx - pp)
     yy = yy.astype(np.int)
 
     #print(yy)

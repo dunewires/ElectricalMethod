@@ -18,16 +18,28 @@ win.resize(1000, 600)
 win.setWindowTitle('realtime graphing in pyqtgraph')
 pg.setConfigOptions(antialias=True) # enable antialiasing for prettier plots
  
-p1 = win.addPlot(title="Timeseries data")
-p2 = win.addPlot(title="Amplitude vs. Frequency")
+p1 = win.addPlot(row=0, col=0, title="Timeseries data 1A")
+p2 = win.addPlot(row=1, col=0, title="Amp. vs. Freq. 1A")
+p3 = win.addPlot(row=0, col=1, title="Timeseries data 1F")
+p4 = win.addPlot(row=1, col=1, title="Amp. vs. Freq. 1F")
 
+# Register 1A
 curve1 = p1.plot(pen='r')  # timeseries data
 curve2 = p2.plot(pen='y', symbolBrush=(0,0,200), symbolPen='w', symbol='o', symbolSize=10)  # amplitude vs freq
 
+# Register 1F
+curve3 = p3.plot(pen='r') # timeseries data
+curve4 = p4.plot(pen='y', symbolBrush=(0,0,200), symbolPen='w', symbol='o', symbolSize=10) # ampl vs. freq
+
+
 #pdata = np.array([], dtype=np.float)  # data to plot
-pdata = []
-ampls = []
-freqs = []
+pdata1A = []
+ampls1A = []
+freqs1A = []
+
+pdata1F = []
+ampls1F = []
+freqs1F = []
 
 # For single set of axes only...
 ####p = pg.plot()
@@ -61,17 +73,29 @@ print(msg)
 #bufferSize = struct.calcsize(structPackFmtStr)
 
 # For DWA data emulator (sending 32 bits, e.g. CAFE805E)
-bufferSize = 4  # number of bytes to receive
+#bufferSize = 4  # number of bytes to receive
+bufferSize = 1024  # number of bytes to receive
 encoding = 'utf-8'  
 # want result to be a string like 'CAFE805E'
 
-lastLine = ''
+lastLine1A = ''
+lastLine1F = ''
 nRx = 0  # keep track of number of transmissions received
-headerDict = {}
+headerDict1A = {}
+headerDict1F = {}
+
+def parseUdpHeader(lines):
+    print("parseUdpHeader: ")
+    print(lines)
+    dd = {}
+    dd['reg'] = lines[1][-2:]
+    dd['ntx'] = dwa.unsignedIntOfHexString(lines[0][-2:])
+    return dd
 
 def update():
-    global curve1, curve2, pdata, ampls, freqs
-    global p, sock, data, lastLine, nRx, headerDict
+    global curve1, curve2, pdata1A, ampls1A, freqs1A, headerDict1A
+    global curve3, curve4, pdata1F, ampls1F, freqs1F, headerDict1F
+    global p, sock, data, lastLine1A, lastLine1F, nRx
 
     # NOW READ DATA (data is a byte string, e.g. b'hi\nthere')
     try:
@@ -82,75 +106,129 @@ def update():
 
         ##### For sine wave data
         #vals = struct.unpack(structPackFmtStr, data)  
-        #pdata = np.append(pdata, vals) 
+        #pdata1A = np.append(pdata1A, vals) 
         ######
-
+        
         #### For DWA data
         dataStr = binascii.hexlify(data).decode('utf-8').upper()
         print("{:05d} dataStr = {}".format(nRx, dataStr))
         # parse the data string
 
-        if dataStr.startswith('CAFE'):
-            lastLine = dataStr
+        # reformat "data" into 8-character lines
+        chunkLength = 8
+        dataLines = [dataStr[ii:ii+chunkLength]
+                     for ii in range(0, len(dataStr), chunkLength)]
+        #print("dataLines = ")
+        #print(dataLines)
 
-            # Do analysis on the last dataset (assuming that there was one!)
-            # reset the data array
-            # FIXME: this means we will miss the last stimulation frequency
-            # since there is no 'CAFE' header after it.  Need a way to know
-            # when a dataset from a given frequency is completed.
-            
-            # Update the data set for plotting
-            # fit sine-wave to data from last stimulation frequency
-            if len(pdata) > 0:
-                amplEst = 0.5*(np.max(pdata)-np.min(pdata))  # FIXME: should fit sinewave?
-                ampls.append(amplEst) 
-                freqs.append(headerDict['STIM_FREQ_HZ'])
-                # update plot
-                # FIXME: NEED TO UPDATE THE AMPLITUDE VS. FREQUENCY PLOT
-                curve2.setData(freqs, ampls)
-                app.processEvents() ## force complete redraw for every plot
-                #junk = input("frequency complete.. hit key to continue")
+        udpHeader = [dataLines.pop(0), dataLines.pop(0)]
+        print("udpHeader = ")
+        print(udpHeader)
+        udpHeaderDict = parseUdpHeader(udpHeader)
+        print('udpHeaderDict = ')
+        print(udpHeaderDict)
+        #print("dataLines = ")
+        #print(dataLines)
 
-            return
-            
+        reg = udpHeaderDict['reg']
         
-        if lastLine.startswith('CAFE'):
-
-            print("")
-            print("Parsing header")
-            print("  {}".format(lastLine), end="")
-            print("  {}".format(dataStr), end="")
-            headerDict = dwa.parseUdpHeader(lastLine, dataStr, verbose=False)
-            print(headerDict)
-            lastLine = ''
-
-            # erase old timeseries data
-            pdata.clear()
-            return
-
-        # Parse data
-        #print("    {}".format(line), end="")
-        pdata += dwa.parseUdpDataLine(dataStr)
-        #print(data)
-        lastLine = dataStr
+        for dataLine in dataLines:
+        
+            if dataLine.startswith('CAFE'):
+                if reg == '1A':
+                    lastLine1A = dataLine
+                elif reg == '1F':
+                    lastLine1F = dataLine
+    
+                # Do analysis on the last dataset (assuming that there was one!)
+                # reset the data array
+                # FIXME: this means we will miss the last stimulation frequency
+                # since there is no 'CAFE' header after it.  Need a way to know
+                # when a dataset from a given frequency is completed.
+                
+                # Update the data set for plotting
+                # fit sine-wave to data from last stimulation frequency
+                if reg == '1A':
+                    if len(pdata1A) > 0:
+                        amplEst = 0.5*(np.max(pdata1A)-np.min(pdata1A))  # FIXME: should fit sinewave?
+                        ampls1A.append(amplEst) 
+                        freqs1A.append(headerDict1A['STIM_FREQ_HZ'])
+                        # update plot
+                        # FIXME: NEED TO UPDATE THE AMPLITUDE VS. FREQUENCY PLOT
+                        curve2.setData(freqs1A, ampls1A)
+                        app.processEvents() ## force complete redraw for every plot
+                        #junk = input("frequency complete.. hit key to continue")
+                elif reg == '1F':
+                    if len(pdata1F) > 0:
+                        amplEst = 0.5*(np.max(pdata1F)-np.min(pdata1F))  # FIXME: should fit sinewave?
+                        ampls1F.append(amplEst) 
+                        freqs1F.append(headerDict1F['STIM_FREQ_HZ'])
+                        # update plot
+                        # FIXME: NEED TO UPDATE THE AMPLITUDE VS. FREQUENCY PLOT
+                        curve4.setData(freqs1F, ampls1F)
+                        app.processEvents() ## force complete redraw for every plot
+                        #junk = input("frequency complete.. hit key to continue")
+                        
+                return
+                
+            if reg == '1A':
+                if lastLine1A.startswith('CAFE'):
+        
+                    print("")
+                    print("Parsing header")
+                    print("  {}".format(lastLine1A), end="")
+                    print("  {}".format(dataLine), end="")
+                    headerDict1A = dwa.parseUdpHeader(lastLine1A, dataLine, verbose=False)
+                    print(headerDict1A)
+                    lastLine1A = ''
+        
+                    # erase old timeseries data
+                    pdata1A.clear()
+                    return
+            elif reg == '1F':
+                if lastLine1F.startswith('CAFE'):
+        
+                    print("")
+                    print("Parsing header")
+                    print("  {}".format(lastLine1F), end="")
+                    print("  {}".format(dataLine), end="")
+                    headerDict1F = dwa.parseUdpHeader(lastLine1F, dataLine, verbose=False)
+                    print(headerDict1F)
+                    lastLine1F = ''
+        
+                    # erase old timeseries data
+                    pdata1F.clear()
+                    return
+                    
+        
+            # Parse data
+            if reg == '1A':
+                #print("    {}".format(line), end="")
+                pdata1A += dwa.parseUdpDataLine(dataLine)
+                #print(data)
+                lastLine1A = dataLine
+            elif reg == '1F':
+                pdata1F += dwa.parseUdpDataLine(dataLine)
+                lastLine1F = dataLine
         
         #print("vals = ")
         #print("len(vals) = {}".format(len(vals)))
         #print(vals)
-        #print("len(pdata) = {}".format(len(pdata)))
+        #print("len(pdata1A) = {}".format(len(pdata1A)))
     except socket.timeout:
         sock.close()
-        print("last pdata = ")
-        print(pdata)
-        print("min val = {}".format(np.min(pdata)))
-        print("max val = {}".format(np.max(pdata)))
-        print("n vals  = {}".format(len(pdata)))
+        print("last pdata1A = ")
+        print(pdata1A)
+        print("min val = {}".format(np.min(pdata1A)))
+        print("max val = {}".format(np.max(pdata1A)))
+        print("n vals  = {}".format(len(pdata1A)))
         print("no more data")
         junk = input("hit any key to close")
         sys.exit()
 
     # update plot
-    curve1.setData(np.arange(len(pdata)), pdata)
+    curve1.setData(np.arange(len(pdata1A)), pdata1A)
+    curve3.setData(np.arange(len(pdata1F)), pdata1F)
     app.processEvents() ## force complete redraw for every plot
     
 

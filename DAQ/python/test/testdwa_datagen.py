@@ -4,10 +4,12 @@ import dwaTools as dwa
 
 nSamples = 100 # samples per waveform, at a single frequency  MUST BE EVEN
 dt = 0.5e-3    # seconds
+phase = np.pi*0.5  # phase shift
+amplFactor = 3.0
 
 fmin = 100
 fmax = 200
-nf   = 30
+nf   = 3
 freqs = np.linspace(fmin, fmax, num=nf)
 
 # adc sampling dt
@@ -19,7 +21,6 @@ skipStr = dwa.adcSkipHexStringOfDt(dt, adc_dt=adc_dt)
 #print('data = {}'.format(dwa.hexStrOfSignedInt(-54, 4)))
 #print('data = {}'.format(dwa.hexStrOfSignedInt(54, 4)))
 #print('data = {}'.format(dwa.hexStrOfSignedInt(-54, 6)))
-
 
 dt_actual = adc_dt*(nskip+1)
 tt = np.arange(nSamples)*dt_actual
@@ -61,7 +62,7 @@ for freq in freqs:
     freqActual = dwa.freqOfPeriod(period_10ns)
     # ... and the sine wave at that freq
     ampl = dwa.resonanceModel(freqActual, a0, slope, cc, f0, gamma)
-    vv = ampl*np.sin(2*np.pi*freqActual*tt)
+    vv = amplFactor*ampl*np.sin(2*np.pi*freqActual*tt-phase)
     
     for ii in range(nSamples//2):
         # convert the floating point voltage to an integer (ADC value)
