@@ -63,6 +63,17 @@ architecture STRUCT of top_tension_analyzer is
     );
   END COMPONENT;
 
+  COMPONENT ila_4x32
+    PORT (
+      clk : IN STD_LOGIC;
+
+      probe0 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+      probe1 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+      probe2 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+      probe3 : IN STD_LOGIC_VECTOR(31 DOWNTO 0)
+    );
+  END COMPONENT ;
+
   signal auto            : std_logic := '0';
   signal acStimX200      : std_logic := '0';
   signal acStimX200_oddr : std_logic := '0';
@@ -90,7 +101,7 @@ architecture STRUCT of top_tension_analyzer is
   signal fifoAdcData_rdBusy : std_logic_vector(7 downto 0)             := (others => '0');
   signal fifoAdcData_ef     : std_logic_vector(7 downto 0)             := (others => '0');
   signal fifoAdcData_pf     : std_logic_vector(7 downto 0)             := (others => '0');
-  signal adcAutoDc_af      : std_logic_vector(7 downto 0)             := (others => '0');
+  signal adcAutoDc_af       : std_logic_vector(7 downto 0)             := (others => '0');
 
   signal adcStart : std_logic := '0';
 
@@ -108,8 +119,9 @@ architecture STRUCT of top_tension_analyzer is
 
   signal dpotMag : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0) := (others => (others => '0'));
 
-  signal sendRunHdr : boolean  := false;
-  signal sendAdcData :boolean  := false;
+  signal sendRunHdr  : boolean               := false;
+  signal sendAdcData : boolean               := false;
+  signal hGStateDbg  : unsigned(15 downto 0) := (others => '0');
 
 begin
   led(1) <= dwaClk100;
@@ -353,34 +365,47 @@ begin
 
   headerGenerator_inst : entity duneDwa.headerGenerator
     port map (
-      fromDaqReg         => fromDaqReg,
-      toDaqReg           => toDaqReg,
+      fromDaqReg => fromDaqReg,
+      toDaqReg   => toDaqReg,
+
       --internalDwaReg     => open,
 
-      runOdometer        => (others => '0'),
-      fpgaSerialNum      => (others => '0'),
+      runOdometer   => (others => '0'),
+      fpgaSerialNum => (others => '0'),
 
       --udpDataRen         => false, --fromDaq
-      sendRunHdr         => sendRunHdr,
-      sendAdcData        => sendAdcData,
-      sendStatusHdr      => false,
+      sendRunHdr    => sendRunHdr,
+      sendAdcData   => sendAdcData,
+      sendStatusHdr => false,
 
-      firmwareId_date    => (others => '0'),
-      firmwareId_hash    => (others => '0'),
-      stimPeriodActive   => (others => '0'),
-      stimPeriodCounter  => acStim_nHPeriod(22 downto 0) & '0',
+      firmwareId_date   => (others => '0'),
+      firmwareId_hash   => (others => '0'),
+      stimPeriodActive  => (others => '0'),
+      stimPeriodCounter => acStim_nHPeriod(22 downto 0) & '0',
 
-      adcSamplingPeriod  => adcCnv_nPeriod,
+      adcSamplingPeriod => adcCnv_nPeriod,
 
-      adcDataRdy         => not(fifoAdcData_ef),
-      adcDataRen         => fifoAdcData_ren,
-      adcData            => fifoAdcData_dout,
+      adcDataRdy => not(fifoAdcData_ef),
+      adcDataRen => fifoAdcData_ren,
+      adcData    => fifoAdcData_dout,
 
       --udpRequestComplete => open,
 
-      reset              => false,--fromDaq
-      dwaClk100          => dwaClk100
-    );  
+      stateDbg  => hGStateDbg,
+      dwaClk100 => dwaClk100
+    );
+
+  ila_4x32_inst : ila_4x32
+    PORT MAP (
+      clk => dwaClk100,
+
+      probe0               => toDaqReg.udpDataWord,
+      probe1(31 downto 1)  => (others => '0'),
+      probe1(0)            => bool2Sl(toDaqReg.udpDataRdy),
+      probe2(31 downto 16) => (others => '0'),
+      probe2(15 downto 0)  => std_logic_vector(hGStateDbg),
+      probe3               => (others => '0')
+    );
 
 end STRUCT;
 
