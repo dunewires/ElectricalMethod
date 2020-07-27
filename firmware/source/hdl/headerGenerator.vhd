@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Sun Jul 26 20:32:28 2020
+-- Last update : Mon Jul 27 10:14:06 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -199,7 +199,7 @@ begin
     udpPktCnt <= udpCnt_reg;
 
     -- state machine
-    state_seq : process (dwaClk100, fromDaqReg.reset)
+    state_seq : process (dwaClk100)
     begin
         if rising_edge(dwaClk100) then
             if fromDaqReg.reset then
@@ -224,8 +224,11 @@ begin
         -- set defaults
         state_next      <= state_reg;
         udpDataRdy_next <= udpDataRdy_reg;
-        adcDataRen         <= (others => '0');
-
+        rqstType_next   <= rqstType;
+        headCnt_next    <= headCnt_reg;
+        udpCnt_next     <= udpCnt_reg;
+        adcIdx_next     <= adcIdx;
+        adcDataRen      <= (others => '0');
         case (state_reg) is
             
             when idle_s =>
