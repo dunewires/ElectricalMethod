@@ -20,7 +20,7 @@ force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqMax 24'h000020 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqStep 24'h000008 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.cyclesPerFreq 24'h0000008 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.adcSamplesPerCycle 16'h0008 0
-force -freeze sim:/tb_adc_emu/fromDaqReg.acStim_mag 12'h023 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimMag 12'h023 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.clientIp 32'h95828854 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.stimTime 24'h000010 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.activeChannels 8'h09 0

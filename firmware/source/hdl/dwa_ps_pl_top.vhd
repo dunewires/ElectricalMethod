@@ -160,16 +160,7 @@ architecture STRUCTURE of dwa_ps_pl_top is
         );
     end component dwa_registers_v1_0_S00_AXI;
 
-    COMPONENT ila_4x32
-        PORT (
-            clk : IN STD_LOGIC;
 
-            probe0 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-            probe1 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-            probe2 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-            probe3 : IN STD_LOGIC_VECTOR(31 DOWNTO 0)
-        );
-    END COMPONENT ;
 
     signal M00_AXI_0_awaddr     : STD_LOGIC_VECTOR ( 31 downto 0 );
     signal M00_AXI_0_awprot     : STD_LOGIC_VECTOR ( 2 downto 0 );
@@ -364,15 +355,6 @@ begin
     ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
 
 
-    ila_4x32_inst : ila_4x32
-        PORT MAP (
-            clk => dwaClk100,
 
-            probe0              => toDaqReg.udpDataWord,
-            probe1(31 downto 1) => (others => '0'),
-            probe1(0)           => bool2Sl(toDaqReg.udpDataRdy),
-            probe2              => (others => '0'),
-            probe3              => (others => '0')
-        );
 
 end STRUCTURE;

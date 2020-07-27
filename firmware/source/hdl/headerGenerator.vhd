@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Jul  9 22:32:19 2020
+-- Last update : Sun Jul 26 20:32:28 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -35,6 +35,7 @@ entity headerGenerator is
             fromDaqReg      : in fromDaqRegType;
             toDaqReg        : out toDaqRegType;
 
+
             ---------------------------
             -- this will come from PS
             -- total number of runs with this board (non-volatile)
@@ -62,7 +63,7 @@ entity headerGenerator is
             adcDataRen   : out std_logic_vector(7 downto 0) := (others => '0');
             adcData      : in slv_vector_type(7 downto 0)(31 downto 0);
 
-            reset     : in boolean;  --   := false;
+            stateDbg         :out unsigned(15 downto 0);
             dwaClk100 : in std_logic -- := '0'
         );
         
@@ -75,7 +76,7 @@ architecture rtl of headerGenerator is
         signal state_next : state_type := idle_s;
 
         type rqstType_type is (RQST_NULL, RQST_RUN, RQST_STATUS, RQST_ADC);
-        signal rqstType  : rqstType_type := RQST_NULL;
+        signal rqstType, rqstType_next  : rqstType_type := RQST_NULL;
 
         constant REG_RUN     : std_logic_vector(7 downto 0) := x"FF";
         constant REG_STATUS  : std_logic_vector(7 downto 0) := x"FE";
@@ -128,6 +129,7 @@ architecture rtl of headerGenerator is
         signal   udpCnt_next  : unsigned(15 downto 0) := (others => '0');
         signal   udpPktCnt    : unsigned(15 downto 0) := (others => '0');
         
+
 begin
 
     --header data indexed list with 0 at bottom of list
@@ -197,18 +199,21 @@ begin
     udpPktCnt <= udpCnt_reg;
 
     -- state machine
-    state_seq : process (dwaClk100, reset)
+    state_seq : process (dwaClk100, fromDaqReg.reset)
     begin
-        if reset then
-            -- handle the reset signal
-            -- FIXME: what else goes here?
-            --udpDataRdy_next <= false;
-        elsif rising_edge(dwaClk100) then
-            state_reg       <= state_next;
-            headCnt_reg     <= headCnt_next;
-            udpDataRdy_reg  <= udpDataRdy_next;
-            udpCnt_reg      <= udpCnt_next;
-            adcIdx          <= adcIdx_next;
+        if rising_edge(dwaClk100) then
+            if fromDaqReg.reset then
+                -- handle the fromDaqReg.reset signal
+                -- FIXME: what else goes here?
+                --udpDataRdy_next <= false;
+            else
+                state_reg       <= state_next;
+                headCnt_reg     <= headCnt_next;
+                udpDataRdy_reg  <= udpDataRdy_next;
+                udpCnt_reg      <= udpCnt_next;
+                adcIdx          <= adcIdx_next;
+                rqstType        <= rqstType_next;
+            end if;
         end if;
     end process state_seq;
     
@@ -228,22 +233,22 @@ begin
                 if sendRunHdr then
                     udpDataRdy_next <= true;
                     state_next      <= genAFrame_s;
-                    headCnt_next   <= to_unsigned(nHeadA-1, headCnt_next'length); 
-                    rqstType        <= RQST_RUN;
+                    headCnt_next    <= to_unsigned(nHeadA-1, headCnt_next'length); 
+                    rqstType_next   <= RQST_RUN;
                     --registerId      <= REG_RUN;
 
                 elsif sendAdcData then
                     udpDataRdy_next <= true;
                     state_next      <= genAFrame_s;
                     headCnt_next    <= to_unsigned(nHeadA-1, headCnt_next'length);
-                    rqstType        <= RQST_ADC;
+                    rqstType_next   <= RQST_ADC;
                     --registerId      <= std_logic_vector(to_unsigned(adcIdx, registerId'length));
                     
                 elsif sendStatusHdr then
                     udpDataRdy_next <= true;
                     state_next      <= genAFrame_s;
                     headCnt_next    <= to_unsigned(nHeadA-1, headCnt_next'length);
-                    rqstType        <= RQST_STATUS;
+                    rqstType_next   <= RQST_STATUS;
                     --registerId      <= REG_STATUS;
 
                 else
@@ -349,8 +354,8 @@ begin
                         state_next  <= genAFrame_s;
                         udpDataRdy_next <= true;
                     else
-                        adcIdx_next     <= 7;      -- reset adcIdx
-                        rqstType   <= RQST_NULL;
+                        adcIdx_next     <= 7;      -- fromDaqReg.reset adcIdx
+                        rqstType_next   <= RQST_NULL;
                         state_next <= idle_s; -- return to idle
                     end if;
                 end if;
@@ -361,5 +366,6 @@ begin
         end case;
     end process;
 
+stateDbg <=  to_unsigned(state_type'POS(state_reg),stateDbg'length); 
 end architecture rtl;
 
