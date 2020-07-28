@@ -341,9 +341,11 @@ begin
                     -- mux adcIdx channels to udpDataWord
                     toDaqReg.udpDataWord <= adcData(adcIdx);
                 else
-                    state_next <= udpPldEnd_s;
                     toDaqReg.udpDataWord <= x"DDDDDDDD";
-                    udpDataRdy_next <= false;
+                    if fromDaqReg.udpDataRen then
+                        state_next <= udpPldEnd_s;
+                        udpDataRdy_next <= false;
+                    end if; 
                 end if;
                 
             when udpPldEnd_s =>
@@ -355,6 +357,7 @@ begin
                     if (rqstType = RQST_ADC) and (adcIdx > 0) then
                         adcIdx_next <= adcIdx - 1;
                         state_next  <= genAFrame_s;
+                        headCnt_next    <= to_unsigned(nHeadA-1, headCnt_next'length);
                         udpDataRdy_next <= true;
                     else
                         adcIdx_next     <= 7;      -- fromDaqReg.reset adcIdx
