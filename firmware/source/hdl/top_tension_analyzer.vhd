@@ -85,13 +85,14 @@ architecture STRUCT of top_tension_analyzer is
 
   signal acStim_mag           : unsigned(11 downto 0) := (others => '0');
   signal acStim_enable        : std_logic             := '0';
+  signal ctrl_acStim_enable   : std_logic             := '0';
   signal acStim_trigger       : std_logic             := '0';
   signal acStim_nHPeriod      : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_periodCnt : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriod  : unsigned(23 downto 0) := (others => '0');
   --initial value non zero
-  signal freqReq    : std_logic_vector(31 downto 0) := (others => '1');
-  signal freqReqAxi : std_logic_vector(31 downto 0) := (others => '1');
+  signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
+  signal ctrlFreqSet : unsigned(23 downto 0) := (others => '1');
 
   signal fifoAdcData_din    : SLV_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
   signal fifoAdcData_wen    : std_logic                                := '0';
@@ -125,6 +126,9 @@ architecture STRUCT of top_tension_analyzer is
   signal hGStateDbg  : unsigned(15 downto 0) := (others => '0');
 
 begin
+
+  CoilDrive <= fromDaqReg.coilDrive;
+
   led(1) <= dwaClk100;
   led(0) <= '1' when toDaqReg.ctrlBusy else '0';
   led(3) <= '1';
@@ -190,24 +194,25 @@ begin
     variable acStim_nHPeriod_all : unsigned(47 downto 0 );
     variable adcCnv_nPeriod_all  : unsigned(47 downto 0 );
     variable adcCnv_nCnv_all     : unsigned(39 downto 0 );
+
   begin
     if rising_edge(dwaClk10) then
       if fromDaqReg.auto then
-        acStimX200_nHPeriod <= acStimX200_nHPeriodAuto;
+        stimFreqReq   <= ctrlFreqSet;
+        acStim_enable <= ctrl_acStim_enable;
       else
-        acStimX200_nHPeriod <= fromDaqReg.stimFreqReq;
+        stimFreqReq   <= fromDaqReg.stimFreqReq;
+        acStim_enable <= '1';
       end if;
 
+      acStimX200_nHPeriod <= (x"7A1200"/ stimFreqReq);
       -- trim off 8 MSbs because we don't need to go below ~10Hz
-      -- acStim_nHPeriod_all := (x"5F5E1000"/unsigned(freqReq));
-
+      -- acStim_nHPeriod_all := (x"5F5E1000"/unsigned(stimFreqReq));
       -- acStim_nHPeriod     <= acStim_nHPeriod_all(acStim_nHPeriod'range);
       -- use the acStim_nHPeriod as the basis for the other freq to maintain exact sync
-
       -- this will produce a greater error in the actual freq being measured.
       acStim_nHPeriod_all := acStimX200_nHPeriod * 200;
-
-      adcCnv_nPeriod_all := acStimX200_nHPeriod * 50;
+      adcCnv_nPeriod_all  := acStimX200_nHPeriod * 50;
       --  let's start with a fixed conversion from half wave to ADC samples
       -- 100 = 4 samples/period
       -- 400 = 1 samples/period
@@ -301,8 +306,8 @@ begin
       fromDaqReg => fromDaqReg,
       toDaqReg   => open, --toDaqReg,
 
-      acStimX200_nHPeriod => acStimX200_nHPeriodAuto,
-      acStim_enable       => acStim_enable,
+      freqSet       => ctrlFreqSet,
+      acStim_enable => ctrl_acStim_enable,
 
       sendRunHdr  => sendRunHdr,
       sendAdcData => sendAdcData,
