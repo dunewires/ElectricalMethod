@@ -97,6 +97,7 @@ architecture STRUCT of top_tension_analyzer is
   signal fifoAdcData_wen    : std_logic                                := '0';
   signal fifoAdcData_ren    : std_logic_vector(7 downto 0)             := (others => '0');
   signal fifoAdcData_dout   : SLV_VECTOR_TYPE(7 downto 0)(31 downto 0) := (others => (others => '0'));
+  signal adcData            : SLV_VECTOR_TYPE(7 downto 0)(31 downto 0) := (others => (others => '0'));
   signal fifoAdcData_ff     : std_logic_vector(7 downto 0)             := (others => '0');
   signal fifoAdcData_rdBusy : std_logic_vector(7 downto 0)             := (others => '0');
   signal fifoAdcData_ef     : std_logic_vector(7 downto 0)             := (others => '0');
@@ -361,6 +362,12 @@ begin
         wr_rst_busy => open,
         rd_rst_busy => open
       );
+    adcData(adc_i) <= (
+        31           => '0',
+        30 downto 16 => fifoAdcData_dout(adc_i)(31 downto 17),
+        15           => '0',
+        14 downto 0  => fifoAdcData_dout(adc_i)(15 downto 1)
+    );
   end generate adcFifoGen;
 
   headerGenerator_inst : entity duneDwa.headerGenerator
@@ -387,7 +394,7 @@ begin
 
       adcDataRdy => not(fifoAdcData_ef),
       adcDataRen => fifoAdcData_ren,
-      adcData    => fifoAdcData_dout,
+      adcData    => adcData,
 
       --udpRequestComplete => open,
 
@@ -400,7 +407,8 @@ begin
       clk => dwaClk100,
 
       probe0               => toDaqReg.udpDataWord,
-      probe1(31 downto 1)  => (others => '0'),
+      probe1(31 downto 2)  => (others => '0'),
+      probe1(1)            => bool2Sl(fromDaqReg.udpDataDone),
       probe1(0)            => bool2Sl(toDaqReg.udpDataRdy),
       probe2(31 downto 16) => (others => '0'),
       probe2(15 downto 0)  => std_logic_vector(hGStateDbg),

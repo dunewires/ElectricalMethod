@@ -153,7 +153,7 @@ architecture arch_imp of dwa_registers_v1_0_S00_AXI is
 	signal reg_data_out    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal byte_index      : integer;
 	signal aw_en           : std_logic;
-	signal udpDataStatSel  : std_logic;
+	signal udpDataStatStrb : std_logic;
 	signal udpReadBusy     : boolean;
 	signal udpReadBusy_del : boolean;
 begin
@@ -672,7 +672,7 @@ begin
 		-- Address decoding for reading registers
 		loc_addr              := axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 		fromDaqReg.udpDataRen <= false;
-		udpDataStatSel        <= '0';
+		udpDataStatStrb       <= '0';
 
 		--regFromDwa_strb                                 <= (others => '0');
 		--regFromDwa_strb(to_integer(unsigned(loc_addr))) <= axi_rvalid;
@@ -719,9 +719,9 @@ begin
 			when b"10100" =>
 				reg_data_out <= hashCode;
 			when b"10111" =>
-			    -- PS is expecting a FIFO Empty Flag
-				reg_data_out   <= (31 downto 1 => '1', 0 => bool2Sl(not(toDaqReg.udpDataRdy)));
-				udpDataStatSel <= slv_reg_rden; --when read udpDataRdy
+				-- PS is expecting a FIFO Empty Flag
+				reg_data_out    <= (31 downto 1 => '1', 0 => bool2Sl(not(toDaqReg.udpDataRdy)));
+				udpDataStatStrb <= slv_reg_rden; --when read udpDataRdy
 			when b"11000" =>
 				reg_data_out <= toDaqReg.udpDataWord;
 				-- When udp word is read, send comb slv_reg_rden to DWA PL
@@ -740,15 +740,15 @@ begin
 				udpReadBusy     <= false;
 				udpReadBusy_del <= false;
 			else
-				udpReadBusy_del <= udpReadBusy;
+				-- update state of udpReadBusy each time it is read by PS	
+				udpReadBusy     <= toDaqReg.udpDataRdy when udpDataStatStrb else udpReadBusy;
+				udpReadBusy_del <= udpReadBusy; -- delay to find trailing edge
 				if (slv_reg_rden = '1') then
 					-- When there is a valid read address (S_AXI_ARVALID) with 
 					-- acceptance of read address by the slave (axi_arready), 
 					-- output the read dada 
 					-- Read address mux
 					axi_rdata <= reg_data_out; -- register read data
-					                        -- update state of udpReadBusy each time it is read by PS	
-					udpReadBusy <= udpDataStatSel = '1' and toDaqReg.udpDataRdy;
 				end if;
 			end if;
 		end if;
@@ -757,11 +757,11 @@ begin
 
 	-- Add user logic here
 	-- DWA just gets a copy of the register
-	fromDaqReg.reset      <= slv_reg0(0)= '1';
-	fromDaqReg.ctrlStart  <= slv_reg0(1)= '1';
-	fromDaqReg.auto       <= slv_reg1(0)= '1';
+	fromDaqReg.reset     <= slv_reg0(0)= '1';
+	fromDaqReg.ctrlStart <= slv_reg0(1)= '1';
+	fromDaqReg.auto      <= slv_reg1(0)= '1';
 	-- udpDataDone when PS has read the status at the end of the data payload
-	fromDaqReg.udpDataDone        <= not udpReadBusy and udpReadBusy_del;
+	fromDaqReg.udpDataDone        <= not udpReadBusy and udpReadBusy_del; --trailing edge
 	fromDaqReg.stimFreqReq        <= unsigned(slv_reg3(23 downto 0));
 	fromDaqReg.stimFreqMin        <= unsigned(slv_reg4(23 downto 0));
 	fromDaqReg.stimFreqMax        <= unsigned(slv_reg5(23 downto 0));
