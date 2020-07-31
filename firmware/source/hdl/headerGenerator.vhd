@@ -170,7 +170,7 @@ begin
     );    
     
     headCDataList <= ( -- Frequency Data Frame
-        x"CCCC" & std_logic_vector(to_unsigned(nHeadC-2, 16)),
+        x"CCCC" & std_logic_vector(to_unsigned(nHeadC-3, 16)),
         x"11" & x"0000" & registerId, -- Register ID (same as in "A" frame)
         x"40" & std_logic_vector(stimPeriodCounter),
         --FIXME: the following product can overflow...
