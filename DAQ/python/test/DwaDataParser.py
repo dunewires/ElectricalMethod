@@ -237,7 +237,7 @@ class DwaDataParser():
         # values. Each entry in the pair is the 15 MSb of
         # a 16bit sample.
         frameDict = {}
-        frameDict['adcSamples'] = list(chain.from_iterable( (line[:4], line[-4:]) for line in infoLines))
+        frameDict['adcSamples_raw'] = list(chain.from_iterable( (line[:4], line[-4:]) for line in infoLines))
         #print("frameDict = {}".format(frameDict))
         return frameDict
     
@@ -270,8 +270,8 @@ class DwaDataParser():
         # So the hex string must be converted to an integer
         # and then bit-shifted up by 1
         
-        key = 'adcSamples'
-        dd[key] = [ dwa.adcValOfHexStr(hexStr) for hexStr in dd[key] ]
+        key = 'adcSamples_raw'
+        dd['adcSamples'] = [ dwa.adcValOfHexStr(hexStr) for hexStr in dd[key] ]
         #dd[key] = [int(hexStr, hexBase) << 1
         #           for hexStr in dd[key]]
 
@@ -285,7 +285,16 @@ class DwaDataParser():
 
 
     def parse(self,  udpPayload):
+        # FIXME: ensure that lines in udpPayload have no whitespace....
 
+        # if udpPayload is a filename, then read the file into a
+        # list of strings
+        # if udpPayload is already a list of strings, then just parse it
+        if isinstance(udpPayload, str):
+            with open(udpPayload) as fh:
+                lines = fh.readlines()
+            udpPayload = [tok.strip() for tok in lines]
+        
         inHeader = False
         delimIdxs = []  # line numbers of frame delimiters
         for ii, line in enumerate(udpPayload):
@@ -308,11 +317,15 @@ class DwaDataParser():
             # get frame type
             frameType = int(udpPayload[frameStartIdx][0], hexBase)
             print("frameType = 0d{} = 0x{:X}".format(frameType, frameType))
-        
-            # Number of Frame Information lines
-            nFrameInfo = int(frameStartLine[4:], hexBase)
-            print("nFrameInfo = {}".format(nFrameInfo))
-            frameEndIdx = frameStartIdx + nFrameInfo + 1
+
+            # FIXME: kluge b/c we don't specify the number of ADC data lines yet...
+            if frameStartLine.startswith('DDDD'):
+                frameEndIdx = udpPayload.index('DDDDDDDD')
+            else:
+                # Number of Frame Information lines
+                nFrameInfo = int(frameStartLine[4:], hexBase)
+                print("nFrameInfo = {}".format(nFrameInfo))
+                frameEndIdx = frameStartIdx + nFrameInfo + 1
             
             # FIXME: add an "assert" here if delimiters don't match
             print("frameEndLine = {}".format(udpPayload[frameEndIdx]))
