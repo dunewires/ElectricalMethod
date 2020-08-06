@@ -385,23 +385,28 @@ def dwaGetConfigParameters(configFile):
 
     SECTION = "FPGA"
     config["auto"] = cp.get(SECTION, "auto")
-    config["freqReq_vio"] = cp.get(SECTION, "freqReq_vio")
-    # dwaCtrl  => (auto mainsMinus_enable m_axis_tready)
-    config["dwaCtrl"] = cp.get(SECTION, "dwaCtrl")
-    config["ctrl_freqMin"] = cp.get(SECTION, "ctrl_freqMin")
-    config["ctrl_freqMax"] = cp.get(SECTION, "ctrl_freqMax")
-    config["ctrl_freqStep"] = cp.get(SECTION, "ctrl_freqStep")
-    config["ctrl_stimTime"] = cp.get(SECTION, "ctrl_stimTime")
-    config["stimFreqReq"] = cp.get(SECTION, "stimFreqReq")
-    config["ctrl_adc_nSamples"] = cp.get(SECTION, "ctrl_adc_nSamples")
-    config["adcAutoDc_chSel"] = cp.get(SECTION, "adcAutoDc_chSel")
-    config["adcHScale"] = cp.get(SECTION, "adcHScale")
-    config["stimMag"] = cp.get(SECTION, "stimMag")
-    config["coilDrive"] = cp.get(SECTION, "coilDrive")
-    config["relays_enable"] = cp.get(SECTION, "relays_enable")
+    # 
+    config["stimFreqReq"]  = cp.get(SECTION, "stimFreqReq")
+    config["stimFreqMin"]  = cp.get(SECTION, "stimFreqMin")
+    config["stimFreqMax"]  = cp.get(SECTION, "stimFreqMax")
+    config["stimFreqStep"] = cp.get(SECTION, "stimFreqStep")
+    config["stimTime"]     = cp.get(SECTION, "stimTime")
+    config["stimMag"]      = cp.get(SECTION, "stimMag")
+    # 
     config["cyclesPerFreq"] = cp.get(SECTION, "cyclesPerFreq")
     config["adcSamplesPerCycle"] = cp.get(SECTION, "adcSamplesPerCycle")
-    config["activeChannels"] = cp.get(SECTION, "activeChannels")
+    # 
+    config["relayMask"] = cp.get(SECTION, "relayMask")
+    config["coilDrive"] = cp.get(SECTION, "coilDrive")
+    #
+    # Defunct
+    # dwaCtrl  => (auto mainsMinus_enable m_axis_tready)
+    #config["dwaCtrl"] = cp.get(SECTION, "dwaCtrl")
+    #config["adcAutoDc_chSel"] = cp.get(SECTION, "adcAutoDc_chSel")
+    #config["adcHScale"] = cp.get(SECTION, "adcHScale")
+    #config["freqReq_vio"] = cp.get(SECTION, "freqReq_vio")
+    #config["ctrl_adc_nSamples"] = cp.get(SECTION, "ctrl_adc_nSamples")
+    #
     #config["client_IP"] = cp.get(SECTION, "client_IP", fallback=None)
     if cp.has_option(SECTION, "client_IP"):
         config["client_IP"] = cp.get(SECTION, "client_IP")
@@ -425,67 +430,49 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
 
     config = dwaGetConfigParameters(configFile)
 
-    # FIXME: don't need this section, can just use
-    # the config[] dictionary values directly...
-    freqReq_vio = config["freqReq_vio"]
-    # dwaCtrl  => (auto mainsMinus_enable m_axis_tready)
-    dwaCtrl = config["dwaCtrl"]
-    ctrl_freqMin = config["ctrl_freqMin"]
-    ctrl_freqMax = config["ctrl_freqMax"]
-    ctrl_freqStep = config["ctrl_freqStep"]
-    stimFreqReq = config["stimFreqReq"]
-    ctrl_stimTime = config["ctrl_stimTime"]
-    ctrl_adc_nSamples = config["ctrl_adc_nSamples"]
-    adcAutoDc_chSel = config["adcAutoDc_chSel"]
-    adcHScale = config["adcHScale"]
-    stimMag = config["stimMag"]
-    coilDrive = config["coilDrive"]
-    cyclesPerFreq = config["cyclesPerFreq"]
-    adcSamplesPerCycle = config["adcSamplesPerCycle"]
-    activeChannels = config["activeChannels"]
-    relays_enable = config["relays_enable"]
-    auto = config["auto"]
-    
     s = tcpOpen(verbose=verbose)
     sleepSec = 0.2
     time.sleep(sleepSec)
 
-
     #fromDaqReg.auto           <= slv_reg1(0)= '1';
     # is this saying sweep vs. fixed freq?
-    dwaRegWrite(s, '00000001', auto, verbose=verbose)
+    dwaRegWrite(s, '00000001', config["auto"], verbose=verbose)
     time.sleep(sleepSec)
-
+    #
     #fromDaqReg.stimFreqReq  <= unsigned(slv_reg3(23 downto 0));
-    dwaRegWrite(s, '00000003', stimFreqReq, verbose=verbose)
+    dwaRegWrite(s, '00000003', config["stimFreqReq"], verbose=verbose)
     time.sleep(sleepSec)
-
     #fromDaqReg.stimFreqMin  <= unsigned(slv_reg4(23 downto 0));
-    dwaRegWrite(s, '00000004',ctrl_freqMin, verbose=verbose)
+    dwaRegWrite(s, '00000004', config["stimFreqMin"], verbose=verbose)
     time.sleep(sleepSec)
     #fromDaqReg.stimFreqMax  <= unsigned(slv_reg5(23 downto 0));
-    dwaRegWrite(s, '00000005',ctrl_freqMax, verbose=verbose)
+    dwaRegWrite(s, '00000005', config["stimFreqMax"], verbose=verbose)
     time.sleep(sleepSec)
     #fromDaqReg.stimFreqStep <= unsigned(slv_reg6(23 downto 0));
-    dwaRegWrite(s, '00000006',ctrl_freqStep, verbose=verbose)
+    dwaRegWrite(s, '00000006', config["stimFreqStep"], verbose=verbose)
     time.sleep(sleepSec)
     #fromDaqReg.stimRampTime   <= unsigned(slv_reg7(23 downto 0));
-    dwaRegWrite(s, '00000007',ctrl_stimTime, verbose=verbose)
+    dwaRegWrite(s, '00000007', config["stimTime"], verbose=verbose)
     time.sleep(sleepSec)
     #fromDaqReg.stimMag        <= unsigned(slv_reg8(23 downto 0));
-    dwaRegWrite(s, '00000008',stimMag, verbose=verbose)
+    dwaRegWrite(s, '00000008', config["stimMag"], verbose=verbose)
     time.sleep(sleepSec)
+    # 
     #fromDaqReg.nAdcStimPeriod <= unsigned(slv_reg10(23 downto 0));
-    dwaRegWrite(s, '0000000A',cyclesPerFreq, verbose=verbose)
+    dwaRegWrite(s, '0000000A', config["cyclesPerFreq"], verbose=verbose)
     time.sleep(sleepSec)
     #fromDaqReg.nAdcStimPeriodSamp <= unsigned(slv_reg11(23 downto 0));
-    dwaRegWrite(s, '0000000B',adcSamplesPerCycle, verbose=verbose)
+    dwaRegWrite(s, '0000000B', config["adcSamplesPerCycle"], verbose=verbose)
     time.sleep(sleepSec)
-
+    #
+    #fromDaqReg.relayMask      <= slv_reg13;
+    dwaRegWrite(s, '0000000D', config["relayMask"], verbose=verbose)
+    time.sleep(sleepSec)
     #fromDaqReg.coilDrive      <= slv_reg14;
-    dwaRegWrite(s, '0000000E', coilDrive, verbose=verbose)
+    dwaRegWrite(s, '0000000E', config["coilDrive"], verbose=verbose)
     time.sleep(sleepSec)
 
+    
     ###############
     #time.sleep(sleepSec)
     #dwaRegWrite(s, '00000002',dwaCtrl, verbose=verbose)
@@ -502,6 +489,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     # If there is an IP address in the config file, then set it
     if config["client_IP"]:
         print("Setting UDP address")
+        #fromDaqReg.clientIp      <= slv_reg12;
         dwaSetUdpAddress(s, config["client_IP"], verbose=verbose)
         time.sleep(sleepSec)
 

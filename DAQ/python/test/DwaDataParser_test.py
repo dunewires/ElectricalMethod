@@ -1,3 +1,7 @@
+import sys
+
+sys.path.append("../")
+
 import dwaTools as dwa
 import DwaDataParser as ddp
 import matplotlib.pyplot as plt

@@ -246,11 +246,13 @@ class MainWindow(qtw.QMainWindow):
             self.myy[key] = []
 
         # Set up UDP connection
-        sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        print("making socket")
+        sock = socket.socket(family=socket.AF_INET,  # internet
+                             type=socket.SOCK_DGRAM) # UDP
         # If the following 2 lines are uncommented, then testing with testgui_server.py
         # fails....
-        #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: necessary?
-        #sock.bind( self.udpServerAddressPort ) # is this for servers only????
+        #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: this is not necessary
+        sock.bind( self.udpServerAddressPort ) # this is required
         sock.settimeout(self.udpTimeoutSec)    # if no new data comes from server, quit
 
         # FIXME: remove this when using with DWA
@@ -264,7 +266,9 @@ class MainWindow(qtw.QMainWindow):
             msgFromServer = sock.recvfrom(1024)
             msg = "Message from Server {}".format(msgFromServer[0])
             print(msg)
-        
+
+        print('here')
+            
         #nRx = {}      # track number of udp transmissions received
         #for reg in self.registers:
         #    nRx[reg] = 0 
@@ -275,6 +279,7 @@ class MainWindow(qtw.QMainWindow):
         #def getUniqueFileroot():
         #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
         froot = datetime.datetime.now().strftime("udpData/%Y%m%dT%H%M%S")
+        print("fileroot = ", froot)
         # create new output filenames
         fnOfReg = {}  # file names for output. Keys are 2-digit hex string (e.g. '03' or 'FF'). values are filenames
         for reg in self.registers_all:
@@ -286,8 +291,10 @@ class MainWindow(qtw.QMainWindow):
             try:
                 data, addr = sock.recvfrom(self.udpBufferSize)
                 print("")
+                print("bing! data received")
                 #print(data)                
                 udpDataStr = binascii.hexlify(data).decode(self.udpEnc).upper()
+                print(udpDataStr)
                 
                 # Break up string into 8-character chunks
                 chunkLength = 8
@@ -299,6 +306,7 @@ class MainWindow(qtw.QMainWindow):
                 # FIXME: this is just to handle the case where DWA transmission
                 # contains the old-style (and now non-standard) header lines...
                 while not dataStrings[0].startswith("AAAA"):
+                    print("popping udp word:", dataStrings[0])
                     dataStrings.pop(0)
                 
                 # Write the raw udp payload to file
