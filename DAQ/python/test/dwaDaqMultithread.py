@@ -1,13 +1,10 @@
 # FIXME/TODO:
-# * resetting the time axis fails if a single UDP transmission
-#   contains data before and after CAFE (new frequency)
-# * "GO" button should be disabled/yellow while run is underway (avoid clicking twice)
+# * Output file names are generated at start. All data is appended to those files.
+#   To get new filename, need to quit/restart this program
 # * UDP header will eventually contain status bits as well (currently not used)
 # * look for dropped UDP packets by monitoring the UDP counter
 #   (careful with wraps of the counter)
-# * if there is a dropped UDP packet, how can we well what register it was from?
-# * how can we reconstruct the time sample associated with each data point
-#   if there are dropped UDP packets?
+# * if there is a dropped UDP packet, how can we tell what register it was from?
 # * From Sebastien: 4/17/2020
 #   Another idea that came from people doing the measurement for
 #   protodune was to get a summary of the recent previous wire tension
@@ -235,8 +232,6 @@ class MainWindow(qtw.QMainWindow):
 
         # Start listening for UDP data
         self.execute()
-
-
         
     # end of __init__ for class MainWindow
         
@@ -410,9 +405,16 @@ class MainWindow(qtw.QMainWindow):
         # execute
         self.threadpool.start(worker)
 
+    def cleanUp(self):
+        print("App quitting:")
+        print("   closing UDP connection")
+        self.sock.close()
+        
+        
 def main():
     app = qtw.QApplication([])
     window = MainWindow()
+    app.aboutToQuit.connect(window.cleanUp)
     app.exec_()
 
 if __name__ == "__main__":
