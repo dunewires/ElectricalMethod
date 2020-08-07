@@ -142,14 +142,20 @@ class MainWindow(qtw.QMainWindow):
 
         #################################################
         ################# START LAYOUT ##################
+        # FIXME: use Qt Designer instead (to make a .ui file)
+        # then load with
+        # from PyQt5 import uic
+        # uic.loadUi('mylayout.ui', self)
+        # 
         #ui = dwaGui.Ui_MainWindow()
         #ui.setupUi(win)
+
         layout = qtw.QVBoxLayout()
         gl = qtw.QGridLayout()
 
         self.label = qtw.QLabel("Multi-register GUI")
-        self.button = qtw.QPushButton("Acquire")
-        self.button.pressed.connect(self.execute)
+        #self.button = qtw.QPushButton("Acquire")
+        #self.button.pressed.connect(self.execute)
         self.outputText = qtw.QPlainTextEdit()
         
         # *data* registers (e.g. wire readouts)
@@ -167,11 +173,11 @@ class MainWindow(qtw.QMainWindow):
         
         layout.addWidget(self.label)
         layout.addWidget(self.outputText)
-        layout.addWidget(self.button)
+        #layout.addWidget(self.button)
 
         for nreg, reg in enumerate(self.registers):
-            row = nreg/3
-            col = nreg % 3
+            row = int(nreg/3)
+            col = int(nreg % 3)
             gl.addWidget(self.pws[reg], row, col)
 
         gl.addLayout(layout, 2, 2)
@@ -183,19 +189,13 @@ class MainWindow(qtw.QMainWindow):
         self.setCentralWidget(w)
         ####################### END LAYOUT ###############
         ##################################################
-
         
         self.show()
 
+        # Set up multithreading
         self.threadpool = qtc.QThreadPool()
         print("Multithreading with maximum %d threads" %
               self.threadpool.maxThreadCount())
-        
-        #self.timer = qtc.QTimer()
-        #self.timer_dt = 50
-        #self.timer.setInterval(self.timer_dt)
-        #self.timer.timeout.connect(self.recurring_timer)
-        #self.timer.start()
 
         # Create instance of data parser to handle incoming data
         self.dwaDataParser = ddp.DwaDataParser()
@@ -209,7 +209,15 @@ class MainWindow(qtw.QMainWindow):
         self.udpBufferSize = 1024*4 # max data to be received at once (bytes?)
         self.udpEnc = 'utf-8'  # encoding
         self.udpTimeoutSec = 20
-       
+
+        # Set up UDP connection
+        print("making socket")
+        self.sock = socket.socket(family=socket.AF_INET,  # internet
+                                  type=socket.SOCK_DGRAM) # UDP
+        self.sock.bind( self.udpServerAddressPort ) # this is required
+        #self.sock.settimeout(self.udpTimeoutSec)    # if no new data comes from server, quit
+        #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: this is not necessary
+        
         # establish a plot and data for the plot
         self.myx = {}
         self.myy = {}
@@ -224,7 +232,12 @@ class MainWindow(qtw.QMainWindow):
             self.registerOfVal[reg.value] = reg
             
         self.currentRunDict = {}
-            
+
+        # Start listening for UDP data
+        self.execute()
+
+
+        
     # end of __init__ for class MainWindow
         
     def printOutput(self, s):
@@ -233,7 +246,6 @@ class MainWindow(qtw.QMainWindow):
     def threadComplete(self):
         print("THREAD COMPLETE!")
 
-        
     def start_acquisition(self, newdata_callback):
         # initiate a DWA acquisition
         # send configuration
@@ -245,30 +257,18 @@ class MainWindow(qtw.QMainWindow):
             self.myx[key] = []
             self.myy[key] = []
 
-        # Set up UDP connection
-        print("making socket")
-        sock = socket.socket(family=socket.AF_INET,  # internet
-                             type=socket.SOCK_DGRAM) # UDP
-        # If the following 2 lines are uncommented, then testing with testgui_server.py
-        # fails....
-        #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: this is not necessary
-        sock.bind( self.udpServerAddressPort ) # this is required
-        sock.settimeout(self.udpTimeoutSec)    # if no new data comes from server, quit
-
         # FIXME: remove this when using with DWA
         # During testing, send 'begin' to start the UDP server
-        if False:
-            msgFromClient = "begin"
-            bytesToSend = str.encode(msgFromClient)
-            print('sending message = [{}]'.format(msgFromClient))
-            sock.sendto(bytesToSend, self.udpServerAddressPort)
-            print("waiting for response")
-            msgFromServer = sock.recvfrom(1024)
-            msg = "Message from Server {}".format(msgFromServer[0])
-            print(msg)
+        #if False:
+        #    msgFromClient = "begin"
+        #    bytesToSend = str.encode(msgFromClient)
+        #    print('sending message = [{}]'.format(msgFromClient))
+        #    self.sock.sendto(bytesToSend, self.udpServerAddressPort)
+        #    print("waiting for response")
+        #    msgFromServer = self.sock.recvfrom(1024)
+        #    msg = "Message from Server {}".format(msgFromServer[0])
+        #    print(msg)
 
-        print('here')
-            
         #nRx = {}      # track number of udp transmissions received
         #for reg in self.registers:
         #    nRx[reg] = 0 
@@ -289,7 +289,7 @@ class MainWindow(qtw.QMainWindow):
         
         while True:
             try:
-                data, addr = sock.recvfrom(self.udpBufferSize)
+                data, addr = self.sock.recvfrom(self.udpBufferSize)
                 print("")
                 print("bing! data received")
                 #print(data)                
@@ -348,7 +348,7 @@ class MainWindow(qtw.QMainWindow):
                     
             except socket.timeout:
                 print("  UDP Timeout")
-                sock.close()
+                self.sock.close()
                 break
             else:
                 pass
@@ -406,39 +406,9 @@ class MainWindow(qtw.QMainWindow):
         worker.signals.finished.connect(self.threadComplete)
         worker.signals.newUdpPayload.connect(self.processUdpPayload)
         #worker.signals.newdata.connect(self.process_new_data)
-        #worker.signals.progress.connect(self.update_progress)
 
         # execute
         self.threadpool.start(worker)
-
-    #def update_progress(self, progress):
-    #    print("%d%% done" % progress)
-    #    self.bar.setValue(progress)
-
-    #def recurring_timer(self):
-    #    self.counter += 1
-    #    cts_per_second = int(1000/self.timer_dt)
-    #    if (self.counter % cts_per_second) == 0:
-    #        self.label.setText("Counter: %d" % self.counter)
-    #
-    #    # update the data plot
-    #    dx = self.myx[1]-self.myx[0]
-    #    self.myx = self.myx[1:]
-    #    self.myx.append(self.myx[-1]+dx)
-    #    self.myy = self.myy[1:]
-    #    self.myy.append(np.sin(self.myx[-1]))
-    #    self.mycurve.setData(self.myx, self.myy)
-
-    #def execute_this_fn(self, progress_callback):
-    #    nmax = 5
-    #    for n in range(0, nmax):
-    #        time.sleep(1)
-    #        progress_callback.emit(int(100*float(n)/(nmax-1)))
-    #    return "Done."
-
-    #def display_output(self, data):
-    #    id, s = data
-    #    self.text.appendPlainText("WORKER: %d: %s" % (id, s))
 
 def main():
     app = qtw.QApplication([])
