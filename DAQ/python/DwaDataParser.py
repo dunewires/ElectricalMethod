@@ -49,23 +49,33 @@ class DwaDataParser():
         self.frameKeys[Frame.UDP]["11"] = "Register_ID"    #  8bit
         #
         # Run Frame Entries
-        self.frameKeys[Frame.RUN]["20"] = "DWA_Ctrl"       # ??bit
-        self.frameKeys[Frame.RUN]["21"] = "fixedPeriod"    # 24bit
-        self.frameKeys[Frame.RUN]["22"] = "stimPeriodMin"  # 24bit
-        self.frameKeys[Frame.RUN]["23"] = "stimPeriodMax"  # 24bit
-        self.frameKeys[Frame.RUN]["24"] = "stimPeriodStep" # ??bit
-        self.frameKeys[Frame.RUN]["26"] = "nCyclesPerFreq" # ??bit
+        self.frameKeys[Frame.RUN]["00"] = "runOdometer"    # ??bit
+        self.frameKeys[Frame.RUN]["01"] = "fpgaSerialNumber" # ??bit
+        self.frameKeys[Frame.RUN]["02"] = "firmwareIdDate_24MSb" # 24-bit
+        self.frameKeys[Frame.RUN]["03"] = "firmwareIdDate_24LSb" # 24-bit
+        self.frameKeys[Frame.RUN]["04"] = "firmwareIdHash_16MSb" # 24-bit
+        self.frameKeys[Frame.RUN]["05"] = "firmwareIdHash_16LSb" # 24-bit
+        #self.frameKeys[Frame.RUN]["20"] = "DWA_Ctrl"       # ??bit
+        self.frameKeys[Frame.RUN]["21"] = "stimFreqReq"   # 24bit
+        self.frameKeys[Frame.RUN]["22"] = "stimFreqMin"   # 24bit
+        self.frameKeys[Frame.RUN]["23"] = "stimFreqMax"   # 24bit
+        self.frameKeys[Frame.RUN]["24"] = "stimFreqStep"  # ??bit
+        self.frameKeys[Frame.RUN]["26"] = "cyclesPerFreq" # ??bit
         self.frameKeys[Frame.RUN]["27"] = "adcSamplesPerCycle" # ??bit
         self.frameKeys[Frame.RUN]["28"] = "stimMag"        # 12bit
         self.frameKeys[Frame.RUN]["2A"] = "clientIP_16MSb" # 16bit
         self.frameKeys[Frame.RUN]["2B"] = "clientIP_16LSb" # 16bit
+        self.frameKeys[Frame.RUN]["2C"] = "stimTime" # ??bit
+        self.frameKeys[Frame.RUN]["2D"] = "activeChannels" # ??bit
+        self.frameKeys[Frame.RUN]["2E"] = "relayMask_16MSb" # ??bit
+        self.frameKeys[Frame.RUN]["2F"] = "relayMask_16LSb" # ??bit
         #
         # Frequency Frame entries
         self.frameKeys[Frame.FREQ]["11"] = "Register_ID_Freq"  #  8bit
-        self.frameKeys[Frame.FREQ]["40"] = "freqCounter"       # 16bit
-        self.frameKeys[Frame.FREQ]["41"] = "adcSamplesPerFreq" # 16bit
-        self.frameKeys[Frame.FREQ]["42"] = "stimPeriod"        # 24bit
-        self.frameKeys[Frame.FREQ]["43"] = "samplingPeriod"    # 24bit
+        self.frameKeys[Frame.FREQ]["40"] = "periodCounter"     # 16bit
+        self.frameKeys[Frame.FREQ]["41"] = "adcSamplesPerFreq" # 24bit
+        self.frameKeys[Frame.FREQ]["42"] = "stimPeriodActive"  # 24bit
+        self.frameKeys[Frame.FREQ]["43"] = "adcSamplingPeriod" # 24bit
         #
         # ADC Data Frame entries
         # N/A
