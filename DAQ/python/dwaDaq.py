@@ -56,9 +56,6 @@ class WorkerSignals(qtc.QObject):
     data
        'tuple' of (identifier, data)
 
-    newdata
-       'tuple' of (registerID, datax, datay)  where data is a list
-
     newUdpPayload
        'dict' of data from UDP transmission
 
@@ -68,7 +65,6 @@ class WorkerSignals(qtc.QObject):
     result = qtc.pyqtSignal(object)
     progress = qtc.pyqtSignal(int)
     data = qtc.pyqtSignal(tuple)
-    newdata = qtc.pyqtSignal(tuple)
     newUdpPayload = qtc.pyqtSignal(dict)
     status = qtc.pyqtSignal(tuple)
     
@@ -103,7 +99,6 @@ class Worker(qtc.QRunnable):
         # this will be passed on to self.fn so that function
         # has access to the callback
         #kwargs['progress_callback'] = self.signals.progress
-        #kwargs['newdata_callback'] = self.signals.newdata
         kwargs['newdata_callback'] = self.signals.newUdpPayload
         
     @qtc.pyqtSlot()
@@ -241,19 +236,65 @@ class MainWindow(qtw.QMainWindow):
             self.registerOfVal[reg.value] = reg
             
         self.currentRunDict = {}
+        self.fnOfReg = {}  # file names for output (empty for now)
 
-        # Start listening for UDP data
+        # Start listening for UDP data in a Worker thread
         self.execute()
         
     # end of __init__ for class MainWindow
         
     def printOutput(self, s):
+        print("printOutput():")
         print(s)
 
     def threadComplete(self):
         print("THREAD COMPLETE!")
 
-    def start_acquisition(self, newdata_callback):
+
+    def _makeWordList(self, udpDataStr):
+        '''
+        Converts a UDP transmission (single string) into a python list
+
+        Each entry in the list is a string representation of a 32-bit hex word 
+        
+
+        e.g.
+        >>> udpDataStr  = 'AAAA0002100000F1110000FFAAAAAAAA'
+        >>> dataStrings = self._makeWordList(udpDataStr)
+           ['AAAA0002', '100000F1', '110000FF', 'AAAAAAAA']
+        '''
+        chunkLength = 8
+        dataStrings = [udpDataStr[ii:ii+chunkLength]
+                       for ii in range(0, len(udpDataStr), chunkLength)]
+        print("dataStrings = ")
+        print(dataStrings)
+        return dataStrings
+
+    def _logRawUdpTransmissionToFile(self, dataStrings):
+        print("Data came from:")
+        rawFH = open("udpstream.txt", 'a')
+        for item in dataStrings:
+            rawFH.write(f'{item}\n')
+        rawFH.close()
+
+
+    def _makeOutputFilenames(self):
+        # Generate a unique filename for each register
+        # Generate filehandles for each register
+        # FIXME: move this to a higher level (only do it once...)
+        #def getUniqueFileroot():
+        #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
+        froot = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        froot = os.path.join(self.udpDataDir, froot)
+        print("fileroot = ", froot)
+        # create new output filenames
+        self.fnOfReg = {}  # file names for output. Keys are 2-digit hex string (e.g. '03' or 'FF'). values are filenames
+        for reg in self.registers_all:
+            self.fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
+        print("self.fnOfReg = ")
+        print(self.fnOfReg)
+
+    def startUdpReceiver(self, newdata_callback):
         # initiate a DWA acquisition
         # send configuration
         # start listening for UDP data
@@ -264,37 +305,6 @@ class MainWindow(qtw.QMainWindow):
             self.myx[key] = []
             self.myy[key] = []
 
-        # FIXME: remove this when using with DWA
-        # During testing, send 'begin' to start the UDP server
-        #if False:
-        #    msgFromClient = "begin"
-        #    bytesToSend = str.encode(msgFromClient)
-        #    print('sending message = [{}]'.format(msgFromClient))
-        #    self.sock.sendto(bytesToSend, self.udpServerAddressPort)
-        #    print("waiting for response")
-        #    msgFromServer = self.sock.recvfrom(1024)
-        #    msg = "Message from Server {}".format(msgFromServer[0])
-        #    print(msg)
-
-        #nRx = {}      # track number of udp transmissions received
-        #for reg in self.registers:
-        #    nRx[reg] = 0 
-
-        # Generate a unique filename for each register
-        # Generate filehandles for each register
-        # FIXME: move this to a higher level (only do it once...)
-        #def getUniqueFileroot():
-        #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
-        froot = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
-        froot = os.path.join(self.udpDataDir, froot)
-        print("fileroot = ", froot)
-        # create new output filenames
-        fnOfReg = {}  # file names for output. Keys are 2-digit hex string (e.g. '03' or 'FF'). values are filenames
-        for reg in self.registers_all:
-            fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
-        print("fnOfReg = ")
-        print(fnOfReg)
-        
         while True:
             try:
                 data, addr = self.sock.recvfrom(self.udpBufferSize)
@@ -304,55 +314,39 @@ class MainWindow(qtw.QMainWindow):
                 udpDataStr = binascii.hexlify(data).decode(self.udpEnc).upper()
                 print(udpDataStr)
                 
-                # Break up string into 8-character chunks
-                chunkLength = 8
-                dataStrings = [udpDataStr[ii:ii+chunkLength]
-                             for ii in range(0, len(udpDataStr), chunkLength)]
-                print("dataStrings = ")
-                print(dataStrings)
+                # Break up string into a list of 8-character chunks
+                dataStrings = self._makeWordList(udpDataStr)
 
-                # FIXME: this is just to handle the case where DWA transmission
+                # Write the raw udp payload to file
+                self._logRawUdpTransmissionToFile(dataStrings)
+
+                # FIXME: THIS EVENTUALLY GOES AWAY
+                # Currently it's a kluge to handle the case where DWA transmission
                 # contains the old-style (and now non-standard) header lines...
                 while not dataStrings[0].startswith("AAAA"):
                     print("popping udp word:", dataStrings[0])
                     dataStrings.pop(0)
-                
-                # Write the raw udp payload to file
-                # Save incoming data as-is
-                print("Data came from:")
-                rawFH = open("udpstream.txt", 'a')
-                for item in dataStrings:
-                    rawFH.write(f'{item}\n')
 
+                # Parse UDP transmission
                 self.dwaDataParser.parse(dataStrings)
-                print('\n\n')
-                print('self.dwaDataParser.dwaPayload = ')
-                print(self.dwaDataParser.dwaPayload)
+                if 'FFFFFFFF' in dataStrings:
+                    print('\n\n')
+                    print('self.dwaDataParser.dwaPayload = ')
+                    print(self.dwaDataParser.dwaPayload)
 
+                # If there is a run frame, this is a new run
+                # so need to create new filenames
+                if ddp.Frame.RUN in self.dwaDataParser.dwaPayload:
+                    self._makeOutputFilenames()
+                
                 # write data to file by register
                 reg = self.dwaDataParser.dwaPayload[ddp.Frame.UDP]['Register_ID_hexStr']
-                with open(fnOfReg[reg], 'a') as regFH:
+                with open(self.fnOfReg[reg], 'a') as regFH:
                     for item in dataStrings:
                         regFH.write(f'{item}\n')
                     regFH.close()
                 
                 newdata_callback.emit(self.dwaDataParser.dwaPayload)
-                    
-                #reg = udpHeaderDict['reg']  # which register sent this data?
-                #nRx[reg] += 1
-                #
-                #print("{:05d} udpDataStr = {}".format(nRx[reg], udpDataStr))
-                #print('udpHeaderDict = ')
-                #print(udpHeaderDict)
-                ##print("dataStrings = ")
-                ##print(dataStrings)
-                #
-                #print("new_data_x = ")
-                #print(new_data_x)
-                #print("new_data_y = ")
-                #print(new_data_y)
-                #data_tup = (reg, new_data_x, new_data_y)
-                #newdata_callback.emit(data_tup)
                     
             except socket.timeout:
                 print("  UDP Timeout")
@@ -363,25 +357,11 @@ class MainWindow(qtw.QMainWindow):
             finally:
                 pass
 
-    #def process_new_data(self, tup):
-    #    # new data arrived from udp receiver
-    #    # add it to memory, update plots, trigger analysis if appropriate
-    #    print("process_new_data()")
-    #    print(tup)
-    #    reg = tup[0]
-    #    print("new data from register %s" % reg)
-    #    self.myx[reg] += tup[1]
-    #    self.myy[reg] += tup[2]
-    #
-    #    # update plot
-    #    self.mycurves[reg].setData(self.myx[reg], self.myy[reg])
-
     def processUdpPayload(self, udpDict):
         # new UDP payload has arrived from DWA.
         # Deal with it (update plots, or status, or ...)
         print('\n\n')
         print("processUdpPayload()")
-        print(udpDict)
 
         kk = udpDict.keys()
         print(kk)
@@ -409,11 +389,10 @@ class MainWindow(qtw.QMainWindow):
         
     def execute(self):
         # Pass the function to execute
-        worker = Worker(self.start_acquisition)  # could have args/kwargs too..
+        worker = Worker(self.startUdpReceiver)  # could have args/kwargs too..
         worker.signals.result.connect(self.printOutput)
         worker.signals.finished.connect(self.threadComplete)
         worker.signals.newUdpPayload.connect(self.processUdpPayload)
-        #worker.signals.newdata.connect(self.process_new_data)
 
         # execute
         self.threadpool.start(worker)
