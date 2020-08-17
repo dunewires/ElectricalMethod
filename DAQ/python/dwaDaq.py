@@ -149,7 +149,7 @@ class MainWindow(qtw.QMainWindow):
         # FIXME: use Qt Designer instead (to make a .ui file)
         # then load with
         # from PyQt5 import uic
-        uic.loadUi('test/mockup.ui', self)
+        uic.loadUi('dwaDaqUI.ui', self)
         #ui = dwaGui.Ui_MainWindow()
         #ui.setupUi(win)
 
