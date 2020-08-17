@@ -23,12 +23,19 @@ import socket
 import binascii
 import datetime
 import os
+import sys
+
+from functools import partial
+from enum import IntEnum
+import string
 
 import numpy as np
 
+from PyQt5 import uic
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtGui as qtg
 from PyQt5 import QtCore as qtc
+from PyQt5.QtCore import pyqtSlot
 
 #from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
@@ -36,6 +43,11 @@ import pyqtgraph as pg
 #import dwaGui  ## for GUI made in Qt Creator
 import dwaTools as dwa
 import DwaDataParser as ddp
+
+class View(IntEnum):
+    ''' for stackedWidget page indexing '''
+    GRID = 0
+    CHAN = 1
 
 class WorkerSignals(qtc.QObject):
     '''
@@ -132,68 +144,61 @@ class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
-        self.counter = 0
-
         #################################################
         ################# START LAYOUT ##################
         # FIXME: use Qt Designer instead (to make a .ui file)
         # then load with
         # from PyQt5 import uic
-        # uic.loadUi('mylayout.ui', self)
-        # 
+        uic.loadUi('test/mockup.ui', self)
         #ui = dwaGui.Ui_MainWindow()
         #ui.setupUi(win)
 
-        layout = qtw.QVBoxLayout()
-        gl = qtw.QGridLayout()
+        # Make handles for widgets in the UI
+        self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")
+        self.stack.setCurrentIndex(View.GRID)
 
-        self.label = qtw.QLabel("Multi-register GUI")
-        #self.button = qtw.QPushButton("Acquire")
-        #self.button.pressed.connect(self.execute)
-        self.outputText = qtw.QPlainTextEdit()
+        # make dummy data to display
+        self._makeDummyData()
+
+        # get refs to curves on each plot
+        self._makeCurves()
+        self._plotDummyGrid()
+        self.chanViewMain = 0  # which channel is drawn on the big canvas in chan view?
+        self._plotDummyChan(self.chanViewMain)
+
+        # Establish keyboard shortcuts and associated signals/slots
+        self._keyboardShortcuts()
+
+        ############ Resize and launch GUI in bottom right corner of screen
+        # tested on mac & linux (unclear about windows)
+        # https://stackoverflow.com/questions/39046059/pyqt-location-of-the-window
+        self.resize(1400,800)
+        screen = qtg.QDesktopWidget().screenGeometry()
+        wgeom = self.geometry()
+        x = screen.width() - wgeom.width()
+        y = screen.height() - wgeom.height()
+        self.move(x, y)
         
-        # *data* registers (e.g. wire readouts)
-        # Fix me: do this programatically -- can loop over with "for item in ddp.Registers:"
+        self.show()
+        ####################### END LAYOUT ###############
+        ##################################################
+
         self.registers = [ddp.Registers.D0, ddp.Registers.D1, ddp.Registers.D2,
                           ddp.Registers.D3, ddp.Registers.D4, ddp.Registers.D5,
                           ddp.Registers.D6, ddp.Registers.D7]
         self.registers_all = [item for item in ddp.Registers]
 
-        self.pws = {}  # plot widgets
-        for reg in self.registers:
-            self.pws[reg] = pg.PlotWidget()
-            self.pws[reg].setTitle(reg.name)
-        ##self.pw.setBackground('w')
-        
-        layout.addWidget(self.label)
-        layout.addWidget(self.outputText)
-        #layout.addWidget(self.button)
-
-        for nreg, reg in enumerate(self.registers):
-            row = int(nreg/3)
-            col = int(nreg % 3)
-            gl.addWidget(self.pws[reg], row, col)
-
-        gl.addLayout(layout, 2, 2)
-        
-        w = qtw.QWidget()
-        #w.setLayout(layout)
-        w.setLayout(gl)
-
-        self.setCentralWidget(w)
-        ####################### END LAYOUT ###############
-        ##################################################
-        
-        self.show()
-
+        ###########################################
         # Set up multithreading
         self.threadpool = qtc.QThreadPool()
         print("Multithreading with maximum %d threads" %
               self.threadpool.maxThreadCount())
 
+        ###########################################
         # Create instance of data parser to handle incoming data
         self.dwaDataParser = ddp.DwaDataParser()
 
+        ###########################################
         # Ensure there is a directory to save UDP data
         self.udpDataDir = './udpData/'
         try:
@@ -205,7 +210,8 @@ class MainWindow(qtw.QMainWindow):
             print("  Directory already exists: [{}]".format(self.udpDataDir))
             pass
 
-        # Configuration for the UDP connection
+        ###########################################
+        # Configure the UDP connection
         UDP_IP = ''     # '' is a symbolic name meaning all available interfaces
         UDP_PORT = 6008 # port (set to match the hard-coded value on the FPGA)
         self.udpServerAddressPort = (UDP_IP, UDP_PORT)
@@ -223,20 +229,10 @@ class MainWindow(qtw.QMainWindow):
         #self.sock.settimeout(self.udpTimeoutSec)    # if no new data comes from server, quit
         #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: this is not necessary
         
-        # establish a plot and data for the plot
-        self.myx = {}
-        self.myy = {}
-        self.mycurves = {}
-        for reg in self.registers:
-            self.myx[reg] = list(np.linspace(0, 2*np.pi, num=100))
-            self.myy[reg] = list(np.sin(self.myx[reg]))
-            self.mycurves[reg] = self.pws[reg].plot(self.myx[reg], self.myy[reg])
-
         self.registerOfVal = {}
         for reg in ddp.Registers:
             self.registerOfVal[reg.value] = reg
             
-        self.currentRunDict = {}
         self.fnOfReg = {}  # file names for output (empty for now)
 
         # Start listening for UDP data in a Worker thread
@@ -251,6 +247,84 @@ class MainWindow(qtw.QMainWindow):
     def threadComplete(self):
         print("THREAD COMPLETE!")
 
+    def _makeDummyData(self):
+        self.dummyData = {}
+        self.xx = np.linspace(0, 2*np.pi, 1000)
+
+        for ii in range(9):
+            self.dummyData[ii] = {'x':self.xx[:],
+                                  'y':np.sin(self.xx*(ii+1))
+                                 }
+    def _makeCurves(self):
+        ''' make one curve in each pyqtgraph PlotWidget '''
+        self.curvesGridView = {}
+        #gridLocations = list(string.ascii_uppercase[0:8]) # ['A', ..., 'H']
+        gridLocations = list(range(8))
+        print(gridLocations)
+        for ii, loc in enumerate(gridLocations):
+            self.curvesGridView[loc] = getattr(self, f'pw_grid_{loc}').plot([0], [0])
+
+        self.curvesChanView = {}
+        for ii, loc in enumerate(gridLocations):
+            self.curvesChanView[loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0])
+        # add in the main window, too
+        self.curvesChanView['main'] = getattr(self, f'pw_chan_main').plot([0],[0])
+        
+    def _plotDummyGrid(self, dummy=False):
+        ''' plot data in Grid view '''
+        keys = sorted(self.curvesGridView)  # keys sorted alphabetically ('A', 'B', ...)
+        print(keys)
+        for ii, kk in enumerate(keys):
+            self.curvesGridView[kk].setData(self.dummyData[ii]['x'],
+                                            self.dummyData[ii]['y'])
+            getattr(self, f'pw_grid_{kk}').setTitle(ii)
+
+    def _plotDummyChan(self, chan):
+        ''' plot data in channel mode
+        the reqested channel is plotted on the big graph. 
+        all 8 channels are plotted on the small graphs at top
+        '''
+        # update the large plot
+        self.curvesChanView['main'].setData(self.dummyData[chan]['x'], self.dummyData[chan]['y'])
+        getattr(self, f'pw_chan_main').setTitle(chan)
+
+        # update the 8 small plots
+        #locs = list(string.ascii_uppercase[0:8])   # ['A', 'B', ..., 'H']
+        locs  = list(range(8))
+        chans = list(range(8))
+        for ii in range(len(locs)):
+            cha = chans[ii]
+            loc = locs[ii]
+            self.curvesChanView[loc].setData(self.dummyData[cha]['x'], self.dummyData[cha]['y'])
+            getattr(self, f'pw_chan_{loc}').setTitle(cha)
+
+                
+    def _keyboardShortcuts(self):
+        self.scGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+A"), self)
+        self.scGridView.activated.connect(self.viewGrid)
+        chans = range(8)
+        self.chanViewShortcuts = []
+        for chan in chans:
+            self.chanViewShortcuts.append(qtw.QShortcut(qtg.QKeySequence(f'Ctrl+{chan}'), self))
+            self.chanViewShortcuts[-1].activated.connect(partial(self.viewChan, chan))
+
+        
+    @pyqtSlot()
+    def viewGrid(self):
+        self.stack.setCurrentIndex(View.GRID)
+        print("page 1")
+        
+    @pyqtSlot(int)
+    def viewChan(self, chan):
+        self.stack.setCurrentIndex(View.CHAN)
+        print("got here...")
+        print("channel = ", chan)
+        #
+        # FIXME: no need to do this (if correct channel is already displayed!
+        x, y = self.curvesChanView[chan].getData()
+        self.curvesChanView['main'].setData(x, y)
+        self.pw_chan_main.setTitle(chan)
+        self.chanViewMain = chan
 
     def _makeWordList(self, udpDataStr):
         '''
@@ -300,11 +374,6 @@ class MainWindow(qtw.QMainWindow):
         # send configuration
         # start listening for UDP data
         # establish signal/slot for sending data from udp receiver to GUI
-
-        # clear stored data
-        for key in self.myx.keys():
-            self.myx[key] = []
-            self.myy[key] = []
 
         while True:
             try:
@@ -385,8 +454,13 @@ class MainWindow(qtw.QMainWindow):
             regId = udpDict[ddp.Frame.FREQ]['Register_ID_Freq']
             print('regId = ', regId)
             reg = self.registerOfVal[regId]
-            self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
-        
+            #self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
+            # FIXME: check which view is active and only update that one...
+            # can use self.stack.currentIndex()
+            self.curvesGridView[regId].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
+            self.curvesChanView[regId].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
+            # FIXME: need to update the main window in chan view, too
+            
     def process_new_amplitude(self, tup):
         # a full time-series is complete and processed
         # so now plot the amplitude vs. frequency data
@@ -409,10 +483,11 @@ class MainWindow(qtw.QMainWindow):
         
         
 def main():
-    app = qtw.QApplication([])
+    app = qtw.QApplication(sys.argv)
     window = MainWindow()
     app.aboutToQuit.connect(window.cleanUp)
     app.exec_()
+    #sys.exit(app.exec_())  # diff btw this and prev. line???
 
 if __name__ == "__main__":
     main()
