@@ -1,6 +1,7 @@
 # FIXME/TODO:
-# * Output file names are generated at start. All data is appended to those files.
-#   To get new filename, need to quit/restart this program
+# * in "channel view" mode, have all 8 chans on top, *and* zoom in on one channel
+# * estimate amplitude and plot amp vs. frequency
+# * run a test with sebastien's real data...
 # * UDP header will eventually contain status bits as well (currently not used)
 # * look for dropped UDP packets by monitoring the UDP counter
 #   (careful with wraps of the counter)
@@ -337,10 +338,14 @@ class MainWindow(qtw.QMainWindow):
                 # If there is a run frame, this is a new run
                 # so need to create new filenames
                 if ddp.Frame.RUN in self.dwaDataParser.dwaPayload:
+                    print("New run detected... creating new filenames")
                     self._makeOutputFilenames()
+                    print(self.fnOfReg)
                 
                 # write data to file by register
                 reg = self.dwaDataParser.dwaPayload[ddp.Frame.UDP]['Register_ID_hexStr']
+                print("self.fnOfReg: ")
+                print(self.fnOfReg)
                 with open(self.fnOfReg[reg], 'a') as regFH:
                     for item in dataStrings:
                         regFH.write(f'{item}\n')
