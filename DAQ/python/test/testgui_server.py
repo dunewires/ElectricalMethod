@@ -20,13 +20,12 @@ bytesToSend = str.encode(msgFromServer)
 sock = socket.socket(family=socket.AF_INET,  type=socket.SOCK_DGRAM)
 
 # Bind to address and ip
-sock.bind((localIP, localPort))
+#sock.bind((localIP, localPort))
 print("UDP server up and listening")
 
-sendData = False
-
 # Pause until client requests data start
-while(True):
+waitForTrigger = False
+while(waitForTrigger):
     bytesAddressPair = sock.recvfrom(bufferSize)
     message = bytesAddressPair[0]
     address = bytesAddressPair[1]
@@ -183,14 +182,34 @@ def sendDummyDataDwaMultiregister(sock):
 def sendDummyDataNewHeaders(sock):
     print("Reading data from the following files: ")
     #fname= 'newdata_run.dat'
-    filenames = ['newdata_run.dat',
-                 'newdata_adc_0.dat', 'newdata_adc_1.dat',
-                 'newdata_adc_2.dat', 'newdata_adc_3.dat',
-                 'newdata_adc_4.dat', 'newdata_adc_5.dat',
-                 'newdata_adc_6.dat', 'newdata_adc_7.dat']
-    filenames = ['data/{}'.format(ff) for ff in filenames]  # prepend subdir
-    
+    #filenames = ['newdata_run.dat',
+    #             'newdata_adc_0.dat', 'newdata_adc_1.dat',
+    #             'newdata_adc_2.dat', 'newdata_adc_3.dat',
+    #             'newdata_adc_4.dat', 'newdata_adc_5.dat',
+    #             'newdata_adc_6.dat', 'newdata_adc_7.dat']
+    #filenames = ['data/{}'.format(ff) for ff in filenames]  # prepend subdir
+    fileroot = 'data/fromSebastien/20200813T000904'
+    filenames = [f'{fileroot}_FF.txt']
+    freqMax = 157
+    chanMax = 7
+    for freq in range(0,freqMax+1):
+        for chan in range(0, chanMax+1):
+            filenames.append(f'{fileroot}_{chan:02}_{freq:04}.txt')
+
+    address = (localIP, localPort)
+
+    oldFreq = 'FF'
     for fname in filenames:
+        toks = fname.split("_")
+        try:
+            freqNum = toks[2]
+            freqNum = freqNum[0:4]
+            print(freqNum)
+            if freqNum != oldFreq:
+                time.sleep(0.1)
+                oldFreq = freqNum
+        except:
+            pass
         lines = getAllLines(fname)
         print("lines = ")
         print(lines)
@@ -199,7 +218,7 @@ def sendDummyDataNewHeaders(sock):
         print(dataToSend)
         bytesToSend = binascii.unhexlify(dataToSend)  # convert string to bytes.  e.g. dataToSend is 'CAFE805E' and bytesToSend is b'\xca\xfe\x80^'
         sock.sendto(bytesToSend, address)
-        time.sleep(0.03)  # needed otherwise packets are dropped.  not sure how small the sleep can be... 5ms seems to work fine though
+        time.sleep(0.005)  # needed otherwise packets are dropped.  not sure how small the sleep can be... 5ms seems to work fine though
 
 #sendDummyDataSine(sock)
 #sendDummyDataDwa(sock)

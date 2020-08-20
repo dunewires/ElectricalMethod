@@ -6,6 +6,19 @@ import dwaTools as dwa
 import DwaDataParser as ddp
 import matplotlib.pyplot as plt
 
+
+registerOfVal = {}
+for reg in ddp.Registers:
+    print("reg = ")
+    print(reg)
+    print("reg.value = ")
+    print(reg.value)
+    registerOfVal[reg.value] = reg
+                                                       
+
+sys.exit()
+
+
 #filename = 'newdata_run.dat'
 #filename = 'newdata_adc.dat'
 #filename = 'junk2.dat'
