@@ -12,8 +12,40 @@ import binascii
 import json, configparser
 import numpy as np
 
-def registerNames():
-    return ['18', '19', '1A', '1B', '1C', '1D', '1E', '1F']
+
+def findFreq(yy):
+    return 100
+
+def findAmplitude(yy):
+    return 0.5*( yy.max()-yy.min() )
+
+def splitFile(filename):
+    ''' split a UDP file that has multiple frequencies
+    into separate files, one per frequency'''
+    with open(filename) as fh:
+        lines = fh.readlines()
+    lines = [line.strip() for line in lines]
+
+    # FIX the "C" header bug
+    lines = ["CCCC0005" if line == "CCCC0006" else line for line in lines]
+    
+    # find indices of lines that are 'DDDDDDDD' (and of ADC data)
+    idxs = [ii+1 for ii, val in enumerate(lines) if val == 'DDDDDDDD']
+    
+    size = len(lines)
+    freqs = [lines[i: j] for i, j in zip([0] + idxs, idxs+([size] if idxs[-1] != size else []))]
+
+    print(len(freqs))
+    
+    for ii, freq in enumerate(freqs):
+        ff = filename.replace('.txt', f'_{ii:04}.txt')
+        print(ff)
+        with open(ff, 'w') as fh:
+            for line in freq:
+                fh.write(line+'\n')
+
+#def registerNames():
+#    return ['18', '19', '1A', '1B', '1C', '1D', '1E', '1F']
 
 # From 
 # https://stackoverflow.com/questions/6727875/hex-string-to-signed-int-in-python-3-2

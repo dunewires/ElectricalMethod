@@ -72,9 +72,9 @@ class DwaDataParser():
         #
         # Frequency Frame entries
         self.frameKeys[Frame.FREQ]["11"] = "Register_ID_Freq"  #  8bit
-        self.frameKeys[Frame.FREQ]["40"] = "periodCounter"     # 16bit
+        self.frameKeys[Frame.FREQ]["40"] = "stimPeriodCounter" # 24bit (currently-used stimulus period)
         self.frameKeys[Frame.FREQ]["41"] = "adcSamplesPerFreq" # 24bit
-        self.frameKeys[Frame.FREQ]["42"] = "stimPeriodActive"  # 24bit
+        self.frameKeys[Frame.FREQ]["42"] = "stimPeriodActive"  # 24bit NOT USED
         self.frameKeys[Frame.FREQ]["43"] = "adcSamplingPeriod" # 24bit
         #
         # ADC Data Frame entries
@@ -120,10 +120,10 @@ class DwaDataParser():
             #
             # Frequency Frame keys
             "Register_ID_Freq": self._parseInfoLineAsInt,
-            "freqCounter": self._parseInfoLineAsInt,
+            "stimPeriodCounter":self._parseInfoLineAsInt,
             "adcSamplesPerFreq": self._parseInfoLineAsInt,
-            "stimPeriod": self._parseInfoLineAsInt,
-            "samplingPeriod": self._parseInfoLineAsInt,
+            #"stimPeriod": self._parseInfoLineAsInt,
+            "adcSamplingPeriod":self._parseInfoLineAsInt,
             #"UNHANDLED_LINES": self._parseUnknownInfoLine  # do this if a key is not recognized...
         }
 
