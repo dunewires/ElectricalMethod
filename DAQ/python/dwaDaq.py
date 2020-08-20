@@ -227,7 +227,7 @@ class MainWindow(qtw.QMainWindow):
                                   type=socket.SOCK_DGRAM) # UDP
         self.sock.bind( self.udpServerAddressPort ) # this is required
         #self.sock.settimeout(self.udpTimeoutSec)    # if no new data comes from server, quit
-        #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: this is not necessary
+        #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: this is not necessary
         
         self.registerOfVal = {}
         for reg in ddp.Registers:
