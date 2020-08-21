@@ -257,25 +257,42 @@ class MainWindow(qtw.QMainWindow):
                                  }
     def _makeCurves(self):
         ''' make one curve in each pyqtgraph PlotWidget '''
-        self.curvesGridView = {}
+        # FIXME: merge all curves into self.curves = {}
+        # self.curves = {'grid': ... ,   # grid view
+        #                'chan': ...     # chan view
+        #               }
+        # e.g. for channel 5:
+        #   self.curves['grid'][5]['V(t)']['data']
+        #   self.curves['grid'][5]['V(t)']['fit']
+        #   self.curves['grid'][5]['A(f)']['data']
+        #   self.curves['grid'][5]['A(f)']['fit']
+
+        # pyqtgraph pen configuration
+        fitPen = pg.mkPen(color=(255,0,0), width=3)
+
+        self.curves = {}
+        self.curves['grid'] = {}   # grid view
+        self.curves['chan'] = {}   # channel view
+        self.curvesFit = {}  # FIXME: kluge -- merge w/ self.curves
+        self.curvesFit['grid'] = {}
         #gridLocations = list(string.ascii_uppercase[0:8]) # ['A', ..., 'H']
         gridLocations = list(range(8))
-        print(gridLocations)
         for ii, loc in enumerate(gridLocations):
-            self.curvesGridView[loc] = getattr(self, f'pw_grid_{loc}').plot([0], [0])
+            # set background color to white
+            getattr(self, f'pw_grid_{loc}').setBackground('w')
 
-        self.curvesChanView = {}
-        for ii, loc in enumerate(gridLocations):
-            self.curvesChanView[loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0])
+            self.curvesFit['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], pen=fitPen)
+            self.curves['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
+            self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0])
         # add in the main window, too
-        self.curvesChanView['main'] = getattr(self, f'pw_chan_main').plot([0],[0])
-        
+        self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0])
+
     def _plotDummyGrid(self, dummy=False):
         ''' plot data in Grid view '''
-        keys = sorted(self.curvesGridView)  # keys sorted alphabetically ('A', 'B', ...)
+        keys = sorted(self.curves['grid'])  # keys sorted (0, 1, ..., 7)
         print(keys)
         for ii, kk in enumerate(keys):
-            self.curvesGridView[kk].setData(self.dummyData[ii]['x'],
+            self.curves['grid'][kk].setData(self.dummyData[ii]['x'],
                                             self.dummyData[ii]['y'])
             getattr(self, f'pw_grid_{kk}').setTitle(ii)
 
@@ -285,7 +302,8 @@ class MainWindow(qtw.QMainWindow):
         all 8 channels are plotted on the small graphs at top
         '''
         # update the large plot
-        self.curvesChanView['main'].setData(self.dummyData[chan]['x'], self.dummyData[chan]['y'])
+        self.curves['chan']['main'].setData(self.dummyData[chan]['x'],
+                                            self.dummyData[chan]['y'])
         getattr(self, f'pw_chan_main').setTitle(chan)
 
         # update the 8 small plots
@@ -295,7 +313,8 @@ class MainWindow(qtw.QMainWindow):
         for ii in range(len(locs)):
             cha = chans[ii]
             loc = locs[ii]
-            self.curvesChanView[loc].setData(self.dummyData[cha]['x'], self.dummyData[cha]['y'])
+            self.curves['chan'][loc].setData(self.dummyData[cha]['x'],
+                                             self.dummyData[cha]['y'])
             getattr(self, f'pw_chan_{loc}').setTitle(cha)
 
                 
@@ -321,8 +340,8 @@ class MainWindow(qtw.QMainWindow):
         print("channel = ", chan)
         #
         # FIXME: no need to do this (if correct channel is already displayed!
-        x, y = self.curvesChanView[chan].getData()
-        self.curvesChanView['main'].setData(x, y)
+        x, y = self.curves['chan'][chan].getData()
+        self.curves['chan']['main'].setData(x, y)
         self.pw_chan_main.setTitle(chan)
         self.chanViewMain = chan
 
@@ -353,6 +372,15 @@ class MainWindow(qtw.QMainWindow):
         rawFH.close()
 
 
+    def _clearAmplitudeData(self):
+        self.ampData = {}
+        for reg in ddp.Registers:
+            self.ampData[reg] = {'freq'}
+
+        #self.registerOfVal = {}
+        #for reg in ddp.Registers:
+        #    self.registerOfVal[reg.value] = reg
+        
     def _makeOutputFilenames(self):
         # Generate a unique filename for each register
         # Generate filehandles for each register
@@ -409,6 +437,7 @@ class MainWindow(qtw.QMainWindow):
                 if ddp.Frame.RUN in self.dwaDataParser.dwaPayload:
                     print("New run detected... creating new filenames")
                     self._makeOutputFilenames()
+                    self._clearAmplitudeData()
                     print(self.fnOfReg)
                 
                 # write data to file by register
@@ -457,15 +486,21 @@ class MainWindow(qtw.QMainWindow):
             #self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
             # FIXME: check which view is active and only update that one...
             # can use self.stack.currentIndex()
-            self.curvesGridView[regId].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
-            self.curvesChanView[regId].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
+
+            dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
+            tt = np.arange(len(udpDict[ddp.Frame.ADC_DATA]['adcSamples']))*dt
+
+            self.curves['grid'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
+            self.curves['chan'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
             # FIXME: need to update the main window in chan view, too
+
+            # compute the best fit to V(t) and plot (in red)
+            (B, C, freq_Hz) = dwa.processWaveform(udpDict)
+            nptsInFit=500
+            tfit = np.linspace(tt[0], tt[-1], nptsInFit)
+            yfit = B*np.sin(2*np.pi*freq_Hz*tfit) + C*np.cos(2*np.pi*freq_Hz*tfit)
+            self.curvesFit['grid'][regId].setData(tfit, yfit)
             
-    def process_new_amplitude(self, tup):
-        # a full time-series is complete and processed
-        # so now plot the amplitude vs. frequency data
-        pass
-        
     def execute(self):
         # Pass the function to execute
         worker = Worker(self.startUdpReceiver)  # could have args/kwargs too..

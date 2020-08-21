@@ -190,7 +190,7 @@ def sendDummyDataNewHeaders(sock):
     #filenames = ['data/{}'.format(ff) for ff in filenames]  # prepend subdir
     fileroot = 'data/fromSebastien/20200813T000904'
     filenames = [f'{fileroot}_FF.txt']
-    freqMax = 157
+    freqMax = 50
     chanMax = 7
     for freq in range(0,freqMax+1):
         for chan in range(0, chanMax+1):
