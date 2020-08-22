@@ -169,6 +169,9 @@
                 <item row="2" column="1">
                  <widget class="PlotWidget" name="pw_ampl_7" native="true"/>
                 </item>
+                <item row="2" column="2">
+                 <widget class="PlotWidget" name="pw_ampl_all" native="true"/>
+                </item>
                </layout>
               </item>
              </layout>
