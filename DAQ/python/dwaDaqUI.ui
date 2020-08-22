@@ -48,7 +48,7 @@
        <item>
         <widget class="QStackedWidget" name="stackedWidget">
          <property name="currentIndex">
-          <number>1</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="page1">
           <layout class="QGridLayout" name="gridLayout_3">
@@ -134,6 +134,44 @@
              <property name="text">
               <string>This is page 2</string>
              </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page3">
+          <layout class="QGridLayout" name="gridLayout_6">
+           <item row="0" column="0">
+            <widget class="QWidget" name="widget" native="true">
+             <layout class="QGridLayout" name="gridLayout_5">
+              <item row="0" column="0">
+               <layout class="QGridLayout" name="gridLayout">
+                <item row="0" column="0">
+                 <widget class="PlotWidget" name="pw_ampl_0" native="true"/>
+                </item>
+                <item row="0" column="2">
+                 <widget class="PlotWidget" name="pw_ampl_2" native="true"/>
+                </item>
+                <item row="0" column="1">
+                 <widget class="PlotWidget" name="pw_ampl_1" native="true"/>
+                </item>
+                <item row="1" column="0">
+                 <widget class="PlotWidget" name="pw_ampl_3" native="true"/>
+                </item>
+                <item row="1" column="2">
+                 <widget class="PlotWidget" name="pw_ampl_5" native="true"/>
+                </item>
+                <item row="1" column="1">
+                 <widget class="PlotWidget" name="pw_ampl_4" native="true"/>
+                </item>
+                <item row="2" column="0">
+                 <widget class="PlotWidget" name="pw_ampl_6" native="true"/>
+                </item>
+                <item row="2" column="1">
+                 <widget class="PlotWidget" name="pw_ampl_7" native="true"/>
+                </item>
+               </layout>
+              </item>
+             </layout>
             </widget>
            </item>
           </layout>

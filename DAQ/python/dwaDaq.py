@@ -48,6 +48,7 @@ class View(IntEnum):
     ''' for stackedWidget page indexing '''
     GRID = 0
     CHAN = 1
+    AMPL = 2
 
 class WorkerSignals(qtc.QObject):
     '''
@@ -154,8 +155,9 @@ class MainWindow(qtw.QMainWindow):
         #ui.setupUi(win)
 
         # Make handles for widgets in the UI
-        self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")
-        self.stack.setCurrentIndex(View.GRID)
+        self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
+        self.currentView = View.GRID
+        self.stack.setCurrentIndex(self.currentView)
 
         # make dummy data to display
         self._makeDummyData()
@@ -183,10 +185,14 @@ class MainWindow(qtw.QMainWindow):
         ####################### END LAYOUT ###############
         ##################################################
 
+        ###########################################
+        # Define list of registers
+        # wire registers only
         self.registers = [ddp.Registers.D0, ddp.Registers.D1, ddp.Registers.D2,
                           ddp.Registers.D3, ddp.Registers.D4, ddp.Registers.D5,
                           ddp.Registers.D6, ddp.Registers.D7]
-        self.registers_all = [item for item in ddp.Registers]
+        # inclues wires & run & status registers
+        self.registers_all = [item for item in ddp.Registers]  
 
         ###########################################
         # Set up multithreading
@@ -234,7 +240,8 @@ class MainWindow(qtw.QMainWindow):
             self.registerOfVal[reg.value] = reg
             
         self.fnOfReg = {}  # file names for output (empty for now)
-
+        self.ampData = {}  # hold amplitude vs. freq data for a scan
+        
         # Start listening for UDP data in a Worker thread
         self.execute()
         
@@ -273,6 +280,7 @@ class MainWindow(qtw.QMainWindow):
         self.curves = {}
         self.curves['grid'] = {}   # grid view
         self.curves['chan'] = {}   # channel view
+        self.curves['ampl'] = {}   # Ampl. vs. Freq (grid view)
         self.curvesFit = {}  # FIXME: kluge -- merge w/ self.curves
         self.curvesFit['grid'] = {}
         #gridLocations = list(string.ascii_uppercase[0:8]) # ['A', ..., 'H']
@@ -280,10 +288,14 @@ class MainWindow(qtw.QMainWindow):
         for ii, loc in enumerate(gridLocations):
             # set background color to white
             getattr(self, f'pw_grid_{loc}').setBackground('w')
+            getattr(self, f'pw_ampl_{loc}').setBackground('w')
 
             self.curvesFit['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], pen=fitPen)
             self.curves['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
             self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0])
+            #
+            # amplitude vs. freq data
+            self.curves['ampl'][loc] = getattr(self, f'pw_ampl_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
         # add in the main window, too
         self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0])
 
@@ -327,15 +339,27 @@ class MainWindow(qtw.QMainWindow):
             self.chanViewShortcuts.append(qtw.QShortcut(qtg.QKeySequence(f'Ctrl+{chan}'), self))
             self.chanViewShortcuts[-1].activated.connect(partial(self.viewChan, chan))
 
+        # Amplitude vs. frequency data
+        self.scAmpGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+F"), self)
+        self.scAmpGridView.activated.connect(self.viewAmpGrid)
+
         
     @pyqtSlot()
     def viewGrid(self):
-        self.stack.setCurrentIndex(View.GRID)
+        self.currentView = View.GRID
+        self.stack.setCurrentIndex(self.currentView)
         print("page 1")
+
+    @pyqtSlot()
+    def viewAmpGrid(self):
+        self.currentView = View.AMPL
+        self.stack.setCurrentIndex(self.currentView)
+        print("page 3")
         
     @pyqtSlot(int)
     def viewChan(self, chan):
-        self.stack.setCurrentIndex(View.CHAN)
+        self.currentView = View.CHAN
+        self.stack.setCurrentIndex(self.currentView)
         print("got here...")
         print("channel = ", chan)
         #
@@ -374,8 +398,9 @@ class MainWindow(qtw.QMainWindow):
 
     def _clearAmplitudeData(self):
         self.ampData = {}
-        for reg in ddp.Registers:
-            self.ampData[reg] = {'freq'}
+        for reg in self.registers:
+            self.ampData[reg] = {'freq':[],  # stim freq in Hz
+                                 'ampl':[] } # amplitude in ADC counts
 
         #self.registerOfVal = {}
         #for reg in ddp.Registers:
@@ -490,16 +515,23 @@ class MainWindow(qtw.QMainWindow):
             dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
             tt = np.arange(len(udpDict[ddp.Frame.ADC_DATA]['adcSamples']))*dt
 
+            #################################
+            # Update plots
             self.curves['grid'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
             self.curves['chan'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
             # FIXME: need to update the main window in chan view, too
 
             # compute the best fit to V(t) and plot (in red)
             (B, C, freq_Hz) = dwa.processWaveform(udpDict)
+            self.ampData[reg]['freq'].append(freq_Hz)
+            self.ampData[reg]['ampl'].append(np.sqrt(B**2+C**2))
             nptsInFit=500
             tfit = np.linspace(tt[0], tt[-1], nptsInFit)
             yfit = B*np.sin(2*np.pi*freq_Hz*tfit) + C*np.cos(2*np.pi*freq_Hz*tfit)
             self.curvesFit['grid'][regId].setData(tfit, yfit)
+
+            self.curves['ampl'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+
             
     def execute(self):
         # Pass the function to execute
