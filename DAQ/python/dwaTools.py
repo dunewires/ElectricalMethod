@@ -26,33 +26,17 @@ def processWaveform(udpDict):
     dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
     tt = np.arange(len(yy)) * dt
     wt = angFreq*tt
+    # Construct matrices for linear least-squares minimization
     sc = np.sum(np.sin(wt)*np.cos(wt))
     ss = np.sum(np.sin(wt)**2)
     cc = np.sum(np.cos(wt)**2)
-    print("sc = ")
-    print(sc)
-    print(type(sc))
-    print("ss = ")
-    print(ss)
-    print(type(ss))
-    YMAT = np.array( [ np.sum( yy*np.sin(wt) ),
-                       np.sum( yy*np.cos(wt) ) ])
-    AMAT = np.array( [ [ ss, sc ], [ sc, cc ] ] )
-    PMAT = np.linalg.inv(AMAT).dot(YMAT)
-    print(PMAT)
-    
-    #ampSimple = 0.5*( yy.max()-yy.min() )
-    amplitude = np.sqrt(PMAT[0]**2 + PMAT[1]**2)
-
-    tfit = np.linspace(tt[0], tt[-1], int(1e3))
-    yfit = PMAT[0]*np.sin(angFreq*tfit) + PMAT[1]*np.cos(angFreq*tfit)
-    
-    #plt.plot(tt, yy, 'k.')
-    #plt.plot(tfit, yfit, 'r-')
-    #plt.savefig('junk.png')
-
-    # B*sin(2*pi*f*t) + C*cos(2*pi*f*t)
-    return (PMAT[0], PMAT[1], freq_Hz)
+    ys = np.sum( yy*np.sin(wt) )
+    yc = np.sum( yy*np.cos(wt) )
+    XMAT = np.array( [ [ss,sc], [sc,cc] ] )
+    YMAT = np.array( [ ys, yc ])
+    BMAT = np.dot( np.linalg.inv(np.dot(XMAT.T, XMAT)), np.dot(XMAT.T, YMAT) )
+    print(BMAT)
+    return (BMAT[0], BMAT[1], freq_Hz)
 
 def splitFile(filename):
     ''' split a UDP file that has multiple frequencies
