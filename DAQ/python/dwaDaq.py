@@ -1,6 +1,5 @@
 # FIXME/TODO:
-# * update the chan view plots to use POINTs and include fitted curve there, too.
-#   Will require saving the fitted curves in memory (should do this anyway)
+# * in A(f) plot for all channels, use color for lines
 # * UDP header will eventually contain status bits as well (currently not used)
 # * look for dropped UDP packets by monitoring the UDP counter
 #   (careful with wraps of the counter)
@@ -151,9 +150,10 @@ class MainWindow(qtw.QMainWindow):
 
         # Make handles for widgets in the UI
         self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
+        self.stack.setStyleSheet("background-color:white")
         self.currentView = View.GRID
         self.stack.setCurrentIndex(self.currentView)
-
+        
         # Configure/label plots
         self.chanViewMain = 0  # which channel to show large
         self.configurePlots()
@@ -296,13 +296,14 @@ class MainWindow(qtw.QMainWindow):
         self.curves['ampl']['all'] = {}   # all plots, single window for Ampl. vs. Freq (grid view)
         self.curvesFit = {}  # FIXME: kluge -- merge w/ self.curves
         self.curvesFit['grid'] = {}
+        self.curvesFit['chan'] = {}
         #gridLocations = list(string.ascii_uppercase[0:8]) # ['A', ..., 'H']
         gridLocations = list(range(8))
         for ii, loc in enumerate(gridLocations):
-
             self.curvesFit['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], pen=fitPen)
+            self.curvesFit['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0], pen=fitPen)
             self.curves['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
-            self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0])
+            self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
             #
             # amplitude vs. freq data
             self.curves['ampl'][loc] = getattr(self, f'pw_ampl_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
@@ -310,7 +311,8 @@ class MainWindow(qtw.QMainWindow):
             self.curves['ampl']['all'][loc] = getattr(self, f'pw_ampl_all').plot([0],[0])
 
         # add in the main window, too
-        self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0])
+        self.curvesFit['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0], pen=fitPen)
+        self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
 
 
         
@@ -534,14 +536,20 @@ class MainWindow(qtw.QMainWindow):
                 self.curves['chan']['main'].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
             
             # compute the best fit to V(t) and plot (in red)
-            (B, C, freq_Hz) = dwa.processWaveform(udpDict)
+            (B, C, D, freq_Hz) = dwa.processWaveform(udpDict)
             self.ampData[reg]['freq'].append(freq_Hz)
             self.ampData[reg]['ampl'].append(np.sqrt(B**2+C**2))
             nptsInFit=500
             tfit = np.linspace(tt[0], tt[-1], nptsInFit)
-            yfit = B*np.sin(2*np.pi*freq_Hz*tfit) + C*np.cos(2*np.pi*freq_Hz*tfit)
+            yfit = B*np.sin(2*np.pi*freq_Hz*tfit) + C*np.cos(2*np.pi*freq_Hz*tfit) + D
+            #print(f'   B = {B}')
+            #print(f'   C = {C}')
+            #print(f'   D = {D}')
             self.curvesFit['grid'][regId].setData(tfit, yfit)
-
+            self.curvesFit['chan'][regId].setData(tfit, yfit)
+            if regId == self.chanViewMain:
+                self.curvesFit['chan']['main'].setData(tfit, yfit)
+            
             self.curves['ampl'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
             
             self.curves['ampl']['all'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])

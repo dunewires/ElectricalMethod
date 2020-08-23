@@ -27,16 +27,23 @@ def processWaveform(udpDict):
     tt = np.arange(len(yy)) * dt
     wt = angFreq*tt
     # Construct matrices for linear least-squares minimization
+    # See: https://mmas.github.io/least-squares-fitting-numpy-scipy
+    NN = len(yy)
+    s1 = np.sum(np.sin(wt))
+    c1 = np.sum(np.cos(wt))
     sc = np.sum(np.sin(wt)*np.cos(wt))
     ss = np.sum(np.sin(wt)**2)
     cc = np.sum(np.cos(wt)**2)
+    y1 = np.sum( yy )
     ys = np.sum( yy*np.sin(wt) )
     yc = np.sum( yy*np.cos(wt) )
-    XMAT = np.array( [ [ss,sc], [sc,cc] ] )
-    YMAT = np.array( [ ys, yc ])
+    XMAT = np.array( [ [ss, sc, s1],
+                       [sc, cc, c1],
+                       [s1, c1, NN] ] )
+    YMAT = np.array( [ ys, yc, y1 ])
     BMAT = np.dot( np.linalg.inv(np.dot(XMAT.T, XMAT)), np.dot(XMAT.T, YMAT) )
-    print(BMAT)
-    return (BMAT[0], BMAT[1], freq_Hz)
+    #print(BMAT)
+    return (BMAT[0], BMAT[1], BMAT[2], freq_Hz)
 
 def splitFile(filename):
     ''' split a UDP file that has multiple frequencies
