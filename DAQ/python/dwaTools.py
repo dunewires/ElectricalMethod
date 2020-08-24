@@ -3,6 +3,8 @@
 # Created by James Battat
 # 2019 December 17
 
+import matplotlib.pyplot as plt
+
 import sys
 import os, errno
 import socket
@@ -12,8 +14,64 @@ import binascii
 import json, configparser
 import numpy as np
 
-def registerNames():
-    return ['18', '19', '1A', '1B', '1C', '1D', '1E', '1F']
+import DwaDataParser as ddp
+
+def processWaveform(udpDict):
+    # udpDict is a transfer that includes ADC data
+    # frequency is obtained from:
+    freq_Hz = 1./(udpDict[ddp.Frame.FREQ]['stimPeriodCounter']*1e-8)
+    angFreq = 2*np.pi*freq_Hz
+    yy = np.array(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
+    # dt is given by the sampling time
+    dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
+    tt = np.arange(len(yy)) * dt
+    wt = angFreq*tt
+    # Construct matrices for linear least-squares minimization
+    # See: https://mmas.github.io/least-squares-fitting-numpy-scipy
+    NN = len(yy)
+    s1 = np.sum(np.sin(wt))
+    c1 = np.sum(np.cos(wt))
+    sc = np.sum(np.sin(wt)*np.cos(wt))
+    ss = np.sum(np.sin(wt)**2)
+    cc = np.sum(np.cos(wt)**2)
+    y1 = np.sum( yy )
+    ys = np.sum( yy*np.sin(wt) )
+    yc = np.sum( yy*np.cos(wt) )
+    XMAT = np.array( [ [ss, sc, s1],
+                       [sc, cc, c1],
+                       [s1, c1, NN] ] )
+    YMAT = np.array( [ ys, yc, y1 ])
+    BMAT = np.dot( np.linalg.inv(np.dot(XMAT.T, XMAT)), np.dot(XMAT.T, YMAT) )
+    #print(BMAT)
+    return (BMAT[0], BMAT[1], BMAT[2], freq_Hz)
+
+def splitFile(filename):
+    ''' split a UDP file that has multiple frequencies
+    into separate files, one per frequency'''
+    with open(filename) as fh:
+        lines = fh.readlines()
+    lines = [line.strip() for line in lines]
+
+    # FIX the "C" header bug
+    lines = ["CCCC0005" if line == "CCCC0006" else line for line in lines]
+    
+    # find indices of lines that are 'DDDDDDDD' (and of ADC data)
+    idxs = [ii+1 for ii, val in enumerate(lines) if val == 'DDDDDDDD']
+    
+    size = len(lines)
+    freqs = [lines[i: j] for i, j in zip([0] + idxs, idxs+([size] if idxs[-1] != size else []))]
+
+    print(len(freqs))
+    
+    for ii, freq in enumerate(freqs):
+        ff = filename.replace('.txt', f'_{ii:04}.txt')
+        print(ff)
+        with open(ff, 'w') as fh:
+            for line in freq:
+                fh.write(line+'\n')
+
+#def registerNames():
+#    return ['18', '19', '1A', '1B', '1C', '1D', '1E', '1F']
 
 # From 
 # https://stackoverflow.com/questions/6727875/hex-string-to-signed-int-in-python-3-2
@@ -153,7 +211,7 @@ def makeAdcDataLine(adc1=None, adc2=None, bitsToDrop=1):
     return '{:04x}{:04x}'.format(adc1, adc2).upper()
 
 
-def genDummyAdcData(nsamples, ncycles):
+def genDummyAdcData(nsamples, ncycles, phase=0):
     ''' make dummy adc data
     ADC samples are 15-bit (15MSb of the 16-bit ADC value)
     2 ADC samples per output line
@@ -163,7 +221,8 @@ def genDummyAdcData(nsamples, ncycles):
         nsamples += 1
 
     xx = np.linspace(0, 2*np.pi*ncycles, num=nsamples)
-    yy = 2**14 * np.sin(xx)
+    pp = 2*np.pi*phase/8.0
+    yy = 2**14 * np.sin(xx - pp)
     yy = yy.astype(np.int)
 
     #print(yy)
@@ -358,6 +417,9 @@ def force_symlink(file1, file2):
             os.symlink(file1, file2)
 
 def dwaReset(verbose=0):
+    #fromDaqReg.reset          <= slv_reg0(0)= '1';
+    # presumably this is handled by dwaReset()?
+
     s = tcpOpen(verbose=verbose)
     dwaRegWrite(s, '00000000', '00000001', verbose=verbose)
     time.sleep(0.2)
@@ -380,19 +442,29 @@ def dwaGetConfigParameters(configFile):
     config = {}
 
     SECTION = "FPGA"
-    # FIXME: move these to a config file
-    config["freqReq_vio"] = cp.get(SECTION, "freqReq_vio")
+    config["auto"] = cp.get(SECTION, "auto")
+    # 
+    config["stimFreqReq"]  = cp.get(SECTION, "stimFreqReq")
+    config["stimFreqMin"]  = cp.get(SECTION, "stimFreqMin")
+    config["stimFreqMax"]  = cp.get(SECTION, "stimFreqMax")
+    config["stimFreqStep"] = cp.get(SECTION, "stimFreqStep")
+    config["stimTime"]     = cp.get(SECTION, "stimTime")
+    config["stimMag"]      = cp.get(SECTION, "stimMag")
+    # 
+    config["cyclesPerFreq"] = cp.get(SECTION, "cyclesPerFreq")
+    config["adcSamplesPerCycle"] = cp.get(SECTION, "adcSamplesPerCycle")
+    # 
+    config["relayMask"] = cp.get(SECTION, "relayMask")
+    config["coilDrive"] = cp.get(SECTION, "coilDrive")
+    #
+    # Defunct
     # dwaCtrl  => (auto mainsMinus_enable m_axis_tready)
-    config["dwaCtrl"] = cp.get(SECTION, "dwaCtrl")
-    config["ctrl_freqMin"] = cp.get(SECTION, "ctrl_freqMin")
-    config["ctrl_freqMax"] = cp.get(SECTION, "ctrl_freqMax")
-    config["ctrl_freqStep"] = cp.get(SECTION, "ctrl_freqStep")
-    config["ctrl_stimTime"] = cp.get(SECTION, "ctrl_stimTime")
-    config["ctrl_adc_nSamples"] = cp.get(SECTION, "ctrl_adc_nSamples")
-    config["adcAutoDc_chSel"] = cp.get(SECTION, "adcAutoDc_chSel")
-    config["adcHScale"] = cp.get(SECTION, "adcHScale")
-    config["stimMag"] = cp.get(SECTION, "stimMag")
-    config["relays_enable"] = cp.get(SECTION, "relays_enable")
+    #config["dwaCtrl"] = cp.get(SECTION, "dwaCtrl")
+    #config["adcAutoDc_chSel"] = cp.get(SECTION, "adcAutoDc_chSel")
+    #config["adcHScale"] = cp.get(SECTION, "adcHScale")
+    #config["freqReq_vio"] = cp.get(SECTION, "freqReq_vio")
+    #config["ctrl_adc_nSamples"] = cp.get(SECTION, "ctrl_adc_nSamples")
+    #
     #config["client_IP"] = cp.get(SECTION, "client_IP", fallback=None)
     if cp.has_option(SECTION, "client_IP"):
         config["client_IP"] = cp.get(SECTION, "client_IP")
@@ -416,59 +488,50 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
 
     config = dwaGetConfigParameters(configFile)
 
-    # FIXME: don't need this section, can just use
-    # the config[] dictionary values directly...
-    freqReq_vio = config["freqReq_vio"]
-    # dwaCtrl  => (auto mainsMinus_enable m_axis_tready)
-    dwaCtrl = config["dwaCtrl"]
-    ctrl_freqMin = config["ctrl_freqMin"]
-    ctrl_freqMax = config["ctrl_freqMax"]
-    ctrl_freqStep = config["ctrl_freqStep"]
-    ctrl_stimTime = config["ctrl_stimTime"]
-    ctrl_adc_nSamples = config["ctrl_adc_nSamples"]
-    adcAutoDc_chSel = config["adcAutoDc_chSel"]
-    adcHScale = config["adcHScale"]
-    stimMag = config["stimMag"]
-    relays_enable = config["relays_enable"]
-
     s = tcpOpen(verbose=verbose)
     sleepSec = 0.2
+    time.sleep(sleepSec)
 
-    #fromDaqReg.reset          <= slv_reg0(0)= '1';
-    # this is handled in dwaReset()
-
-    #fromDaqReg.ctrlStart      <= slv_reg0(1)= '1';
-    # not sure what this one is...  is it dwaStart()???
     #fromDaqReg.auto           <= slv_reg1(0)= '1';
-    # not sure what this one is...
-    # 
+    # is this saying sweep vs. fixed freq?
+    dwaRegWrite(s, '00000001', config["auto"], verbose=verbose)
+    time.sleep(sleepSec)
+    #
     #fromDaqReg.stimFreqReq  <= unsigned(slv_reg3(23 downto 0));
+    dwaRegWrite(s, '00000003', config["stimFreqReq"], verbose=verbose)
     time.sleep(sleepSec)
-    dwaRegWrite(s, '00000003', freqReq_vio, verbose=verbose)
     #fromDaqReg.stimFreqMin  <= unsigned(slv_reg4(23 downto 0));
+    dwaRegWrite(s, '00000004', config["stimFreqMin"], verbose=verbose)
     time.sleep(sleepSec)
-    dwaRegWrite(s, '00000004',ctrl_freqMin, verbose=verbose)
     #fromDaqReg.stimFreqMax  <= unsigned(slv_reg5(23 downto 0));
+    dwaRegWrite(s, '00000005', config["stimFreqMax"], verbose=verbose)
     time.sleep(sleepSec)
-    dwaRegWrite(s, '00000005',ctrl_freqMax, verbose=verbose)
     #fromDaqReg.stimFreqStep <= unsigned(slv_reg6(23 downto 0));
+    dwaRegWrite(s, '00000006', config["stimFreqStep"], verbose=verbose)
     time.sleep(sleepSec)
-    dwaRegWrite(s, '00000006',ctrl_freqStep, verbose=verbose)
     #fromDaqReg.stimRampTime   <= unsigned(slv_reg7(23 downto 0));
+    dwaRegWrite(s, '00000007', config["stimTime"], verbose=verbose)
     time.sleep(sleepSec)
-    dwaRegWrite(s, '00000007',ctrl_stimTime, verbose=verbose)
     #fromDaqReg.stimMag        <= unsigned(slv_reg8(23 downto 0));
+    dwaRegWrite(s, '00000008', config["stimMag"], verbose=verbose)
     time.sleep(sleepSec)
-    dwaRegWrite(s, '00000008',stimMag, verbose=verbose)
+    # 
     #fromDaqReg.nAdcStimPeriod <= unsigned(slv_reg10(23 downto 0));
+    dwaRegWrite(s, '0000000A', config["cyclesPerFreq"], verbose=verbose)
     time.sleep(sleepSec)
-    dwaRegWrite(s, '0000000A',nAdcStimPeriod, verbose=verbose)
     #fromDaqReg.nAdcStimPeriodSamp <= unsigned(slv_reg11(23 downto 0));
+    dwaRegWrite(s, '0000000B', config["adcSamplesPerCycle"], verbose=verbose)
     time.sleep(sleepSec)
-    dwaRegWrite(s, '0000000B',nAdcStimPeriodSamp, verbose=verbose)
-
+    #
+    #fromDaqReg.relayMask      <= slv_reg13;
+    dwaRegWrite(s, '0000000D', config["relayMask"], verbose=verbose)
+    time.sleep(sleepSec)
     #fromDaqReg.coilDrive      <= slv_reg14;
+    dwaRegWrite(s, '0000000E', config["coilDrive"], verbose=verbose)
+    time.sleep(sleepSec)
 
+    
+    ###############
     #time.sleep(sleepSec)
     #dwaRegWrite(s, '00000002',dwaCtrl, verbose=verbose)
     #time.sleep(sleepSec)
@@ -479,25 +542,28 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     #dwaRegWrite(s, '0000000B',adcHScale, verbose=verbose)
     #time.sleep(sleepSec)
     #dwaRegWrite(s, '0000000E',relays_enable, verbose=verbose)
-    time.sleep(sleepSec)
+    #time.sleep(sleepSec)
 
     # If there is an IP address in the config file, then set it
     if config["client_IP"]:
         print("Setting UDP address")
+        #fromDaqReg.clientIp      <= slv_reg12;
         dwaSetUdpAddress(s, config["client_IP"], verbose=verbose)
         time.sleep(sleepSec)
 
+    time.sleep(sleepSec)
     tcpClose(s, verbose=verbose)
 
 def dwaStart(verbose=0):
 
     sleepSec = 0.2
 
+    #fromDaqReg.ctrlStart      <= slv_reg0(1)= '1';
+    # presumably this is handled by dwaStart()
+
     s = tcpOpen(verbose=verbose)
     # start
-    dwaRegWrite(s,'00000009','00000001', verbose=verbose)
-    time.sleep(sleepSec)
-    dwaRegWrite(s,'00000009','00000000', verbose=verbose)
+    dwaRegWrite(s,'00000000','00000002', verbose=verbose)
     time.sleep(sleepSec)
 
     tcpClose(s, verbose=verbose)
