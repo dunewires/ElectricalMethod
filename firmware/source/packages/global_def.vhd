@@ -25,6 +25,7 @@ package global_def is
     -- ADC AXI offset address
     constant adcRegOfst  : integer := 24;
     constant adcStatAddr : integer := 23;
+    constant useAdcEmu   : boolean := true;
 
     type SLV_VECTOR_TYPE is array (natural range <>) of std_logic_vector;
     type UNSIGNED_VECTOR_TYPE is array (natural range <>) of unsigned;
@@ -35,6 +36,8 @@ package global_def is
         ctrlBusy    : boolean; --nf
         udpDataWord : std_logic_vector(31 downto 0);
         udpDataRdy  : boolean;
+        senseWireGain : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
+
     end record; -- toDaqRegType
 
     type fromDaqRegType is record
@@ -61,6 +64,7 @@ package global_def is
         adcSamplesPerCycle : unsigned(15 downto 0); -- bits???
                                                     --- AC Stimulus magnitude (12bit DAC value)
         stimMag : unsigned(11 downto 0);
+        senseWireGain : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
         -- Client IP address (where UDP data is sent)
         clientIp : unsigned(31 downto 0);
         --- After switching to a new frequency, how long to wait before
