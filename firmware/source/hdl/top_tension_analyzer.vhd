@@ -244,20 +244,21 @@ begin
     end if;
   end process make_ac_stimX200;
 
-  -- gain DPOT
-  --  dpotInterface_1 : entity duneDwa.dpotInterface
-  --    port map (
-  --      mag => dpotMag,
-  --
-  --      sdi    => dpotSdi,
-  --      sdo    => dpotSdo,
-  --      pr_b   => dpotPr_b,
-  --      cs_b   => dpotCs_b,
-  --      sck    => dpotSck,
-  --      shdn_b => dpotShdn_b,
-  --
-  --      sysClk10 => sysClk10
-  --    );
+   --gain DPOT
+    dpotInterface_inst : entity duneDwa.dpotInterface
+      port map (
+      fromDaqReg => fromDaqReg,
+      toDaqReg   => toDaqReg, --toDaqReg,
+  
+        sdi    => dpotSdi,
+        sdo    => dpotSdo,
+        pr_b   => dpotPr_b,
+        cs_b   => dpotCs_b,
+        sck    => dpotSck,
+        shdn_b => dpotShdn_b,
+  
+        sysClk10 => dwaClk10
+      );
 
   -- mains trigger noise filter
   trigGen : process (dwaClk100)

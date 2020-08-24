@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Aug 24 17:06:51 2020
+-- Last update : Mon Aug 24 17:37:24 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -36,6 +36,8 @@ package global_def is
         ctrlBusy    : boolean; --nf
         udpDataWord : std_logic_vector(31 downto 0);
         udpDataRdy  : boolean;
+        senseWireGain : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
+
     end record; -- toDaqRegType
 
     type fromDaqRegType is record
@@ -62,6 +64,7 @@ package global_def is
         adcSamplesPerCycle : unsigned(15 downto 0); -- bits???
                                                     --- AC Stimulus magnitude (12bit DAC value)
         stimMag : unsigned(11 downto 0);
+        senseWireGain : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
         -- Client IP address (where UDP data is sent)
         clientIp : unsigned(31 downto 0);
         --- After switching to a new frequency, how long to wait before

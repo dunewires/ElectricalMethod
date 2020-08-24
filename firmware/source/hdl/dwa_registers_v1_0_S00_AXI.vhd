@@ -709,7 +709,20 @@ begin
 			when b"01110" =>
 				reg_data_out <= slv_reg14;
 			when b"01111" =>
-				reg_data_out <= slv_reg15;
+				reg_data_out <= 
+				toDaqReg.senseWireGain(3) &
+				toDaqReg.senseWireGain(2) &
+				toDaqReg.senseWireGain(1) &
+				toDaqReg.senseWireGain(0) &
+				 ;
+			when b"10000" =>
+				reg_data_out <= 
+				toDaqReg.senseWireGain(7) &
+				toDaqReg.senseWireGain(6) &
+				toDaqReg.senseWireGain(5) &
+				toDaqReg.senseWireGain(4) &
+				 ;
+	
 			-- Registers 16 to 31 have been changed to be driven by the DWA (read only)
 			when b"10001" =>
 				reg_data_out(0)           <= '1' when toDaqReg.ctrlBusy else '0';
@@ -773,6 +786,15 @@ begin
 	fromDaqReg.clientIp           <= unsigned(slv_reg12);
 	fromDaqReg.relayMask          <= slv_reg13;
 	fromDaqReg.coilDrive          <= slv_reg14;
+	fromDaqReg.senseWireGain(7)          <= slv_reg16(31 downto 25);
+	fromDaqReg.senseWireGain(6)          <= slv_reg16(24 downto 16);
+	fromDaqReg.senseWireGain(5)          <= slv_reg16(15 downto 8);
+	fromDaqReg.senseWireGain(4)          <= slv_reg16(7 downto 0);
+	fromDaqReg.senseWireGain(3)          <= slv_reg15(31 downto 25);
+	fromDaqReg.senseWireGain(2)          <= slv_reg15(24 downto 16);
+	fromDaqReg.senseWireGain(1)          <= slv_reg15(15 downto 8);
+	fromDaqReg.senseWireGain(0)          <= slv_reg15(7 downto 0);
+
 	-- User logic ends
 
 end arch_imp;
