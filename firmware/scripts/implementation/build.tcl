@@ -64,6 +64,12 @@ proc setup {} {
     global post_route_wns
     global target
     global ip_dir
+    global fsbl_elf
+    global lwip_elf
+    global boot_bin
+    global hardware_loc
+
+    #set location of compiled soruce for flash
 
  ##select configuration   
     set target "dune"
@@ -71,6 +77,7 @@ proc setup {} {
     set scriptdir [pwd]
     set firmware_dir $scriptdir/../
     set proj_sources_dir $firmware_dir/source/
+
 
         #set top_module "top_tension_analyzer"
         set top_module "dwa_ps_pl_top"
@@ -89,6 +96,10 @@ proc setup {} {
     set post_route_wns xxx
     set proj_dir $firmware_dir/../../vivadoProjects/$proj_name
    
+    set fsbl_elf $proj_sources_dir/sdk/dwaFsbl/Debug/dwaFsbl.elf
+    set lwip_elf $proj_sources_dir/sdk/lwip_ref/Release/lwip_ref.elf
+    set boot_bin $proj_dir/BOOT.bin
+    set hardware_loc TCP:127.0.0.1:3124
     puts "Target: $target"
     puts "FPGA Part: $part"
     puts "Scripts Directory:  $scriptdir"
@@ -96,6 +107,33 @@ proc setup {} {
     
   #  set_property ip_repo_paths {$scriptdir/../../../vivadoProjects/ip_repo/dwa_registers_1.0} [current_project]
    # update_ip_catalog
+
+# Current date, time, and seconds since epoch
+# 0 = 4-digit year
+# 1 = 2-digit year
+# 2 = 2-digit month
+# 3 = 2-digit day
+# 4 = 2-digit hour
+# 5 = 2-digit minute
+# 6 = 2-digit second
+# 7 = Epoch (seconds since 1970-01-01_00:00:00)
+# Array index                                            0  1  2  3  4  5  6  7
+set datetime_arr [clock format [clock seconds] -format {%Y %y %m %d %H %M %S %s}]
+ 
+# Get the dateCode in the yy-mm-dd-HH format
+set dateCode [lindex $datetime_arr 1][lindex $datetime_arr 2][lindex $datetime_arr 3][lindex $datetime_arr 4]
+# Show this in the log
+puts dateCode=$dateCode
+ 
+# Get the git hashtag for this project
+#if needed use the git dir command git --git-dir /foo/bar/.git log
+set git_hash [exec git log -1 --pretty='%h']
+# Show this in the log
+puts hashCode=$git_hash
+ 
+# Set the generics
+set_property generic "dateCode=32'h$dateCode hashCode=32'h$git_hash" [current_fileset]
+
 }
 
 proc readSource {} {
@@ -281,24 +319,42 @@ proc bitgen {} {
     global proj_dir
     global proj_name
     global post_route_wns
+    global proj_sources_dir
     global target
-    
+    global build_name
+    global fsbl_elf
+    global lwip_elf
+    global boot_bin
+    global hardware_loc
+    global scriptdir
+
     puts "\n##################################################################"
     puts "#                   Generate  Bitfile                            #"
     puts "##################################################################\n"
 
     set build_date [ clock format [ clock seconds ] -format %Y%m%d ]
     set build_time [ clock format [ clock seconds ] -format %H%M%S ]
+    set build_name    ${proj_name}_${build_date}_${build_time}_${post_route_wns}ns
 
-    write_debug_probes -force $proj_dir/${proj_name}_${build_date}_${build_time}_${post_route_wns}ns.ltx
-    write_bitstream -force $proj_dir/${proj_name}_${build_date}_${build_time}_${post_route_wns}ns.bit \
-	-bin_file
+    write_debug_probes -force $proj_dir/$build_name.ltx
+    write_bitstream -force  $proj_dir/$build_name.bit 
 
-    if {$target == "vc707"} {
+    source $scriptdir/implementation/makeMcs.tcl
 
-        write_mem_info -force $proj_dir/${proj_name}_${build_date}_${build_time}_${post_route_wns}ns.mmi
-        get_property SLACK [get_timing_paths -max_paths 20 -nworst 7 -setup]
-    }
+}
+
+proc progFlash {} {
+    setup
+    global fsbl_elf
+    global boot_bin
+    global hardware_loc
+    global scriptdir
+
+    puts "\n##################################################################"
+    puts "#                   program flash                           #"
+    puts "##################################################################\n"
+
+    source $scriptdir/implementation/progFlash.tcl
 }
 
 proc writeGdrive {} {

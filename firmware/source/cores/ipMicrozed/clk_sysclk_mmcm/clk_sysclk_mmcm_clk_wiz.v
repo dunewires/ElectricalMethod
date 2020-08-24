@@ -56,17 +56,17 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// clk_out1____25.000______0.000______50.0______151.619_____97.786
-// clk_out2____50.000______0.000______50.0______131.873_____97.786
-// clk_out3___100.000______0.000______50.0______114.523_____97.786
-// clk_out4___200.000______0.000______50.0______100.010_____97.786
-// clk_out5___400.000______0.000______50.0_______87.396_____97.786
-// clk_out6____10.000______0.000______50.0______181.846_____97.786
+// clk_out1__25.00000______0.000______50.0______191.696____114.212
+// clk_out2__50.00000______0.000______50.0______167.017____114.212
+// clk_out3__100.00000______0.000______50.0______144.719____114.212
+// clk_out4__200.00000______0.000______50.0______126.455____114.212
+// clk_out5__400.00000______0.000______50.0______111.164____114.212
+// clk_out6__10.00000______0.000______50.0______229.362____114.212
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
 //----------------------------------------------------------------------------
-// __primary_____________200____________0.010
+// __primary_____________100____________0.010
 
 `timescale 1ps/1ps
 
@@ -83,17 +83,15 @@ module clk_sysclk_mmcm_clk_wiz
   // Status and control signals
   input         reset,
   output        locked,
-  input         clk_in1_p,
-  input         clk_in1_n
+  input         clk_in1
  );
   // Input buffering
   //------------------------------------
 wire clk_in1_clk_sysclk_mmcm;
 wire clk_in2_clk_sysclk_mmcm;
-  IBUFDS clkin1_ibufgds
-   (.O  (clk_in1_clk_sysclk_mmcm),
-    .I  (clk_in1_p),
-    .IB (clk_in1_n));
+  BUFG clkin1_bufg
+   (.O (clk_in1_clk_sysclk_mmcm),
+    .I (clk_in1));
 
 
 
@@ -135,7 +133,7 @@ wire clk_in2_clk_sysclk_mmcm;
     .COMPENSATION         ("ZHOLD"),
     .STARTUP_WAIT         ("FALSE"),
     .DIVCLK_DIVIDE        (1),
-    .CLKFBOUT_MULT_F      (4.000),
+    .CLKFBOUT_MULT_F      (8.000),
     .CLKFBOUT_PHASE       (0.000),
     .CLKFBOUT_USE_FINE_PS ("FALSE"),
     .CLKOUT0_DIVIDE_F     (32.000),
@@ -162,7 +160,7 @@ wire clk_in2_clk_sysclk_mmcm;
     .CLKOUT5_PHASE        (0.000),
     .CLKOUT5_DUTY_CYCLE   (0.500),
     .CLKOUT5_USE_FINE_PS  ("FALSE"),
-    .CLKIN1_PERIOD        (5.000))
+    .CLKIN1_PERIOD        (10.000))
   mmcm_adv_inst
     // Output clocks
    (

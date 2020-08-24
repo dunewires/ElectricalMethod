@@ -29,6 +29,19 @@ set_property PACKAGE_PIN P16 [get_ports DAC_CLR_B]
 set_property IOSTANDARD LVCMOS33 [get_ports DAC_CLK]
 set_property PACKAGE_PIN N17 [get_ports DAC_CLK]
 
+set_property IOSTANDARD LVCMOS33 [get_ports dpotSdi]
+set_property PACKAGE_PIN R16 [get_ports dpotSdi]
+set_property IOSTANDARD LVCMOS33 [get_ports dpotSdo]
+set_property PACKAGE_PIN T17 [get_ports dpotSdo]
+set_property IOSTANDARD LVCMOS33 [get_ports dpotPr_b]
+set_property PACKAGE_PIN V17 [get_ports dpotPr_b]
+set_property IOSTANDARD LVCMOS33 [get_ports dpotCs_b]
+set_property PACKAGE_PIN R18 [get_ports dpotCs_b]
+set_property IOSTANDARD LVCMOS33 [get_ports dpotSck]
+set_property PACKAGE_PIN W18 [get_ports dpotSck]
+set_property IOSTANDARD LVCMOS33 [get_ports dpotShdn_b]
+set_property PACKAGE_PIN R17 [get_ports dpotShdn_b]
+
 set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[0]]
 set_property PACKAGE_PIN U13 [get_ports CoilDrive[0]]
 
@@ -161,6 +174,6 @@ set_property PACKAGE_PIN H16 [get_ports adcSrcSyncClk_p]
 set_property IOSTANDARD LVCMOS25 [get_ports mainsSquare]
 set_property PACKAGE_PIN G18 [get_ports mainsSquare]
 
-# temp clock false paths.  Replace with sync fifos
+# temp clock false paths.  Replace with sync clock
 set_false_path -from [get_clocks aclk] -to [get_clocks BB_CLK]
 set_false_path -from [get_clocks BB_CLK] -to [get_clocks aclk]

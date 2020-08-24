@@ -53,8 +53,9 @@ int drainDebugFifoUdp(int fifoAddr) {
   int rfifo;
   u8_t *rDFifoB = (u8_t*) &rDFifoData;
   //  xil_printf("start drain fifo %x\r\n", fifoAddr);
-  // Only look at the LS 4 bits changed to all bits since fifo is at 31
-  //statusBit = fifoAddr & 0xF;
+  // Subtract ADC base address to get the bit index of the first ADC EF bit 
+  // eg when AXI register is 18 we will look at the first bit in the status reg
+  statusBit = fifoAddr - 0x18;
   //  xil_printf("start drain fifo %x\r\n", statusBit);
   udpTxbuf[0] = 0xF0;
   udpTxbuf[1] = 0x00;
@@ -72,11 +73,8 @@ int drainDebugFifoUdp(int fifoAddr) {
   // checking status before each write slows the transfer,
   // add programmable full bit to read a larger chunk without the need to check status.
   while (1) {
-    statusFlags = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + (0x001E << 2));
-
-    //if (((statusFlags & 0x000001 << (statusBit*2)) == 0) & (rDFifoTxIndex < rDFifoBufSize-8))
-    // only checking one fifo for now
-    if (((statusFlags & 0x000001)  == 0) & (rDFifoTxIndex < rDFifoBufSize-8))
+    statusFlags = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + (0x0017 << 2));
+    if (((statusFlags & 0x000001 << statusBit) == 0) & (rDFifoTxIndex < rDFifoBufSize-8))
       // Get more data from FIFO
       {
 	rDFifoData = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + (fifoAddr << 2));
@@ -137,17 +135,20 @@ int transfer_mmUdpTx_data(u8_t *txBufData, int  txBufLength, struct udp_pcb *pcb
   return 0;
 }
 
-void start_udp( ){
+void start_udp(u32_t ipAddrSel){
   //struct udp_pcb *ptel_pcb = udp_new();
   int port = mmDataTxUdpPort;
   err_t err;
- 
+  u8_t *ipAddrSelB = (u8_t*) &ipAddrSel;
+
+  if (mmDataTxPcb) {
+    xil_printf("Removing UDP PCB\r\n");
+    udp_remove(mmDataTxPcb);
+  }
+
   //	udp_bind(ptel_pcb, IP_ADDR_ANY, port);
-  IP4_ADDR(&udpDstIpAddr, 140,247,123, 171);//jeff laptop
-   //IP4_ADDR(&udpDstIpAddr, 140,247,132,8);//new pc2
-  //IP4_ADDR(&udpDstIpAddr, 149,130,136,84); //James noether.wellesley.edu
-   //IP4_ADDR(&udpDstIpAddr, 128, 103,   100, 251);//laptop
-  print_ip("MM Data sent to IP  : ", &udpDstIpAddr);
+  IP4_ADDR(&udpDstIpAddr, ipAddrSelB[3],ipAddrSelB[2],ipAddrSelB[1],ipAddrSelB[0]);//jeff laptop
+  print_ip("UDP Data is now sent to IP  : ", &udpDstIpAddr);
   xil_printf("\r\n");
   xil_printf("%s%d\r\n", "using port           : ",port);
 

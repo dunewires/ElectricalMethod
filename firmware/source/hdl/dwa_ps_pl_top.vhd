@@ -15,6 +15,10 @@ library duneDwa;
 use duneDwa.global_def.all;
 
 entity dwa_ps_pl_top is
+    generic (
+        dateCode : std_logic_vector(31 downto 0);
+        hashCode : std_logic_vector(31 downto 0)
+    );
 
     port (
         --DWA
@@ -29,6 +33,13 @@ entity dwa_ps_pl_top is
         DAC_LD_B  : out std_logic := '0';
         DAC_CLR_B : out std_logic := '0';
         DAC_CLK   : out std_logic := '0';
+
+        dpotSdi    : out std_logic := '0';
+        dpotSdo    : out std_logic := '0';
+        dpotPr_b   : out std_logic := '0';
+        dpotCs_b   : out std_logic := '0';
+        dpotSck    : out std_logic := '0';
+        dpotShdn_b : out std_logic := '0';
 
         CoilDrive : out std_logic_vector(31 downto 0) := (others => '0');
 
@@ -113,7 +124,9 @@ architecture STRUCTURE of dwa_ps_pl_top is
             M00_AXI_0_rvalid     : in    STD_LOGIC;
             M00_AXI_0_rready     : out   STD_LOGIC;
             peripheral_aresetn_0 : out   STD_LOGIC_VECTOR ( 0 to 0 );
-            aclk                 : out   STD_LOGIC
+            aclk                 : out   STD_LOGIC;
+            FCLK_CLK1_0          : out   STD_LOGIC
+
         );
     end component dwa_ps_bd;
 
@@ -147,6 +160,8 @@ architecture STRUCTURE of dwa_ps_pl_top is
         );
     end component dwa_registers_v1_0_S00_AXI;
 
+
+
     signal M00_AXI_0_awaddr     : STD_LOGIC_VECTOR ( 31 downto 0 );
     signal M00_AXI_0_awprot     : STD_LOGIC_VECTOR ( 2 downto 0 );
     signal M00_AXI_0_awvalid    : STD_LOGIC;
@@ -167,21 +182,19 @@ architecture STRUCTURE of dwa_ps_pl_top is
     signal M00_AXI_0_rvalid     : STD_LOGIC;
     signal M00_AXI_0_rready     : STD_LOGIC;
     signal peripheral_aresetn_0 : STD_LOGIC_VECTOR ( 0 to 0 );
-    signal aclk                 : STD_LOGIC;
+    signal S_AXI_ACLK_100       : STD_LOGIC;
+    signal S_AXI_ACLK_10        : STD_LOGIC;
 
-    signal regFromDwa      : SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
-    signal regFromDwa_strb : std_logic_vector(31 downto 0);
-
-
-    signal regToDwa : SLV_VECTOR_TYPE(31 downto 0)(31 downto 0);
+    signal fromDaqReg : fromDaqRegType;
+    signal toDaqReg   : toDaqRegType;
 
     signal adcDataSerial : std_logic_vector(3 downto 0) := (others => '0');
     signal adcSrcSyncClk : std_logic                    := '0';
     signal adcSck        : std_logic                    := '0';
-    
+
 begin
 
-    adcSerialInbuf_gen :for adcSerial_indx in 3 downto 0 generate
+    adcSerialInbuf_gen : for adcSerial_indx in 3 downto 0 generate
         IBUFDS_ADCSDIN : IBUFDS
             generic map (
                 DIFF_TERM    => true,
@@ -257,14 +270,19 @@ begin
             M00_AXI_0_wready              => M00_AXI_0_wready,
             M00_AXI_0_wstrb(3 downto 0)   => M00_AXI_0_wstrb(3 downto 0),
             M00_AXI_0_wvalid              => M00_AXI_0_wvalid,
-            aclk                          => aclk,
+            aclk                          => S_AXI_ACLK_100,
+            FCLK_CLK1_0                   => S_AXI_ACLK_10,
             peripheral_aresetn_0(0)       => peripheral_aresetn_0(0)
         );
 
 
     dwa_registers_v1_0_S00_AXI_1 : entity duneDwa.dwa_registers_v1_0_S00_AXI
+        generic map (
+            dateCode => dateCode,
+            hashCode => hashCode
+        )
         port map (
-            S_AXI_ACLK    => aclk,
+            S_AXI_ACLK    => S_AXI_ACLK_100,
             S_AXI_ARESETN => peripheral_aresetn_0(0),
             S_AXI_AWADDR  => M00_AXI_0_AWADDR(6 downto 0),
             S_AXI_AWPROT  => M00_AXI_0_AWPROT,
@@ -286,19 +304,20 @@ begin
             S_AXI_RVALID  => M00_AXI_0_RVALID,
             S_AXI_RREADY  => M00_AXI_0_RREADY,
 
-            regFromDwa      => regFromDwa,
-            regFromDwa_strb => regFromDwa_strb,
+            fromDaqReg => fromDaqReg,
+            toDaqReg   => toDaqReg
 
-            regToDwa => regToDwa
         );
 
     top_tension_analyzer_1 : entity work.top_tension_analyzer
-        port map (
-            regFromDwa      => regFromDwa,
-            regFromDwa_strb => regFromDwa_strb,
 
-            regToDwa   => regToDwa,
-            S_AXI_ACLK => aclk,
+        port map (
+            fromDaqReg => fromDaqReg,
+            toDaqReg   => toDaqReg,
+
+
+            dwaClk100 => S_AXI_ACLK_100,
+            dwaClk10  => S_AXI_ACLK_10,
 
 
             led             => led,
@@ -311,17 +330,31 @@ begin
             DAC_CLR_B => DAC_CLR_B,
             DAC_CLK   => DAC_CLK,
 
+            dpotSdi    => dpotSdi,
+            dpotSdo    => dpotSdo,
+            dpotPr_b   => dpotPr_b,
+            dpotCs_b   => dpotCs_b,
+            dpotSck    => dpotSck,
+            dpotShdn_b => dpotShdn_b,
+
             CoilDrive => CoilDrive,
 
             adcCnv        => adcCnv,
             adcSck        => adcSck,
             adcDataSerial => adcDataSerial,
-            adcSrcSyncClk => adcSrcSyncClk,
-
-
-            BB_CLK_P => BB_CLK_P,
-            BB_CLK_N => BB_CLK_N
+            adcSrcSyncClk => adcSrcSyncClk
 
         );
+
+
+    -- COMP_TAG_END ------ End COMPONENT Declaration ------------
+
+    -- The following code must appear in the VHDL architecture
+    -- body. Substitute your own instance name and net names.
+
+    ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
+
+
+
 
 end STRUCTURE;
