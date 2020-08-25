@@ -94,7 +94,7 @@ proc setup {} {
 
     set_param general.maxThreads 8
     set post_route_wns xxx
-    set proj_dir $firmware_dir/../../vivadoProjects/$proj_name
+    set proj_dir $firmware_dir/vivadoProjects/$proj_name
    
     set fsbl_elf $proj_sources_dir/sdk/dwaFsbl/Debug/dwaFsbl.elf
     set lwip_elf $proj_sources_dir/sdk/lwip_ref/Release/lwip_ref.elf
@@ -104,7 +104,8 @@ proc setup {} {
     puts "FPGA Part: $part"
     puts "Scripts Directory:  $scriptdir"
     puts "Project Directory: $proj_dir"
-    
+    file mkdir $proj_dir
+
   #  set_property ip_repo_paths {$scriptdir/../../../vivadoProjects/ip_repo/dwa_registers_1.0} [current_project]
    # update_ip_catalog
 
