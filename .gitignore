@@ -1,3 +1,4 @@
+firmware/vivadoProjects/*
 firmware/source/sdk/.metadata/
 firmware/source/sdk/.sdk/
 DAQ/python/udpData/*
