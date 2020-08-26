@@ -98,7 +98,8 @@ begin
 				acStim_periodCnt <= (acStim_periodCnt'left downto 1 => '0', 0 => '1'); --x"000001";
 			end if;
 			acStim(3 downto 1) <= acStim(2 downto 0);
-			--sync For ADC readout
+			-- sync For ADC readout
+			-- generate pulses with the required length
 			acStim_trigger <= acStim(0) and not acStim(1);
 			DAC_LD_B       <= acStim(3) or not acStim(0);
 			DAC_CLR_B      <= not acStim(3) or acStim(0);
