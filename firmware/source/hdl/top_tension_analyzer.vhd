@@ -205,7 +205,7 @@ begin
         acStim_enable <= '1';
       end if;
 
-      acStimX200_nHPeriod <= (x"7A1200"/ stimFreqReq);
+      acStimX200_nHPeriod <= (x"3d0900"/ stimFreqReq);
       -- trim off 8 MSbs because we don't need to go below ~10Hz
       -- acStim_nHPeriod_all := (x"5F5E1000"/unsigned(stimFreqReq));
       -- acStim_nHPeriod     <= acStim_nHPeriod_all(acStim_nHPeriod'range);
