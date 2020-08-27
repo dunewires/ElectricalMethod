@@ -23,8 +23,8 @@ architecture tb of tb_adc_emu is
 
   signal end_of_simulation : boolean := false;
 
-  signal fromDaqReg : fromDaqRegType;
-  signal toDaqReg   : toDaqRegType;
+  signal fromDaqReg      : fromDaqRegType;
+  signal toDaqReg        : toDaqRegType;
   signal dwaClk100       : std_logic;
   signal dwaClk10        : std_logic;
   signal led             : std_logic_vector(3 downto 0);
@@ -42,29 +42,38 @@ architecture tb of tb_adc_emu is
   signal dpotSck         : std_logic := '0';
   signal dpotShdn_b      : std_logic := '0';
   signal CoilDrive       : std_logic_vector(31 downto 0);
-  signal adcCnv          : std_logic                    := '0';
-  signal adcSck          : std_logic                    := '0';
-  signal adcDataSerial   : std_logic_vector(3 downto 0) := (others => '0');
-  signal adcSrcSyncClk   : std_logic                    := '0';
-
-  signal daqReadCnt: unsigned(4 downto 0) := (others => '0');
+  signal adcCnv          : std_logic                     := '0';
+  signal adcSck          : std_logic                     := '0';
+  signal adcDataSerial   : std_logic_vector(3 downto 0)  := (others => '0');
+  signal adcSrcSyncClk   : std_logic                     := '0';
+  signal emuDSR          : std_logic_vector(35 downto 0) := (others => '0');
+  signal daqReadCnt      : unsigned(4 downto 0)          := (others => '0');
 
   --signal udpDataRdyDel  : std_logic := '0';
-  signal udpDataRdyDel  : boolean := false;
-  
+  signal udpDataRdyDel : boolean := false;
+
 begin
-    
-   process (dwaClk100)
-   begin
-       if rising_edge(dwaClk100) then
-          daqReadCnt <= daqReadCnt+1;
-           fromDaqReg.udpDataRen <= toDaqReg.udpDataRdy when (daqReadCnt = "00000") else false;
-           udpDataRdyDel <= toDaqReg.udpDataRdy;
-           fromDaqReg.udpDataDone <= udpDataRdyDel and not toDaqReg.udpDataRdy;
-       end if;
-   end process;
-   
-   
+
+  process (dwaClk100)
+  begin
+    if rising_edge(dwaClk100) then
+      daqReadCnt             <= daqReadCnt+1;
+      fromDaqReg.udpDataRen  <= toDaqReg.udpDataRdy when (daqReadCnt = "00000") else false;
+      udpDataRdyDel          <= toDaqReg.udpDataRdy;
+      fromDaqReg.udpDataDone <= udpDataRdyDel and not toDaqReg.udpDataRdy;
+    end if;
+
+  end process;  
+
+  process (dpotSck)
+  begin
+    if rising_edge(dpotSck) then
+      emuDSR                 <= emuDSR(34 downto 0) & dpotSdo;
+      --emuDSR(31)                 <= dpotSdo;
+    end if;
+  end process;
+
+
   top_tension_analyzer_1 : entity duneDwa.top_tension_analyzer
     port map (
       fromDaqReg      => fromDaqReg,
@@ -79,7 +88,7 @@ begin
       DAC_LD_B        => DAC_LD_B,
       DAC_CLR_B       => DAC_CLR_B,
       DAC_CLK         => DAC_CLK,
-      dpotSdi         => dpotSdi,
+      dpotSdi         => emuDSR(35),
       dpotSdo         => dpotSdo,
       dpotPr_b        => dpotPr_b,
       dpotCs_b        => dpotCs_b,
