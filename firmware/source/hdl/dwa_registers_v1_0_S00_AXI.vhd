@@ -713,14 +713,14 @@ begin
 				toDaqReg.senseWireGain(3) &
 				toDaqReg.senseWireGain(2) &
 				toDaqReg.senseWireGain(1) &
-				toDaqReg.senseWireGain(0) &
+				toDaqReg.senseWireGain(0) 
 				 ;
 			when b"10000" =>
 				reg_data_out <= 
 				toDaqReg.senseWireGain(7) &
 				toDaqReg.senseWireGain(6) &
 				toDaqReg.senseWireGain(5) &
-				toDaqReg.senseWireGain(4) &
+				toDaqReg.senseWireGain(4) 
 				 ;
 	
 			-- Registers 16 to 31 have been changed to be driven by the DWA (read only)

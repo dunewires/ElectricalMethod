@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Aug 24 17:44:06 2020
+-- Last update : Thu Aug 27 13:12:09 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ package global_def is
     -- ADC AXI offset address
     constant adcRegOfst  : integer := 24;
     constant adcStatAddr : integer := 23;
-    constant useAdcEmu   : boolean := true;
+    constant useAdcEmu   : boolean := false;
 
 
     type SLV_VECTOR_TYPE is array (natural range <>) of std_logic_vector;

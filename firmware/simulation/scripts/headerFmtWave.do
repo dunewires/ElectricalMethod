@@ -157,14 +157,17 @@ add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotIn
 add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/sdi
 add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/sck
 add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/pr_b
-add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/mag
 add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/cs_b
 add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/clkEn
+add wave -noupdate -expand /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/toDaqReg.senseWireGain
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/sdi
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/writeReg
+add wave -noupdate -expand /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/shiftReg
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {272250000000 fs} 0}
+WaveRestoreCursors {{Cursor 1} {3766947941 fs} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 208
-configure wave -valuecolwidth 63
+configure wave -valuecolwidth 210
 configure wave -justifyvalue left
 configure wave -signalnamewidth 1
 configure wave -snapdistance 10
@@ -177,4 +180,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits fs
 update
-WaveRestoreZoom {4644295502 fs} {14563803243 fs}
+WaveRestoreZoom {1231989702 fs} {9445254398 fs}
