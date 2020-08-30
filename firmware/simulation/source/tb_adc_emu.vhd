@@ -63,13 +63,17 @@ begin
       fromDaqReg.udpDataDone <= udpDataRdyDel and not toDaqReg.udpDataRdy;
     end if;
 
-  end process;  
+  end process;
 
   process (dpotSck)
   begin
     if rising_edge(dpotSck) then
-      emuDSR                 <= emuDSR(34 downto 0) & dpotSdo;
-      --emuDSR(31)                 <= dpotSdo;
+      emuDSR <= emuDSR(34 downto 0) & dpotSdi;
+    --emuDSR(31)                 <= dpotSdo;
+    end if;
+    if falling_edge(dpotSck) then
+      dpotSdo <= emuDSR(35);
+    --emuDSR(31)                 <= dpotSdo;
     end if;
   end process;
 
@@ -88,7 +92,7 @@ begin
       DAC_LD_B        => DAC_LD_B,
       DAC_CLR_B       => DAC_CLR_B,
       DAC_CLK         => DAC_CLK,
-      dpotSdi         => emuDSR(35),
+      dpotSdi         => dpotSdi,
       dpotSdo         => dpotSdo,
       dpotPr_b        => dpotPr_b,
       dpotCs_b        => dpotCs_b,

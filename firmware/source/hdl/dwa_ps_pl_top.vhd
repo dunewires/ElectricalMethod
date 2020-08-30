@@ -34,8 +34,8 @@ entity dwa_ps_pl_top is
         DAC_CLR_B : out std_logic := '0';
         DAC_CLK   : out std_logic := '0';
 
-        dpotSdi    : in std_logic := '0';
-        dpotSdo    : out std_logic := '0';
+        dpotSdi    : out std_logic := '0';
+        dpotSdo    : in std_logic := '0';
         dpotPr_b   : out std_logic := '0';
         dpotCs_b   : out std_logic := '0';
         dpotSck    : out std_logic := '0';

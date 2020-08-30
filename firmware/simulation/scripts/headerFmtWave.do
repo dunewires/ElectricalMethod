@@ -146,8 +146,8 @@ add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReado
 add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv
 add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcBusy
 add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/acStim_nHPeriod
+add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/dpotState
 add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/update
-add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/sysClk10
 add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/shiftReg
 add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/shiftCnt
 add wave -noupdate -expand -group dpot /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/shdn_b
@@ -164,7 +164,7 @@ add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/sdi
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/writeReg
 add wave -noupdate -expand /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/shiftReg
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {3766947941 fs} 0}
+WaveRestoreCursors {{Cursor 1} {37000000000 fs} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 208
 configure wave -valuecolwidth 210
@@ -180,4 +180,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits fs
 update
-WaveRestoreZoom {1231989702 fs} {9445254398 fs}
+WaveRestoreZoom {0 fs} {59671419611 fs}
