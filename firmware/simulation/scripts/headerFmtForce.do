@@ -25,10 +25,10 @@ force -freeze sim:/tb_adc_emu/fromDaqReg.clientIp 32'h95828854 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.stimTime 24'h000010 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.activeChannels 8'h09 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.relayMask 32'h91817161 0
-force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(7) 8'h58 0
-force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(6) 8'h57 0
-force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(5) 8'h56 0
-force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(4) 8'h55 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(7) 8'h00 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(6) 8'h00 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(5) 8'h00 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(4) 8'h01 0
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(3) 8'h64 0
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(2) 8'h63 0
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(1) 8'h62 0
