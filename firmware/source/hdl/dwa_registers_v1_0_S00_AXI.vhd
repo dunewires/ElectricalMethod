@@ -786,12 +786,12 @@ begin
 	fromDaqReg.clientIp           <= unsigned(slv_reg12);
 	fromDaqReg.relayMask          <= slv_reg13;
 	fromDaqReg.coilDrive          <= slv_reg14;
-	fromDaqReg.senseWireGain(7)          <= slv_reg16(31 downto 24);
-	fromDaqReg.senseWireGain(6)          <= slv_reg16(23 downto 16);
+	fromDaqReg.senseWireGain(7)          <= slv_reg16(31 downto 25);
+	fromDaqReg.senseWireGain(6)          <= slv_reg16(24 downto 16);
 	fromDaqReg.senseWireGain(5)          <= slv_reg16(15 downto 8);
 	fromDaqReg.senseWireGain(4)          <= slv_reg16(7 downto 0);
-	fromDaqReg.senseWireGain(3)          <= slv_reg15(31 downto 24);
-	fromDaqReg.senseWireGain(2)          <= slv_reg15(23 downto 16);
+	fromDaqReg.senseWireGain(3)          <= slv_reg15(31 downto 25);
+	fromDaqReg.senseWireGain(2)          <= slv_reg15(24 downto 16);
 	fromDaqReg.senseWireGain(1)          <= slv_reg15(15 downto 8);
 	fromDaqReg.senseWireGain(0)          <= slv_reg15(7 downto 0);
 
