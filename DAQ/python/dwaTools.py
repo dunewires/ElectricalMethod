@@ -6,6 +6,7 @@
 import matplotlib.pyplot as plt
 
 import sys
+import string
 import os, errno
 import socket
 import time
@@ -425,6 +426,7 @@ def dwaReset(verbose=0):
     time.sleep(0.2)
     tcpClose(s)
 
+   
 def dwaGetConfigParameters(configFile):
     """Parse and return DWA configuration parameters from a file
 
@@ -451,11 +453,12 @@ def dwaGetConfigParameters(configFile):
     config["stimTime"]     = cp.get(SECTION, "stimTime")
     config["stimMag"]      = cp.get(SECTION, "stimMag")
     # 
-    config["cyclesPerFreq"] = cp.get(SECTION, "cyclesPerFreq")
+    config["cyclesPerFreq"]      = cp.get(SECTION, "cyclesPerFreq")
     config["adcSamplesPerCycle"] = cp.get(SECTION, "adcSamplesPerCycle")
     # 
     config["relayMask"] = cp.get(SECTION, "relayMask")
     config["coilDrive"] = cp.get(SECTION, "coilDrive")
+    config["digipot"]   = cp.get(SECTION, "digipot")
     #
     # Defunct
     # dwaCtrl  => (auto mainsMinus_enable m_axis_tready)
@@ -472,9 +475,66 @@ def dwaGetConfigParameters(configFile):
             config["client_IP"] = None
     else:
         config["client_IP"] = None
-    
-    return config
 
+    return config
+        
+      
+
+def dwaValidateConfigParams(config):
+    """ validate the values read from a config file
+    """
+    
+    ##############################################
+    # VALIDATE entries in the config file
+    # before returning the contents (and sending to FPGA)
+    # check for:
+    # * valid digipot settings
+    # * FIXME: IP address
+
+    # Validate IP address
+    if not config["client_IP"]:
+        print("ERROR: must specify client IP address")
+        sys.exit()
+    
+    ############################
+    # Validate digipot setting
+    # must be 8 x 8-bit hex values
+    if len(config["digipot"]) != 16 or not all(c in string.hexdigits for c in config["digipot"]):
+        print(f"Invalid digipot value: {config['digipot']}")
+        sys.exit()
+
+
+def dwaSetDigipots(ss, cfgstr, verbose=0):
+    """ cfgstr is an 8-channel string: 8 x 8-bit values, one per digipot
+    e.g. cfgstr = '0001020304050607'
+    where '00' is a hex string to configure digipot 0
+    where '01' is a hex string to configure digipot 1
+    ...
+    where '07' is a hex string to configure digipot 7
+    
+    The cfgstr has been validated elsewhere (see dwaValidateConfigParams() )
+    """
+
+    # Construct the register values for the digipot
+    # regWrite(t,"F", "0F0F0F0F0F")
+    # 
+    # The association between digipots and register is even channels
+    # (0, 2, 4, 6) on register 0xF and odd channels (1, 3, 5, 7) on
+    # register 0x10. Within a register value, the ordering of the
+    # digipots follows 0xDDCCBBAA, where AA is the 8-bit value for
+    # channel 0 or 1, BB for channel 2 or 3, CC for channel 4 or 5 and
+    # DD for channel 6 or 7.
+
+    # Config string for even digipots
+    cfgEven = cfgstr[12:14]+cfgstr[ 8:10]+cfgstr[4:6]+cfgstr[0:2]
+    cfgOdd  = cfgstr[14:16]+cfgstr[10:12]+cfgstr[6:8]+cfgstr[2:4]
+    print(f"cfgEven = {cfgEven}")
+    print(f"cfgOdd  = {cfgOdd}")
+    # Even digipots
+    #dwaRegWrite(ss, '0000000F', config["auto"], verbose=verbose)
+    # Odd digipots
+    #dwaRegWrite(ss, '00000010', config["auto"], verbose=verbose)
+    
 def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     """
     Args:
@@ -545,13 +605,18 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     #time.sleep(sleepSec)
 
     # If there is an IP address in the config file, then set it
-    if config["client_IP"]:
-        print("Setting UDP address")
-        #fromDaqReg.clientIp      <= slv_reg12;
-        dwaSetUdpAddress(s, config["client_IP"], verbose=verbose)
-        time.sleep(sleepSec)
-
+    # FIXME: should get rid of this "if" check
+    # The check should happen in 
+    print("Setting UDP address")
+    #fromDaqReg.clientIp      <= slv_reg12;
+    dwaSetUdpAddress(s, config["client_IP"], verbose=verbose)
     time.sleep(sleepSec)
+
+    print("Setting Digipots")
+    dwaSetDigipots(s, config["digipot"], verbose=verbose)
+    time.sleep(sleepSec)
+
+    
     tcpClose(s, verbose=verbose)
 
 def dwaStart(verbose=0):
