@@ -27,8 +27,8 @@ entity top_tension_analyzer is
     DAC_CLR_B : out std_logic := '0';
     DAC_CLK   : out std_logic := '0';
 
-    dpotSdi    : out std_logic := '0';
-    dpotSdo    : in std_logic := '0';
+    dpotSdi    : in std_logic := '0';
+    dpotSdo    : out std_logic := '0';
     dpotPr_b   : out std_logic := '0';
     dpotCs_b   : out std_logic := '0';
     dpotSck    : out std_logic := '0';
@@ -63,7 +63,16 @@ architecture STRUCT of top_tension_analyzer is
     );
   END COMPONENT;
 
+  COMPONENT ila_4x32
+    PORT (
+      clk : IN STD_LOGIC;
 
+      probe0 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+      probe1 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+      probe2 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+      probe3 : IN STD_LOGIC_VECTOR(31 DOWNTO 0)
+    );
+  END COMPONENT ;
 
   signal auto            : std_logic := '0';
   signal acStimX200      : std_logic := '0';
@@ -241,8 +250,8 @@ begin
       fromDaqReg => fromDaqReg,
       toDaqReg   => toDaqReg, --toDaqReg,
   
-        sdi    => dpotSdo,
-        sdo    => dpotSdi,
+        sdi    => dpotSdi,
+        sdo    => dpotSdo,
         pr_b   => dpotPr_b,
         cs_b   => dpotCs_b,
         sck    => dpotSck,
@@ -370,8 +379,8 @@ begin
   headerGenerator_inst : entity duneDwa.headerGenerator
     port map (
       fromDaqReg => fromDaqReg,
-      --------------------------------------------------------------------------toDaqReg   => open,-- toDaqReg, -- use for sim to prevent multisourced signal
-     -- toDaqReg   => toDaqReg, -- use for vivado opt
+      --toDaqReg   => open,-- toDaqReg, -- use for sim to prevent multisourced signal
+      toDaqReg   => toDaqReg, -- use for vivado opt
 
       --internalDwaReg     => open,
 
@@ -400,7 +409,22 @@ begin
       dwaClk100 => dwaClk100
     );
 
+  ila_4x32_inst : ila_4x32
+    PORT MAP (
+      clk => dwaClk100,
 
+      probe0               => toDaqReg.udpDataWord,
+      probe1(31 downto 6)  => (others => '0'),
+      probe1(5)  => '0',
+      probe1(4)  => dpotSdi,
+      probe1(3)  => dpotSdo,
+      probe1(2)  => dpotCs_b,
+      probe1(1)            => bool2Sl(fromDaqReg.udpDataDone),
+      probe1(0)            => bool2Sl(toDaqReg.udpDataRdy),
+      probe2(31 downto 16) => (others => '0'),
+      probe2(15 downto 0)  => std_logic_vector(hGStateDbg),
+      probe3               => (others => '0')
+    );
 
 end STRUCT;
 
