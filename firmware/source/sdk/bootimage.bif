@@ -2,6 +2,6 @@
 the_ROM_image:
 {
 [bootloader]/home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/..//source//sdk/dwaFsbl/Debug/dwaFsbl.elf
-/home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/..//../../vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20200827_211604_26.684ns.bit
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/..//vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20200917_191209_26.885ns.bit
 /home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/..//source//sdk/lwip_ref/Release/lwip_ref.elf
 }
