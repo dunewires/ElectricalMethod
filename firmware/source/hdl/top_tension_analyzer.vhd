@@ -370,8 +370,8 @@ begin
   headerGenerator_inst : entity duneDwa.headerGenerator
     port map (
       fromDaqReg => fromDaqReg,
-      --------------------------------------------------------------------------toDaqReg   => open,-- toDaqReg, -- use for sim to prevent multisourced signal
-     -- toDaqReg   => toDaqReg, -- use for vivado opt
+      --toDaqReg   => open,-- toDaqReg, -- use for sim to prevent multisourced signal
+      toDaqReg   => toDaqReg, -- use for vivado opt
 
       --internalDwaReg     => open,
 
