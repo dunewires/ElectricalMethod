@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Jul 30 18:03:39 2020
+-- Last update : Wed Aug 26 11:50:57 2020
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -97,8 +97,8 @@ begin
 
 					when stimRun_s => -- count the number of clock cycles we stim before ADC readout
 						timerCnt      <= timerCnt+1;
-						acStim_enable <= '1';
-						if timerCnt >= fromDaqReg.stimTime then
+						acStim_enable <= '1'; -- Turn on stimulus 
+						if timerCnt(31 downto 8) >= fromDaqReg.stimTime then
 							timerCnt  <= x"00000000";
 							ctrlState <= adcReadout_s;
 							adcStart  <= '1';

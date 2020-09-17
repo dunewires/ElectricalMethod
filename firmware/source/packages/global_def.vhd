@@ -25,7 +25,6 @@ package global_def is
     -- ADC AXI offset address
     constant adcRegOfst  : integer := 24;
     constant adcStatAddr : integer := 23;
-    constant useAdcEmu   : boolean := false;
 
     type SLV_VECTOR_TYPE is array (natural range <>) of std_logic_vector;
     type UNSIGNED_VECTOR_TYPE is array (natural range <>) of unsigned;
