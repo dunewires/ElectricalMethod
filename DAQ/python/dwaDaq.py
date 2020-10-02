@@ -153,6 +153,11 @@ class MainWindow(qtw.QMainWindow):
         self.stack.setStyleSheet("background-color:white")
         self.currentView = View.GRID
         self.stack.setCurrentIndex(self.currentView)
+
+
+        # Connect slots/signals
+        self.btnStart.clicked.connect(self.startRun)
+        self.btnQuit.clicked.connect(self.close)
         
         # Configure/label plots
         self.chanViewMain = 0  # which channel to show large
@@ -355,6 +360,29 @@ class MainWindow(qtw.QMainWindow):
         # Amplitude vs. frequency data
         self.scAmpGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+F"), self)
         self.scAmpGridView.activated.connect(self.viewAmpGrid)
+
+
+    @pyqtSlot()
+    def startRun(self):
+        self.outputText.appendPlainText("CLICKED START")
+        self.outputText.update()
+        
+        print('\n\n======= dwaReset() ===========')
+        dwa.dwaReset(verbose=1)
+
+        print('\n\n======= dwaConfig() ===========')
+        dwa.dwaConfig(verbose=0, configFile="dwaConfigWCLab.ini")
+        #dwa.dwaConfig(verbose=0, configFile="dwaConfigWC.ini")
+        #dwa.dwaConfig(verbose=0, configFile="dwaConfigSingleFreq.ini")
+
+        print('\n\n======= dwaStart() ===========')
+        dwa.dwaStart(verbose=1)
+        
+        #print('\n\n======= dwaStat() ===========')
+        #dwa.dwaStat(verbose=1)
+
+    #@pyqtSlot()
+    #def quitAll(self):
 
         
     @pyqtSlot()
