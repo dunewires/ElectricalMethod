@@ -35,7 +35,7 @@ architecture tb of tb_headerGenerator is
   signal runOdometer        : unsigned(23 downto 0);
   signal fpgaSerialNum      : unsigned(23 downto 0);             
 
-  signal udpDataRen         : boolean;
+  --signal udpDataRen         : boolean;  -- now in fromDaqReg
   signal sendRunHdr         : boolean;
   signal sendAdcData        : boolean;
   signal sendStatusHdr      : boolean;
@@ -50,7 +50,7 @@ architecture tb of tb_headerGenerator is
   signal adcDataRen   : std_logic_vector(7 downto 0);
   signal adcData      : slv_vector_type(7 downto 0)(31 downto 0);
   
-  signal reset     : boolean   := false;
+  --signal reset     : boolean   := false; -- now in fromDaqReg
   signal dwaClk100 : std_logic := '0';
 
 begin
@@ -63,7 +63,7 @@ begin
       runOdometer          =>   runOdometer,
       fpgaSerialNum        =>   fpgaSerialNum,
       
-      udpDataRen           =>   udpDataRen,         
+      --udpDataRen           =>   udpDataRen,         
       sendRunHdr           =>   sendRunHdr,        
       sendAdcData          =>   sendAdcData,        
       sendStatusHdr        =>   sendStatusHdr,      
@@ -78,7 +78,7 @@ begin
       adcDataRen           =>   adcDataRen,         
       adcData              =>   adcData,            
 
-      reset     => reset,
+      --reset     => reset,
       dwaClk100 => dwaClk100
     );
 

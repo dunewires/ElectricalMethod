@@ -95,7 +95,7 @@ architecture rtl of headerGenerator is
 
         ----------------------------
 	---- Setup for Header F
-	constant nHeadF      : integer  := 21; -- # of header words (incl. 2 delimiters)
+	constant nHeadF      : integer  := 25; -- # of header words (incl. 2 delimiters)
 	constant nHeadFLog   : integer  := integer(log2(real(nHeadF +1)));
 	signal headFDataList : slv_vector_type(nHeadF-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
@@ -133,6 +133,7 @@ architecture rtl of headerGenerator is
 begin
 
     --header data indexed list with 0 at bottom of list
+    -- UDP Header
     headADataList <= (
         x"AAAA" & std_logic_vector(to_unsigned(nHeadA-2, 16)), -- header delimiter (start)
         x"10" & x"00" & std_logic_vector(udpPktCnt),   -- UDP pkt counter
@@ -140,6 +141,7 @@ begin
         x"AAAAAAAA" -- header delimiter (end)
     );
 
+    --RUN Header
     headFDataList <= (
         x"FFFF" & std_logic_vector(to_unsigned(nHeadF-2, 16)), -- header delimiter (start)
         x"00" & std_logic_vector(runOdometer),
@@ -166,9 +168,17 @@ begin
         x"2E" & x"00" & fromDaqReg.relayMask(31 downto 16), 
         x"2F" & x"00" & fromDaqReg.relayMask(15 downto  0),
         --# relay mask. v3 has 192 bits (64+32)*2 (8 lines of 24 bits) !!!
+        --
+        -- Digipot gain adjust values
+        x"30" & x"00" & fromDaqReg.senseWireGain(0) & fromDaqReg.senseWireGain(1),
+        x"31" & x"00" & fromDaqReg.senseWireGain(2) & fromDaqReg.senseWireGain(3),
+        x"32" & x"00" & fromDaqReg.senseWireGain(4) & fromDaqReg.senseWireGain(5),
+        x"33" & x"00" & fromDaqReg.senseWireGain(6) & fromDaqReg.senseWireGain(7),
+        --
         x"FFFFFFFF" -- header delimiter (end)
     );    
-    
+
+    -- FREQUENCY Header
     headCDataList <= ( -- Frequency Data Frame
         x"CCCC" & std_logic_vector(to_unsigned(nHeadC-3, 16)),
         x"11" & x"0000" & registerId, -- Register ID (same as in "A" frame)
@@ -181,6 +191,7 @@ begin
         x"DDDD" & x"5151" -- FIXME: this shoould be in the genDFrame_s...
     ); 
 
+    --STATUS Header
     headEDataList <= ( -- Status frame
         x"EEEE" & std_logic_vector(to_unsigned(nHeadE-2, 16)),
         x"61" & x"0000" & x"55",
