@@ -301,6 +301,8 @@ begin
       freqSet       => ctrlFreqSet,
       acStim_enable => ctrl_acStim_enable,
 
+      noiseReadoutBusy  => noiseReadoutBusy,
+
       sendRunHdr  => sendRunHdr,
       sendAdcData => sendAdcData,
 
@@ -338,6 +340,24 @@ begin
       dwaClk100 => dwaClk100
     );
 
+  mainsNoiseCor_1 : entity work.mainsNoiseCor
+    port map (
+      fromDaqReg           => fromDaqReg,
+      toDaqReg             => toDaqReg,
+      freqSet              => freqSet,
+
+      noiseReadoutBusy     => noiseReadoutBusy,
+      adcStart             => adcStart,
+
+      senseWireDataStrb    => senseWireDataStrb,
+      senseWireData        => senseWireData,
+
+      senseWireMNSDataStrb => senseWireMNSDataStrb,
+      senseWireMNSData     => senseWireMNSData,
+
+      dwaClk100            => dwaClk100
+    );    
+
   --for each of the 8 channels
   adcFifoGen : for adc_i in 7 downto 0 generate
 
@@ -347,8 +367,8 @@ begin
         rst    => bool2Sl(fromDaqReg.reset),
         wr_clk => dwaClk100,
         rd_clk => dwaClk100,
-        din    => std_logic_vector(senseWireData(adc_i)),
-        wr_en  => senseWireDataStrb,
+        din    => std_logic_vector(senseWireMSNData(adc_i)),
+        wr_en  => senseWireMSNDataStrb,
 
         rd_en => fifoAdcData_ren(adc_i),
         dout  => fifoAdcData_dout(adc_i),
