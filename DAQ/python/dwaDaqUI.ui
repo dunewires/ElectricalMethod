@@ -28,13 +28,6 @@
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QPushButton" name="btnQuit">
-            <property name="text">
-             <string>Quit</string>
-            </property>
-           </widget>
-          </item>
          </layout>
         </widget>
        </item>
@@ -54,9 +47,70 @@
        <item>
         <widget class="QStackedWidget" name="stackedWidget">
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
-         <widget class="QWidget" name="page0">
+         <widget class="QWidget" name="page_config">
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="1">
+            <widget class="QLabel" name="configPage_label">
+             <property name="text">
+              <string>CONFIGURATION PAGE</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="configFileName">
+             <property name="autoFillBackground">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="placeholderText">
+              <string>Config file name</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="param1Input"/>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLineEdit" name="param2Input"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="configFileName_label">
+             <property name="text">
+              <string>Config File</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="param1Input_label">
+             <property name="text">
+              <string>Param1</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="param2Input_label">
+             <property name="text">
+              <string>Param2</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QPlainTextEdit" name="configFileContents"/>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="configFileContents_label">
+             <property name="text">
+              <string>Config file contents</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page_timeseriesGrid">
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="0" column="0">
             <widget class="QLabel" name="label_3">
@@ -98,7 +152,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="page1">
+         <widget class="QWidget" name="page_timeseriesChan">
           <layout class="QGridLayout" name="gridLayout_4">
            <item row="1" column="0">
             <layout class="QVBoxLayout" name="verticalLayout_6" stretch="1,5">
@@ -144,7 +198,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="page2">
+         <widget class="QWidget" name="page_amplitudeGrid">
           <layout class="QGridLayout" name="gridLayout_6">
            <item row="0" column="0">
             <widget class="QWidget" name="widget" native="true">
@@ -185,7 +239,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="page3">
+         <widget class="QWidget" name="page_amplitudeChan">
           <layout class="QGridLayout" name="gridLayout_7">
            <item row="1" column="1">
             <layout class="QVBoxLayout" name="verticalLayout" stretch="1,5">

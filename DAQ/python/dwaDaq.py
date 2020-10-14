@@ -44,10 +44,11 @@ import DwaDataParser as ddp
 
 class View(IntEnum):
     ''' for stackedWidget page indexing '''
-    GRID = 0     # show all V(t) data
-    CHAN = 1     # show V(t) data for a single channel
-    AMPLGRID = 2  # show all amp. vs. freq data
-    AMPLCHAN = 3  # zoom in on amp vs. freq data
+    CONFIG = 0    # show all V(t) data
+    GRID = 1      # show all V(t) data
+    CHAN = 2      # show V(t) data for a single channel
+    AMPLGRID = 3  # show all amp. vs. freq data
+    AMPLCHAN = 4  # zoom in on amp vs. freq data
     
 class WorkerSignals(qtc.QObject):
     '''
@@ -149,15 +150,23 @@ class MainWindow(qtw.QMainWindow):
         # Load the UI (built in Qt Designer)
         uic.loadUi('dwaDaqUI.ui', self)
 
+        # Set defaults...
+        self.configFile = "dwaConfigWC.ini"
+        self.configFileName.setText(self.configFile)
+        self.configFileContents.setReadOnly(True)
+
+        
         # Make handles for widgets in the UI
         self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
         self.stack.setStyleSheet("background-color:white")
-        self.currentView = View.GRID
+        self.currentView = View.CONFIG
         self.stack.setCurrentIndex(self.currentView)
 
         # Connect slots/signals
         self.btnStart.clicked.connect(self.startRun)
-        self.btnQuit.clicked.connect(self.close)
+        #self.btnQuit.clicked.connect(self.close)
+        self.configFileName.returnPressed.connect(self.configFileNameEnter)
+
         
         # Configure/label plots
         self.chanViewMain = 0  # which channel to show large for V(t) data
@@ -377,66 +386,100 @@ class MainWindow(qtw.QMainWindow):
                                              self.dummyDataAmpl[cha]['y'])
                 
     def _keyboardShortcuts(self):
-        # Show all timeseries data
+        # Show configuration parameters
+        self.scConfig = qtw.QShortcut(qtg.QKeySequence("Ctrl+C"), self)
+        self.scConfig.activated.connect(self.viewConfig)
+
+        # V(t) data (grid view)
         self.scGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+V"), self)
         self.scGridView.activated.connect(self.viewGrid)
-
-        chans = range(8)
-        self.chanViewShortcuts = []  # FIXME: no need to save these, just need to connect slot...
-        for chan in chans:
-            # V(t) data
-            self.chanViewShortcuts.append(qtw.QShortcut(qtg.QKeySequence(f'Alt+{chan}'), self))
-            self.chanViewShortcuts[-1].activated.connect(partial(self.viewChan, chan))
-            # A(f) data
-            self.chanViewShortcuts.append(qtw.QShortcut(qtg.QKeySequence(f'Ctrl+{chan}'), self))
-            self.chanViewShortcuts[-1].activated.connect(partial(self.viewAmplChan, chan))
 
         # A(f) data (grid view)
         self.scAmplGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+F"), self)
         self.scAmplGridView.activated.connect(self.viewAmplGrid)
+
+        # Show V(t) or A(f) (channel view)
+        chans = range(8)
+        self.chanViewShortcuts = []  # FIXME: no need to save these, just need to connect slot...
+        for chan in chans:
+            # V(t)
+            self.chanViewShortcuts.append(qtw.QShortcut(qtg.QKeySequence(f'Alt+{chan}'), self))
+            self.chanViewShortcuts[-1].activated.connect(partial(self.viewChan, chan))
+            # A(f)
+            self.chanViewShortcuts.append(qtw.QShortcut(qtg.QKeySequence(f'Ctrl+{chan}'), self))
+            self.chanViewShortcuts[-1].activated.connect(partial(self.viewAmplChan, chan))
 
 
     @pyqtSlot()
     def startRun(self):
         self.outputText.appendPlainText("CLICKED START")
         self.outputText.update()
-        
-        print('\n\n======= dwaReset() ===========')
-        dwa.dwaReset(verbose=1)
 
-        print('\n\n======= dwaConfig() ===========')
-        #dwa.dwaConfig(verbose=0, configFile="dwaConfigWCLab.ini")
-        dwa.dwaConfig(verbose=0, configFile="dwaConfigWC.ini")
-        #dwa.dwaConfig(verbose=0, configFile="dwaConfigSingleFreq.ini")
+        self.configFile = self.configFileName.text()
+        print("config file = {}".format(self.configFile))
 
-        print('\n\n======= dwaStart() ===========')
-        dwa.dwaStart(verbose=1)
+        # verify that config file can be opened
+        try:
+            with open(self.configFile) as fh:
+                pass
+
+            print('\n\n======= dwaReset() ===========')
+            dwa.dwaReset(verbose=1)
+            
+            print('\n\n======= dwaConfig() ===========')
+            #dwa.dwaConfig(verbose=0, configFile="dwaConfigWCLab.ini")
+            dwa.dwaConfig(verbose=0, configFile="dwaConfigWC.ini")
+            #dwa.dwaConfig(verbose=0, configFile="dwaConfigSingleFreq.ini")
+            
+            print('\n\n======= dwaStart() ===========')
+            dwa.dwaStart(verbose=1)
+            
+            #print('\n\n======= dwaStat() ===========')
+            #dwa.dwaStat(verbose=1)
+
+        except:
+            print("Could not open file -- cannot proceed")
         
-        #print('\n\n======= dwaStat() ===========')
-        #dwa.dwaStat(verbose=1)
 
     #@pyqtSlot()
     #def quitAll(self):
 
+    @pyqtSlot()
+    def configFileNameEnter(self):
+        # try to read the requested file
+        # if found, display contents
+        # if not found, display error message
+        configFileToOpen = self.configFileName.text()
+        try:
+            with open(configFileToOpen) as fh:
+                textToDisplay = fh.read()
+        except:
+            textToDisplay = "Could not open file"
+        self.configFileContents.setPlainText(textToDisplay)
         
+    @pyqtSlot()
+    def viewConfig(self):
+        self.currentView = View.CONFIG
+        self.stack.setCurrentIndex(self.currentView)
+        print("View CONFIG")
+
     @pyqtSlot()
     def viewGrid(self):
         self.currentView = View.GRID
         self.stack.setCurrentIndex(self.currentView)
-        print("page 1")
+        print("View V(t) GRID")
 
     @pyqtSlot()
     def viewAmplGrid(self):
         self.currentView = View.AMPLGRID
         self.stack.setCurrentIndex(self.currentView)
-        print("page 3")
+        print("View A(f) GRID")
 
     @pyqtSlot(int)
     def viewAmplChan(self, chan):
         self.currentView = View.AMPLCHAN
         self.stack.setCurrentIndex(self.currentView)
-        print("got here...")
-        print("channel = ", chan)
+        print("View A(f) AMPLCHAN.  Channel = {}".format(chan))
 
         if self.chanViewMainAmpl != chan:
             x, y = self.curves['ampl'][chan].getData()
@@ -448,8 +491,7 @@ class MainWindow(qtw.QMainWindow):
     def viewChan(self, chan):
         self.currentView = View.CHAN
         self.stack.setCurrentIndex(self.currentView)
-        print("got here...")
-        print("channel = ", chan)
+        print("View V(t) AMPLCHAN.  Channel = {}".format(chan))
 
         if self.chanViewMain != chan:
             x, y = self.curves['chan'][chan].getData()
