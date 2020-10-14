@@ -56,12 +56,12 @@
          <property name="currentIndex">
           <number>2</number>
          </property>
-         <widget class="QWidget" name="page1">
+         <widget class="QWidget" name="page0">
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="0" column="0">
             <widget class="QLabel" name="label_3">
              <property name="text">
-              <string>This is page 1</string>
+              <string>All V(t) data</string>
              </property>
             </widget>
            </item>
@@ -98,7 +98,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="page2">
+         <widget class="QWidget" name="page1">
           <layout class="QGridLayout" name="gridLayout_4">
            <item row="1" column="0">
             <layout class="QVBoxLayout" name="verticalLayout_6" stretch="1,5">
@@ -138,13 +138,13 @@
            <item row="0" column="0">
             <widget class="QLabel" name="label_2">
              <property name="text">
-              <string>This is page 2</string>
+              <string>V(t) for single channel</string>
              </property>
             </widget>
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="page3">
+         <widget class="QWidget" name="page2">
           <layout class="QGridLayout" name="gridLayout_6">
            <item row="0" column="0">
             <widget class="QWidget" name="widget" native="true">
@@ -152,36 +152,75 @@
               <item row="0" column="0">
                <layout class="QGridLayout" name="gridLayout">
                 <item row="0" column="0">
-                 <widget class="PlotWidget" name="pw_ampl_0" native="true"/>
+                 <widget class="PlotWidget" name="pw_amplgrid_0" native="true"/>
                 </item>
                 <item row="0" column="2">
-                 <widget class="PlotWidget" name="pw_ampl_2" native="true"/>
+                 <widget class="PlotWidget" name="pw_amplgrid_2" native="true"/>
                 </item>
                 <item row="0" column="1">
-                 <widget class="PlotWidget" name="pw_ampl_1" native="true"/>
+                 <widget class="PlotWidget" name="pw_amplgrid_1" native="true"/>
                 </item>
                 <item row="1" column="0">
-                 <widget class="PlotWidget" name="pw_ampl_3" native="true"/>
+                 <widget class="PlotWidget" name="pw_amplgrid_3" native="true"/>
                 </item>
                 <item row="1" column="2">
-                 <widget class="PlotWidget" name="pw_ampl_5" native="true"/>
+                 <widget class="PlotWidget" name="pw_amplgrid_5" native="true"/>
                 </item>
                 <item row="1" column="1">
-                 <widget class="PlotWidget" name="pw_ampl_4" native="true"/>
+                 <widget class="PlotWidget" name="pw_amplgrid_4" native="true"/>
                 </item>
                 <item row="2" column="0">
-                 <widget class="PlotWidget" name="pw_ampl_6" native="true"/>
+                 <widget class="PlotWidget" name="pw_amplgrid_6" native="true"/>
                 </item>
                 <item row="2" column="1">
-                 <widget class="PlotWidget" name="pw_ampl_7" native="true"/>
+                 <widget class="PlotWidget" name="pw_amplgrid_7" native="true"/>
                 </item>
                 <item row="2" column="2">
-                 <widget class="PlotWidget" name="pw_ampl_all" native="true"/>
+                 <widget class="PlotWidget" name="pw_amplgrid_all" native="true"/>
                 </item>
                </layout>
               </item>
              </layout>
             </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="page3">
+          <layout class="QGridLayout" name="gridLayout_7">
+           <item row="1" column="1">
+            <layout class="QVBoxLayout" name="verticalLayout" stretch="1,5">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_3">
+               <item>
+                <widget class="PlotWidget" name="pw_amplchan_0" native="true"/>
+               </item>
+               <item>
+                <widget class="PlotWidget" name="pw_amplchan_1" native="true"/>
+               </item>
+               <item>
+                <widget class="PlotWidget" name="pw_amplchan_2" native="true"/>
+               </item>
+               <item>
+                <widget class="PlotWidget" name="pw_amplchan_3" native="true"/>
+               </item>
+               <item>
+                <widget class="PlotWidget" name="pw_amplchan_4" native="true"/>
+               </item>
+               <item>
+                <widget class="PlotWidget" name="pw_amplchan_5" native="true"/>
+               </item>
+               <item>
+                <widget class="PlotWidget" name="pw_amplchan_6" native="true"/>
+               </item>
+               <item>
+                <widget class="PlotWidget" name="pw_amplchan_7" native="true"/>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="PlotWidget" name="pw_amplchan_main" native="true"/>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>

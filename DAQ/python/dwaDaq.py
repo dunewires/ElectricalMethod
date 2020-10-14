@@ -44,10 +44,11 @@ import DwaDataParser as ddp
 
 class View(IntEnum):
     ''' for stackedWidget page indexing '''
-    GRID = 0
-    CHAN = 1
-    AMPL = 2
-
+    GRID = 0     # show all V(t) data
+    CHAN = 1     # show V(t) data for a single channel
+    AMPLGRID = 2  # show all amp. vs. freq data
+    AMPLCHAN = 3  # zoom in on amp vs. freq data
+    
 class WorkerSignals(qtc.QObject):
     '''
     Defines the signals available from a running worker thread.
@@ -154,13 +155,13 @@ class MainWindow(qtw.QMainWindow):
         self.currentView = View.GRID
         self.stack.setCurrentIndex(self.currentView)
 
-
         # Connect slots/signals
         self.btnStart.clicked.connect(self.startRun)
         self.btnQuit.clicked.connect(self.close)
         
         # Configure/label plots
-        self.chanViewMain = 0  # which channel to show large
+        self.chanViewMain = 0  # which channel to show large for V(t) data
+        self.chanViewMainAmpl = 0  # which channel to show large for A(f) data
         self.configurePlots()
         
         # make dummy data to display
@@ -251,18 +252,24 @@ class MainWindow(qtw.QMainWindow):
     # end of __init__ for class MainWindow
 
     def configurePlots(self):
-        getattr(self, f'pw_ampl_all').setBackground('w')
-        getattr(self, f'pw_ampl_all').setTitle('All')
+        # FIXME: clean this up...
         getattr(self, f'pw_chan_main').setBackground('w')
         getattr(self, f'pw_chan_main').setTitle(self.chanViewMain)
+        getattr(self, f'pw_amplchan_main').setBackground('w')
+        getattr(self, f'pw_amplchan_main').setTitle(self.chanViewMainAmpl)
+        getattr(self, f'pw_amplgrid_all').setBackground('w')
+        getattr(self, f'pw_amplgrid_all').setTitle('All')
         for ii in range(8):
             # set background color to white
+            # FIXME: clean this up...
             getattr(self, f'pw_grid_{ii}').setBackground('w')
-            getattr(self, f'pw_ampl_{ii}').setBackground('w')
-            getattr(self, f'pw_chan_{ii}').setBackground('w')
             getattr(self, f'pw_grid_{ii}').setTitle(ii)
+            getattr(self, f'pw_chan_{ii}').setBackground('w')
             getattr(self, f'pw_chan_{ii}').setTitle(ii)
-            getattr(self, f'pw_ampl_{ii}').setTitle(ii)
+            getattr(self, f'pw_amplgrid_{ii}').setBackground('w')
+            getattr(self, f'pw_amplgrid_{ii}').setTitle(ii)
+            getattr(self, f'pw_amplchan_{ii}').setBackground('w')
+            getattr(self, f'pw_amplchan_{ii}').setTitle(ii)
 
     def printOutput(self, s):
         print("printOutput():")
@@ -272,13 +279,21 @@ class MainWindow(qtw.QMainWindow):
         print("THREAD COMPLETE!")
 
     def _makeDummyData(self):
-        self.dummyData = {}
-        self.xx = np.linspace(0, 2*np.pi, 1000)
-
+        # V(t)
+        self.dummyData = {}  
+        xx = np.linspace(0, 2*np.pi, 1000)
         for ii in range(9):
-            self.dummyData[ii] = {'x':self.xx[:],
-                                  'y':np.sin(self.xx*(ii+1))
-                                 }
+            self.dummyData[ii] = {'x':xx[:],
+                                  'y':np.sin(xx[:]*(ii+1))
+            }
+        # Amplitude vs. Freq
+        self.dummyDataAmpl = {}
+        xx = np.linspace(10, 100, 1000)
+        for ii in range(9):
+            self.dummyDataAmpl[ii] = {'x':xx[:],
+                                      'y':xx[:]*ii+1
+            }
+
     def _makeCurves(self):
         ''' make one curve in each pyqtgraph PlotWidget '''
         # FIXME: merge all curves into self.curves = {}
@@ -295,9 +310,9 @@ class MainWindow(qtw.QMainWindow):
         fitPen = pg.mkPen(color=(255,0,0), width=3)
 
         self.curves = {}
-        self.curves['grid'] = {}   # grid view
-        self.curves['chan'] = {}   # channel view
-        self.curves['ampl'] = {}   # Ampl. vs. Freq (grid view)
+        self.curves['grid'] = {}   # grid view V(t) data
+        self.curves['chan'] = {}   # channel view V(t) data
+        self.curves['ampl'] = {}   # Ampl. vs. Freq
         self.curves['ampl']['all'] = {}   # all plots, single window for Ampl. vs. Freq (grid view)
         self.curvesFit = {}  # FIXME: kluge -- merge w/ self.curves
         self.curvesFit['grid'] = {}
@@ -305,61 +320,80 @@ class MainWindow(qtw.QMainWindow):
         #gridLocations = list(string.ascii_uppercase[0:8]) # ['A', ..., 'H']
         gridLocations = list(range(8))
         for ii, loc in enumerate(gridLocations):
+            # V(t) plots
             self.curvesFit['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], pen=fitPen)
             self.curvesFit['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0], pen=fitPen)
             self.curves['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
             self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
             #
-            # amplitude vs. freq data
-            self.curves['ampl'][loc] = getattr(self, f'pw_ampl_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
-            # plot all A(f) in one of the A(f) windows
-            self.curves['ampl']['all'][loc] = getattr(self, f'pw_ampl_all').plot([0],[0])
+            # A(f) plots (grid view)
+            self.curves['ampl'][loc] = getattr(self, f'pw_amplgrid_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
+            #                plot all A(f) in one of the A(f) windows
+            self.curves['ampl']['all'][loc] = getattr(self, f'pw_amplgrid_all').plot([0],[0])
+            # A(f) plots (channel view)
+            self.curves['ampl'][loc] = getattr(self, f'pw_amplchan_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
 
-        # add in the main window, too
+            
+        # add in the main window, too (large view of V(t) for a single channel)
         self.curvesFit['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0], pen=fitPen)
         self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
 
+        # add in the main window, too (large view of A(f) for a single channel)
+        self.curves['ampl']['main'] = getattr(self, f'pw_amplchan_main').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
 
         
     def _plotDummyGrid(self, dummy=False):
         ''' plot data in Grid view '''
+        # V(t) data
         keys = sorted(self.curves['grid'])  # keys sorted (0, 1, ..., 7)
         print(keys)
         for ii, kk in enumerate(keys):
             self.curves['grid'][kk].setData(self.dummyData[ii]['x'],
                                             self.dummyData[ii]['y'])
-
+            
+        # FIXME: A(f) data (not yet implemented)
+            
     def _plotDummyChan(self, chan):
         ''' plot data in channel mode
         the reqested channel is plotted on the big graph. 
         all 8 channels are plotted on the small graphs at top
         '''
         # update the large plot
+        # V(t)
         self.curves['chan']['main'].setData(self.dummyData[chan]['x'],
                                             self.dummyData[chan]['y'])
+        # A(f)
+        self.curves['ampl']['main'].setData(self.dummyDataAmpl[chan]['x'],
+                                            self.dummyDataAmpl[chan]['y'])
 
         # update the 8 small plots
         #locs = list(string.ascii_uppercase[0:8])   # ['A', 'B', ..., 'H']
-        locs  = list(range(8))
-        chans = list(range(8))
-        for ii in range(len(locs)):
-            cha = chans[ii]
-            loc = locs[ii]
+        for ii in range(8):
+            cha = ii
+            loc = ii
             self.curves['chan'][loc].setData(self.dummyData[cha]['x'],
                                              self.dummyData[cha]['y'])
+            self.curves['ampl'][loc].setData(self.dummyDataAmpl[cha]['x'],
+                                             self.dummyDataAmpl[cha]['y'])
                 
     def _keyboardShortcuts(self):
-        self.scGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+A"), self)
+        # Show all timeseries data
+        self.scGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+V"), self)
         self.scGridView.activated.connect(self.viewGrid)
-        chans = range(8)
-        self.chanViewShortcuts = []
-        for chan in chans:
-            self.chanViewShortcuts.append(qtw.QShortcut(qtg.QKeySequence(f'Ctrl+{chan}'), self))
-            self.chanViewShortcuts[-1].activated.connect(partial(self.viewChan, chan))
 
-        # Amplitude vs. frequency data
-        self.scAmpGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+F"), self)
-        self.scAmpGridView.activated.connect(self.viewAmpGrid)
+        chans = range(8)
+        self.chanViewShortcuts = []  # FIXME: no need to save these, just need to connect slot...
+        for chan in chans:
+            # V(t) data
+            self.chanViewShortcuts.append(qtw.QShortcut(qtg.QKeySequence(f'Alt+{chan}'), self))
+            self.chanViewShortcuts[-1].activated.connect(partial(self.viewChan, chan))
+            # A(f) data
+            self.chanViewShortcuts.append(qtw.QShortcut(qtg.QKeySequence(f'Ctrl+{chan}'), self))
+            self.chanViewShortcuts[-1].activated.connect(partial(self.viewAmplChan, chan))
+
+        # A(f) data (grid view)
+        self.scAmplGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+F"), self)
+        self.scAmplGridView.activated.connect(self.viewAmplGrid)
 
 
     @pyqtSlot()
@@ -371,8 +405,8 @@ class MainWindow(qtw.QMainWindow):
         dwa.dwaReset(verbose=1)
 
         print('\n\n======= dwaConfig() ===========')
-        dwa.dwaConfig(verbose=0, configFile="dwaConfigWCLab.ini")
-        #dwa.dwaConfig(verbose=0, configFile="dwaConfigWC.ini")
+        #dwa.dwaConfig(verbose=0, configFile="dwaConfigWCLab.ini")
+        dwa.dwaConfig(verbose=0, configFile="dwaConfigWC.ini")
         #dwa.dwaConfig(verbose=0, configFile="dwaConfigSingleFreq.ini")
 
         print('\n\n======= dwaStart() ===========')
@@ -392,10 +426,23 @@ class MainWindow(qtw.QMainWindow):
         print("page 1")
 
     @pyqtSlot()
-    def viewAmpGrid(self):
-        self.currentView = View.AMPL
+    def viewAmplGrid(self):
+        self.currentView = View.AMPLGRID
         self.stack.setCurrentIndex(self.currentView)
         print("page 3")
+
+    @pyqtSlot(int)
+    def viewAmplChan(self, chan):
+        self.currentView = View.AMPLCHAN
+        self.stack.setCurrentIndex(self.currentView)
+        print("got here...")
+        print("channel = ", chan)
+
+        if self.chanViewMainAmpl != chan:
+            x, y = self.curves['ampl'][chan].getData()
+            self.curves['ampl']['main'].setData(x, y)
+            self.pw_amplchan_main.setTitle(chan)
+            self.chanViewMainAmpl = chan
         
     @pyqtSlot(int)
     def viewChan(self, chan):
