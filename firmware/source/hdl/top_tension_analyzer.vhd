@@ -62,7 +62,19 @@ architecture STRUCT of top_tension_analyzer is
       rd_rst_busy : OUT STD_LOGIC
     );
   END COMPONENT;
+COMPONENT ila_4x32
 
+PORT (
+  clk : IN STD_LOGIC;
+
+
+
+  probe0 : IN STD_LOGIC_VECTOR(31 DOWNTO 0); 
+  probe1 : IN STD_LOGIC_VECTOR(31 DOWNTO 0); 
+  probe2 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+  probe3 : IN STD_LOGIC_VECTOR(31 DOWNTO 0)
+);
+END COMPONENT  ;
 
 
   signal auto            : std_logic := '0';
@@ -85,10 +97,7 @@ architecture STRUCT of top_tension_analyzer is
   signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
   signal ctrlFreqSet : unsigned(23 downto 0) := (others => '1');
 
-  signal fifoAdcData_din    : SLV_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
-  signal fifoAdcData_wen    : std_logic                                := '0';
   signal fifoAdcData_ren    : std_logic_vector(7 downto 0)             := (others => '0');
-  signal fifoAdcData_dout   : SLV_VECTOR_TYPE(7 downto 0)(31 downto 0) := (others => (others => '0'));
   signal adcData            : SLV_VECTOR_TYPE(7 downto 0)(31 downto 0) := (others => (others => '0'));
   signal fifoAdcData_ff     : std_logic_vector(7 downto 0)             := (others => '0');
   signal fifoAdcData_rdBusy : std_logic_vector(7 downto 0)             := (others => '0');
@@ -96,10 +105,9 @@ architecture STRUCT of top_tension_analyzer is
   signal fifoAdcData_pf     : std_logic_vector(7 downto 0)             := (others => '0');
   signal adcAutoDc_af       : std_logic_vector(7 downto 0)             := (others => '0');
 
-  signal adcStart : std_logic := '0';
+  signal adcStart : boolean  := true;
 
   signal adcBusy : std_logic := '0';
-  signal adcDone : std_logic := '0';
 
   signal mainsSquare_del1, mainsSquare_del2 : std_logic := '0';
   signal mainsTrig                          : std_logic := '0';
@@ -108,6 +116,10 @@ architecture STRUCT of top_tension_analyzer is
 
   signal senseWireData     : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
   signal senseWireDataStrb : std_logic                                   := '0';
+
+  signal senseWireMNSData     : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0) := (others => (others => '0'));
+  signal senseWireMNSDataStrb : std_logic                                   := '0';
+
   signal senseWireDataSel  : unsigned(2 downto 0)                        := (others => '0');
 
   signal dpotMag : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0) := (others => (others => '0'));
@@ -116,14 +128,16 @@ architecture STRUCT of top_tension_analyzer is
   signal sendAdcData : boolean               := false;
   signal hGStateDbg  : unsigned(15 downto 0) := (others => '0');
 
+  signal noiseReadoutBusy : boolean               := false;
+  signal noiseResetBusy : boolean               := false;
 begin
 
   CoilDrive <= fromDaqReg.coilDrive;
 
-  led(1) <= dwaClk100;
+  led(1) <= '1';
   led(0) <= '1' when toDaqReg.ctrlBusy else '0';
   led(3) <= '1';
-  led(2) <= acStimX200;
+  led(2) <= '1';
 
   --  ODDR_acStim : ODDR
   --    generic map(
@@ -190,7 +204,8 @@ begin
     if rising_edge(dwaClk10) then
       if fromDaqReg.auto then
         stimFreqReq   <= ctrlFreqSet;
-        acStim_enable <= ctrl_acStim_enable;
+        --acStim_enable <= ctrl_acStim_enable;
+        acStim_enable <= '0';
       else
         stimFreqReq   <= fromDaqReg.stimFreqReq;
         acStim_enable <= '1';
@@ -223,13 +238,15 @@ begin
   begin
     if rising_edge(dwaClk100) then
       -- Default Increment
-      acStimX200_periodCnt <= acStimX200_periodCnt +1;
       -- need the > to catch when the nPeriod decreases at the wrong time
-
-      if acStimX200_periodCnt >= acStimX200_nHPeriod then
+      --if acStimX200_periodCnt >= acStimX200_nHPeriod then
+      --if acStimX200_periodCnt >= x"1046" then
+      if acStimX200_periodCnt >= x"10D6" then
         -- dont use the enable here to keep the filter working
         acStimX200           <= not acStimX200;
         acStimX200_periodCnt <= (acStimX200_periodCnt'left downto 1 => '0', 0 => '1'); --x"000001";
+      else
+      acStimX200_periodCnt <= acStimX200_periodCnt +1;
       end if;
 
     end if;
@@ -239,7 +256,8 @@ begin
     dpotInterface_inst : entity duneDwa.dpotInterface
       port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg, --toDaqReg,
+      --toDaqReg   => toDaqReg, --toDaqReg,
+      toDaqReg   => open, --toDaqReg,
   
         sdi    => dpotSdo,
         sdo    => dpotSdi,
@@ -296,12 +314,14 @@ begin
   wtaController_inst : entity duneDwa.wtaController
     port map (
       fromDaqReg => fromDaqReg,
+      --toDaqReg   => toDaqReg,
       toDaqReg   => open, --toDaqReg,
 
       freqSet       => ctrlFreqSet,
       acStim_enable => ctrl_acStim_enable,
 
       noiseReadoutBusy  => noiseReadoutBusy,
+      noiseResetBusy => noiseResetBusy,
 
       sendRunHdr  => sendRunHdr,
       sendAdcData => sendAdcData,
@@ -310,7 +330,6 @@ begin
 
       adcStart => adcStart,
       adcBusy  => adcBusy,
-      adcDone  => adcDone,
 
       dwaClk100 => dwaClk100
     );
@@ -318,14 +337,16 @@ begin
   -- on adcStart get all of the samples at the current frequency
   adcReadout_inst : entity duneDwa.adcReadout
     port map (
+      fromDaqReg => fromDaqReg,
+
       adcCnv_nCnv     => adcCnv_nCnv,
       adcCnv_nPeriod  => adcCnv_nPeriod,
-      acStim_nHPeriod => acStim_nHPeriod,
+      noiseReadoutBusy => noiseReadoutBusy,
 
       adcStart => adcStart,
-      trigger  => acStim_trigger,
+      --trigger  => acStim_trigger,
+      trigger  => mainsTrig,
       adcBusy  => adcBusy,
-      adcDone  => adcDone,
 
       adcCnv => adcCnv,
       adcSck => adcSck,
@@ -340,13 +361,15 @@ begin
       dwaClk100 => dwaClk100
     );
 
-  mainsNoiseCor_1 : entity work.mainsNoiseCor
+  mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
     port map (
       fromDaqReg           => fromDaqReg,
-      toDaqReg             => toDaqReg,
-      freqSet              => freqSet,
+      --toDaqReg             => toDaqReg,
+      toDaqReg             => open,--toDaqReg,
+      freqSet              => ctrlFreqSet,
 
       noiseReadoutBusy     => noiseReadoutBusy,
+      resetBusy =>    noiseResetBusy,
       adcStart             => adcStart,
 
       senseWireDataStrb    => senseWireDataStrb,
@@ -367,11 +390,14 @@ begin
         rst    => bool2Sl(fromDaqReg.reset),
         wr_clk => dwaClk100,
         rd_clk => dwaClk100,
-        din    => std_logic_vector(senseWireMSNData(adc_i)),
-        wr_en  => senseWireMSNDataStrb,
+        din    => '0' & std_logic_vector(senseWireMNSData(adc_i)),
+        wr_en  => senseWireMNSDataStrb,
 
         rd_en => fifoAdcData_ren(adc_i),
-        dout  => fifoAdcData_dout(adc_i),
+        -- MNS eval
+        --rd_en => bool2sl(not noiseReadoutBusy),
+        dout  => adcData(adc_i),
+
         -- ADC full bits are the second set of 8 bits
         full        => fifoAdcData_ff(adc_i),
         empty       => fifoAdcData_ef(adc_i),
@@ -379,12 +405,7 @@ begin
         wr_rst_busy => open,
         rd_rst_busy => open
       );
-    adcData(adc_i) <= (
-        31           => '0',
-        30 downto 16 => fifoAdcData_dout(adc_i)(31 downto 17),
-        15           => '0',
-        14 downto 0  => fifoAdcData_dout(adc_i)(15 downto 1)
-    );
+
   end generate adcFifoGen;
 
   headerGenerator_inst : entity duneDwa.headerGenerator
@@ -394,7 +415,6 @@ begin
       toDaqReg   => toDaqReg, -- use for vivado opt
 
       --internalDwaReg     => open,
-
       runOdometer   => (others => '0'),
       fpgaSerialNum => (others => '0'),
 
@@ -420,7 +440,23 @@ begin
       dwaClk100 => dwaClk100
     );
 
-
+ila_4x32_inst : ila_4x32
+PORT MAP (
+  clk => dwaClk100,
+  probe0(31 downto 16) => (others => '0'), 
+  probe0(15 downto 0) => std_logic_vector(adcData(3)(15 downto 0)), 
+  probe1(31 downto 16) => (others => '0'), 
+  probe1(15 downto 0) => std_logic_vector(senseWireData(3)(15 downto 0)), 
+  probe2(31 downto 15) => (others => '0'),
+  probe2(14 downto 0) => std_logic_vector(senseWireMNSData(3)(14 downto 0)),
+  probe3(31 downto 6) => (others => '0'),
+  probe3(5) => senseWireDataStrb,
+  probe3(4) => mainsTrig,
+  probe3(3) => senseWireMNSDataStrb,
+  probe3(2) => bool2sl(adcStart),
+  probe3(1) => bool2sl(noiseReadoutBusy),
+  probe3(0) => bool2sl(noiseResetBusy)
+);
 
 end STRUCT;
 

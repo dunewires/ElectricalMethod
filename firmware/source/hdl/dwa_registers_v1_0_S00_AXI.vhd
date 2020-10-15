@@ -87,7 +87,6 @@ entity dwa_registers_v1_0_S00_AXI is
 
 		toDaqReg   : in  toDaqRegType;
 		fromDaqReg : out fromDaqRegType
-
 	);
 end dwa_registers_v1_0_S00_AXI;
 
@@ -255,7 +254,8 @@ begin
 			-- used for any pulsed signals e.g. reset & start
 			slv_reg0 <= (others => '0');
 			if S_AXI_ARESETN = '0' then
-				slv_reg1  <= (others => '0');
+			-- set default register values
+				slv_reg1  <= x"00000003"; --MNS enabled, auto enabled
 				slv_reg2  <= (others => '0');
 				slv_reg3  <= (others => '0');
 				slv_reg4  <= (others => '0');
@@ -279,11 +279,11 @@ begin
 				slv_reg22 <= (others => '0');
 				slv_reg23 <= (others => '0');
 				slv_reg24 <= (others => '0');
-				slv_reg25 <= (others => '0');
-				slv_reg26 <= (others => '0');
-				slv_reg27 <= (others => '0');
-				slv_reg28 <= (others => '0');
-				slv_reg29 <= (others => '0');
+				slv_reg25 <= x"00000320";--		noiseFreqMin   
+				slv_reg26 <= x"00000460";--		noiseFreqMax 
+				slv_reg27 <= x"00000010";--		noiseFreqStep  1 Hz
+				slv_reg28 <= x"0000CB73";--		noiseSampPer   32 samp / cycle @ 60 Hz
+				slv_reg29 <= x"00000100";--		noiseNCnv       256 total samples
 				slv_reg30 <= (others => '0');
 				slv_reg31 <= (others => '0');
 			else
@@ -709,20 +709,20 @@ begin
 			when b"01110" =>
 				reg_data_out <= slv_reg14;
 			when b"01111" =>
-				reg_data_out <= 
-				toDaqReg.senseWireGain(3) &
-				toDaqReg.senseWireGain(2) &
-				toDaqReg.senseWireGain(1) &
-				toDaqReg.senseWireGain(0) 
-				 ;
+				reg_data_out <=
+					toDaqReg.senseWireGain(3) &
+					toDaqReg.senseWireGain(2) &
+					toDaqReg.senseWireGain(1) &
+					toDaqReg.senseWireGain(0)
+				;
 			when b"10000" =>
-				reg_data_out <= 
-				toDaqReg.senseWireGain(7) &
-				toDaqReg.senseWireGain(6) &
-				toDaqReg.senseWireGain(5) &
-				toDaqReg.senseWireGain(4) 
-				 ;
-	
+				reg_data_out <=
+					toDaqReg.senseWireGain(7) &
+					toDaqReg.senseWireGain(6) &
+					toDaqReg.senseWireGain(5) &
+					toDaqReg.senseWireGain(4)
+				;
+
 			-- Registers 16 to 31 have been changed to be driven by the DWA (read only)
 			when b"10001" =>
 				reg_data_out(0)           <= '1' when toDaqReg.ctrlBusy else '0';
@@ -739,6 +739,20 @@ begin
 				reg_data_out <= toDaqReg.udpDataWord;
 				-- When udp word is read, send comb slv_reg_rden to DWA PL
 				fromDaqReg.udpDataRen <= slv_reg_rden = '1';
+			when b"11001" =>
+				reg_data_out <= slv_reg25;
+			when b"11010" =>
+				reg_data_out <= slv_reg26;
+			when b"11011" =>
+				reg_data_out <= slv_reg27;
+			when b"11100" =>
+				reg_data_out <= slv_reg28;
+			when b"11101" =>
+				reg_data_out <= slv_reg29;
+			when b"11110" =>
+				reg_data_out <= slv_reg30;
+			when b"11111" =>
+				reg_data_out <= slv_reg31;
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;
@@ -772,7 +786,9 @@ begin
 	-- DWA just gets a copy of the register
 	fromDaqReg.reset     <= slv_reg0(0)= '1';
 	fromDaqReg.ctrlStart <= slv_reg0(1)= '1';
-	fromDaqReg.auto      <= slv_reg1(0)= '1';
+
+	fromDaqReg.auto   <= slv_reg1(0)= '1';
+	fromDaqReg.mnsEna <= slv_reg1(1)= '1';
 	-- udpDataDone when PS has read the status at the end of the data payload
 	fromDaqReg.udpDataDone        <= not udpReadBusy and udpReadBusy_del; --trailing edge
 	fromDaqReg.stimFreqReq        <= unsigned(slv_reg3(23 downto 0));
@@ -786,14 +802,21 @@ begin
 	fromDaqReg.clientIp           <= unsigned(slv_reg12);
 	fromDaqReg.relayMask          <= slv_reg13;
 	fromDaqReg.coilDrive          <= slv_reg14;
-	fromDaqReg.senseWireGain(7)          <= slv_reg16(31 downto 24);
-	fromDaqReg.senseWireGain(6)          <= slv_reg16(23 downto 16);
-	fromDaqReg.senseWireGain(5)          <= slv_reg16(15 downto 8);
-	fromDaqReg.senseWireGain(4)          <= slv_reg16(7 downto 0);
-	fromDaqReg.senseWireGain(3)          <= slv_reg15(31 downto 24);
-	fromDaqReg.senseWireGain(2)          <= slv_reg15(23 downto 16);
-	fromDaqReg.senseWireGain(1)          <= slv_reg15(15 downto 8);
-	fromDaqReg.senseWireGain(0)          <= slv_reg15(7 downto 0);
+	fromDaqReg.senseWireGain(7)   <= slv_reg16(31 downto 24);
+	fromDaqReg.senseWireGain(6)   <= slv_reg16(23 downto 16);
+	fromDaqReg.senseWireGain(5)   <= slv_reg16(15 downto 8);
+	fromDaqReg.senseWireGain(4)   <= slv_reg16(7 downto 0);
+	fromDaqReg.senseWireGain(3)   <= slv_reg15(31 downto 24);
+	fromDaqReg.senseWireGain(2)   <= slv_reg15(23 downto 16);
+	fromDaqReg.senseWireGain(1)   <= slv_reg15(15 downto 8);
+	fromDaqReg.senseWireGain(0)   <= slv_reg15(7 downto 0);
+	--temp hard code
+	fromDaqReg.noiseFreqMin  <= unsigned(slv_reg25(23 downto 0));
+	fromDaqReg.noiseFreqMax  <= unsigned(slv_reg26(23 downto 0));
+	fromDaqReg.noiseFreqStep <= unsigned(slv_reg27(23 downto 0));
+	fromDaqReg.noiseSampPer  <= unsigned(slv_reg28(23 downto 0));
+	fromDaqReg.noiseNCnv     <= unsigned(slv_reg29(23 downto 0));
+
 
 	-- User logic ends
 

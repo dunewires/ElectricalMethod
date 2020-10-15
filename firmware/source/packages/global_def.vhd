@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Oct  1 08:51:53 2020
+-- Last update : Wed Oct  7 09:47:05 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -34,32 +34,35 @@ package global_def is
     type INTEGER_VECTOR_TYPE is array (natural range <>) of integer;
 
     type toDaqRegType is record
-        ctrlBusy    : boolean; --nf
-        udpDataWord : std_logic_vector(31 downto 0);
-        udpDataRdy  : boolean;
+        ctrlBusy      : boolean; --nf
+        udpDataWord   : std_logic_vector(31 downto 0);
+        udpDataRdy    : boolean;
         senseWireGain : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
 
     end record; -- toDaqRegType
 
     type fromDaqRegType is record
-        reset     : boolean;
-        auto      : boolean;
-        ctrlStart : boolean;
-        udpDataDone   : boolean;
-        udpDataRen   : boolean;
-        coilDrive : std_logic_vector(31 downto 0);
+        ctrlStart   : boolean;
+        reset       : boolean;
+        
+        auto        : boolean;
+        mnsEna      : boolean;
+        udpDataDone : boolean;
+        udpDataRen  : boolean;
+        coilDrive   : std_logic_vector(31 downto 0);
 
         -- start james' additions
         --- dwaCtrl (still used?  how many bits?)
-        fixedPeriod    : unsigned(23 downto 0); -- 10ns
-        stimFreqReq  : unsigned(23 downto 0); --nf
-        stimFreqMin  : unsigned(23 downto 0); -- 10ns
-        stimFreqMax  : unsigned(23 downto 0); -- 10ns
-        stimFreqStep : unsigned(23 downto 0); -- 10ns
-        noiseFreqMin  : unsigned(23 downto 0) := x"000280"; -- 40 Hz
-        noiseFreqMax  : unsigned(23 downto 0) := x"000460"; -- 70 Hz
-        noiseFreqStep : unsigned(23 downto 0) := x"000010"; -- 1 Hz
-        noiseSampPer :unsigned(23 downto 0) := x"00CB73"; -- 32 samp / cycle @ 60 Hz
+        fixedPeriod   : unsigned(23 downto 0); -- 10ns
+        stimFreqReq   : unsigned(23 downto 0); --nf
+        stimFreqMin   : unsigned(23 downto 0); -- 10ns
+        stimFreqMax   : unsigned(23 downto 0); -- 10ns
+        stimFreqStep  : unsigned(23 downto 0); -- 10ns
+        noiseFreqMin  : unsigned(23 downto 0); -- 40 Hz
+        noiseFreqMax  : unsigned(23 downto 0); -- 70 Hz
+        noiseFreqStep : unsigned(23 downto 0); -- 1 Hz
+        noiseSampPer  : unsigned(23 downto 0); -- 32 samp / cycle @ 60 Hz
+        noiseNCnv     : unsigned(23 downto 0);
         --stimPeriodActive   : unsigned(23 downto 0);
         --stimPeriodCounter  : unsigned(23 downto 0); -- bits???
         --- Number of stimulus cycles per frequency (unitless)
@@ -67,7 +70,7 @@ package global_def is
                                                     --- Number of ADC samples per simulus cycle (unitless)
         adcSamplesPerCycle : unsigned(15 downto 0); -- bits???
                                                     --- AC Stimulus magnitude (12bit DAC value)
-        stimMag : unsigned(11 downto 0);
+        stimMag       : unsigned(11 downto 0);
         senseWireGain : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
         -- Client IP address (where UDP data is sent)
         clientIp : unsigned(31 downto 0);
