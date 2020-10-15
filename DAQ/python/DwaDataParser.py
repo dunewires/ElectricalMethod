@@ -108,10 +108,10 @@ class DwaDataParser():
             "UDP_Counter": self._parseInfoLineAsInt,
             "Register_ID": self._parseInfoLineAsInt,
             "DWA_Ctrl": self._parseInfoLineAsInt,
-            "fixedPeriod": self._parseInfoLineAsInt,
-            "stimPeriodMin": self._parseInfoLineAsInt,
-            "stimPeriodMax": self._parseInfoLineAsInt,
-            "stimPeriodStep": self._parseInfoLineAsInt,
+            "stimFreqReq": self._parseInfoLineAsInt,
+            "stimFreqMin": self._parseInfoLineAsInt,
+            "stimFreqMax": self._parseInfoLineAsInt,
+            "stimFreqStep": self._parseInfoLineAsInt,
             "nCyclesPerFreq": self._parseInfoLineAsInt,
             "adcSamplesPerCycle": self._parseInfoLineAsInt,
             "stimMag": self._parseInfoLineAsInt,
@@ -122,7 +122,7 @@ class DwaDataParser():
             "Register_ID_Freq": self._parseInfoLineAsInt,
             "stimPeriodCounter":self._parseInfoLineAsInt,
             "adcSamplesPerFreq": self._parseInfoLineAsInt,
-            #"stimPeriod": self._parseInfoLineAsInt,
+            "stimPeriodActive": self._parseInfoLineAsInt,
             "adcSamplingPeriod":self._parseInfoLineAsInt,
             #"UNHANDLED_LINES": self._parseUnknownInfoLine  # do this if a key is not recognized...
         }
@@ -137,7 +137,7 @@ class DwaDataParser():
 
         self._framePostProcSelector = {
             Frame.UDP: self._postProcessUdpFrame,
-            #Frame.FREQ: self._postProcessFreqFrame,
+            Frame.FREQ: self._postProcessFreqFrame,
             Frame.ADC_DATA: self._postProcessAdcDataFrame,
             Frame.RUN: self._postProcessRunFrame,
             #Frame.STATUS: self._postProcessStatusFrame,
@@ -220,10 +220,12 @@ class DwaDataParser():
         print("frameDict = {}".format(frameDict))
 
         for line in infoLines:
-            #print("line = {}".format(line))
+            print("line, frameType = {}, {}".format(line, frameType))
             key, uniqueKey = self._getKey(line, frameType)
+            print("key, uniqueKey = {}, {}".format(key, uniqueKey))
             parserFxn = self._infoLineParserSelector.get(uniqueKey, self._parseUnknownInfoLine)
             val = parserFxn(line)
+            print('parserFxn = {}', parserFxn)
             if val is not line: # for unknown key, val==line
                 frameDict[uniqueKey] = val
             else:
@@ -263,15 +265,21 @@ class DwaDataParser():
         # Construct IP address in the form 'xxx.yyy.zzz.www'
         hexStr = dd['clientIP_16MSb'] + dd['clientIP_16LSb']
         dd['clientIP'] = dwa.hexStrToIpAddressStr(hexStr)
+
+        # Convert frequencies to Hz
+        dd['stimFreqMin_Hz'] = dd['stimFreqMin']/16.
+        dd['stimFreqMax_Hz'] = dd['stimFreqMax']/16.
+        dd['stimFreqStep_Hz'] = dd['stimFreqStep']/16.
         return dd
 
     def _postProcessUdpFrame(self, dd):
         dd['Register_ID_hexStr'] = '{:02X}'.format(dd['Register_ID'])
         return dd
 
-    #def _postProcessFreqFrame(self, dd):
-    #    return dd
-    #
+    def _postProcessFreqFrame(self, dd):
+        dd['stimFreqActive_Hz'] = dd['stimPeriodActive']*1e8 # convert period in 10ns to freq in Hz
+        return dd
+    
 
     def _postProcessAdcDataFrame(self, dd):
         # Convert the ADC samples from a hex string

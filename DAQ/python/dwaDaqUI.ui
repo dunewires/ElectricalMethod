@@ -28,6 +28,79 @@
             </property>
            </widget>
           </item>
+          <item>
+           <layout class="QFormLayout" name="formLayout_3">
+            <property name="labelAlignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+            <property name="formAlignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+            </property>
+            <item row="0" column="0" colspan="2">
+             <widget class="QLabel" name="globalFreqHeading">
+              <property name="text">
+               <string>Frequencies [Hz]</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="globalFreqMin_label">
+              <property name="text">
+               <string>Min</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="globalFreqMin_val">
+              <property name="text">
+               <string>....</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="globalFreqMax_label">
+              <property name="text">
+               <string>Max</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="globalFreqMax_val">
+              <property name="text">
+               <string>.....</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="globalFreqStep_label">
+              <property name="text">
+               <string>Step</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="globalFreqStep_val">
+              <property name="text">
+               <string>.....</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="globalFreqActive_label">
+              <property name="text">
+               <string>Active</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLabel" name="globalFreqActive_val">
+              <property name="text">
+               <string>.....</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
          </layout>
         </widget>
        </item>
@@ -50,63 +123,151 @@
           <number>0</number>
          </property>
          <widget class="QWidget" name="page_config">
-          <layout class="QFormLayout" name="formLayout">
-           <item row="0" column="1">
-            <widget class="QLabel" name="configPage_label">
-             <property name="text">
-              <string>CONFIGURATION PAGE</string>
+          <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,8">
+           <item>
+            <layout class="QFormLayout" name="formLayout_2">
+             <property name="labelAlignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLineEdit" name="configFileName">
-             <property name="autoFillBackground">
-              <bool>false</bool>
+             <property name="formAlignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
              </property>
-             <property name="text">
-              <string/>
+             <item row="0" column="0">
+              <widget class="QLabel" name="freqMin_label">
+               <property name="text">
+                <string>Freq Min [Hz]</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="freqMin_val">
+               <property name="text">
+                <string>.....</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="freqMax_label">
+               <property name="text">
+                <string>Freq Max [Hz]</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="freqMax_val">
+               <property name="text">
+                <string>.....</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="freqStep_label">
+               <property name="text">
+                <string>Freq Step [Hz]</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="freqStep_val">
+               <property name="text">
+                <string>.....</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="stimTime_label">
+               <property name="text">
+                <string>Stim Time [?]</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="stimTime_val">
+               <property name="text">
+                <string>.....</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="cycPerFreq_label">
+               <property name="text">
+                <string>Cycles Per Freq [dec]</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QLabel" name="cycPerFreq_val">
+               <property name="text">
+                <string>.....</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="0">
+              <widget class="QLabel" name="sampPerCyc_label">
+               <property name="text">
+                <string>Samples per cycle [dec]</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QLabel" name="sampPerCyc_val">
+               <property name="text">
+                <string>.....</string>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="0">
+              <widget class="QLabel" name="clientIP_label">
+               <property name="text">
+                <string>Client IP</string>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="1">
+              <widget class="QLabel" name="clientIP_val">
+               <property name="text">
+                <string>.....</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QFormLayout" name="formLayout">
+             <property name="fieldGrowthPolicy">
+              <enum>QFormLayout::ExpandingFieldsGrow</enum>
              </property>
-             <property name="placeholderText">
-              <string>Config file name</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLineEdit" name="param1Input"/>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLineEdit" name="param2Input"/>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="configFileName_label">
-             <property name="text">
-              <string>Config File</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="param1Input_label">
-             <property name="text">
-              <string>Param1</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="param2Input_label">
-             <property name="text">
-              <string>Param2</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QPlainTextEdit" name="configFileContents"/>
-           </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="configFileContents_label">
-             <property name="text">
-              <string>Config file contents</string>
-             </property>
-            </widget>
+             <item row="1" column="0">
+              <widget class="QLabel" name="configFileName_label">
+               <property name="text">
+                <string>Config File</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="configFileName">
+               <property name="autoFillBackground">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="placeholderText">
+                <string>Config file name</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="configFileContents_label">
+               <property name="text">
+                <string>Config file contents</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QPlainTextEdit" name="configFileContents"/>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>
