@@ -76,6 +76,26 @@ PORT (
 );
 END COMPONENT  ;
 
+COMPONENT vio_ctrl
+  PORT (
+    clk : IN STD_LOGIC;
+    probe_in0 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+    probe_in1 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+    probe_in2 : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+    probe_out0 : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+    probe_out1 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
+    probe_out2 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
+    probe_out3 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
+    probe_out4 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    probe_out5 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    probe_out6 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    probe_out7 : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+    probe_out8 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+    probe_out9 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
+    probe_out10 : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
+    probe_out11 : OUT STD_LOGIC_VECTOR(4 DOWNTO 0)
+  );
+END COMPONENT;
 
   signal auto            : std_logic := '0';
   signal acStimX200      : std_logic := '0';
@@ -130,6 +150,9 @@ END COMPONENT  ;
 
   signal noiseReadoutBusy : boolean               := false;
   signal noiseResetBusy : boolean               := false;
+  signal noiseFirstReadout : boolean               := false;
+
+  signal noiseCorrDataSel: std_logic_vector(1 downto 0) := (others => '0');
 begin
 
   CoilDrive <= fromDaqReg.coilDrive;
@@ -204,8 +227,8 @@ begin
     if rising_edge(dwaClk10) then
       if fromDaqReg.auto then
         stimFreqReq   <= ctrlFreqSet;
-        --acStim_enable <= ctrl_acStim_enable;
-        acStim_enable <= '0';
+        --acStim_enable <= '0';--ctrl_acStim_enable;
+        acStim_enable <= ctrl_acStim_enable;
       else
         stimFreqReq   <= fromDaqReg.stimFreqReq;
         acStim_enable <= '1';
@@ -239,9 +262,7 @@ begin
     if rising_edge(dwaClk100) then
       -- Default Increment
       -- need the > to catch when the nPeriod decreases at the wrong time
-      --if acStimX200_periodCnt >= acStimX200_nHPeriod then
-      --if acStimX200_periodCnt >= x"1046" then
-      if acStimX200_periodCnt >= x"10D6" then
+      if acStimX200_periodCnt >= acStimX200_nHPeriod then
         -- dont use the enable here to keep the filter working
         acStimX200           <= not acStimX200;
         acStimX200_periodCnt <= (acStimX200_periodCnt'left downto 1 => '0', 0 => '1'); --x"000001";
@@ -321,6 +342,7 @@ begin
       acStim_enable => ctrl_acStim_enable,
 
       noiseReadoutBusy  => noiseReadoutBusy,
+      noiseFirstReadout  => noiseFirstReadout,
       noiseResetBusy => noiseResetBusy,
 
       sendRunHdr  => sendRunHdr,
@@ -369,7 +391,11 @@ begin
       freqSet              => ctrlFreqSet,
 
       noiseReadoutBusy     => noiseReadoutBusy,
-      resetBusy =>    noiseResetBusy,
+      noiseFirstReadout     => noiseFirstReadout,
+
+dataSel => noiseCorrDataSel,
+
+      resetBusy             =>    noiseResetBusy,
       adcStart             => adcStart,
 
       senseWireDataStrb    => senseWireDataStrb,
@@ -458,5 +484,25 @@ PORT MAP (
   probe3(0) => bool2sl(noiseResetBusy)
 );
 
+vio_ctrl_inst : vio_ctrl
+  PORT MAP (
+    clk => dwaClk100,
+    probe_in0 => (others   => '0'),
+    probe_in1 => (others   => '0'),
+    probe_in2 => (others   => '0'),
+    probe_out0 => open,
+    probe_out1 => open,
+    probe_out2 => open,
+    probe_out3 => open,
+    probe_out4 => open,
+    probe_out5 => open,
+    probe_out6 => open,
+    probe_out7 => open,
+    probe_out8 => open,
+    probe_out9 => open,
+    probe_out10 => open,
+    probe_out11(4 downto 2) => open,
+    probe_out11(1 downto 0) => noiseCorrDataSel
+  );
 end STRUCT;
 

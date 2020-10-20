@@ -279,12 +279,12 @@ begin
 				slv_reg22 <= (others => '0');
 				slv_reg23 <= (others => '0');
 				slv_reg24 <= (others => '0');
-				slv_reg25 <= x"00000320";--		noiseFreqMin   
-				slv_reg26 <= x"00000460";--		noiseFreqMax 
+				slv_reg25 <= x"00000370";--		noiseFreqMin   
+				slv_reg26 <= x"00000410";--		noiseFreqMax 
 				slv_reg27 <= x"00000010";--		noiseFreqStep  1 Hz
 				slv_reg28 <= x"0000CB73";--		noiseSampPer   32 samp / cycle @ 60 Hz
 				slv_reg29 <= x"00000100";--		noiseNCnv       256 total samples
-				slv_reg30 <= (others => '0');
+				slv_reg30 <= x"00001000";-- ~10ms?
 				slv_reg31 <= (others => '0');
 			else
 				loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
@@ -816,6 +816,7 @@ begin
 	fromDaqReg.noiseFreqStep <= unsigned(slv_reg27(23 downto 0));
 	fromDaqReg.noiseSampPer  <= unsigned(slv_reg28(23 downto 0));
 	fromDaqReg.noiseNCnv     <= unsigned(slv_reg29(23 downto 0));
+	fromDaqReg.noiseBPFSetTime     <= unsigned(slv_reg30(23 downto 0));
 
 
 	-- User logic ends

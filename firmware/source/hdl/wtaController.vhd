@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Oct  7 16:11:11 2020
+-- Last update : Tue Oct 20 00:33:50 2020
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -37,6 +37,7 @@ entity wtaController is
 		acStim_enable : out std_logic             := '0';
 
 		noiseReadoutBusy : out boolean := false;
+		noiseFirstReadout : out boolean := false;
 		noiseResetBusy   : in  boolean := false;
 
 		sendRunHdr  : out boolean := false;
@@ -71,6 +72,7 @@ begin
 			adcStart          <= false;
 			sendRunHdr        <= false;
 			sendAdcData       <= false;
+						noiseFirstReadout <= noiseReadoutCnt = x"1";
 
 			if fromDaqReg.reset then
 				ctrlState <= idle_s;
@@ -93,25 +95,27 @@ begin
 							ctrlState        <= noisePrep_s;
 						end if;
 
-					when noisePrep_s =>                 --wait a bit for the divison to update and check FIFOs are not almost full
-						if timerCnt <= x"00000020" then --give at least 32 clocks for division to happen
+					when noisePrep_s =>                 
+					--wait a bit for the divison to update and BPF to respond to the new setting
+						if timerCnt(31 downto 8) <= fromDaqReg.noiseBPFSetTime then 
 							timerCnt <= timerCnt +1;    -- only count 
+					-- check FIFOs are not almost full
 						elsif not noiseResetBusy then   -- wait for the noise memory to be reset
 							adcStart  <= true;
 							timerCnt  <= x"00000000";
 							ctrlState <= noiseReadout_s;
 						end if;
 
-					when noiseReadout_s => --wait a bit for the divison to update and check FIFOs are not almost full
+					when noiseReadout_s => --wait a bit for the division to update and check FIFOs are not almost full
 						                   -- wait for falling edge of adcBusy;
 						if adcBusy = '0' and adcBusy_del = '1' then
 							if scanDone then
-								freqSet <= fromDaqReg.noiseFreqMin;
-								if noiseReadoutCnt = x"8" then
-									noiseReadoutBusy <= false; -- only count 
+								if noiseReadoutCnt = x"8" then --we are done with the noise
 									freqSet          <= fromDaqReg.stimFreqMin;
+									noiseReadoutBusy <= false; -- only count 
 									ctrlState        <= stimPrep_s;
-								else
+								else -- accumulate more noise samples to average 
+									freqSet <= fromDaqReg.noiseFreqMin;
 									noiseReadoutCnt <= noiseReadoutCnt +1;
 									ctrlState       <= noisePrep_s;
 								end if;

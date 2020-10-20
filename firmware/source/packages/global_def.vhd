@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Oct  7 09:47:05 2020
+-- Last update : Mon Oct 19 16:03:52 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -63,6 +63,7 @@ package global_def is
         noiseFreqStep : unsigned(23 downto 0); -- 1 Hz
         noiseSampPer  : unsigned(23 downto 0); -- 32 samp / cycle @ 60 Hz
         noiseNCnv     : unsigned(23 downto 0);
+        noiseBPFSetTime: unsigned(23 downto 0);
         --stimPeriodActive   : unsigned(23 downto 0);
         --stimPeriodCounter  : unsigned(23 downto 0); -- bits???
         --- Number of stimulus cycles per frequency (unitless)
