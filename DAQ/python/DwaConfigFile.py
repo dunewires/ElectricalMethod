@@ -10,6 +10,7 @@ class DwaConfigFile():
         print(f"Config filename: {filename}")
         self.configIsValid = False
         self.fname = filename
+        self.setDefaults()
         self.ingest()
         self.setValidOptions()
         self.config = {}
@@ -37,7 +38,9 @@ class DwaConfigFile():
                                      "stimTime", "stimMag",
                                      "cyclesPerFreq", "adcSamplesPerCycle",
                                      "relayMask", "coilDrive", "digipot",
-                                     "client_IP"]
+                                     "client_IP",
+                                     "noiseFreqMin", "noiseFreqMax", "noiseFreqStep",
+                                     "noiseSettlingTime", "noiseNCnv", "noiseAdcSamplesPerFreq"]
 
     def parse(self):
         """Parse the DWA configuration parameters from a file
@@ -71,17 +74,28 @@ class DwaConfigFile():
         print("Options present in the config file = ")
         print(options)
         for option in options:
-            if option not in self.validOptions[SECTION]:
+            #if option not in self.validOptions[SECTION]:
+            if option not in self.config:
                 print(f"WARNING: option in config file was ignored: {option}")
 
         print("Done reading the config file")
         print(self.config)
         print("\n")
+
+
+    def setDefaults(self):
+        self.defaults = {}
+        self.defaults["noiseFreqMin"]  = "00000100"  # [1/16Hz]
+        self.defaults["noiseFreqMax"]  = "00000400"  # [1/16Hz]
+        self.defaults["noiseFreqStep"] = "00000010"  # [1/16Hz]
+        self.defaults["noiseSettlingTime"] = "00100000"  # [10ns]  "00100000" ~ 1ms
+        self.defaults["noiseNCnv"] = "00000010"  # [unitless]
+        self.defaults["noiseAdcSamplesPerFreq"] = "00000400"  # [unitless] (1024 samples)
         
     def validate(self):
         """ validate the values read from a config file
         Check for:
-        * Missing keys
+        * Missing keys (replace with defaults where appropriate)
         * Empty values
         * Valid digipot settings
         * FIXME: IP address
@@ -93,11 +107,19 @@ class DwaConfigFile():
         configParams = self.config.keys()
         for cp in configParams:
             if self.config[cp] == None:
-                print(f"  ERROR: missing key: {cp}")
-                self.invalidEntries[cp] = "Key is missing"
+                if cp in self.defaults:
+                    print(f"  WARNING: missing key: {cp}, using default: {self.defaults[cp]}")
+                    self.config[cp] = self.defaults[cp]
+                else:
+                    print(f"  ERROR: missing key: {cp}")
+                    self.invalidEntries[cp] = "Key is missing"
             elif self.config[cp].strip() == "":
-                print(f"  ERROR: empty value: {cp}")
-                self.invalidEntries[cp] = "Value is empty"
+                if cp in self.defaults:
+                    print(f"  WARNING: empty value: {cp}, using default: {self.defaults[cp]}")
+                    self.config[cp] = self.defaults[cp]
+                else:
+                    print(f"  ERROR: empty value: {cp}")
+                    self.invalidEntries[cp] = "Value is empty"
 
         # Validate IP address format
         # FIXME: check that format is either: a.b.c.d
