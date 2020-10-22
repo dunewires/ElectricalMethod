@@ -175,3 +175,6 @@ class DwaConfigFile():
         for hd in hexToDecKeys:
             val = int(self.config[hd], base)
             self.config[f"{hd}_dec"] = f"{val:d}"
+
+    def getConfigDict(self):
+        return self.config

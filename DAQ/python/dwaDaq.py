@@ -182,7 +182,7 @@ class MainWindow(qtw.QMainWindow):
         #self.log_tb.append("logging window...")  # FIXME... how to update...?
         
         # Set defaults...
-        self.configFileName.setText("dwaConfigWCLab.ini")
+        self.configFileName.setText("dwaConfigWC.ini")
         self.configFileContents.setReadOnly(True)
 
         # Make handles for widgets in the UI

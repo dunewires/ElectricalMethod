@@ -16,6 +16,7 @@ import json, configparser
 import numpy as np
 
 import DwaDataParser as ddp
+import DwaConfigFile as dcf
 
 def processWaveform(udpDict):
     # udpDict is a transfer that includes ADC data
@@ -544,9 +545,14 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False):
 
     Example:
     """
+    print("\n\n dwaConfig()")
     print("verbose = {}".format(verbose))
-
-    config = dwaGetConfigParameters(configFile)
+    cf = dcf.DwaConfigFile(configFile)
+    print("\nafter making config file object\n")
+    config = cf.getConfigDict()
+    print("CONFIG DICTIONARY = ")
+    print(config)
+    #config = dwaGetConfigParameters(configFile)
 
     s = tcpOpen(verbose=verbose)
     sleepSec = 0.2
@@ -592,6 +598,9 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False):
 
     # Mains noise subtraction parameters
     if doMainsSubtraction:
+        print("Setting mains subtraction parameters")
+        
+        
         #fromDaqReg.noiseFreqMin  <= unsigned(slv_reg25(23 downto 0));
         dwaRegWrite(s, '00000019', config["noiseFreqMin"], verbose=verbose)
         time.sleep(sleepSec)
