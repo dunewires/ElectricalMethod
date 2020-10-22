@@ -22,6 +22,7 @@ import binascii
 import datetime
 import os
 import sys
+import logging
 
 from functools import partial
 from enum import IntEnum
@@ -43,13 +44,27 @@ import dwaTools as dwa
 import DwaDataParser as ddp
 import DwaConfigFile as dcf
 
+
+#class QtHandler(logging.Handler):
+#    """ handle logging events -- display them in a text box in the gui"""
+#    def __init__(self):
+#        logging.Handler.__init__(self)
+#
+#    def emit(self, record):
+#        print("in EMIT....")
+#        msg = self.format(record)
+#        self.logTextBox.appendPlainText(msg)
+#        #XStream.stdout().write("{}\n".format(record))
+
+        
 class View(IntEnum):
     ''' for stackedWidget page indexing '''
-    CONFIG = 0    # show all V(t) data
-    GRID = 1      # show all V(t) data
-    CHAN = 2      # show V(t) data for a single channel
-    AMPLGRID = 3  # show all amp. vs. freq data
-    AMPLCHAN = 4  # zoom in on amp vs. freq data
+    CONFIG = 0    # Show the configuration parameters
+    LOG = 1       # Log-file output
+    GRID = 2      # V(t) (grid view)
+    CHAN = 3      # V(t) (channel view)
+    AMPLGRID = 4  # A(f) (grid view)
+    AMPLCHAN = 5  # A(f) (channel view)
     
 class WorkerSignals(qtc.QObject):
     '''
@@ -122,7 +137,7 @@ class Worker(qtc.QRunnable):
         Initialize the runner function with passed args, kwargs.
         '''
 
-        print("Thread start")
+        logging.info("Thread start")
         # retrieve args/kwargs here; and fire processing using them
         try:
             result = self.fn(*self.args, **self.kwargs)
@@ -139,20 +154,35 @@ class Worker(qtc.QRunnable):
             self.signals.result.emit(result)  # return the result of the processing
         finally:
             self.signals.finished.emit() # Done
-        print("Thread complete")
+        logging.info("Thread complete")
         
 
 class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
+        self._initLogging()
+
         #################################################
         ################# START LAYOUT ##################
         # Load the UI (built in Qt Designer)
         uic.loadUi('dwaDaqUI.ui', self)
+        ####self.logTextBox = QTextEditLogger(self.page_logging)
+        self.logTextBox.appendPlainText("log viewing not yet implemented")
+        #logging.getLogger().addHandler(self.logTextBox)
+        #logging.getLogger().setLevel(logging.INFO)
 
+        #self.logHandler = QtHandler()
+        #self.logHandler.setFormatter(logging.Formatter("%(levelname)s:%(message)s"))
+        #self.logger.addHandler(self.logHandler)
+        
+        self.logFilename_val.setText(self.logFilename)  # must come after loadUi() call
+        self.logFilenameLog_val.setText(self.logFilename)  
+
+        #self.log_tb.append("logging window...")  # FIXME... how to update...?
+        
         # Set defaults...
-        self.configFileName.setText("dwaConfigWC.ini")
+        self.configFileName.setText("dwaConfigWCLab.ini")
         self.configFileContents.setReadOnly(True)
 
         # Make handles for widgets in the UI
@@ -211,7 +241,7 @@ class MainWindow(qtw.QMainWindow):
         ###########################################
         # Set up multithreading
         self.threadpool = qtc.QThreadPool()
-        print("Multithreading with maximum %d threads" %
+        logging.info("Multithreading with maximum %d threads" %
               self.threadpool.maxThreadCount())
 
         ###########################################
@@ -224,13 +254,12 @@ class MainWindow(qtw.QMainWindow):
         # Ensure there is a directory to save UDP data
         self.udpDataDir = './udpData/'
         try:
-            print("Checking for UDP Data directory...")
+            logging.info("Checking for UDP Data directory...")
             os.makedirs(self.udpDataDir)
-            print("  Directory did not exist... made {}".format(self.udpDataDir))
+            logging.info("  Directory did not exist... made {}".format(self.udpDataDir))
         except FileExistsError:
             # directory already exists
-            print("  Directory already exists: [{}]".format(self.udpDataDir))
-            pass
+            logging.warning("  Directory already exists: [{}]".format(self.udpDataDir))
 
         ###########################################
         # Configure the UDP connection
@@ -244,7 +273,7 @@ class MainWindow(qtw.QMainWindow):
         self.udpTimeoutSec = 20
 
         # Set up UDP connection
-        print("making socket")
+        logging.info("making socket")
         self.sock = socket.socket(family=socket.AF_INET,  # internet
                                   type=socket.SOCK_DGRAM) # UDP
         self.sock.bind( self.udpServerAddressPort ) # this is required
@@ -262,6 +291,24 @@ class MainWindow(qtw.QMainWindow):
         self.execute()
         
     # end of __init__ for class MainWindow
+
+
+    def _initLogging(self):
+        # logging levels (in order of severity): DEBUG, INFO, WARNING, ERROR, CRITICAL
+        self.logDir = './logs/'
+        try:
+            print("Checking for log directory...")
+            os.makedirs(self.logDir)
+            print("  Directory did not exist... made {}".format(self.logDir))
+        except FileExistsError:  # directory already exists
+            print("  Directory already exists: [{}]".format(self.logDir))
+        # Initiate the logging system
+        self.logFilename = os.path.join(self.logDir,    # e.g. ./logs/20200329T120531.log
+                                        datetime.datetime.now().strftime("%Y%m%dT%H%M%S.log") )
+        logging.basicConfig(filename=self.logFilename, level=logging.INFO, filemode='w',
+                            format='%(levelname)s:%(name)s:%(message)s')
+        logging.info(f'Log created {self.logFilename}')
+        self.logger = logging.getLogger(__name__)
 
     def configurePlots(self):
         # FIXME: clean this up...
@@ -288,7 +335,7 @@ class MainWindow(qtw.QMainWindow):
         print(s)
 
     def threadComplete(self):
-        print("THREAD COMPLETE!")
+        logging.info("THREAD COMPLETE!")
 
     def _makeDummyData(self):
         # V(t)
@@ -402,6 +449,10 @@ class MainWindow(qtw.QMainWindow):
         self.scConfig = qtw.QShortcut(qtg.QKeySequence("Ctrl+C"), self)
         self.scConfig.activated.connect(self.viewConfig)
 
+        # Show log
+        self.scLog = qtw.QShortcut(qtg.QKeySequence("Ctrl+L"), self)
+        self.scLog.activated.connect(self.viewLog)
+
         # V(t) data (grid view)
         self.scGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+V"), self)
         self.scGridView.activated.connect(self.viewGrid)
@@ -430,29 +481,29 @@ class MainWindow(qtw.QMainWindow):
 
         # FIXME: use DwaConfigFile instead (self.dwaConfigFile)
         self.configFile = self.configFileName.text()
-        print("config file = {}".format(self.configFile))
+        logging.info("config file = {}".format(self.configFile))
 
         # verify that config file can be opened
         try:
             with open(self.configFile) as fh:
                 pass
 
-            print('\n\n======= dwaReset() ===========')
+            logging.info('\n\n======= dwaReset() ===========')
             dwa.dwaReset(verbose=1)
             
-            print('\n\n======= dwaConfig() ===========')
+            logging.info('\n\n======= dwaConfig() ===========')
             #dwa.dwaConfig(verbose=0, configFile="dwaConfigWCLab.ini")
             dwa.dwaConfig(verbose=0, configFile=self.configFile)
             #dwa.dwaConfig(verbose=0, configFile="dwaConfigSingleFreq.ini")
             
-            print('\n\n======= dwaStart() ===========')
+            logging.info('\n\n======= dwaStart() ===========')
             dwa.dwaStart(verbose=1)
             
-            #print('\n\n======= dwaStat() ===========')
+            #logging.info('\n\n======= dwaStat() ===========')
             #dwa.dwaStat(verbose=1)
 
         except:
-            print("Could not open file -- cannot proceed")
+            logging.error("Could not open file -- cannot proceed")
         
 
     #@pyqtSlot()
@@ -467,25 +518,31 @@ class MainWindow(qtw.QMainWindow):
     def viewConfig(self):
         self.currentView = View.CONFIG
         self.stack.setCurrentIndex(self.currentView)
-        print("View CONFIG")
+        logging.info("View CONFIG")
 
+    @pyqtSlot()
+    def viewLog(self):
+        self.currentView = View.LOG
+        self.stack.setCurrentIndex(self.currentView)
+        logging.info("View LOG")
+        
     @pyqtSlot()
     def viewGrid(self):
         self.currentView = View.GRID
         self.stack.setCurrentIndex(self.currentView)
-        print("View V(t) GRID")
+        logging.info("View V(t) GRID")
 
     @pyqtSlot()
     def viewAmplGrid(self):
         self.currentView = View.AMPLGRID
         self.stack.setCurrentIndex(self.currentView)
-        print("View A(f) GRID")
+        logging.info("View A(f) GRID")
 
     @pyqtSlot(int)
     def viewAmplChan(self, chan):
         self.currentView = View.AMPLCHAN
         self.stack.setCurrentIndex(self.currentView)
-        print("View A(f) AMPLCHAN.  Channel = {}".format(chan))
+        logging.info("View A(f) AMPLCHAN.  Channel = {}".format(chan))
 
         if self.chanViewMainAmpl != chan:
             x, y = self.curves['amplchan'][chan].getData()
@@ -497,7 +554,7 @@ class MainWindow(qtw.QMainWindow):
     def viewChan(self, chan):
         self.currentView = View.CHAN
         self.stack.setCurrentIndex(self.currentView)
-        print("View V(t) AMPLCHAN.  Channel = {}".format(chan))
+        logging.info("View V(t) AMPLCHAN.  Channel = {}".format(chan))
 
         if self.chanViewMain != chan:
             x, y = self.curves['chan'][chan].getData()
@@ -523,7 +580,13 @@ class MainWindow(qtw.QMainWindow):
         if validConfigFilename:
             # read/parse config file
             self.dwaConfigFile = dcf.DwaConfigFile(configFileToOpen)
-            self.configFileContents.setPlainText(self.dwaConfigFile.getRawText())
+            textToDisplay = self.dwaConfigFile.getRawText()
+            if self.omitComments_cb.isChecked():
+                logging.info("cutting out commented lines from config file")
+                lines = textToDisplay.split('\n')
+                lines = [line for line in lines if line.strip()!="" and not line.strip().startswith('#')]
+                textToDisplay = '\n'.join(lines)
+            self.configFileContents.setPlainText(textToDisplay)
             # update various config file fields
             self.freqMin_val.setText(self.dwaConfigFile.config['stimFreqMin_Hz'])
             self.freqMax_val.setText(self.dwaConfigFile.config['stimFreqMax_Hz'])
@@ -552,12 +615,11 @@ class MainWindow(qtw.QMainWindow):
         chunkLength = 8
         dataStrings = [udpDataStr[ii:ii+chunkLength]
                        for ii in range(0, len(udpDataStr), chunkLength)]
-        print("dataStrings = ")
-        print(dataStrings)
+        logging.info(f"dataStrings = {dataStrings}")
         return dataStrings
 
     def _logRawUdpTransmissionToFile(self, dataStrings):
-        print("Data came from:")
+        logging.info("Data came from:")
         rawFH = open("udpstream.txt", 'a')
         for item in dataStrings:
             rawFH.write(f'{item}\n')
@@ -582,13 +644,12 @@ class MainWindow(qtw.QMainWindow):
         #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
         froot = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
         froot = os.path.join(self.udpDataDir, froot)
-        print("fileroot = ", froot)
+        logging.info(f"fileroot = {froot}")
         # create new output filenames
         self.fnOfReg = {}  # file names for output. Keys are 2-digit hex string (e.g. '03' or 'FF'). values are filenames
         for reg in self.registers_all:
             self.fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
-        print("self.fnOfReg = ")
-        print(self.fnOfReg)
+        logging.info(f"self.fnOfReg = {self.fnOfReg}")
 
     def startUdpReceiver(self, newdata_callback):
         # initiate a DWA acquisition
@@ -599,11 +660,11 @@ class MainWindow(qtw.QMainWindow):
         while True:
             try:
                 data, addr = self.sock.recvfrom(self.udpBufferSize)
-                print("")
-                print("bing! data received")
-                #print(data)                
+                logging.info("")
+                logging.info("bing! data received")
+                #logging.info(data)                
                 udpDataStr = binascii.hexlify(data).decode(self.udpEnc).upper()
-                print(udpDataStr)
+                logging.info(udpDataStr)
                 
                 # Break up string into a list of 8-character chunks
                 dataStrings = self._makeWordList(udpDataStr)
@@ -615,28 +676,26 @@ class MainWindow(qtw.QMainWindow):
                 # Currently it's a kluge to handle the case where DWA transmission
                 # contains the old-style (and now non-standard) header lines...
                 while not dataStrings[0].startswith("AAAA"):
-                    print("popping udp word:", dataStrings[0])
+                    logging.info(f"popping udp word: {dataStrings[0]}")
                     dataStrings.pop(0)
 
                 # Parse UDP transmission
                 self.dwaDataParser.parse(dataStrings)
                 if 'FFFFFFFF' in dataStrings:
-                    print('\n\n')
-                    print('self.dwaDataParser.dwaPayload = ')
-                    print(self.dwaDataParser.dwaPayload)
+                    logging.info('\n\n')
+                    logging.info(f'self.dwaDataParser.dwaPayload = {self.dwaDataParser.dwaPayload}')
 
                 # If there is a run frame, this is a new run
                 # so need to create new filenames
                 if ddp.Frame.RUN in self.dwaDataParser.dwaPayload:
-                    print("New run detected... creating new filenames")
+                    logging.info("New run detected... creating new filenames")
                     self._makeOutputFilenames()
                     self._clearAmplitudeData()
-                    print(self.fnOfReg)
+                    logging.info(self.fnOfReg)
                 
                 # write data to file by register
                 reg = self.dwaDataParser.dwaPayload[ddp.Frame.UDP]['Register_ID_hexStr']
-                print("self.fnOfReg: ")
-                print(self.fnOfReg)
+                logging.info(f"self.fnOfReg: {self.fnOfReg}")
                 with open(self.fnOfReg[reg], 'a') as regFH:
                     for item in dataStrings:
                         regFH.write(f'{item}\n')
@@ -645,7 +704,7 @@ class MainWindow(qtw.QMainWindow):
                 newdata_callback.emit(self.dwaDataParser.dwaPayload)
                     
             except socket.timeout:
-                print("  UDP Timeout")
+                logging.info("  UDP Timeout")
                 self.sock.close()
                 break
             else:
@@ -656,11 +715,11 @@ class MainWindow(qtw.QMainWindow):
     def processUdpPayload(self, udpDict):
         # new UDP payload has arrived from DWA.
         # Deal with it (update plots, or status, or ...)
-        print('\n\n')
-        print("processUdpPayload()")
+        logging.info('\n\n')
+        logging.info("processUdpPayload()")
 
         kk = udpDict.keys()
-        print(kk)
+        logging.info(kk)
 
         self.outputText.appendPlainText("UDP Counter: {}".format(udpDict[ddp.Frame.UDP]['UDP_Counter']))
         
@@ -669,7 +728,7 @@ class MainWindow(qtw.QMainWindow):
             self.outputText.appendPlainText("\nFOUND RUN HEADER")
             self.outputText.appendPlainText(str(udpDict))
             # FIXME: TEMPORARY...
-            print("\n\n\n\nFOUND RUN HEADER")
+            logging.info("\n\n\n\nFOUND RUN HEADER")
             # update the frequency information (min, max, step)
             # FIXME: move this to a subroutine...
             self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.2f}")
@@ -677,8 +736,8 @@ class MainWindow(qtw.QMainWindow):
             self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.2f}")
             
         if ddp.Frame.FREQ in udpDict:
-            print("FOUND FREQUENCY HEADER")
-            print(udpDict)
+            logging.info("FOUND FREQUENCY HEADER")
+            logging.info(udpDict)
             self.globalFreqActive_val.setText(f"{udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']:.2f}")
             
         # Check to see if this is an ADC data transfer:
@@ -686,7 +745,7 @@ class MainWindow(qtw.QMainWindow):
             self.outputText.appendPlainText("\nFOUND ADC DATA\n")
             # update the relevant plot...
             regId = udpDict[ddp.Frame.FREQ]['Register_ID_Freq']
-            print('regId = ', regId)
+            logging.info(f'regId = {regId}')
             reg = self.registerOfVal[regId]
             #self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
             # FIXME: check which view is active and only update that one...
@@ -736,8 +795,8 @@ class MainWindow(qtw.QMainWindow):
         self.threadpool.start(worker)
 
     def cleanUp(self):
-        print("App quitting:")
-        print("   closing UDP connection")
+        logging.info("App quitting:")
+        logging.info("   closing UDP connection")
         self.sock.close()
         
         

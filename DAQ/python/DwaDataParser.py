@@ -277,7 +277,9 @@ class DwaDataParser():
         return dd
 
     def _postProcessFreqFrame(self, dd):
-        dd['stimFreqActive_Hz'] = dd['stimPeriodActive']*1e8 # convert period in 10ns to freq in Hz
+        # FIXME: this is a kluge to account for an error in firmware... will need to be updated
+        print("stimPeriodCounter = {}".format(dd['stimPeriodCounter']))
+        dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodCounter'] # convert period in 10ns to freq in Hz
         return dd
     
 
