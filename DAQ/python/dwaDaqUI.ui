@@ -31,7 +31,7 @@
           <item>
            <layout class="QFormLayout" name="formLayout_3">
             <property name="labelAlignment">
-             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
             <property name="formAlignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -105,7 +105,7 @@
                <string>CTRL-C</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
              </widget>
             </item>
@@ -121,6 +121,9 @@
               <property name="text">
                <string>CTRL-L</string>
               </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
              </widget>
             </item>
             <item row="6" column="1">
@@ -134,6 +137,9 @@
              <widget class="QLabel" name="label_8">
               <property name="text">
                <string>CTRL-F</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
              </widget>
             </item>
@@ -149,6 +155,9 @@
               <property name="text">
                <string>CTRL-V</string>
               </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
              </widget>
             </item>
             <item row="8" column="1">
@@ -163,6 +172,9 @@
               <property name="text">
                <string>CTRL-#</string>
               </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
              </widget>
             </item>
             <item row="9" column="1">
@@ -176,6 +188,9 @@
              <widget class="QLabel" name="label_14">
               <property name="text">
                <string>ALT-#</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
              </widget>
             </item>
@@ -207,7 +222,7 @@
        <item>
         <widget class="QStackedWidget" name="stackedWidget">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="page_config">
           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,8">

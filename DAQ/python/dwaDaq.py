@@ -478,10 +478,9 @@ class MainWindow(qtw.QMainWindow):
         self.outputText.appendPlainText("CLICKED START")
         self.outputText.update()
 
-
         # FIXME: use DwaConfigFile instead (self.dwaConfigFile)
         self.configFile = self.configFileName.text()
-        logging.info("config file = {}".format(self.configFile))
+        logging.info(f"config file = {self.configFile}")
 
         # verify that config file can be opened
         try:
@@ -493,7 +492,7 @@ class MainWindow(qtw.QMainWindow):
             
             logging.info('\n\n======= dwaConfig() ===========')
             #dwa.dwaConfig(verbose=0, configFile="dwaConfigWCLab.ini")
-            dwa.dwaConfig(verbose=0, configFile=self.configFile)
+            dwa.dwaConfig(verbose=0, configFile=self.configFile, doMainsSubtraction=True)
             #dwa.dwaConfig(verbose=0, configFile="dwaConfigSingleFreq.ini")
             
             logging.info('\n\n======= dwaStart() ===========')

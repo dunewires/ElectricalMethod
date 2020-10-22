@@ -535,7 +535,7 @@ def dwaSetDigipots(ss, cfgstr, verbose=0):
     # Odd digipots
     dwaRegWrite(ss, '00000010', cfgOdd, verbose=verbose)
     
-def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
+def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False):
     """
     Args:
         config (dict): dictionary containing configuration parameters
@@ -590,6 +590,32 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     dwaRegWrite(s, '0000000E', config["coilDrive"], verbose=verbose)
     time.sleep(sleepSec)
 
+    # Mains noise subtraction parameters
+    if doMainsSubtraction:
+        #fromDaqReg.noiseFreqMin  <= unsigned(slv_reg25(23 downto 0));
+        dwaRegWrite(s, '00000019', config["noiseFreqMin"], verbose=verbose)
+        time.sleep(sleepSec)
+        
+        #fromDaqReg.noiseFreqMax  <= unsigned(slv_reg26(23 downto 0));
+        dwaRegWrite(s, '0000001A', config["noiseFreqMax"], verbose=verbose)
+        time.sleep(sleepSec)
+        
+        #fromDaqReg.noiseFreqStep <= unsigned(slv_reg27(23 downto 0));
+        dwaRegWrite(s, '0000001B', config["noiseFreqStep"], verbose=verbose)
+        time.sleep(sleepSec)
+        
+        #fromDaqReg.noiseSampPer  <= unsigned(slv_reg28(23 downto 0));
+        dwaRegWrite(s, '0000001C', config["noiseSamplingPeriod"], verbose=verbose)
+        time.sleep(sleepSec)
+        
+        #fromDaqReg.noiseNCnv     <= unsigned(slv_reg29(23 downto 0));
+        dwaRegWrite(s, '0000001D', config["noiseAdcSamplesPerFreq"], verbose=verbose)
+        time.sleep(sleepSec)
+    
+        #fromDaqReg.noiseBpfSetTime     <= unsigned(slv_reg30(23 downto 0));
+        dwaRegWrite(s, '0000001E', config["noiseSettlingTime"], verbose=verbose)
+        time.sleep(sleepSec)
+    
     
     ###############
     #time.sleep(sleepSec)
@@ -911,7 +937,7 @@ def dwaRegWrite(s, address, value, verbose=0):
         print('Send failed')
         sys.exit()
 
-    print("FIXME: SHOULD WE READ AFTER WRITE?")
+    #print("FIXME: SHOULD WE READ AFTER WRITE?")
 
     #get reply and print
     #print recv_timeout(s)

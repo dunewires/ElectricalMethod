@@ -40,7 +40,7 @@ class DwaConfigFile():
                                      "relayMask", "coilDrive", "digipot",
                                      "client_IP",
                                      "noiseFreqMin", "noiseFreqMax", "noiseFreqStep",
-                                     "noiseSettlingTime", "noiseNCnv", "noiseAdcSamplesPerFreq"]
+                                     "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq"]
 
     def parse(self):
         """Parse the DWA configuration parameters from a file
@@ -85,13 +85,13 @@ class DwaConfigFile():
 
     def setDefaults(self):
         self.defaults = {}
-        self.defaults["noiseFreqMin"]  = "00000100"  # [1/16Hz]
-        self.defaults["noiseFreqMax"]  = "00000400"  # [1/16Hz]
-        self.defaults["noiseFreqStep"] = "00000010"  # [1/16Hz]
-        self.defaults["noiseSettlingTime"] = "00100000"  # [10ns]  "00100000" ~ 1ms
-        self.defaults["noiseNCnv"] = "00000010"  # [unitless]
-        self.defaults["noiseAdcSamplesPerFreq"] = "00000400"  # [unitless] (1024 samples)
-        
+        self.defaults["noiseFreqMin"]           = "00000370"  # [1/16Hz]
+        self.defaults["noiseFreqMax"]           = "00000410"  # [1/16Hz]
+        self.defaults["noiseFreqStep"]          = "00000010"  # [1/16Hz]
+        self.defaults["noiseAdcSamplesPerFreq"] = "00000100"  # [unitless] (256 samples) limited to 256
+        self.defaults["noiseSamplingPeriod"]    = "0000CB73"  # [10ns]   32 samp/cycle @ 60 Hz
+        self.defaults["noiseSettlingTime"]      = "00001000"  # [2.56us]  "00001000" ~ 10ms
+
     def validate(self):
         """ validate the values read from a config file
         Check for:
