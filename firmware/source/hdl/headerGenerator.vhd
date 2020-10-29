@@ -165,12 +165,12 @@ begin
         x"2D" & x"0000" & fromDaqReg.activeChannels,
         x"2E" & x"00" & fromDaqReg.relayMask(31 downto 16), 
         x"2F" & x"00" & fromDaqReg.relayMask(15 downto  0),
-        x"30" & std_logic_vector(fromDaqReg.noiseFreqMin),
-        x"31" & std_logic_vector(fromDaqReg.noiseFreqMax),
-        x"32" & std_logic_vector(fromDaqReg.noiseFreqStep),
-        x"33" & std_logic_vector(fromDaqReg.noiseSampPer),
-        x"34" & std_logic_vector(fromDaqReg.noiseNCnv),
-        x"35" & std_logic_vector(fromDaqReg.noiseBPFSetTime),
+        x"34" & std_logic_vector(fromDaqReg.noiseFreqMin),
+        x"35" & std_logic_vector(fromDaqReg.noiseFreqMax),
+        x"36" & std_logic_vector(fromDaqReg.noiseFreqStep),
+        x"37" & std_logic_vector(fromDaqReg.noiseSampPer),
+        x"38" & std_logic_vector(fromDaqReg.noiseNCnv),
+        x"39" & std_logic_vector(fromDaqReg.noiseBPFSetTime),
         --# relay mask. v3 has 192 bits (64+32)*2 (8 lines of 24 bits) !!!
         x"FFFFFFFF" -- header delimiter (end)
     );    
