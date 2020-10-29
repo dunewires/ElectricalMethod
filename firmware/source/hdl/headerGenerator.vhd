@@ -95,7 +95,7 @@ architecture rtl of headerGenerator is
 
         ----------------------------
 	---- Setup for Header F
-	constant nHeadF      : integer  := 21; -- # of header words (incl. 2 delimiters)
+	constant nHeadF      : integer  := 27; -- # of header words (incl. 2 delimiters)
 	constant nHeadFLog   : integer  := integer(log2(real(nHeadF +1)));
 	signal headFDataList : slv_vector_type(nHeadF-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
@@ -165,6 +165,12 @@ begin
         x"2D" & x"0000" & fromDaqReg.activeChannels,
         x"2E" & x"00" & fromDaqReg.relayMask(31 downto 16), 
         x"2F" & x"00" & fromDaqReg.relayMask(15 downto  0),
+        x"30" & std_logic_vector(fromDaqReg.noiseFreqMin),
+        x"31" & std_logic_vector(fromDaqReg.noiseFreqMax),
+        x"32" & std_logic_vector(fromDaqReg.noiseFreqStep),
+        x"33" & std_logic_vector(fromDaqReg.noiseSampPer),
+        x"34" & std_logic_vector(fromDaqReg.noiseNCnv),
+        x"35" & std_logic_vector(fromDaqReg.noiseBPFSetTime),
         --# relay mask. v3 has 192 bits (64+32)*2 (8 lines of 24 bits) !!!
         x"FFFFFFFF" -- header delimiter (end)
     );    
