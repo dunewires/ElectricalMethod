@@ -1,12 +1,19 @@
 import dwaTools as dwa  #FIXME: make these internal methods???
 import configparser
 import string
+import logging
+logger = logging.getLogger(__name__)
 
-hexBase = 16
 
 class DwaConfigFile():
 
     def __init__(self, filename):
+        self.load(filename)
+        print("FINAL VERSION:")
+        print(self.config)
+
+
+    def load(self, filename):
         print(f"Config filename: {filename}")
         self.configIsValid = False
         self.fname = filename
@@ -18,11 +25,7 @@ class DwaConfigFile():
         self.parse()
         self.validate()
         self.postProcess()
-
-        print("FINAL VERSION:")
-        print(self.config)
-
-
+        
     def ingest(self):
         # read in the config file as raw text
         with open(self.fname) as fh:

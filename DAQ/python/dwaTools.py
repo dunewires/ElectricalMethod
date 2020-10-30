@@ -3,6 +3,8 @@
 # Created by James Battat
 # 2019 December 17
 
+# FIXME: change print() statements to logger statements
+
 import matplotlib.pyplot as plt
 
 import sys
@@ -17,6 +19,9 @@ import numpy as np
 
 import DwaDataParser as ddp
 import DwaConfigFile as dcf
+
+import logging
+logger = logging.getLogger(__name__)
 
 def processWaveform(udpDict):
     # udpDict is a transfer that includes ADC data
@@ -427,7 +432,7 @@ def dwaReset(verbose=0):
     time.sleep(0.2)
     tcpClose(s)
 
-   
+### DEFUNCT -- use DwaConfigFile.py class and DwaConfigFile.getConfigDict() instead!   
 def dwaGetConfigParameters(configFile):
     """Parse and return DWA configuration parameters from a file
 
@@ -600,7 +605,6 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False):
     if doMainsSubtraction:
         print("Setting mains subtraction parameters")
         
-        
         #fromDaqReg.noiseFreqMin  <= unsigned(slv_reg25(23 downto 0));
         dwaRegWrite(s, '00000019', config["noiseFreqMin"], verbose=verbose)
         time.sleep(sleepSec)
@@ -702,7 +706,7 @@ def tcpClose(ss, verbose=0):
 def tcpOpen(verbose=1):
     # FIXME: move HOST to a config file
     # IP Address of microzed board
-    #HOST = '149.130.136.243'     # Wellesley Lab (MAC: 84:2b:2b:97:da:01)
+    ####HOST = '149.130.136.243'     # Wellesley Lab (MAC: 84:2b:2b:97:da:01)
     #HOST = '140.247.132.37' # NW Lab
     #HOST = '140.247.123.186'     # J156Lab
     HOST = '149.130.136.211' # Wellesley DWA (MAC 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x03)
@@ -815,16 +819,18 @@ def dwaRegComm(ss, payload_header='abcd1234', payload_type=None,
     try :
         packer = struct.Struct(packerString)
         packed_data = packer.pack(*values)
-        print('PAYLOAD_HEADER = {0:s}'.format(payload_header))
-        print('PAYLOAD_TYPE = {0:s}'.format(payload_type))
-        print('ADDRESS = {0:s}'.format(address))
-        print('values = {}'.format(values))
-        #
-        print('Sending...')
+        if verbose:
+            print('PAYLOAD_HEADER = {0:s}'.format(payload_header))
+            print('PAYLOAD_TYPE = {0:s}'.format(payload_type))
+            print('ADDRESS = {0:s}'.format(address))
+            print('values = {}'.format(values))
+            #
+            print('Sending...')
         ss.sendall(packed_data)
         time.sleep(0.25)
         #FIXME: don't actually know if msg is sent successfully...
-        print('Message sent successfully')
+        if verbose:
+            print('Message sent successfully')
     except socket.error:
         #Send failed
         print('Send failed')
@@ -832,12 +838,15 @@ def dwaRegComm(ss, payload_header='abcd1234', payload_type=None,
     
     #get reply and print
     if payload_type != 'FE170003':
-        print(dwaRecvTimeout(ss, timeout=2, verbose=verbose))
+        #print(dwaRecvTimeout(ss, timeout=2, verbose=verbose))
+        val = dwaRecvTimeout(ss, timeout=2, verbose=verbose)
+        print(val)
+        return val
     
 
 def dwaRegRead(ss, address, verbose=0):
-    dwaRegComm(ss, payload_header='abcd1234', payload_type='FE170001',
-               address=address, verbose=0)
+    return dwaRegComm(ss, payload_header='abcd1234', payload_type='FE170001',
+                      address=address, verbose=0)
 
 
 def dwaRegRead2(ss, address, verbose=0):
@@ -897,14 +906,18 @@ def dwaRecvTimeout(ss,timeout=2, verbose=0):
     data_bin = data[8:]      # third  4 bytes
 
     # FIXME: add verbose check
-    print('type(data) = {}'.format(type(data)))
-    print('binascii.hexlify(header_bin) = {}'.format(binascii.hexlify(header_bin)))
-    print('binascii.hexlify(address_bin) = {}'.format(binascii.hexlify(address_bin)))
-    print('binascii.hexlify(data_bin) = {}'.format(binascii.hexlify(data_bin)))
-    print('received: {}'.format(binascii.hexlify(data)))
+    if verbose:
+        print('type(data) = {}'.format(type(data)))
+        print('binascii.hexlify(header_bin) = {}'.format(binascii.hexlify(header_bin)))
+        print('binascii.hexlify(address_bin) = {}'.format(binascii.hexlify(address_bin)))
+        print('binascii.hexlify(data_bin) = {}'.format(binascii.hexlify(data_bin)))
+        print('received: {}'.format(binascii.hexlify(data)))
+
     unpacked_data = unpacker.unpack(data)
-    print('unpacked:')
-    print(unpacked_data)
+
+    if verbose:
+        print('unpacked:')
+        print(unpacked_data)
 
     return(unpacked_data)
 

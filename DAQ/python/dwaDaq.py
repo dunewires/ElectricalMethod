@@ -1,9 +1,11 @@
 # FIXME/TODO:
-# * in A(f) plot for all channels, use color for lines
+# * Logging: use RotatingFileHandler for log file, and don't create a new log file each time... ???
 # * UDP header will eventually contain status bits as well (currently not used)
 # * look for dropped UDP packets by monitoring the UDP counter
 #   (careful with wraps of the counter)
 # * if there is a dropped UDP packet, how can we tell what register it was from?
+# * Mapping from register/ADC number to APA wire number...
+# * database logging (seitch)
 # * From Sebastien: 4/17/2020
 #   Another idea that came from people doing the measurement for
 #   protodune was to get a summary of the recent previous wire tension
@@ -13,6 +15,9 @@
 #   to have that to determine where a bad bunch lies.  Similarly,
 #   something like a histogram for the layer or for the whole APA
 #   would be good at the end of a measurement process.
+
+# for logging info:
+# https://fangpenlin.com/posts/2012/08/26/good-logging-practice-in-python/
 
 import traceback, sys
 import requests
@@ -78,7 +83,7 @@ class WorkerSignals(qtc.QObject):
        'tuple'  (exctype, vaue, traceback.format_exc() )
 
     result
-       'object' data returnd from processing, anything
+       'object' data returned from processing, anything
 
     progress
        'int' percent complete, from 0-100
@@ -124,7 +129,8 @@ class Worker(qtc.QRunnable):
         self.args = args
         self.kwargs = kwargs
         self.signals = WorkerSignals()
-
+        self.logger = logging.getLogger()
+        
         # Add the callback to our kwargs, if needed
         # this will be passed on to self.fn so that function
         # has access to the callback
@@ -137,7 +143,8 @@ class Worker(qtc.QRunnable):
         Initialize the runner function with passed args, kwargs.
         '''
 
-        logging.info("Thread start")
+        print("\n\n ======== Worker.run() (thread start) ========== \n\n")
+        self.logger.info("Thread start")
         # retrieve args/kwargs here; and fire processing using them
         try:
             result = self.fn(*self.args, **self.kwargs)
@@ -147,14 +154,17 @@ class Worker(qtc.QRunnable):
             #    progress = self.signals.progress,
             #)
         except:
+            print("\n ======== Worker.run() exception ========== \n")
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
             self.signals.error.emit( (exctype, value, traceback.format_exc()) )
         else:
+            print("\n\n ======== Worker.run() else ========== \n\n")
             self.signals.result.emit(result)  # return the result of the processing
         finally:
             self.signals.finished.emit() # Done
-        logging.info("Thread complete")
+            print("\n\n ======== Worker.run() finally ========== \n\n")
+            self.logger.info("Thread complete")
         
 
 class MainWindow(qtw.QMainWindow):
@@ -192,7 +202,7 @@ class MainWindow(qtw.QMainWindow):
         self.stack.setCurrentIndex(self.currentView)
 
         # Connect slots/signals
-        self.btnStart.clicked.connect(self.startRun)
+        self.btnStart.clicked.connect(self.startRunThread)
         #self.btnQuit.clicked.connect(self.close)
         self.configFileName.returnPressed.connect(self.configFileNameEnter)
 
@@ -240,9 +250,9 @@ class MainWindow(qtw.QMainWindow):
 
         ###########################################
         # Set up multithreading
-        self.threadpool = qtc.QThreadPool()
+        self.threadPool = qtc.QThreadPool()
         logging.info("Multithreading with maximum %d threads" %
-              self.threadpool.maxThreadCount())
+              self.threadPool.maxThreadCount())
 
         ###########################################
         # Create instance of data parser to handle incoming data
@@ -288,7 +298,7 @@ class MainWindow(qtw.QMainWindow):
         self.ampData = {}  # hold amplitude vs. freq data for a scan
         
         # Start listening for UDP data in a Worker thread
-        self.execute()
+        self.udpListen()
         
     # end of __init__ for class MainWindow
 
@@ -303,13 +313,30 @@ class MainWindow(qtw.QMainWindow):
         except FileExistsError:  # directory already exists
             print("  Directory already exists: [{}]".format(self.logDir))
         # Initiate the logging system
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        
         self.logFilename = os.path.join(self.logDir,    # e.g. ./logs/20200329T120531.log
                                         datetime.datetime.now().strftime("%Y%m%dT%H%M%S.log") )
-        logging.basicConfig(filename=self.logFilename, level=logging.INFO, filemode='w',
-                            format='%(levelname)s:%(name)s:%(message)s')
-        logging.info(f'Log created {self.logFilename}')
-        self.logger = logging.getLogger(__name__)
+        loggingFormatter = logging.Formatter('%(levelname)s:%(name)s:%(message)s')
+        #logging.basicConfig(filename=self.logFilename, level=logging.INFO, filemode='w',
+        #                    format='%(levelname)s:%(name)s:%(message)s')
 
+        # log output to file (doesn't work in other threads, only in main...)
+        fh = logging.FileHandler(self.logFilename)
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(loggingFormatter)
+        self.logger.addHandler(fh)
+        
+        # log output to terminal
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+        ch.setFormatter(loggingFormatter)
+        self.logger.addHandler(ch)
+
+        self.logger.info(f'Log created {self.logFilename}')
+
+        
     def configurePlots(self):
         # FIXME: clean this up...
         getattr(self, f'pw_chan_main').setBackground('w')
@@ -473,36 +500,71 @@ class MainWindow(qtw.QMainWindow):
             self.chanViewShortcuts[-1].activated.connect(partial(self.viewAmplChan, chan))
 
 
+    def udpListen(self):
+        # Pass the function to execute
+        worker = Worker(self.startUdpReceiver)  # could have args/kwargs too..
+        worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.threadComplete)
+        worker.signals.newUdpPayload.connect(self.processUdpPayload)
+
+        # execute
+        self.threadPool.start(worker)
+
     @pyqtSlot()
-    def startRun(self):
-        self.outputText.appendPlainText("CLICKED START")
-        self.outputText.update()
+    def startRunThread(self):
+        # Pass the function to execute
+        worker = Worker(self.startRun)  # could have args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        #worker.signals.finished.connect(self.threadComplete)
+        #worker.signals.newUdpPayload.connect(self.processUdpPayload)
 
-        # FIXME: use DwaConfigFile instead (self.dwaConfigFile)
+        # execute
+        self.threadPool.start(worker)
+
+    def startRun(self, newdata_callback):
+        # FIXME: newdata_callback is needed by another thread, but not this one....
+        # how to implement different signatures for different threads???
+        
+        #self.outputText.appendPlainText("CLICKED START")
+        #self.outputText.update()
+
+        # startRun() is in a thread...  need to get logger?
+        logger = logging.getLogger(__name__)
         self.configFile = self.configFileName.text()
-        logging.info(f"config file = {self.configFile}")
+        logger.info(f"config file = {self.configFile}")
+        #
+        ## FIXME: the textbox doesn't update right away...
+        ## need to force an update somehow....
+        self._loadConfigFile()
 
+        print("\n\n =================== startRun()\n\n")
+        
+        verbose = 1
+        
+        print(f"self.configFile = {self.configFile}")
         # verify that config file can be opened
         try:
             with open(self.configFile) as fh:
                 pass
 
-            logging.info('\n\n======= dwaReset() ===========')
-            dwa.dwaReset(verbose=1)
+            logger.info('======= dwaReset() ===========')
+            dwa.dwaReset(verbose=verbose)
             
-            logging.info('\n\n======= dwaConfig() ===========')
-            #dwa.dwaConfig(verbose=0, configFile="dwaConfigWCLab.ini")
-            dwa.dwaConfig(verbose=0, configFile=self.configFile, doMainsSubtraction=True)
-            #dwa.dwaConfig(verbose=0, configFile="dwaConfigSingleFreq.ini")
+            logger.info('======= dwaConfig() ===========')
+            #dwa.dwaConfig(verbose=verbose, configFile="dwaConfigWCLab.ini")
+            dwa.dwaConfig(verbose=verbose, configFile=self.configFile, doMainsSubtraction=True)
+            #dwa.dwaConfig(verbose=verbose, configFile="dwaConfigSingleFreq.ini")
+
             
-            logging.info('\n\n======= dwaStart() ===========')
-            dwa.dwaStart(verbose=1)
+            logger.info('======= dwaStart() ===========')
+            dwa.dwaStart(verbose=verbose)
+            logger.info('======= DONE WITH dwaStart() ===========')
             
-            #logging.info('\n\n======= dwaStat() ===========')
-            #dwa.dwaStat(verbose=1)
+            #logger.info('\n\n======= dwaStat() ===========')
+            #dwa.dwaStat(verbose=verbose)
 
         except:
-            logging.error("Could not open file -- cannot proceed")
+            logger.error("Could not open file -- cannot proceed")
         
 
     #@pyqtSlot()
@@ -517,31 +579,31 @@ class MainWindow(qtw.QMainWindow):
     def viewConfig(self):
         self.currentView = View.CONFIG
         self.stack.setCurrentIndex(self.currentView)
-        logging.info("View CONFIG")
+        self.logger.info("View CONFIG")
 
     @pyqtSlot()
     def viewLog(self):
         self.currentView = View.LOG
         self.stack.setCurrentIndex(self.currentView)
-        logging.info("View LOG")
+        self.logger.info("View LOG")
         
     @pyqtSlot()
     def viewGrid(self):
         self.currentView = View.GRID
         self.stack.setCurrentIndex(self.currentView)
-        logging.info("View V(t) GRID")
+        self.logger.info("View V(t) GRID")
 
     @pyqtSlot()
     def viewAmplGrid(self):
         self.currentView = View.AMPLGRID
         self.stack.setCurrentIndex(self.currentView)
-        logging.info("View A(f) GRID")
+        self.logger.info("View A(f) GRID")
 
     @pyqtSlot(int)
     def viewAmplChan(self, chan):
         self.currentView = View.AMPLCHAN
         self.stack.setCurrentIndex(self.currentView)
-        logging.info("View A(f) AMPLCHAN.  Channel = {}".format(chan))
+        self.logger.info("View A(f) AMPLCHAN.  Channel = {}".format(chan))
 
         if self.chanViewMainAmpl != chan:
             x, y = self.curves['amplchan'][chan].getData()
@@ -553,7 +615,7 @@ class MainWindow(qtw.QMainWindow):
     def viewChan(self, chan):
         self.currentView = View.CHAN
         self.stack.setCurrentIndex(self.currentView)
-        logging.info("View V(t) AMPLCHAN.  Channel = {}".format(chan))
+        self.logger.info("View V(t) AMPLCHAN.  Channel = {}".format(chan))
 
         if self.chanViewMain != chan:
             x, y = self.curves['chan'][chan].getData()
@@ -575,18 +637,20 @@ class MainWindow(qtw.QMainWindow):
         except:
             textToDisplay = "Could not open file"
             self.configFileContents.setPlainText(textToDisplay)
-            
+
+        # FIXME: should this all go in the try: above?
         if validConfigFilename:
             # read/parse config file
             self.dwaConfigFile = dcf.DwaConfigFile(configFileToOpen)
             textToDisplay = self.dwaConfigFile.getRawText()
             if self.omitComments_cb.isChecked():
-                logging.info("cutting out commented lines from config file")
+                self.logger.info("cutting out commented lines from config file")
                 lines = textToDisplay.split('\n')
                 lines = [line for line in lines if line.strip()!="" and not line.strip().startswith('#')]
                 textToDisplay = '\n'.join(lines)
             self.configFileContents.setPlainText(textToDisplay)
-            # update various config file fields
+
+            # update various config file fields in the GUI
             self.freqMin_val.setText(self.dwaConfigFile.config['stimFreqMin_Hz'])
             self.freqMax_val.setText(self.dwaConfigFile.config['stimFreqMax_Hz'])
             self.freqStep_val.setText(self.dwaConfigFile.config['stimFreqStep_Hz'])
@@ -594,9 +658,6 @@ class MainWindow(qtw.QMainWindow):
             self.cycPerFreq_val.setText(self.dwaConfigFile.config['cyclesPerFreq_dec'])
             self.sampPerCyc_val.setText(self.dwaConfigFile.config['adcSamplesPerCycle_dec'])
             self.clientIP_val.setText(self.dwaConfigFile.config['client_IP'])
-            
-
-
             
             
     def _makeWordList(self, udpDataStr):
@@ -614,11 +675,11 @@ class MainWindow(qtw.QMainWindow):
         chunkLength = 8
         dataStrings = [udpDataStr[ii:ii+chunkLength]
                        for ii in range(0, len(udpDataStr), chunkLength)]
-        logging.info(f"dataStrings = {dataStrings}")
+        self.logger.info(f"dataStrings = {dataStrings}")
         return dataStrings
 
     def _logRawUdpTransmissionToFile(self, dataStrings):
-        logging.info("Data came from:")
+        self.logger.info("Data came from:")
         rawFH = open("udpstream.txt", 'a')
         for item in dataStrings:
             rawFH.write(f'{item}\n')
@@ -643,27 +704,33 @@ class MainWindow(qtw.QMainWindow):
         #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
         froot = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
         froot = os.path.join(self.udpDataDir, froot)
-        logging.info(f"fileroot = {froot}")
+        self.logger.info(f"fileroot = {froot}")
         # create new output filenames
         self.fnOfReg = {}  # file names for output. Keys are 2-digit hex string (e.g. '03' or 'FF'). values are filenames
         for reg in self.registers_all:
             self.fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
-        logging.info(f"self.fnOfReg = {self.fnOfReg}")
+        self.logger.info(f"self.fnOfReg = {self.fnOfReg}")
 
     def startUdpReceiver(self, newdata_callback):
         # initiate a DWA acquisition
         # send configuration
         # start listening for UDP data
         # establish signal/slot for sending data from udp receiver to GUI
-
+        # FIXME: this is run in a separate thread -- do we need to get logger?
+        # logger = logging.getLogger()
+        
+        logger = logging.getLogger()
+        logger.info("============= startUdpReceiver() ===============")
+        print("\n\n ============= startUdpReceiver() ===============\n\n")
+        
         while True:
             try:
                 data, addr = self.sock.recvfrom(self.udpBufferSize)
-                logging.info("")
-                logging.info("bing! data received")
-                #logging.info(data)                
+                logger.info("")
+                logger.info("bing! data received")
+                #logger.info(data)                
                 udpDataStr = binascii.hexlify(data).decode(self.udpEnc).upper()
-                logging.info(udpDataStr)
+                logger.info(udpDataStr)
                 
                 # Break up string into a list of 8-character chunks
                 dataStrings = self._makeWordList(udpDataStr)
@@ -675,26 +742,26 @@ class MainWindow(qtw.QMainWindow):
                 # Currently it's a kluge to handle the case where DWA transmission
                 # contains the old-style (and now non-standard) header lines...
                 while not dataStrings[0].startswith("AAAA"):
-                    logging.info(f"popping udp word: {dataStrings[0]}")
+                    logger.info(f"popping udp word: {dataStrings[0]}")
                     dataStrings.pop(0)
 
                 # Parse UDP transmission
                 self.dwaDataParser.parse(dataStrings)
                 if 'FFFFFFFF' in dataStrings:
-                    logging.info('\n\n')
-                    logging.info(f'self.dwaDataParser.dwaPayload = {self.dwaDataParser.dwaPayload}')
+                    logger.info('\n\n')
+                    logger.info(f'self.dwaDataParser.dwaPayload = {self.dwaDataParser.dwaPayload}')
 
                 # If there is a run frame, this is a new run
                 # so need to create new filenames
                 if ddp.Frame.RUN in self.dwaDataParser.dwaPayload:
-                    logging.info("New run detected... creating new filenames")
+                    logger.info("New run detected... creating new filenames")
                     self._makeOutputFilenames()
                     self._clearAmplitudeData()
-                    logging.info(self.fnOfReg)
+                    logger.info(self.fnOfReg)
                 
                 # write data to file by register
                 reg = self.dwaDataParser.dwaPayload[ddp.Frame.UDP]['Register_ID_hexStr']
-                logging.info(f"self.fnOfReg: {self.fnOfReg}")
+                logger.info(f"self.fnOfReg: {self.fnOfReg}")
                 with open(self.fnOfReg[reg], 'a') as regFH:
                     for item in dataStrings:
                         regFH.write(f'{item}\n')
@@ -703,7 +770,7 @@ class MainWindow(qtw.QMainWindow):
                 newdata_callback.emit(self.dwaDataParser.dwaPayload)
                     
             except socket.timeout:
-                logging.info("  UDP Timeout")
+                logger.info("  UDP Timeout")
                 self.sock.close()
                 break
             else:
@@ -714,11 +781,11 @@ class MainWindow(qtw.QMainWindow):
     def processUdpPayload(self, udpDict):
         # new UDP payload has arrived from DWA.
         # Deal with it (update plots, or status, or ...)
-        logging.info('\n\n')
-        logging.info("processUdpPayload()")
+        self.logger.info('\n\n')
+        self.logger.info("processUdpPayload()")
 
         kk = udpDict.keys()
-        logging.info(kk)
+        self.logger.info(kk)
 
         self.outputText.appendPlainText("UDP Counter: {}".format(udpDict[ddp.Frame.UDP]['UDP_Counter']))
         
@@ -727,7 +794,7 @@ class MainWindow(qtw.QMainWindow):
             self.outputText.appendPlainText("\nFOUND RUN HEADER")
             self.outputText.appendPlainText(str(udpDict))
             # FIXME: TEMPORARY...
-            logging.info("\n\n\n\nFOUND RUN HEADER")
+            self.logger.info("\n\n\n\nFOUND RUN HEADER")
             # update the frequency information (min, max, step)
             # FIXME: move this to a subroutine...
             self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.2f}")
@@ -735,8 +802,8 @@ class MainWindow(qtw.QMainWindow):
             self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.2f}")
             
         if ddp.Frame.FREQ in udpDict:
-            logging.info("FOUND FREQUENCY HEADER")
-            logging.info(udpDict)
+            self.logger.info("FOUND FREQUENCY HEADER")
+            self.logger.info(udpDict)
             self.globalFreqActive_val.setText(f"{udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']:.2f}")
             
         # Check to see if this is an ADC data transfer:
@@ -744,7 +811,7 @@ class MainWindow(qtw.QMainWindow):
             self.outputText.appendPlainText("\nFOUND ADC DATA\n")
             # update the relevant plot...
             regId = udpDict[ddp.Frame.FREQ]['Register_ID_Freq']
-            logging.info(f'regId = {regId}')
+            self.logger.info(f'regId = {regId}')
             reg = self.registerOfVal[regId]
             #self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
             # FIXME: check which view is active and only update that one...
@@ -783,19 +850,10 @@ class MainWindow(qtw.QMainWindow):
                 self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
 
             
-    def execute(self):
-        # Pass the function to execute
-        worker = Worker(self.startUdpReceiver)  # could have args/kwargs too..
-        worker.signals.result.connect(self.printOutput)
-        worker.signals.finished.connect(self.threadComplete)
-        worker.signals.newUdpPayload.connect(self.processUdpPayload)
-
-        # execute
-        self.threadpool.start(worker)
 
     def cleanUp(self):
-        logging.info("App quitting:")
-        logging.info("   closing UDP connection")
+        self.logger.info("App quitting:")
+        self.logger.info("   closing UDP connection")
         self.sock.close()
         
         
