@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu Sep 24 17:35:18 2020
--- Last update : Tue Oct 20 15:11:19 2020
+-- Last update : Tue Nov  3 16:40:45 2020
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -169,25 +169,24 @@ begin
                 end if;
                 -- divide the x8 accumulated noise samples by 8 and subtract from sense wire samples.
                 -- outside the range just pass along the samples
-                --if doMns then
-                --            senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1) - signed(noiseData(chan_i)(17 downto 3));
-                --else
-                --            senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1);
-                --end if;
-                case (dataSel) is
-                    when "00" =>
-                        senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1);
-                    when "01" =>
-                        senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1) - signed(noiseData(chan_i)(17 downto 3));
-                    when "10" =>
-                        senseWireMNSData(chan_i) <= signed(noiseData(chan_i)(17 downto 3));
-                    when "11" =>
-                        senseWireMNSData(chan_i)(14 downto 13) <= "00";
-                        senseWireMNSData(chan_i)(12 downto 8)  <= signed(freqSetHalfStep(8 DOWNTO 4));
-                        senseWireMNSData(chan_i)(7 downto 0)   <= signed(cnvCnt);
-                    when others =>
-                        null;
-                end case;
+                if doMns then
+                    case (dataSel) is
+                        when "00" =>
+                            senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1);
+                        when "01" =>
+                            senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1) - signed(noiseData(chan_i)(17 downto 3));
+                        when "10" =>
+                            senseWireMNSData(chan_i) <= signed(noiseData(chan_i)(17 downto 3));
+                        when "11" =>
+                            senseWireMNSData(chan_i)(14 downto 13) <= "00";
+                            senseWireMNSData(chan_i)(12 downto 8)  <= signed(freqSetHalfStep(8 DOWNTO 4));
+                            senseWireMNSData(chan_i)(7 downto 0)   <= signed(cnvCnt);
+                        when others =>
+                            null;
+                    end case;
+                else
+                    senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1);
+                end if;
 
             -- don't strobe readout when we are recording noise samples
             --senseWireMNSDataStrb <= senseWireDataStrb;
