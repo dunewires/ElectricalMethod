@@ -41,7 +41,16 @@ entity dwa_ps_pl_top is
         dpotSck    : out std_logic := '0';
         dpotShdn_b : out std_logic := '0';
 
-        CoilDrive : out std_logic_vector(31 downto 0) := (others => '0');
+    CD_Din    : out std_logic := '0';
+    CD_Dout   : in  std_logic_vector(3 downto 0) := (others  => '0');
+    CD_SCLR_b : out std_logic_vector(3 downto 0) := (others  => '0');
+    CD_SCK    : out std_logic_vector(3 downto 0) := (others  => '0');
+    CD_RCK    : out std_logic_vector(3 downto 0) := (others  => '0');
+    CD_G_b    : out std_logic_vector(3 downto 0) := (others  => '0');
+
+    SNUM_SDA : in  std_logic := '0';
+    SNUM_SCL : out std_logic := '0';
+    SNUM_A   : out std_logic_vector(3 downto 0) := (others  => '0');
 
         adcCnv          : out std_logic                    := '0';
         adcSck_p        : out std_logic                    := '0';
@@ -337,7 +346,16 @@ begin
             dpotSck    => dpotSck,
             dpotShdn_b => dpotShdn_b,
 
-            CoilDrive => CoilDrive,
+            CD_Din => CD_Din,
+            CD_Dout => CD_Dout,
+            CD_SCLR_b => CD_SCLR_b,
+            CD_SCK => CD_SCK,
+            CD_RCK => CD_RCK,
+            CD_G_b => CD_G_b,
+
+            SNUM_SDA => SNUM_SDA,
+            SNUM_SCL => SNUM_SCL,
+            SNUM_A => SNUM_A,
 
             adcCnv        => adcCnv,
             adcSck        => adcSck,

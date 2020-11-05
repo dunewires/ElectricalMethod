@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Oct 19 16:03:52 2020
+-- Last update : Wed Nov  4 23:19:40 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ package global_def is
         udpDataWord   : std_logic_vector(31 downto 0);
         udpDataRdy    : boolean;
         senseWireGain : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
-
+        coilDrive   : std_logic_vector(31 downto 0);
     end record; -- toDaqRegType
 
     type fromDaqRegType is record

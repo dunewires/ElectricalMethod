@@ -11,6 +11,7 @@ read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/wtaController.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/adc_dds_io.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/adcReadout.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/mainsNoiseCorrection.vhd
+read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/wireRelayInterface.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/dacInterface.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/dpotInterface.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/headerGenerator.vhd

@@ -1,6 +1,23 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate /tb_adc_emu/mainsSquare
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/writeReg
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/update
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/toDaqReg
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/srclr_b
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/shiftReg
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/shiftCnt
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/serialString
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/sdo
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/sdi
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/sck
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/relayCfgState
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/rck
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/g_b
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/fromDaqReg
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/dwaClk10
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/clkEn_del
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/clkEn
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/toDaqReg
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/stimFreqReq
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/senseWireMNSDataStrb
@@ -20,14 +37,11 @@ add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/mainsSq
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/led
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/hGStateDbg
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/fromDaqReg
-add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/fifoAdcData_wen
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/fifoAdcData_ren
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/fifoAdcData_rdBusy
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/fifoAdcData_pf
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/fifoAdcData_ff
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/fifoAdcData_ef
-add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/fifoAdcData_dout
-add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/fifoAdcData_din
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/dwaClk100
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/dwaClk10
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/dpotShdn_b
@@ -44,7 +58,6 @@ add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/DAC_CLR
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/DAC_CLK
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/ctrlFreqSet
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/ctrl_acStim_enable
-add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/CoilDrive
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/auto
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/adcStart
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/adcSrcSyncClk
@@ -175,7 +188,6 @@ add wave -noupdate -group {noise correction} /tb_adc_emu/top_tension_analyzer_1/
 add wave -noupdate -group {noise correction} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/mem_rsta_busy
 add wave -noupdate -group {noise correction} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/mem_resetBBusy
 add wave -noupdate -group {noise correction} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/mem_resetABusy
-add wave -noupdate -group {noise correction} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/inRange
 add wave -noupdate -group {noise correction} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/fromDaqReg
 add wave -noupdate -group {noise correction} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/cnvCnt
 add wave -noupdate -group {noise correction} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/freqSet

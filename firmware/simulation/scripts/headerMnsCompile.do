@@ -63,6 +63,7 @@ vcom -64 -2008 -work duneDwa  \
 "../source/packages/global_def.vhd" \
 "../source/hdl/dacInterface.vhd" \
 "../source/hdl/dpotInterface.vhd" \
+"../source/hdl/wireRelayInterface.vhd" \
 "../source/hdl/wtaController.vhd" \
 "../source/hdl/adc_dds_io.vhd" \
 "../source/hdl/adcReadout.vhd" \
