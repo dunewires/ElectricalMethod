@@ -50,7 +50,7 @@ entity dwa_ps_pl_top is
 
     SNUM_SDA : in  std_logic := '0';
     SNUM_SCL : out std_logic := '0';
-    SNUM_A   : out std_logic_vector(3 downto 0) := (others  => '0');
+    SNUM_A   : out std_logic_vector(2 downto 0) := (others  => '0');
 
         adcCnv          : out std_logic                    := '0';
         adcSck_p        : out std_logic                    := '0';
