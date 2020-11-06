@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Jul  1 22:15:38 2020
+-- Last update : Tue Oct  6 20:21:54 2020
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -31,14 +31,15 @@ use UNISIM.vcomponents.all;
 
 entity adcReadout is
 	port (
-		adcCnv_nCnv        : in unsigned(15 downto 0) := (others => '0');
-		adcCnv_nPeriod     : in unsigned(23 downto 0)  := (others => '0');
-		acStim_nHPeriod : in unsigned(23 downto 0)  := (others => '0');
+		fromDaqReg : in fromDaqRegType;
 
-		adcStart : in std_logic := '0';
-		trigger  : in std_logic := '0';
+		adcCnv_nCnv      : in unsigned(15 downto 0) := (others => '0');
+		adcCnv_nPeriod   : in unsigned(23 downto 0) := (others => '0');
+		noiseReadoutBusy : in boolean               := false;
+
+		adcStart : in  boolean   := false;
+		trigger  : in  std_logic := '0';
 		adcBusy  : out std_logic := '0';
-		adcDone  : out std_logic := '0';
 
 		adcCnv : out std_logic := '0';
 		adcSck : out std_logic := '0';
@@ -49,34 +50,40 @@ entity adcReadout is
 		dataParallel     : out SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0);
 		dataParallelStrb : out std_logic := '0';
 
-		reset : in  boolean  := false;
+		reset : in boolean := false;
 
 		dwaClk100 : in std_logic := '0'
 	);
+
 end entity adcReadout;
 architecture rtl of adcReadout is
 
 	type ctrlState_type is (idle_s, adcCnvStart_s, adcCnvWait_s, adcReadout_s,readoutDone_s);
-	signal ctrlState : ctrlState_type        := idle_s;
-	signal timerCnt                  : unsigned(11 downto 0) := (others => '0');
-	signal adcSckEnable              : std_logic             := '0';
-	signal adcSckEnableEmu           : std_logic             := '0';
-	signal dataParallelSsclk         : SIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
-	signal dataParallelSsclkEmu      : SIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
-	signal dataParallelSsclkDwa      : SIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
-	signal adcSrcSyncClkEmu          : std_logic := '0';
-	signal adcSrcSyncClk             : std_logic := '0';
-	signal adcSckEmu                 : std_logic := '0';
-	signal adcDataSerialEmu          : STD_LOGIC_VECTOR(3 downto 0);
+	signal ctrlState            : ctrlState_type        := idle_s;
+	signal timerCnt             : unsigned(11 downto 0) := (others => '0');
+	signal adcSckEnable         : std_logic             := '0';
+	signal adcSckEnableEmu      : std_logic             := '0';
+	signal dataParallelSsclk    : SIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
+	signal dataParallelSsclkEmu : SIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
+	signal dataParallelSsclkDwa : SIGNED_VECTOR_TYPE(3 downto 0)(31 downto 0);
+	signal adcSrcSyncClkEmu     : std_logic := '0';
+	signal adcSrcSyncClk        : std_logic := '0';
+	signal adcSckEmu            : std_logic := '0';
+	signal adcDataSerialEmu     : STD_LOGIC_VECTOR(3 downto 0);
 
 	signal cnvSyncStrb  : std_logic             := '0';
 	signal cnvPeriodCnt : unsigned(23 downto 0) := (others => '0');
-	-- start out at max cnvCnt so we power up doneCnv
-	signal cnvCnt       : unsigned(15 downto 0) := (others => '1');
+	-- start out at max cnvCnt so we power up allCnvStrtDone
+	signal cnvCnt : unsigned(15 downto 0) := (others => '1');
+	signal cnvDone  : std_logic := '0';
 
+	signal adcCnv_nCnvRn    : unsigned(23 downto 0) := (others => '0');
+	signal adcCnv_nPeriodRn : unsigned(23 downto 0) := (others => '0');
 
 begin
-
+	--select adc conv parameters
+	adcCnv_nCnvRn    <= fromDaqReg.noiseNCnv    when noiseReadoutBusy else (x"00" & adcCnv_nCnv);
+	adcCnv_nPeriodRn <= fromDaqReg.noiseSampPer when noiseReadoutBusy else adcCnv_nPeriod;
 	--ADC emulator
 	adc_dds_io_inst : entity work.adc_dds_io
 		port map (
@@ -108,7 +115,7 @@ begin
 		port map (
 			O  => adcSckEmu,       -- 1-bit output: Clock output
 			CE => adcSckEnableEmu, -- 1-bit input: Clock enable input for I0
-			I  => dwaClk100   -- 1-bit input: Primary clock
+			I  => dwaClk100        -- 1-bit input: Primary clock
 		);
 
 
@@ -120,9 +127,9 @@ begin
 			INIT         => '0',         -- Initial value for Q port ('1' or '0')
 			SRTYPE       => "SYNC")      -- Reset Type ("ASYNC" or "SYNC")
 		port map (
-			Q  => adcSck,         -- 1-bit DDR output
+			Q  => adcSck,    -- 1-bit DDR output
 			C  => dwaClk100, -- 1-bit clock input
-			CE => '1',            -- 1-bit clock enable input
+			CE => '1',       -- 1-bit clock enable input
 			D1 => adcSckEnable,
 			D2 => '0',
 			R  => '0', -- 1-bit reset input
@@ -162,8 +169,8 @@ begin
 		cdc : process (dwaClk100)
 		begin
 			if rising_edge(dwaClk100) then
-				dataParallelStrb <= adcDone;
-				if adcDone = '1' then
+				dataParallelStrb <= cnvDone;
+				if cnvDone = '1' then
 					-- also compatible with 16 bit ADC
 					dataParallel(adcSer_indx * 2)        <= dataParallelSsclk(adcSer_indx)(31 downto 16);
 					dataParallel((adcSer_indx * 2) + 1 ) <= dataParallelSsclk(adcSer_indx)(15 downto 0);
@@ -176,24 +183,23 @@ begin
 	-- sample rate process has it's own independent period count 
 	-- to be able to sync with both the rising edge of the stimulus freq and mains trigger
 	sample_rate : process (dwaClk100)
-		variable firstCnv : boolean := false;
-		variable doneCnv  : boolean := false;
+		variable firstCnv       : boolean := false;
+		variable allCnvStrtDone : boolean := false;
 	begin
 		if rising_edge(dwaClk100) then
-			firstCnv    := not (or(cnvCnt)) = '1'; -- waiting for the first cnv
-			doneCnv     := cnvCnt > adcCnv_nCnv;
-			cnvSyncStrb <= '0';
-			adcBusy        <= '0' when doneCnv else '1';
+			firstCnv       := not (or(cnvCnt)) = '1'; -- waiting for the first cnv
+			allCnvStrtDone := cnvCnt >= adcCnv_nCnvRn;
+			cnvSyncStrb    <= '0';
 
 			-- reset the sampling sequence
 			if adcStart then
-				cnvCnt <= (others => '0');
-
-			elsif not doneCnv then
+				cnvCnt  <= (others => '0');
+				adcBusy <= '1';
+			elsif not allCnvStrtDone then
 				--get the samples
 				--trigger can be mains or stim clk	
-				if (trigger = '1' and firstCnv) or              -- use the trigger to set off the first cnv
-					((cnvPeriodCnt >= adcCnv_nPeriod) and -- use the period count for the remaining cnvs
+				if (trigger = '1' and firstCnv) or          -- use the trigger to set off the first cnv
+					((cnvPeriodCnt >= adcCnv_nPeriodRn) and -- use the period count for the remaining cnvs
 						not firstCnv) then
 					cnvPeriodCnt <= x"000001"; --reset to 1
 					cnvCnt       <= cnvCnt + 1;
@@ -201,7 +207,8 @@ begin
 				else
 					cnvPeriodCnt <= cnvPeriodCnt+1;
 				end if;
-
+			else
+				adcBusy <= '0' when cnvDone else adcBusy;
 			end if;
 		end if;
 	end process;
@@ -213,7 +220,7 @@ begin
 			--default 
 			adcCnv       <= '0';
 			adcSckEnable <= '0';
-			adcDone  <= '0';
+			cnvDone      <= '0';
 
 			case (ctrlState) is
 
@@ -253,8 +260,8 @@ begin
 					end if;
 
 				when readoutDone_s =>
-					adcDone <= '1';
-					ctrlState   <= idle_s;
+					cnvDone   <= '1';
+					ctrlState <= idle_s;
 
 				when others =>
 					ctrlState <= idle_s;
