@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Jul 27 10:14:06 2020
+-- Last update : Fri Nov  6 14:50:00 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -112,7 +112,8 @@ architecture rtl of headerGenerator is
 	signal headEDataList : slv_vector_type(nHeadE-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
         -- FIXME: headCnt_reg and _next should use the largest of nHeadA, nHeadC, nHeadE, nHeadF
-        constant nHeadLog  : integer               := integer(log2(real(nHeadF + 1)));
+        constant nHeadLog  : integer               := integer(ceil(log2(real(nHeadF))));
+        -- nf changed to use ceil instead of the +1    
         -- FIXME: this doesn't work right ...
         -- let nHeadF = 21.  Then int(log2(22)) = int(4.46) = 4.  But we need 5
         -- bits to encode the number 21... (10101)
