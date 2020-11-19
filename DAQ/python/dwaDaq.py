@@ -552,7 +552,8 @@ class MainWindow(qtw.QMainWindow):
             
             logger.info('======= dwaConfig() ===========')
             #dwa.dwaConfig(verbose=verbose, configFile="dwaConfigWCLab.ini")
-            dwa.dwaConfig(verbose=verbose, configFile=self.configFile, doMainsSubtraction=True)
+            dwa.dwaConfig(verbose=verbose, configFile=self.configFile,
+                          doMainsSubtraction=True, v3Relays=True)
             #dwa.dwaConfig(verbose=verbose, configFile="dwaConfigSingleFreq.ini")
 
             

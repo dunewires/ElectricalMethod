@@ -541,7 +541,7 @@ def dwaSetDigipots(ss, cfgstr, verbose=0):
     # Odd digipots
     dwaRegWrite(ss, '00000010', cfgOdd, verbose=verbose)
     
-def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False):
+def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v3Relays=False):
     """
     Args:
         config (dict): dictionary containing configuration parameters
@@ -629,7 +629,46 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False):
         dwaRegWrite(s, '0000001E', config["noiseSettlingTime"], verbose=verbose)
         time.sleep(sleepSec)
     
-    
+
+    if v3Relays:
+        #v3 relays.  16bits each relayWireBot(0), ... relayWireBot(3)
+        # relayWireTop(0), ..., relayWireTop(3)
+        # relayBusBot(0), relayBusBot(1)
+        # relayBusTop(0), relayBusTop(1)
+        # relayWireBot
+        dwaRegWrite(s, '00000020', config["relayWireBot0"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000021', config["relayWireBot1"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000022', config["relayWireBot2"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000023', config["relayWireBot3"], verbose=verbose)
+        time.sleep(sleepSec)
+        # relayWireTop
+        dwaRegWrite(s, '00000024', config["relayWireTop0"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000025', config["relayWireTop1"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000026', config["relayWireTop2"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000027', config["relayWireTop3"], verbose=verbose)
+        time.sleep(sleepSec)
+        # relayBusBot
+        dwaRegWrite(s, '00000028', config["relayBusBot0"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000029', config["relayBusBot1"], verbose=verbose)
+        time.sleep(sleepSec)
+        # relayBusTop
+        dwaRegWrite(s, '0000002A', config["relayBusTop0"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '0000002B', config["relayBusTop1"], verbose=verbose)
+        time.sleep(sleepSec)
+        # OK to write
+        # Thee "update relays" signal will be the third bit in register 0
+        # similar to the reset, this bit just needs to be written and not cleared.
+        dwaRegWrite(s, '00000000', '00000002', verbose=verbose)
+        time.sleep(sleepSec)
+        
     ###############
     #time.sleep(sleepSec)
     #dwaRegWrite(s, '00000002',dwaCtrl, verbose=verbose)

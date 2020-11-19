@@ -43,7 +43,8 @@ class DwaConfigFile():
                                      "relayMask", "coilDrive", "digipot",
                                      "client_IP",
                                      "noiseFreqMin", "noiseFreqMax", "noiseFreqStep",
-                                     "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq"]
+                                     "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq",
+                                     "relayWireTop", "relayWireBot", "relayBusTop", "relayBusBot"]
 
     def parse(self):
         """Parse the DWA configuration parameters from a file
@@ -65,7 +66,7 @@ class DwaConfigFile():
         # read in the key=val pairs
         # but only use the keys that are listed above
         # if a valid key is absent from the config file, return None
-        # this is different from "key=" with an empty value. that returns ""
+        # This is different from "key=" with an empty value, which returns ""
         for option in self.validOptions[SECTION]:
             try:
                 self.config[option] = cp.get(SECTION, option, fallback=None)
@@ -88,8 +89,9 @@ class DwaConfigFile():
 
     def setDefaults(self):
         self.defaults = {}
+        # setting noiseFreqMax=noiseFreqMin "turns off" mains noise subtraction
         self.defaults["noiseFreqMin"]           = "00000370"  # [1/16Hz]
-        self.defaults["noiseFreqMax"]           = "00000410"  # [1/16Hz]
+        self.defaults["noiseFreqMax"]           = "00000370"  # [1/16Hz] 
         self.defaults["noiseFreqStep"]          = "00000010"  # [1/16Hz]
         self.defaults["noiseAdcSamplesPerFreq"] = "00000100"  # [unitless] (256 samples) limited to 256
         self.defaults["noiseSamplingPeriod"]    = "0000CB73"  # [10ns]   32 samp/cycle @ 60 Hz
@@ -139,6 +141,10 @@ class DwaConfigFile():
             self.invalidEntries['digipot'] = f"Invalid hex string for digipot: [{digi}]"
             print(f"  ERROR: digipot value invalid hex string: [{digi}]")
 
+
+        # Validate the v3 relay entries (192 bits total)
+        print("FIXME: need to add v3 relay validation")
+
         #else:  # verify the content of the string are valid for our digipots (8-bit hex strings)
         #    nDigipots = 8
         #    digiVals = [digi[2*x:2*x+2] for x in range(nDigipots)]
@@ -179,5 +185,24 @@ class DwaConfigFile():
             val = int(self.config[hd], base)
             self.config[f"{hd}_dec"] = f"{val:d}"
 
+
+        # Split out the v3 relay register values, 16bits each
+        # Bus relays (2 boards, 32bits each board)
+        self.config["relayBusTop1"] = self.config["relayBusTop"][:4]
+        self.config["relayBusTop0"] = self.config["relayBusTop"][4:]
+        self.config["relayBusBot1"] = self.config["relayBusBot"][:4]
+        self.config["relayBusBot0"] = self.config["relayBusBot"][4:]
+        # Wire relays (2 boards, 64bits each board)
+        self.config["relayWireTop3"] = self.config["relayWireTop"][:4]
+        self.config["relayWireTop2"] = self.config["relayWireTop"][4:8]
+        self.config["relayWireTop1"] = self.config["relayWireTop"][8:12]
+        self.config["relayWireTop0"] = self.config["relayWireTop"][12:]
+        #
+        self.config["relayWireBot3"] = self.config["relayWireBot"][:4]
+        self.config["relayWireBot2"] = self.config["relayWireBot"][4:8]
+        self.config["relayWireBot1"] = self.config["relayWireBot"][8:12]
+        self.config["relayWireBot0"] = self.config["relayWireBot"][12:]
+
+        
     def getConfigDict(self):
         return self.config
