@@ -159,6 +159,9 @@ architecture STRUCT of top_tension_analyzer is
   signal noiseFirstReadout : boolean := false;
 
   signal noiseCorrDataSel : std_logic_vector(1 downto 0) := (others => '0');
+  signal msimDumy : std_logic_vector(2 downto 0) := (others => '0');
+  signal dwaClk2         : std_logic                    := '0';
+
 begin
 
 
@@ -166,6 +169,18 @@ begin
   led(0) <= '1' when toDaqReg.ctrlBusy else '0';
   led(3) <= '1';
   led(2) <= '1';
+
+  BUFR_inst : BUFR
+    generic map (
+      BUFR_DIVIDE => "5",      -- Values: "BYPASS, 1, 2, 3, 4, 5, 6, 7, 8"
+      SIM_DEVICE  => "7SERIES" -- Must be set to "7SERIES"
+    )
+    port map (
+      O   => dwaClk2, -- 1-bit output: Clock output port
+      CE  => '1',     -- 1-bit input: Active high, clock enable (Divided modes only)
+      CLR => '0',     -- 1-bit input: Active high, asynchronous clear (Divided modes only)
+      I   => dwaClk10 -- 1-bit input: Clock buffer input driven by an IBUF, MMCM or local interconnect
+    );
 
   --  ODDR_acStim : ODDR
   --    generic map(
@@ -281,8 +296,8 @@ begin
   wireRelayInterface_inst : entity duneDwa.wireRelayInterface
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg,
-      --toDaqReg   => open,
+      --toDaqReg   => toDaqReg,
+      toDaqReg   => open,
 
       g_b     => CD_G_b,
       srclr_b => CD_SCLR_b,
@@ -292,14 +307,14 @@ begin
       rck => CD_RCK,
 
       sck      => CD_SCK,
-      dwaClk10 => dwaClk10
+      dwaClk2 => dwaClk2
     );
   --gain DPOT
   dpotInterface_inst : entity duneDwa.dpotInterface
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg, --toDaqReg,
-      --toDaqReg => open, --toDaqReg,
+      --toDaqReg   => toDaqReg, --toDaqReg,
+      toDaqReg => open, --toDaqReg,
 
       sdi    => dpotSdo,
       sdo    => dpotSdi,
@@ -308,7 +323,7 @@ begin
       sck    => dpotSck,
       shdn_b => dpotShdn_b,
 
-      dwaClk10 => dwaClk10
+      dwaClk2 => dwaClk2
     );
 
   -- mains trigger noise filter
@@ -356,8 +371,8 @@ begin
   wtaController_inst : entity duneDwa.wtaController
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg,
-      --toDaqReg => open, --toDaqReg,
+      --toDaqReg   => toDaqReg,
+      toDaqReg => open, --toDaqReg,
 
       freqSet       => ctrlFreqSet,
       acStim_enable => ctrl_acStim_enable,
@@ -407,8 +422,8 @@ begin
   mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg             => toDaqReg,
-      --toDaqReg => open,--toDaqReg,
+      --toDaqReg             => toDaqReg,
+      toDaqReg => open,--toDaqReg,
       freqSet  => ctrlFreqSet,
 
       noiseReadoutBusy  => noiseReadoutBusy,
@@ -460,7 +475,6 @@ begin
       fromDaqReg => fromDaqReg,
       toDaqReg => toDaqReg, -- Keep this one for sim
 
-      --internalDwaReg     => open,
       runOdometer   => (others => '0'),
       fpgaSerialNum => (others => '0'),
 
@@ -521,7 +535,7 @@ begin
       probe_out8              => open,
       probe_out9              => open,
       probe_out10             => open,
-      probe_out11(4 downto 2) => open,
+      probe_out11(4 downto 2) => msimDumy,
       probe_out11(1 downto 0) => noiseCorrDataSel
     );
 end STRUCT;

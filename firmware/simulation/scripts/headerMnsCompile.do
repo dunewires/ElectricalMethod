@@ -68,9 +68,15 @@ vcom -64 -2008 -work duneDwa  \
 "../source/hdl/adc_dds_io.vhd" \
 "../source/hdl/adcReadout.vhd" \
 "../source/hdl/headerGenerator.vhd" \
-"../source/hdl/mainsNoiseCorrection.vhd" \
-"../source/hdl/top_tension_analyzer.vhd" \
-"./source/tb_adc_emu.vhd" \
+"../source/hdl/mainsNoiseCorrection.vhd" 
+
+vcom -64 -2008 -work duneDwa   \
+"../source/hdl/top_tension_analyzer.vhd" 
+
+vcom -64 -2008 -work duneDwa  \
+"./source/tb_adc_emu.vhd" 
+
+
 
 # compile glbl module
 vlog -work duneDwa "glbl.v"

@@ -43,6 +43,7 @@ read_ip $proj_sources_dir/cores/ipMicrozed/ila_xadc/ila_xadc.xci
 read_ip $proj_sources_dir/cores/ipMicrozed/ila_xadc_big/ila_xadc_big.xci
 read_ip $proj_sources_dir/cores/ipMicrozed/xadc_senseWire/xadc_senseWire.xci
 read_ip $proj_sources_dir/cores/ipMicrozed/ila_4x32/ila_4x32.xci
+read_ip $proj_sources_dir/cores/ipMicrozed/clk_dwa_pl/clk_dwa_pl.xci
 
 # read_ip /home/nate/projects/duneWireTension/vivadoProjects/dwa_ps/dwa_ps.srcs/sources_1/bd/dwa_ps_bd/ip/dwa_ps_bd_auto_pc_0/dwa_ps_bd_auto_pc_0.xci
 # read_ip /home/nate/projects/duneWireTension/vivadoProjects/dwa_ps/dwa_ps.srcs/sources_1/bd/dwa_ps_bd/ip/dwa_ps_bd_dwa_registers_0_0/dwa_ps_bd_dwa_registers_0_0.xci

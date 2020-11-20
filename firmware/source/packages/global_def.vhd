@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Nov  4 23:19:40 2020
+-- Last update : Fri Nov 20 10:55:02 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -38,13 +38,17 @@ package global_def is
         udpDataWord   : std_logic_vector(31 downto 0);
         udpDataRdy    : boolean;
         senseWireGain : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
-        coilDrive   : std_logic_vector(31 downto 0);
+        coilDrive     : std_logic_vector(31 downto 0);
+        relayBusTop   : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
+        relayWireTop  : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
+        relayBusBot   : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
+        relayWireBot  : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
     end record; -- toDaqRegType
 
     type fromDaqRegType is record
-        ctrlStart   : boolean;
-        reset       : boolean;
-        
+        ctrlStart : boolean;
+        reset     : boolean;
+
         auto        : boolean;
         mnsEna      : boolean;
         udpDataDone : boolean;
@@ -53,17 +57,17 @@ package global_def is
 
         -- start james' additions
         --- dwaCtrl (still used?  how many bits?)
-        fixedPeriod   : unsigned(23 downto 0); -- 10ns
-        stimFreqReq   : unsigned(23 downto 0); --nf
-        stimFreqMin   : unsigned(23 downto 0); -- 10ns
-        stimFreqMax   : unsigned(23 downto 0); -- 10ns
-        stimFreqStep  : unsigned(23 downto 0); -- 10ns
-        noiseFreqMin  : unsigned(23 downto 0); -- 40 Hz
-        noiseFreqMax  : unsigned(23 downto 0); -- 70 Hz
-        noiseFreqStep : unsigned(23 downto 0); -- 1 Hz
-        noiseSampPer  : unsigned(23 downto 0); -- 32 samp / cycle @ 60 Hz
-        noiseNCnv     : unsigned(23 downto 0);
-        noiseBPFSetTime: unsigned(23 downto 0);
+        fixedPeriod     : unsigned(23 downto 0); -- 10ns
+        stimFreqReq     : unsigned(23 downto 0); --nf
+        stimFreqMin     : unsigned(23 downto 0); -- 10ns
+        stimFreqMax     : unsigned(23 downto 0); -- 10ns
+        stimFreqStep    : unsigned(23 downto 0); -- 10ns
+        noiseFreqMin    : unsigned(23 downto 0); -- 40 Hz
+        noiseFreqMax    : unsigned(23 downto 0); -- 70 Hz
+        noiseFreqStep   : unsigned(23 downto 0); -- 1 Hz
+        noiseSampPer    : unsigned(23 downto 0); -- 32 samp / cycle @ 60 Hz
+        noiseNCnv       : unsigned(23 downto 0);
+        noiseBPFSetTime : unsigned(23 downto 0);
         --stimPeriodActive   : unsigned(23 downto 0);
         --stimPeriodCounter  : unsigned(23 downto 0); -- bits???
         --- Number of stimulus cycles per frequency (unitless)
@@ -83,8 +87,12 @@ package global_def is
         --- Mask indicating which relays are active
         --- in v2 this is 32 bits.  In v3 will be 192 bits!!!
         relayMask : std_logic_vector(31 downto 0);
-    --adcSamplingPeriod  : unsigned(23 downto 0);
-    -- James' entries end
+        --adcSamplingPeriod  : unsigned(23 downto 0);
+        relayBusTop  : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
+        relayWireTop : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
+        relayBusBot  : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
+        relayWireBot : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
+        relayUpdate  : boolean;
     end record; -- fromDaqRegType
 
 end global_def;
