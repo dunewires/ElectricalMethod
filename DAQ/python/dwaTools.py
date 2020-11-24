@@ -23,14 +23,8 @@ import DwaConfigFile as dcf
 import logging
 logger = logging.getLogger(__name__)
 
-def processWaveform(udpDict):
-    # udpDict is a transfer that includes ADC data
-    # frequency is obtained from:
-    freq_Hz = 1./(udpDict[ddp.Frame.FREQ]['stimPeriodCounter']*1e-8)
+def fitSinusoidToTimeseries(yy, dt, freq_Hz):
     angFreq = 2*np.pi*freq_Hz
-    yy = np.array(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
-    # dt is given by the sampling time
-    dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
     tt = np.arange(len(yy)) * dt
     wt = angFreq*tt
     # Construct matrices for linear least-squares minimization
@@ -52,6 +46,15 @@ def processWaveform(udpDict):
     #print(BMAT)
     return (BMAT[0], BMAT[1], BMAT[2], freq_Hz)
 
+def processWaveform(udpDict):
+    # udpDict is a transfer that includes ADC data
+    # frequency is obtained from:
+    freq_Hz = 1./(udpDict[ddp.Frame.FREQ]['stimPeriodCounter']*1e-8)
+    yy = np.array(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
+    # dt is given by the sampling time
+    dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
+    return fitSinuoidToTimeseries(yy, dt, freq_Hz)
+    
 def splitFile(filename):
     ''' split a UDP file that has multiple frequencies
     into separate files, one per frequency'''
@@ -666,7 +669,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
         # OK to write
         # Thee "update relays" signal will be the third bit in register 0
         # similar to the reset, this bit just needs to be written and not cleared.
-        dwaRegWrite(s, '00000000', '00000002', verbose=verbose)
+        dwaRegWrite(s, '00000000', '00000004', verbose=verbose)
         time.sleep(sleepSec)
         
     ###############
