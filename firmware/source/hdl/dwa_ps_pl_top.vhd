@@ -142,7 +142,7 @@ architecture STRUCTURE of dwa_ps_pl_top is
     component dwa_registers_v1_0_S00_AXI is
         generic (
             C_S_AXI_DATA_WIDTH : integer := 32;
-            C_S_AXI_ADDR_WIDTH : integer := 7
+            C_S_AXI_ADDR_WIDTH : integer := 8
         );
         port (
             S_AXI_ACLK    : in  std_logic;

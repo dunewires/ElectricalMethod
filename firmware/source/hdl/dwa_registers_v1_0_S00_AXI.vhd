@@ -110,7 +110,7 @@ architecture arch_imp of dwa_registers_v1_0_S00_AXI is
 	-- ADDR_LSB = 2 for 32 bits (n downto 2)
 	-- ADDR_LSB = 3 for 64 bits (n downto 3)
 	constant ADDR_LSB          : integer := (C_S_AXI_DATA_WIDTH/32)+ 1;
-	constant OPT_MEM_ADDR_BITS : integer := 4;
+	constant OPT_MEM_ADDR_BITS : integer := 5;
 	------------------------------------------------
 	---- Signals for user logic register space example
 	--------------------------------------------------
@@ -887,29 +887,29 @@ begin
 			when b"011111" =>
 				reg_data_out <= slv_reg31;
 			when b"101011" =>
-				reg_data_out <= toDaqReg.relayBusTop(1);
+				reg_data_out <= x"0000" & toDaqReg.relayBusTop(1);
 			when b"101010" =>
-				reg_data_out <= toDaqReg.relayBusTop(0);
+				reg_data_out <= x"0000" & toDaqReg.relayBusTop(0);
 			when b"101001" =>
-				reg_data_out <= toDaqReg.relayWireTop(3);
+				reg_data_out <= x"0000" & toDaqReg.relayWireTop(3);
 			when b"101000" =>
-				reg_data_out <= toDaqReg.relayWireTop(2);
+				reg_data_out <= x"0000" & toDaqReg.relayWireTop(2);
 			when b"100111" =>
-				reg_data_out <= toDaqReg.relayWireTop(1);
+				reg_data_out <= x"0000" & toDaqReg.relayWireTop(1);
 			when b"100110" =>
-				reg_data_out <= toDaqReg.relayWireTop(0);
+				reg_data_out <= x"0000" & toDaqReg.relayWireTop(0);
 			when b"100101" =>
-				reg_data_out <= toDaqReg.relayBusBot(1);
+				reg_data_out <= x"0000" & toDaqReg.relayBusBot(1);
 			when b"100100" =>
-				reg_data_out <= toDaqReg.relayBusBot(0);
+				reg_data_out <= x"0000" & toDaqReg.relayBusBot(0);
 			when b"100011" =>
-				reg_data_out <= toDaqReg.relayWireBot(3);
+				reg_data_out <= x"0000" & toDaqReg.relayWireBot(3);
 			when b"100010" =>
-				reg_data_out <= toDaqReg.relayWireBot(2);
+				reg_data_out <= x"0000" & toDaqReg.relayWireBot(2);
 			when b"100001" =>
-				reg_data_out <= toDaqReg.relayWireBot(1);
+				reg_data_out <= x"0000" & toDaqReg.relayWireBot(1);
 			when b"100000" =>
-				reg_data_out <= toDaqReg.relayWireBot(0);
+				reg_data_out <= x"0000" & toDaqReg.relayWireBot(0);
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;
@@ -947,6 +947,7 @@ begin
 
 	fromDaqReg.auto   <= slv_reg1(0)= '1';
 	fromDaqReg.mnsEna <= slv_reg1(1)= '1';
+	fromDaqReg.relayAutoBreakEna <= slv_reg1(2);
 	-- udpDataDone when PS has read the status at the end of the data payload
 	fromDaqReg.udpDataDone        <= not udpReadBusy and udpReadBusy_del; --trailing edge
 	fromDaqReg.stimFreqReq        <= unsigned(slv_reg3(23 downto 0));
@@ -975,6 +976,7 @@ begin
 	fromDaqReg.noiseSampPer    <= unsigned(slv_reg28(23 downto 0));
 	fromDaqReg.noiseNCnv       <= unsigned(slv_reg29(23 downto 0));
 	fromDaqReg.noiseBPFSetTime <= unsigned(slv_reg30(23 downto 0));
+
 	fromDaqReg.relayBusTop(1)  <= slv_reg43(15 downto 0);
 	fromDaqReg.relayBusTop(0)  <= slv_reg42(15 downto 0);
 	fromDaqReg.relayWireTop(3) <= slv_reg41(15 downto 0);

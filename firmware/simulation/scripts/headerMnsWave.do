@@ -1,13 +1,21 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate /tb_adc_emu/mainsSquare
-add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/writeReg
-add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/update
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/updateLatch_cdc2
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/updateLatch_cdc1
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/updateLatch
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/updateClear_cdc2
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/updateClear_cdc1
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/updateClear
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/waitCnt
 add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/toDaqReg
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/stringLength
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/stringCnt
 add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/srclr_b
-add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/shiftReg
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/shiftRegOut
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/shiftRegIn
 add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/shiftCnt
-add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/serialString
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/serialStringOut
 add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/sdo
 add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/sdi
 add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/sck
@@ -15,8 +23,7 @@ add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/w
 add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/rck
 add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/g_b
 add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/fromDaqReg
-add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/dwaClk10
-add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/clkEn_del
+add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/dwaClk2
 add wave -noupdate -expand -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/clkEn
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/toDaqReg
 add wave -noupdate -expand -group rop /tb_adc_emu/top_tension_analyzer_1/stimFreqReq
@@ -211,7 +218,7 @@ add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/sdi
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/writeReg
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/shiftReg
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {2128198779 fs} 0}
+WaveRestoreCursors {{Cursor 1} {10101000000 fs} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 208
 configure wave -valuecolwidth 210
@@ -227,4 +234,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits fs
 update
-WaveRestoreZoom {0 fs} {3288783814268 fs}
+WaveRestoreZoom {0 fs} {29315503109 fs}

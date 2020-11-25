@@ -34,7 +34,8 @@ entity wireRelayInterface is
 		sck     : out std_logic_vector(3 downto 0) := (others => '0');
 		srclr_b : out std_logic_vector(3 downto 0) := (others => '0');
 
-		dwaClk2 : in std_logic := '0'
+		dwaClk100 : in std_logic := '0';
+		dwaClk2   : in std_logic := '0'
 	);
 end entity wireRelayInterface;
 
@@ -51,8 +52,10 @@ architecture STRUCT of wireRelayInterface is
 		);
 	END COMPONENT ;
 
-	type relayCfgState_type is (idle_s, shiftBitsIn_s, loadParallelReg_s, shiftBitsOut_s, loadDaqReg_s, waitToEnable_s);
-	signal relayCfgState : relayCfgState_type := idle_s;
+	type relayCfgState_type is (idle_s, updateSerialOut_s, shiftBitsIn_s, loadParallelReg_s, shiftBitsOut_s, waitToEnable_s);
+	signal relayCfgState                                 : relayCfgState_type := idle_s;
+	signal updateLatch,updateLatch_cdc1,updateLatch_cdc2 : boolean            := false;
+	signal updateBusy,updateBusy_cdc1,updateBusy_cdc2    : boolean            := false;
 
 	signal serialStringOut : std_logic_vector(191 downto 0);
 	signal shiftRegOut     : std_logic_vector(191 downto 0);
@@ -60,16 +63,23 @@ architecture STRUCT of wireRelayInterface is
 
 	signal shiftCnt  : unsigned(7 downto 0)  := (others => '0');
 	signal stringCnt : unsigned(1 downto 0)  := (others => '0');
-	signal waitCnt   : unsigned(11 downto 0) := (others => '0');
+	signal waitCnt   : unsigned(15 downto 0) := (others => '0');
 
 	signal clkEn : std_logic_vector(3 downto 0) := (others => '0');
 
 	constant stringLength : UNSIGNED_VECTOR_TYPE(3 downto 0)(7 downto 0) := (
-			x"1F",
 			x"3F",
 			x"1F",
-			x"3F"
+			x"3F",
+			x"1F"
 		);
+
+	attribute ASYNC_REG                     : string;
+	attribute ASYNC_REG of updateBusy_cdc1  : signal is "TRUE";
+	attribute ASYNC_REG of updateBusy_cdc2  : signal is "TRUE";
+	attribute ASYNC_REG of updateLatch_cdc1 : signal is "TRUE";
+	attribute ASYNC_REG of updateLatch_cdc2 : signal is "TRUE";
+
 begin
 
 	serStreamGen : for str_i in 3 downto 0 generate
@@ -95,12 +105,48 @@ begin
 	srclr_b <= (others => '1');
 	-- Make serial string from registers
 	-- Since Din is shared between all strings, make one long string
-	serialStringOut <= fromDaqReg.relayBusBot(1) & fromDaqReg.relayBusBot(0) & --
-		fromDaqReg.relayWireBot(3) & fromDaqReg.relayWireBot(2) & fromDaqReg.relayWireBot(1) & fromDaqReg.relayWireBot(0) &
-		fromDaqReg.relayBusTop(1) & fromDaqReg.relayBusTop(0) &
-		fromDaqReg.relayWireTop(3) & fromDaqReg.relayWireTop(2) & fromDaqReg.relayWireTop(1) & fromDaqReg.relayWireTop(0);
 
 	sdo <= shiftRegOut(shiftRegOut'left);
+
+	updateCdcDC100 : process (dwaClk100)
+	begin
+		if rising_edge(dwaClk100) then
+			updateBusy_cdc1 <= updateBusy;
+			updateBusy_cdc2 <= updateBusy_cdc1;
+
+			-- only enable CDC data transfer when the update is not busy
+			if not updateBusy_cdc2 then
+				serialStringOut <= fromDaqReg.relayBusBot(1) & fromDaqReg.relayBusBot(0) & --
+					fromDaqReg.relayWireBot(3) & fromDaqReg.relayWireBot(2) & fromDaqReg.relayWireBot(1) & fromDaqReg.relayWireBot(0) &
+					fromDaqReg.relayBusTop(1) & fromDaqReg.relayBusTop(0) &
+					fromDaqReg.relayWireTop(3) & fromDaqReg.relayWireTop(2) & fromDaqReg.relayWireTop(1) & fromDaqReg.relayWireTop(0);
+
+				shiftBusToDaq : for srb_i in 1 downto 0 loop
+					toDaqReg.relayBusTop(srb_i) <= shiftRegIn(2)((16 * srb_i)+47 downto (16 * srb_i)+32);
+					toDaqReg.relayBusBot(srb_i) <= shiftRegIn(0)((16 * srb_i)+47 downto (16 * srb_i)+32);
+				end loop shiftBusToDaq;
+
+				shiftWireToDaq : for srw_i in 3 downto 0 loop
+					toDaqReg.relayWireTop(srw_i) <= shiftRegIn(3)((16 * srw_i)+15 downto (16 * srw_i));
+					toDaqReg.relayWireBot(srw_i) <= shiftRegIn(1)((16 * srw_i)+15 downto (16 * srw_i));
+				end loop shiftWireToDaq;
+
+				-- catch relayUpdate pulse
+				updateLatch <= (fromDaqReg.relayUpdate or updateLatch);
+			else
+				--clear updateLatch when busy
+				updateLatch <= false;
+			end if;
+		end if;
+	end process updateCdcDC100;
+
+	updateCdcDC2 : process (dwaClk2)
+	begin
+		if rising_edge(dwaClk2) then
+			updateLatch_cdc1 <= updateLatch;
+			updateLatch_cdc2 <= updateLatch_cdc1;
+		end if;
+	end process updateCdcDC2;
 
 	relayCfgState_seq : process (dwaClk2)
 	begin
@@ -118,19 +164,24 @@ begin
 			case (relayCfgState) is
 
 				when idle_s =>
-					shiftCnt  <= (others => '0'); --number of bits to  shift
-					stringCnt <= (others => '0');
-					if fromDaqReg.relayUpdate then
-						shiftRegOut   <= serialStringOut;
-						relayCfgState <= shiftBitsIn_s;
-						--turn off all relays when updating
-						g_b <= (others => '1');
+					updateBusy <= false;
+					shiftCnt   <= (others => '0'); --number of bits to  shift
+					stringCnt  <= (others => '0');
+					if updateLatch_cdc1 then
+						updateBusy    <= true; --turn on update busy
+						relayCfgState <= updateSerialOut_s;
+						--turn off all relays when updating when enabled
+						g_b <= (others => fromDaqReg.relayAutoBreakEna);
 					end if;
+
+				when updateSerialOut_s => --allow 1 dwaclk2 to disable any updating of serislStringOut
+					shiftRegOut   <= serialStringOut;
+					relayCfgState <= shiftBitsIn_s;
 
 				when shiftBitsIn_s =>
 					clkEn(to_integer(stringCnt)) <= '1';
 					shiftCnt                     <= shiftCnt + 1;
-					if shiftCnt = stringLength(to_integer(shiftCnt)) then -- done with current string
+					if shiftCnt = stringLength(to_integer(stringCnt)) then -- done with current string
 						stringCnt <= stringCnt + 1;
 						if stringCnt = 3 then -- we have finished last string
 							relayCfgState <= loadParallelReg_s;
@@ -149,29 +200,12 @@ begin
 					clkEn    <= (others => '1'); -- shift all four serial streams in at once
 					shiftCnt <= shiftCnt + 1;
 					if shiftCnt = 63 then -- longest serial register chain, we have everyone
-						relayCfgState <= loadDaqReg_s;
-					end if;
-
-				when loadDaqReg_s =>    -- move from shift register to toDaqReg to be read out
-					if clkEn = "0000" then -- wait for last bit to be shifted in
-
-						shiftBusToDaq : for srb_i in 1 downto 0 loop
-							toDaqReg.relayBusTop(srb_i) <= shiftRegIn(2)((16 * srb_i)+47 downto (16 * srb_i)+32);
-							toDaqReg.relayBusBot(srb_i) <= shiftRegIn(0)((16 * srb_i)+47 downto (16 * srb_i)+32);
-						end loop shiftBusToDaq;
-
-						shiftWireToDaq : for srw_i in 3 downto 0 loop
-							toDaqReg.relayWireTop(srw_i) <= shiftRegIn(3)((16 * srw_i)+15 downto (16 * srw_i));
-							toDaqReg.relayWireBot(srw_i) <= shiftRegIn(1)((16 * srw_i)+15 downto (16 * srw_i));
-						end loop shiftWireToDaq;
-
 						relayCfgState <= waitToEnable_s;
-
 					end if;
 
-				when waitToEnable_s => -- Wait for 1ms before enabling relays,  break before make
+				when waitToEnable_s => -- Wait for 16ms before enabling relays,  break before make
 					waitCnt <= waitCnt +1;
-					if waitCnt = x"7D0" then
+					if waitCnt = x"7D00" then
 						waitCnt       <= (others => '0'); -- reset for next time
 						g_b           <= (others => '0');
 						relayCfgState <= idle_s;

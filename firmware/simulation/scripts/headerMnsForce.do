@@ -34,6 +34,21 @@ force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(2)
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(1) 8'h62 0
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(0) 8'h61 0
 
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayBusTop(1) 16'hA021 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayBusTop(0) 16'hA020 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayWireTop(3) 16'hA033 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayWireTop(2) 16'hA032 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayWireTop(1) 16'hA031 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayWireTop(0) 16'hA030 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayBusBot(1) 16'hA001 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayBusBot(0) 16'hA000 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayWireBot(3) 16'hA013 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayWireBot(2) 16'hA012 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayWireBot(1) 16'hA011 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayWireBot(0) 16'hA010 0
+
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(0) 8'h61 0
+
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.noiseFreqMin 24'h0003B0 0 
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.noiseFreqMax 24'h000400 0 
 # 1 Hz
@@ -47,5 +62,6 @@ force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.noiseNCnv 24'h00
 force -freeze sim:/tb_adc_emu/fromDaqReg.reset true 20ns -cancel 30ns
 force -freeze sim:/tb_adc_emu/mainsSquare 0 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.ctrlStart true 100ns -cancel 110ns
+force -freeze sim:/tb_adc_emu/fromDaqReg.relayUpdate true 100ns -cancel 110ns
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/mainsTrig 1 0, 0 {10000000 fs} -r 1000ns
 

@@ -296,8 +296,8 @@ begin
   wireRelayInterface_inst : entity duneDwa.wireRelayInterface
     port map (
       fromDaqReg => fromDaqReg,
-      --toDaqReg   => toDaqReg,
-      toDaqReg   => open,
+      toDaqReg   => toDaqReg,
+      --toDaqReg   => open,
 
       g_b     => CD_G_b,
       srclr_b => CD_SCLR_b,
@@ -307,14 +307,16 @@ begin
       rck => CD_RCK,
 
       sck      => CD_SCK,
+
+      dwaClk100 => dwaClk100,
       dwaClk2 => dwaClk2
     );
   --gain DPOT
   dpotInterface_inst : entity duneDwa.dpotInterface
     port map (
       fromDaqReg => fromDaqReg,
-      --toDaqReg   => toDaqReg, --toDaqReg,
-      toDaqReg => open, --toDaqReg,
+      toDaqReg   => toDaqReg, --toDaqReg,
+      --toDaqReg => open, --toDaqReg,
 
       sdi    => dpotSdo,
       sdo    => dpotSdi,
@@ -371,8 +373,8 @@ begin
   wtaController_inst : entity duneDwa.wtaController
     port map (
       fromDaqReg => fromDaqReg,
-      --toDaqReg   => toDaqReg,
-      toDaqReg => open, --toDaqReg,
+      toDaqReg   => toDaqReg,
+      --toDaqReg => open, --toDaqReg,
 
       freqSet       => ctrlFreqSet,
       acStim_enable => ctrl_acStim_enable,
@@ -422,8 +424,8 @@ begin
   mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
     port map (
       fromDaqReg => fromDaqReg,
-      --toDaqReg             => toDaqReg,
-      toDaqReg => open,--toDaqReg,
+      toDaqReg             => toDaqReg,
+      --toDaqReg => open,--toDaqReg,
       freqSet  => ctrlFreqSet,
 
       noiseReadoutBusy  => noiseReadoutBusy,
