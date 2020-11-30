@@ -280,6 +280,8 @@ class DwaDataParser():
         # FIXME: this is a kluge to account for an error in firmware... will need to be updated
         print("stimPeriodCounter = {}".format(dd['stimPeriodCounter']))
         dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodCounter'] # convert period in 10ns to freq in Hz
+        dd['adcSamplingPeriod_sec'] = dd['adcSamplingPeriod']*1e-8
+
         return dd
     
 
@@ -340,7 +342,7 @@ class DwaDataParser():
 
             # FIXME: kluge b/c we don't specify the number of ADC data lines yet...
             if frameStartLine.startswith('DDDD'):
-                frameEndIdx = udpPayload.index('DDDDDDDD')
+                frameEndIdx = udpPayload.index('DDDDDDDD', frameStartIdx)
             else:
                 # Number of Frame Information lines
                 nFrameInfo = int(frameStartLine[4:], hexBase)
@@ -351,6 +353,12 @@ class DwaDataParser():
             print("frameEndLine = {}".format(udpPayload[frameEndIdx]))
             
             frameParser = self._frameParserSelector[frameType]
+            # For debugging only
+            #if frameStartLine.startswith('DDDD'):
+            #    print(f'frameStartIdx = {frameStartIdx}')
+            #    print(f'frameEndIdx   = {frameEndIdx}')
+            #    print(udpPayload[frameStartIdx+1:frameEndIdx])
+                
             frameDict = frameParser(udpPayload[frameStartIdx+1:frameEndIdx])
         
             print("frameDict = ")
@@ -385,3 +393,85 @@ class DwaDataParser():
         # to human-usable values: again, like the IP address
         # which is in hex form)
 
+    def getFreqData(self, filename):
+        """ return all frequencies (in Hz) in this dataset
+
+        This is a post-processing utility function,
+        not used during realtime data collection
+        """
+        with open(filename) as fh:
+            lines = fh.readlines()
+            lines = [line.strip() for line in lines]
+
+        dout = {}  # output dictionary
+            
+        delimIdxs = []
+        for ii, line in enumerate(lines):
+            if dwa.isHeaderLine(line) and line.startswith('CCCC'):
+                delimIdxs.append(ii)
+        delimIdxs = delimIdxs[::2]   # every other entry is a 'CCCCCCCC' line, ignore those
+        #print("Header lines = ")
+        #print(delimIdxs)
+        #for idx in delimIdxs:
+        #    print(lines[idx])
+        # Number of Frame Information lines
+        for startIdx in delimIdxs:
+            nFrameInfo = int(lines[startIdx][4:], hexBase)
+            #print("nFrameInfo = {}".format(nFrameInfo))
+            endIdx = startIdx + nFrameInfo + 1
+            #print(f'startIdx = {startIdx}')
+            #print(f'endIdx   = {endIdx}')
+            #print(lines[startIdx+1:endIdx])
+                
+            freqDict = self._parseFreqFrame(lines[startIdx+1:endIdx])
+            freqDict = self._postProcessFreqFrame(freqDict)
+
+            keys = freqDict.keys()
+            if len(dout) == 0:  # first pass through... init the dict
+                for key in keys:
+                    dout[key] = []
+
+            for key in keys:
+                dout[key].append(freqDict[key])
+                    
+        return dout
+
+            
+    def getAdcData(self, filename):
+        """ return a list of lists of ADC data from a file
+
+        the file is in the format as saved by the python DAQ
+        This is a post-processing utility function,
+        not used during realtime data collection
+        """
+        with open(filename) as fh:
+            lines = fh.readlines()
+            lines = [line.strip() for line in lines]
+
+        # list to hold ADC data (will be a list of lists)
+        adcData = []
+
+        # look at each ADC data section (delimiters are DDDD5151 and DDDD)
+        # extract/convert the ADC data hex strings
+        
+        # find the ADC delimiters
+        ADC_DATA_DELIMITER = 'DDDD5151'
+        ids = [ii for ii, xx in enumerate(lines) if xx==ADC_DATA_DELIMITER]
+        #print(ids)
+        #print(len(ids))
+
+        # Loop over each section and extract/parse/convert the ADC data strings
+        for startIdx in ids:
+            endIdx = lines.index('DDDDDDDD', startIdx)
+
+            #print(f'startIdx = {startIdx}')
+            #print(f'endIdx   = {endIdx}')
+            #print(lines[startIdx+1:endIdx])
+                
+            dd = self._parseAdcDataFrame(lines[startIdx+1:endIdx])
+            dd = self._postProcessAdcDataFrame(dd)
+            #print(dd)
+            adcData.append(dd['adcSamples'])
+
+        return adcData
+        
