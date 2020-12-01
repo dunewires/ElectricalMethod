@@ -19,6 +19,9 @@
 # for logging info:
 # https://fangpenlin.com/posts/2012/08/26/good-logging-practice-in-python/
 
+import faulthandler   # helps debug segfaults
+faulthandler.enable()
+
 import traceback, sys
 import requests
 import time
@@ -535,7 +538,7 @@ class MainWindow(qtw.QMainWindow):
         #
         ## FIXME: the textbox doesn't update right away...
         ## need to force an update somehow....
-        self._loadConfigFile()
+        self._loadConfigFile(updateGui=False)
 
         print("\n\n =================== startRun()\n\n")
         
@@ -625,7 +628,7 @@ class MainWindow(qtw.QMainWindow):
             self.chanViewMain = chan
 
 
-    def _loadConfigFile(self):
+    def _loadConfigFile(self, updateGui=True):
         # try to read the requested file
         # if found, display contents
         # if not found, display error message
@@ -649,16 +652,22 @@ class MainWindow(qtw.QMainWindow):
                 lines = textToDisplay.split('\n')
                 lines = [line for line in lines if line.strip()!="" and not line.strip().startswith('#')]
                 textToDisplay = '\n'.join(lines)
-            self.configFileContents.setPlainText(textToDisplay)
 
-            # update various config file fields in the GUI
-            self.freqMin_val.setText(self.dwaConfigFile.config['stimFreqMin_Hz'])
-            self.freqMax_val.setText(self.dwaConfigFile.config['stimFreqMax_Hz'])
-            self.freqStep_val.setText(self.dwaConfigFile.config['stimFreqStep_Hz'])
-            self.stimTime_val.setText(self.dwaConfigFile.config['stimTime'])
-            self.cycPerFreq_val.setText(self.dwaConfigFile.config['cyclesPerFreq_dec'])
-            self.sampPerCyc_val.setText(self.dwaConfigFile.config['adcSamplesPerCycle_dec'])
-            self.clientIP_val.setText(self.dwaConfigFile.config['client_IP'])
+            # FIXME: need to find a way to update the GUI in a thread that is not main thread....
+            # right now, updating the GUI in a thread causes a crash.
+            # see: https://stackoverflow.com/questions/10905981/pyqt-qobject-cannot-create-children-for-a-parent-that-is-in-a-different-thread
+            # https://stackoverflow.com/questions/3268073/qobject-cannot-create-children-for-a-parent-that-is-in-a-different-thread
+            if updateGui:
+                self.configFileContents.setPlainText(textToDisplay)
+
+                # update various config file fields in the GUI
+                self.freqMin_val.setText(self.dwaConfigFile.config['stimFreqMin_Hz'])
+                self.freqMax_val.setText(self.dwaConfigFile.config['stimFreqMax_Hz'])
+                self.freqStep_val.setText(self.dwaConfigFile.config['stimFreqStep_Hz'])
+                self.stimTime_val.setText(self.dwaConfigFile.config['stimTime'])
+                self.cycPerFreq_val.setText(self.dwaConfigFile.config['cyclesPerFreq_dec'])
+                self.sampPerCyc_val.setText(self.dwaConfigFile.config['adcSamplesPerCycle_dec'])
+                self.clientIP_val.setText(self.dwaConfigFile.config['client_IP'])
             
             
     def _makeWordList(self, udpDataStr):
