@@ -53,7 +53,7 @@ def processWaveform(udpDict):
     yy = np.array(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
     # dt is given by the sampling time
     dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
-    return fitSinuoidToTimeseries(yy, dt, freq_Hz)
+    return fitSinusoidToTimeseries(yy, dt, freq_Hz)
     
 def splitFile(filename):
     ''' split a UDP file that has multiple frequencies
@@ -571,6 +571,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
     dwaRegWrite(s, '00000001', config["auto"], verbose=verbose)
     time.sleep(sleepSec)
     #
+    print("Setting stimFreq parameters")
     #fromDaqReg.stimFreqReq  <= unsigned(slv_reg3(23 downto 0));
     dwaRegWrite(s, '00000003', config["stimFreqReq"], verbose=verbose)
     time.sleep(sleepSec)
@@ -583,6 +584,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
     #fromDaqReg.stimFreqStep <= unsigned(slv_reg6(23 downto 0));
     dwaRegWrite(s, '00000006', config["stimFreqStep"], verbose=verbose)
     time.sleep(sleepSec)
+    print("Setting stimTime and Mag")
     #fromDaqReg.stimRampTime   <= unsigned(slv_reg7(23 downto 0));
     dwaRegWrite(s, '00000007', config["stimTime"], verbose=verbose)
     time.sleep(sleepSec)
@@ -597,12 +599,15 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
     dwaRegWrite(s, '0000000B', config["adcSamplesPerCycle"], verbose=verbose)
     time.sleep(sleepSec)
     #
-    #fromDaqReg.relayMask      <= slv_reg13;
-    dwaRegWrite(s, '0000000D', config["relayMask"], verbose=verbose)
-    time.sleep(sleepSec)
-    #fromDaqReg.coilDrive      <= slv_reg14;
-    dwaRegWrite(s, '0000000E', config["coilDrive"], verbose=verbose)
-    time.sleep(sleepSec)
+
+    ### Defunct (v2 parameters)
+    #print("Setting v2 parameters: relayMask and coilDrive")
+    ##fromDaqReg.relayMask      <= slv_reg13;
+    #dwaRegWrite(s, '0000000D', config["relayMask"], verbose=verbose)
+    #time.sleep(sleepSec)
+    ##fromDaqReg.coilDrive      <= slv_reg14;
+    #dwaRegWrite(s, '0000000E', config["coilDrive"], verbose=verbose)
+    #time.sleep(sleepSec)
 
     # Mains noise subtraction parameters
     if doMainsSubtraction:
@@ -639,6 +644,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
         # relayBusBot(0), relayBusBot(1)
         # relayBusTop(0), relayBusTop(1)
         # relayWireBot
+        print("Setting v3 relays")
         dwaRegWrite(s, '00000020', config["relayWireBot0"], verbose=verbose)
         time.sleep(sleepSec)
         dwaRegWrite(s, '00000021', config["relayWireBot1"], verbose=verbose)
