@@ -200,8 +200,8 @@ begin
 
 				when waitToShiftOut_s => -- Wait for 16ms before enabling relays,  break before make
 					waitCnt <= waitCnt +1;
-					--if waitCnt = x"7D00" then
-					if waitCnt = x"0007" then -- do not wait for noise before reading, the x"0007" is just bc it's lucky
+					if waitCnt = x"7D00" then
+					--if waitCnt = x"0007" then -- do not wait for noise before reading, the x"0007" is just bc it's lucky
 						waitCnt       <= (others => '0'); -- reset for next time
 						relayCfgState <= shiftBitsOut_s;
 					end if;
