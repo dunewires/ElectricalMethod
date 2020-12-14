@@ -48,7 +48,7 @@ entity dwa_ps_pl_top is
         CD_RCK    : out std_logic_vector(3 downto 0) := (others => '0');
         CD_G_b    : out std_logic_vector(3 downto 0) := (others => '0');
 
-        SNUM_SDA : in  std_logic                    := '0';
+        SNUM_SDA : inout  std_logic                    := '0';
         SNUM_SCL : out std_logic                    := '0';
         SNUM_A   : out std_logic_vector(2 downto 0) := (others => '0');
 

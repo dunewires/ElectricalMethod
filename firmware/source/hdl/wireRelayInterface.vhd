@@ -52,7 +52,7 @@ architecture STRUCT of wireRelayInterface is
 		);
 	END COMPONENT ;
 
-	type relayCfgState_type is (idle_s, updateSerialOut_s, shiftBitsIn_s, loadParallelReg_s, shiftBitsOut_s, waitToEnable_s);
+	type relayCfgState_type is (idle_s, updateSerialOut_s, shiftBitsIn_s, loadParallelReg_s, shiftBitsOut_s, waitToEnable_s, waitToShiftOut_s);
 	signal relayCfgState                                 : relayCfgState_type := idle_s;
 	signal updateLatch,updateLatch_cdc1,updateLatch_cdc2 : boolean            := false;
 	signal updateBusy,updateBusy_cdc1,updateBusy_cdc2    : boolean            := false;
@@ -164,6 +164,7 @@ begin
 			case (relayCfgState) is
 
 				when idle_s =>
+						waitCnt       <= (others => '0'); -- reset for next time
 					updateBusy <= false;
 					shiftCnt   <= (others => '0'); --number of bits to  shift
 					stringCnt  <= (others => '0');
@@ -194,7 +195,16 @@ begin
 				when loadParallelReg_s =>
 					rck           <= (others => '1'); -- load after all bits are shifted
 					shiftCnt      <= (others => '0'); --number of bits to  shift
-					relayCfgState <= shiftBitsOut_s;
+					--relayCfgState <= shiftBitsOut_s;
+					relayCfgState <= waitToShiftOut_s;
+
+				when waitToShiftOut_s => -- Wait for 16ms before enabling relays,  break before make
+					waitCnt <= waitCnt +1;
+					--if waitCnt = x"7D00" then
+					if waitCnt = x"0007" then -- do not wait for noise before reading, the x"0007" is just bc it's lucky
+						waitCnt       <= (others => '0'); -- reset for next time
+						relayCfgState <= shiftBitsOut_s;
+					end if;
 
 				when shiftBitsOut_s =>
 					clkEn    <= (others => '1'); -- shift all four serial streams in at once

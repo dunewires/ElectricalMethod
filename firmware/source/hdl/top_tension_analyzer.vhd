@@ -40,9 +40,9 @@ entity top_tension_analyzer is
     CD_RCK    : out std_logic_vector(3 downto 0) := (others => '0');
     CD_G_b    : out std_logic_vector(3 downto 0) := (others => '0');
 
-    SNUM_SDA : in  std_logic                    := '0';
-    SNUM_SCL : out std_logic                    := '0';
-    SNUM_A   : out std_logic_vector(2 downto 0) := (others => '0');
+    SNUM_SDA : inout std_logic                    := '0';
+    SNUM_SCL : out   std_logic                    := '0';
+    SNUM_A   : out   std_logic_vector(2 downto 0) := (others => '0');
 
     adcCnv        : out std_logic                    := '0';
     adcSck        : out std_logic                    := '0';
@@ -159,8 +159,9 @@ architecture STRUCT of top_tension_analyzer is
   signal noiseFirstReadout : boolean := false;
 
   signal noiseCorrDataSel : std_logic_vector(1 downto 0) := (others => '0');
-  signal msimDumy : std_logic_vector(2 downto 0) := (others => '0');
-  signal dwaClk2         : std_logic                    := '0';
+  signal msimDumy         : std_logic_vector(2 downto 0) := (others => '0');
+  signal dwaClk2          : std_logic                    := '0';
+  signal vioUpdate        : std_logic                    := '0';
 
 begin
 
@@ -293,11 +294,24 @@ begin
     end if;
   end process make_ac_stimX200;
 
+--  serialPromInterface_inst : entity work.serialPromInterface
+--    port map (
+--      fromDaqReg => fromDaqReg,
+--        toDaqReg   => toDaqReg,
+--      --simtoDaqReg => open,
+--
+--      sda       => SNUM_SDA,
+--      scl       => SNUM_SCL,
+--      vioUpdate => vioUpdate,
+--      dwaClk100 => dwaClk100,
+--      dwaClk10  => dwaClk10
+--    );
+
   wireRelayInterface_inst : entity duneDwa.wireRelayInterface
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg,
-      --toDaqReg   => open,
+       toDaqReg   => toDaqReg,
+      --simtoDaqReg => open,
 
       g_b     => CD_G_b,
       srclr_b => CD_SCLR_b,
@@ -306,17 +320,17 @@ begin
       sdo => CD_Din,
       rck => CD_RCK,
 
-      sck      => CD_SCK,
+      sck => CD_SCK,
 
       dwaClk100 => dwaClk100,
-      dwaClk2 => dwaClk2
+      dwaClk2   => dwaClk2
     );
   --gain DPOT
   dpotInterface_inst : entity duneDwa.dpotInterface
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg, --toDaqReg,
-      --toDaqReg => open, --toDaqReg,
+       toDaqReg => toDaqReg,
+      --simtoDaqReg => open, --toDaqReg,
 
       sdi    => dpotSdo,
       sdo    => dpotSdi,
@@ -373,8 +387,8 @@ begin
   wtaController_inst : entity duneDwa.wtaController
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg,
-      --toDaqReg => open, --toDaqReg,
+       toDaqReg   => toDaqReg,
+      --simtoDaqReg => open, --toDaqReg,
 
       freqSet       => ctrlFreqSet,
       acStim_enable => ctrl_acStim_enable,
@@ -424,8 +438,8 @@ begin
   mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg             => toDaqReg,
-      --toDaqReg => open,--toDaqReg,
+       toDaqReg   => toDaqReg,
+      --simtoDaqReg => open,--toDaqReg,
       freqSet  => ctrlFreqSet,
 
       noiseReadoutBusy  => noiseReadoutBusy,
@@ -475,7 +489,7 @@ begin
   headerGenerator_inst : entity duneDwa.headerGenerator
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg => toDaqReg, -- Keep this one for sim
+      toDaqReg   => toDaqReg, -- Keep this one for sim
 
       runOdometer   => (others => '0'),
       fpgaSerialNum => (others => '0'),
@@ -528,7 +542,7 @@ begin
       probe_in2               => (others => '0'),
       probe_out0              => open,
       probe_out1              => open,
-      probe_out2              => open,
+      probe_out2(0)           => vioUpdate,
       probe_out3              => open,
       probe_out4              => open,
       probe_out5              => open,

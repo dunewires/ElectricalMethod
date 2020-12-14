@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Jul 27 10:14:06 2020
+-- Last update : Sun Dec  6 18:35:55 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -172,18 +172,19 @@ begin
         x"38" & std_logic_vector(fromDaqReg.noiseNCnv),
         x"39" & std_logic_vector(fromDaqReg.noiseBPFSetTime),
         --# v3 relays: 192 bits (64+32)*2 (12 lines of 16bits)
-        x"80" & fromDaqReg.relayBusTop(0),
-        x"81" & fromDaqReg.relayBusTop(1),
-        x"82" & fromDaqReg.relayBusBot(0),
-        x"83" & fromDaqReg.relayBusBot(1),
-        x"84" & fromDaqReg.relayWireTop(0),
-        x"85" & fromDaqReg.relayWireTop(1),
-        x"86" & fromDaqReg.relayWireTop(2),
-        x"87" & fromDaqReg.relayWireTop(3),
-        x"88" & fromDaqReg.relayWireBot(0),
-        x"89" & fromDaqReg.relayWireBot(1),
-        x"8A" & fromDaqReg.relayWireBot(2),
-        x"8B" & fromDaqReg.relayWireBot(3),
+        --nf added 8 bits, relay signals are 16 bits
+        x"8000" & fromDaqReg.relayBusTop(0),
+        x"8100" & fromDaqReg.relayBusTop(1),
+        x"8200" & fromDaqReg.relayBusBot(0),
+        x"8300" & fromDaqReg.relayBusBot(1),
+        x"8400" & fromDaqReg.relayWireTop(0),
+        x"8500" & fromDaqReg.relayWireTop(1),
+        x"8600" & fromDaqReg.relayWireTop(2),
+        x"8700" & fromDaqReg.relayWireTop(3),
+        x"8800" & fromDaqReg.relayWireBot(0),
+        x"8900" & fromDaqReg.relayWireBot(1),
+        x"8A00" & fromDaqReg.relayWireBot(2),
+        x"8B00" & fromDaqReg.relayWireBot(3),
         x"FFFFFFFF" -- header delimiter (end)
     );    
     

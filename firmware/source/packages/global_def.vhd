@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Nov 25 14:13:22 2020
+-- Last update : Mon Dec 14 13:39:53 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -25,6 +25,8 @@ package global_def is
     -- ADC AXI offset address
     constant adcRegOfst  : integer := 24;
     constant adcStatAddr : integer := 23;
+    --set emulated data
+    --constant useAdcEmu : boolean := true;
     constant useAdcEmu   : boolean := false;
 
 
@@ -34,15 +36,19 @@ package global_def is
     type INTEGER_VECTOR_TYPE is array (natural range <>) of integer;
 
     type toDaqRegType is record
-        ctrlBusy      : boolean; --nf
-        udpDataWord   : std_logic_vector(31 downto 0);
-        udpDataRdy    : boolean;
-        senseWireGain : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
-        coilDrive     : std_logic_vector(31 downto 0);
-        relayBusTop   : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
-        relayWireTop  : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
-        relayBusBot   : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
-        relayWireBot  : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
+        ctrlBusy         : boolean; --nf
+        udpDataWord      : std_logic_vector(31 downto 0);
+        udpDataRdy       : boolean;
+        senseWireGain    : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
+        coilDrive        : std_logic_vector(31 downto 0);
+        relayBusTop      : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
+        relayWireTop     : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
+        relayBusBot      : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
+        relayWireBot     : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
+
+        serNumMemAddress : unsigned(12 downto 0);
+        serNumMemData    : unsigned(31 downto 0);
+
     end record; -- toDaqRegType
 
     type fromDaqRegType is record
@@ -68,6 +74,12 @@ package global_def is
         noiseSampPer    : unsigned(23 downto 0); -- 32 samp / cycle @ 60 Hz
         noiseNCnv       : unsigned(23 downto 0);
         noiseBPFSetTime : unsigned(23 downto 0);
+
+        serNum           : unsigned(23 downto 0);
+        serNumMemAddress : unsigned(12 downto 0);
+        serNumMemData    : unsigned(31 downto 0);
+        serNumMemRead    : std_logic;
+        serNumMemWrite   : std_logic;
         --stimPeriodActive   : unsigned(23 downto 0);
         --stimPeriodCounter  : unsigned(23 downto 0); -- bits???
         --- Number of stimulus cycles per frequency (unitless)
@@ -88,12 +100,12 @@ package global_def is
         --- in v2 this is 32 bits.  In v3 will be 192 bits!!!
         relayMask : std_logic_vector(31 downto 0);
         --adcSamplingPeriod  : unsigned(23 downto 0);
-        relayBusTop  : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
-        relayWireTop : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
-        relayBusBot  : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
-        relayWireBot : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
-        relayUpdate  : boolean;
-        relayAutoBreakEna:std_logic;
+        relayBusTop       : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
+        relayWireTop      : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
+        relayBusBot       : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
+        relayWireBot      : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
+        relayUpdate       : boolean;
+        relayAutoBreakEna : std_logic;
     end record; -- fromDaqRegType
 
 end global_def;

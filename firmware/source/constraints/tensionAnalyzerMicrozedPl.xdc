@@ -130,6 +130,7 @@ set_property PACKAGE_PIN N18 [get_ports CD_Dout[2]]
 #DWA V2 CoilDrive[21]
 set_property IOSTANDARD LVCMOS33 [get_ports SNUM_SDA]
 set_property PACKAGE_PIN N20 [get_ports SNUM_SDA]
+set_property PULLUP TRUE [get_ports SNUM_SDA]
 
 #DWA V2 CoilDrive[22]
 set_property IOSTANDARD LVCMOS33 [get_ports CD_Dout[0]]
