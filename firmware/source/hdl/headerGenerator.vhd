@@ -41,7 +41,7 @@ entity headerGenerator is
             -- total number of runs with this board (non-volatile)
             runOdometer        : in unsigned(23 downto 0);
             -- 24 LSb of the 64-bit FPGA serial number
-            fpgaSerialNum      : in unsigned(23 downto 0);             
+            --fpgaSerialNum      : in unsigned(23 downto 0);             
 
             -----------------------
             -- PL
@@ -143,7 +143,7 @@ begin
     headFDataList <= (
         x"FFFF" & std_logic_vector(to_unsigned(nHeadF-2, 16)), -- header delimiter (start)
         x"00" & std_logic_vector(runOdometer),
-        x"01" & std_logic_vector(fpgaSerialNum),
+        x"01" & std_logic_vector(fromDaqReg.serNum),
         x"02" & std_logic_vector(firmwareId_date(47 downto 24)), --24MSb
         x"03" & std_logic_vector(firmwareId_date(23 downto  0)),  --24LSb
         x"04" & x"00" & std_logic_vector(firmwareId_hash(31 downto 16)), --16MSb
