@@ -398,15 +398,4 @@ begin
 
         );
 
-
-    -- COMP_TAG_END ------ End COMPONENT Declaration ------------
-
-    -- The following code must appear in the VHDL architecture
-    -- body. Substitute your own instance name and net names.
-
-    ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-
-
-
-
 end STRUCTURE;

@@ -1,43 +1,46 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate /tb_adc_emu/mainsSquare
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/wordCnt
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/waitCnt
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/vioUpdate_del2
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/vioUpdate_del1
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/vioUpdate
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/updateLatch_cdc2
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/updateLatch_cdc1
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/updateLatch
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/updateBusy_cdc2
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/updateBusy_cdc1
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/updateBusy
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/toDaqReg
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/stateDbg
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sNDone
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/shiftRegIn
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/shiftReg
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/serialCmd
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/serialAddress
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sdoEn_del
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sdoEn
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sdo_del
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sdo
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sdaState
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sda
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sclHold
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/scl
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/isTx
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fromDaqReg
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/forceUpdate
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/dwaClkSer
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/dwaClk100
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/dwaClk10
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/commStateNext
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/commState
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/cmdStateNext
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/cmdState
-add wave -noupdate -expand -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/bitCnt
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/writeDone
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/writeBusy_d
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/writeBusy
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/wordCnt
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/waitCnt
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/vioUpdate_del2
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/vioUpdate_del1
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/vioUpdate
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/toDaqReg
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/stateDbg
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/snInitRead
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/shiftReg
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/serString
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/serialCmdEnable
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/serialAddress
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sendStop
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sdoEn_del
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sdoEn
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sdo_del
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sdo
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sdaState
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sda
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/sclHold
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/scl
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/readDone
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/readBusy_d
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/readBusy
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/nWord
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/nRxWord
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/memWrite
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/memRead
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/memAddr
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fromDaqReg
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/dwaClk100
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/dwaClk10
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/deviceAddr
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/cmdStateNext
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/cmdState
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/clkCnt
+add wave -noupdate -group {serial PROM} /tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/bitCnt
 add wave -noupdate -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/updateLatch_cdc2
 add wave -noupdate -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/updateLatch_cdc1
 add wave -noupdate -group coilDrive /tb_adc_emu/top_tension_analyzer_1/wireRelayInterface_inst/updateLatch
@@ -268,4 +271,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits fs
 update
-WaveRestoreZoom {261744623525 fs} {266441655941 fs}
+WaveRestoreZoom {144844878288 fs} {1515257022837 fs}

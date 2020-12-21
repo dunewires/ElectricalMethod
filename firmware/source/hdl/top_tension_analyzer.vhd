@@ -294,24 +294,24 @@ begin
     end if;
   end process make_ac_stimX200;
 
---  serialPromInterface_inst : entity work.serialPromInterface
---    port map (
---      fromDaqReg => fromDaqReg,
---        toDaqReg   => toDaqReg,
---      --simtoDaqReg => open,
---
---      sda       => SNUM_SDA,
---      scl       => SNUM_SCL,
---      vioUpdate => vioUpdate,
---      dwaClk100 => dwaClk100,
---      dwaClk10  => dwaClk10
---    );
+  serialPromInterface_inst : entity work.serialPromInterface
+    port map (
+      fromDaqReg => fromDaqReg,
+      --sim  toDaqReg   => toDaqReg,
+       toDaqReg => open,
+
+      sda       => SNUM_SDA,
+      scl       => SNUM_SCL,
+      vioUpdate => vioUpdate,
+      dwaClk100 => dwaClk100,
+      dwaClk10  => dwaClk10
+    );
 
   wireRelayInterface_inst : entity duneDwa.wireRelayInterface
     port map (
       fromDaqReg => fromDaqReg,
-       toDaqReg   => toDaqReg,
-      --simtoDaqReg => open,
+      --sim toDaqReg   => toDaqReg,
+       toDaqReg => open,
 
       g_b     => CD_G_b,
       srclr_b => CD_SCLR_b,
@@ -329,8 +329,8 @@ begin
   dpotInterface_inst : entity duneDwa.dpotInterface
     port map (
       fromDaqReg => fromDaqReg,
-       toDaqReg => toDaqReg,
-      --simtoDaqReg => open, --toDaqReg,
+      --sim toDaqReg => toDaqReg,
+       toDaqReg => open, --toDaqReg,
 
       sdi    => dpotSdo,
       sdo    => dpotSdi,
@@ -387,8 +387,8 @@ begin
   wtaController_inst : entity duneDwa.wtaController
     port map (
       fromDaqReg => fromDaqReg,
-       toDaqReg   => toDaqReg,
-      --simtoDaqReg => open, --toDaqReg,
+      --sim toDaqReg   => toDaqReg,
+       toDaqReg => open, --toDaqReg,
 
       freqSet       => ctrlFreqSet,
       acStim_enable => ctrl_acStim_enable,
@@ -438,8 +438,8 @@ begin
   mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
     port map (
       fromDaqReg => fromDaqReg,
-       toDaqReg   => toDaqReg,
-      --simtoDaqReg => open,--toDaqReg,
+      --sim toDaqReg   => toDaqReg,
+       toDaqReg => open,--toDaqReg,
       freqSet  => ctrlFreqSet,
 
       noiseReadoutBusy  => noiseReadoutBusy,

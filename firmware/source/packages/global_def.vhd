@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Dec 14 13:39:53 2020
+-- Last update : Mon Dec 21 17:48:25 2020
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ package global_def is
     constant adcStatAddr : integer := 23;
     --set emulated data
     --constant useAdcEmu : boolean := true;
-    constant useAdcEmu   : boolean := false;
+    constant useAdcEmu   : boolean := true;
 
 
     type SLV_VECTOR_TYPE is array (natural range <>) of std_logic_vector;
@@ -46,6 +46,7 @@ package global_def is
         relayBusBot      : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
         relayWireBot     : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
 
+        serNum           : unsigned(23 downto 0);
         serNumMemAddress : unsigned(12 downto 0);
         serNumMemData    : unsigned(31 downto 0);
 
@@ -78,7 +79,9 @@ package global_def is
         serNum           : unsigned(23 downto 0);
         serNumMemAddress : unsigned(12 downto 0);
         serNumMemData    : unsigned(31 downto 0);
+        
         serNumMemRead    : std_logic;
+        serNumMemAddrStrb    : std_logic;
         serNumMemWrite   : std_logic;
         --stimPeriodActive   : unsigned(23 downto 0);
         --stimPeriodCounter  : unsigned(23 downto 0); -- bits???

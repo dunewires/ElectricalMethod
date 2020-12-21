@@ -159,6 +159,8 @@ architecture arch_imp of dwa_registers_v1_0_S00_AXI is
 	signal slv_reg41       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg42       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg43       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg49       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg50       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg_rden    : std_logic;
 	signal slv_reg_wren    : std_logic;
 	signal reg_data_out    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
@@ -262,6 +264,9 @@ begin
 		variable loc_addr : std_logic_vector(OPT_MEM_ADDR_BITS downto 0);
 	begin
 		if rising_edge(S_AXI_ACLK) then
+			--default
+			fromDaqReg.serNumMemWrite    <= '0';
+			fromDaqReg.serNumMemAddrStrb <= '0';
 			-- reg0 moved here so it is not sticky 
 			-- used for any pulsed signals e.g. reset & start
 			slv_reg0 <= (others => '0');
@@ -310,6 +315,8 @@ begin
 				slv_reg41 <= (others => '0');
 				slv_reg42 <= (others => '0');
 				slv_reg43 <= (others => '0');
+				slv_reg49 <= x"00000800";
+				slv_reg50 <= x"BADDBEEF";
 			else
 				loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 				if (slv_reg_wren = '1') then
@@ -667,6 +674,25 @@ begin
 								end if;
 							end loop;
 
+						when b"110001" => --reg 49 is sn address register
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg49(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+							fromDaqReg.serNumMemAddrStrb <= '1'; -- signal dwa this register was updated
+
+						when b"110010" => -- reg 50 is sn data register
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg50(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+							fromDaqReg.serNumMemWrite <= '1'; -- signal dwa this register was updated
 						when others =>
 							slv_reg0  <= slv_reg0;
 							slv_reg1  <= slv_reg1;
@@ -712,6 +738,8 @@ begin
 							slv_reg41 <= slv_reg41;
 							slv_reg42 <= slv_reg42;
 							slv_reg43 <= slv_reg43;
+							slv_reg49 <= slv_reg49;
+							slv_reg50 <= slv_reg50;
 					end case;
 				end if;
 			end if;
@@ -806,7 +834,7 @@ begin
 		loc_addr              := axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 		fromDaqReg.udpDataRen <= false;
 		udpDataStatStrb       <= '0';
-
+		fromDaqReg.serNumMemRead     <= '0';
 		--regFromDwa_strb                                 <= (others => '0');
 		--regFromDwa_strb(to_integer(unsigned(loc_addr))) <= axi_rvalid;
 
@@ -910,6 +938,14 @@ begin
 				reg_data_out <= x"0000" & toDaqReg.relayWireBot(1);
 			when b"100000" =>
 				reg_data_out <= x"0000" & toDaqReg.relayWireBot(0);
+			when b"110000" => -- sn reg 48
+				reg_data_out <= x"00" & std_logic_vector(toDaqReg.serNum);
+			when b"110001" => --sn addres reg 49
+				reg_data_out                 <= b"0000000000000000000" & std_logic_vector(toDaqReg.serNumMemAddress);
+			when b"110010" =>--sn data reg 50
+				reg_data_out <= std_logic_vector(toDaqReg.serNumMemData);
+				fromDaqReg.serNumMemRead     <= slv_reg_rden; --tell dwa data was read
+
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;
@@ -945,8 +981,8 @@ begin
 	fromDaqReg.ctrlStart   <= slv_reg0(1)= '1';
 	fromDaqReg.relayUpdate <= slv_reg0(2)= '1';
 
-	fromDaqReg.auto   <= slv_reg1(0)= '1';
-	fromDaqReg.mnsEna <= slv_reg1(1)= '1';
+	fromDaqReg.auto              <= slv_reg1(0)= '1';
+	fromDaqReg.mnsEna            <= slv_reg1(1)= '1';
 	fromDaqReg.relayAutoBreakEna <= slv_reg1(2);
 	-- udpDataDone when PS has read the status at the end of the data payload
 	fromDaqReg.udpDataDone        <= not udpReadBusy and udpReadBusy_del; --trailing edge
@@ -989,6 +1025,10 @@ begin
 	fromDaqReg.relayWireBot(2) <= slv_reg34(15 downto 0);
 	fromDaqReg.relayWireBot(1) <= slv_reg33(15 downto 0);
 	fromDaqReg.relayWireBot(0) <= slv_reg32(15 downto 0);
+
+	fromDaqReg.serNumMemAddress <= unsigned(slv_reg49(12 downto 0));
+	fromDaqReg.serNumMemData    <= unsigned(slv_reg50);
+	fromDaqReg.serNum  <= toDaqReg.serNum;
 
 	-- User logic ends
 
