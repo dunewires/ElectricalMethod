@@ -120,17 +120,27 @@ int IicPhyReset(void);
 
 int main()
 {
+	  unsigned int udpMacAddr;
+
 #if LWIP_IPV6==0
 	ip_addr_t ipaddr, netmask, gw;
 
 #endif
-	/* the mac address of the board. this should be unique per board */
+	  u8_t *udpMacAddrB = (u8_t*) &udpMacAddr;
+
+	xil_printf("pre sleep MAC address 84, 2b, 2b, %x%x%x\r\n", udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0]);
+	udpMacAddr = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + 0x30);
+	sleep(3000);
+	udpMacAddr = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + 0x30);
+	xil_printf("MAC address 84, 2b, 2b, %x%x%x\r\n", udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0]);
+
 	unsigned char mac_ethernet_address[] =
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x00}; //"Jeff" microzed"
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x01}; //"Nate" microzed"
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x02}; //"James" microzed"
-	{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x03}; //"DWA_v2" microzed"
+	{ 0x84, 0x2b, 0x2b, udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0] }; //"DWA_v2" microzed"
 	//{ 0xfc, 0xc2, 0xde, 0x36, 0xd5, 0x7e}; //"edison"
+
 
 	echo_netif = &server_netif;
 #if defined (__arm__) && !defined (ARMR5)
