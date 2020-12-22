@@ -297,8 +297,8 @@ begin
   serialPromInterface_inst : entity work.serialPromInterface
     port map (
       fromDaqReg => fromDaqReg,
-      --sim  toDaqReg   => toDaqReg,
-       toDaqReg => open,
+        toDaqReg   => toDaqReg,
+      --sim toDaqReg => open,
 
       sda       => SNUM_SDA,
       scl       => SNUM_SCL,
@@ -310,8 +310,8 @@ begin
   wireRelayInterface_inst : entity duneDwa.wireRelayInterface
     port map (
       fromDaqReg => fromDaqReg,
-      --sim toDaqReg   => toDaqReg,
-       toDaqReg => open,
+       toDaqReg   => toDaqReg,
+      --sim toDaqReg => open,
 
       g_b     => CD_G_b,
       srclr_b => CD_SCLR_b,
@@ -329,8 +329,8 @@ begin
   dpotInterface_inst : entity duneDwa.dpotInterface
     port map (
       fromDaqReg => fromDaqReg,
-      --sim toDaqReg => toDaqReg,
-       toDaqReg => open, --toDaqReg,
+       toDaqReg => toDaqReg,
+      --sim toDaqReg => open, --toDaqReg,
 
       sdi    => dpotSdo,
       sdo    => dpotSdi,
@@ -387,8 +387,8 @@ begin
   wtaController_inst : entity duneDwa.wtaController
     port map (
       fromDaqReg => fromDaqReg,
-      --sim toDaqReg   => toDaqReg,
-       toDaqReg => open, --toDaqReg,
+       toDaqReg   => toDaqReg,
+      --sim toDaqReg => open, --toDaqReg,
 
       freqSet       => ctrlFreqSet,
       acStim_enable => ctrl_acStim_enable,
@@ -438,8 +438,8 @@ begin
   mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
     port map (
       fromDaqReg => fromDaqReg,
-      --sim toDaqReg   => toDaqReg,
-       toDaqReg => open,--toDaqReg,
+       toDaqReg   => toDaqReg,
+      --sim toDaqReg => open,--toDaqReg,
       freqSet  => ctrlFreqSet,
 
       noiseReadoutBusy  => noiseReadoutBusy,
@@ -492,7 +492,6 @@ begin
       toDaqReg   => toDaqReg, -- Keep this one for sim
 
       runOdometer   => (others => '0'),
-      fpgaSerialNum => (others => '0'),
 
       --udpDataRen         => false, --fromDaq
       sendRunHdr    => sendRunHdr,
