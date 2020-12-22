@@ -67,8 +67,33 @@ class DwaDataParser():
         self.frameKeys[Frame.RUN]["2B"] = "clientIP_16LSb" # 16bit
         self.frameKeys[Frame.RUN]["2C"] = "stimTime" # ??bit
         self.frameKeys[Frame.RUN]["2D"] = "activeChannels" # ??bit
-        self.frameKeys[Frame.RUN]["2E"] = "relayMask_16MSb" # ??bit
-        self.frameKeys[Frame.RUN]["2F"] = "relayMask_16LSb" # ??bit
+        #self.frameKeys[Frame.RUN]["2E"] = "relayMask_16MSb" # ??bit
+        #self.frameKeys[Frame.RUN]["2F"] = "relayMask_16LSb" # ??bit
+        # Digipot settings
+        self.frameKeys[Frame.RUN]["30"] = "digipotGainAdc01" # ??bit
+        self.frameKeys[Frame.RUN]["31"] = "digipotGainAdc23" # ??bit
+        self.frameKeys[Frame.RUN]["32"] = "digipotGainAdc45" # ??bit
+        self.frameKeys[Frame.RUN]["33"] = "digipotGainAdc67" # ??bit
+        # Mains noise subtraction
+        self.frameKeys[Frame.RUN]["34"] = "noiseFreqMin" # 24bit
+        self.frameKeys[Frame.RUN]["35"] = "noiseFreqMax" # 24bit
+        self.frameKeys[Frame.RUN]["36"] = "noiseFreqStep" # 24bit
+        self.frameKeys[Frame.RUN]["37"] = "noiseSamplingPeriod" # 
+        self.frameKeys[Frame.RUN]["38"] = "noiseAdcSamplesPerFreq" # 
+        self.frameKeys[Frame.RUN]["39"] = "noiseSettlingTime" # 
+        # v3 relays
+        self.frameKeys[Frame.RUN]["40"] = "relayBusTop0"  # 16bits
+        self.frameKeys[Frame.RUN]["41"] = "relayBusTop1"  # 16bits
+        self.frameKeys[Frame.RUN]["42"] = "relayBusBot0"  # 16bits
+        self.frameKeys[Frame.RUN]["43"] = "relayBusBot1"  # 16bits
+        self.frameKeys[Frame.RUN]["44"] = "relayWireTop0"  # 16bits
+        self.frameKeys[Frame.RUN]["45"] = "relayWireTop1"  # 16bits
+        self.frameKeys[Frame.RUN]["46"] = "relayWireTop2"  # 16bits
+        self.frameKeys[Frame.RUN]["47"] = "relayWireTop3"  # 16bits
+        self.frameKeys[Frame.RUN]["48"] = "relayWireBot0"  # 16bits
+        self.frameKeys[Frame.RUN]["49"] = "relayWireBot1"  # 16bits
+        self.frameKeys[Frame.RUN]["4A"] = "relayWireBot2"  # 16bits
+        self.frameKeys[Frame.RUN]["4B"] = "relayWireBot3"  # 16bits
         #
         # Frequency Frame entries
         self.frameKeys[Frame.FREQ]["11"] = "Register_ID_Freq"  #  8bit
@@ -105,18 +130,51 @@ class DwaDataParser():
 
         self._infoLineParserSelector = {
             # keys are the Unique keys in self.frameKeys
+            # UDP frame
             "UDP_Counter": self._parseInfoLineAsInt,
             "Register_ID": self._parseInfoLineAsInt,
-            "DWA_Ctrl": self._parseInfoLineAsInt,
+            # RUN frame
+            "runOdometer": self._parseInfoLineAsInt,
+            "fpgaSerialNumber": self._parseInfoLineAsInt,
+            "firmwareIdDate_24MSb": self._parseInfoLineAsInt,
+            "firmwareIdDate_24LSb": self._parseInfoLineAsInt,
+            "firmwareIdHash_16MSb": self._parseInfoLineAsInt,
+            "firmwareIdHash_16LSb": self._parseInfoLineAsInt,
             "stimFreqReq": self._parseInfoLineAsInt,
             "stimFreqMin": self._parseInfoLineAsInt,
             "stimFreqMax": self._parseInfoLineAsInt,
             "stimFreqStep": self._parseInfoLineAsInt,
-            "nCyclesPerFreq": self._parseInfoLineAsInt,
+            "cyclesPerFreq": self._parseInfoLineAsInt,
             "adcSamplesPerCycle": self._parseInfoLineAsInt,
             "stimMag": self._parseInfoLineAsInt,
-            "clientIP_16MSb":self._parseRunLineClientIP, 
-            "clientIP_16LSb":self._parseRunLineClientIP, 
+            "clientIP_16MSb": self._parseRunLineClientIP, 
+            "clientIP_16LSb": self._parseRunLineClientIP, 
+            "stimTime": self._parseInfoLineAsInt,
+            # Digipot settings
+            "digipotGainAdc01": self._parseDigipotGain,
+            "digipotGainAdc23": self._parseDigipotGain,
+            "digipotGainAdc45": self._parseDigipotGain,
+            "digipotGainAdc67": self._parseDigipotGain,
+            # Mains noise subtraction
+            "noiseFreqMin": self._parseInfoLineAsInt,
+            "noiseFreqMax": self._parseInfoLineAsInt,
+            "noiseFreqStep": self._parseInfoLineAsInt,
+            "noiseSamplingPeriod": self._parseInfoLineAsInt,
+            "noiseAdcSamplesPerFreq": self._parseInfoLineAsInt,
+            "noiseSettlingTime": self._parseInfoLineAsInt,
+            # v3 relays
+            "relayBusTop0": self._parseRelayLine,
+            "relayBusTop1": self._parseRelayLine,
+            "relayBusBot0": self._parseRelayLine,
+            "relayBusBot1": self._parseRelayLine,
+            "relayWireTop0": self._parseRelayLine,
+            "relayWireTop1": self._parseRelayLine,
+            "relayWireTop2": self._parseRelayLine,
+            "relayWireTop3": self._parseRelayLine,
+            "relayWireBot0": self._parseRelayLine,
+            "relayWireBot1": self._parseRelayLine,
+            "relayWireBot2": self._parseRelayLine,
+            "relayWireBot3": self._parseRelayLine,
             #
             # Frequency Frame keys
             "Register_ID_Freq": self._parseInfoLineAsInt,
@@ -124,6 +182,14 @@ class DwaDataParser():
             "adcSamplesPerFreq": self._parseInfoLineAsInt,
             "stimPeriodActive": self._parseInfoLineAsInt,
             "adcSamplingPeriod":self._parseInfoLineAsInt,
+            # Defunct (FIXME: remove?)
+            "DWA_Ctrl": self._parseInfoLineAsInt,
+            #"relayMask_16MSb"
+            #"relayMask_16LSb"
+            #
+            # FIXME: need to add
+            #"activeChannels"
+            # 
             #"UNHANDLED_LINES": self._parseUnknownInfoLine  # do this if a key is not recognized...
         }
 
@@ -194,6 +260,14 @@ class DwaDataParser():
     def _parseRunLineClientIP(self, infoLine):
         return infoLine[-4:]  # last 4 characters, as string
 
+    def _parseDigipotGain(self, infoLine):
+        print("FIXME: digipot gain info not correctly parsed yet")
+        return -1
+
+    def _parseRelayLine(self, infoLine):
+        print("FIXME: v3 relay info lines not correctly parsed yet")
+        return -1
+    
     def _getKey(self, infoLine, frameType):
         key = infoLine[0:2]    # this key may be re-used in a different frame type, can't assume it's unique...
         print("key = [{}]".format(key))
@@ -320,6 +394,10 @@ class DwaDataParser():
         inHeader = False
         delimIdxs = []  # line numbers of frame delimiters
         for ii, line in enumerate(udpPayload):
+            ### FIXME: KLUGE KLUGE!!!!
+            print("MAJOR KLUGE NEEDS TO BE REMOVED!")
+            if line.startswith("8"):
+                continue
             if dwa.isHeaderLine(line):
                 delimIdxs.append(ii)
         print("Header lines = ")
@@ -351,7 +429,8 @@ class DwaDataParser():
             
             # FIXME: add an "assert" here if delimiters don't match
             print("frameEndLine = {}".format(udpPayload[frameEndIdx]))
-            
+            print("frame = ")
+            print(udpPayload[frameStartIdx:frameEndIdx+1])
             frameParser = self._frameParserSelector[frameType]
             # For debugging only
             #if frameStartLine.startswith('DDDD'):

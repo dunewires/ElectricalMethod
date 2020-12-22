@@ -40,7 +40,8 @@ class DwaConfigFile():
                                      "stimFreqReq", "stimFreqMin", "stimFreqMax", "stimFreqStep",
                                      "stimTime", "stimMag",
                                      "cyclesPerFreq", "adcSamplesPerCycle",
-                                     "relayMask", "coilDrive", "digipot",
+                                     # "relayMask", "coilDrive",  # v2 only (defunct)
+                                     "digipot",
                                      "client_IP",
                                      "noiseFreqMin", "noiseFreqMax", "noiseFreqStep",
                                      "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq",
@@ -96,7 +97,13 @@ class DwaConfigFile():
         self.defaults["noiseAdcSamplesPerFreq"] = "00000100"  # [unitless] (256 samples) limited to 256
         self.defaults["noiseSamplingPeriod"]    = "0000CB73"  # [10ns]   32 samp/cycle @ 60 Hz
         self.defaults["noiseSettlingTime"]      = "00001000"  # [2.56us]  "00001000" ~ 10ms
+        #
+        self.defaults["relayWireTop"]  = "0000000000000000" # 64-bit  top3top2top1top0
+        self.defaults["relayWireBot"]  = "0000000000000000" # 64-bit  bot3bot2bot1bot0
+        self.defaults["relayBusTop"]   = "00000000"         # 32-bit  top1top0
+        self.defaults["relayBusBot"]   = "00000000"         # 32-bit  bot1bot0
 
+        
     def validate(self):
         """ validate the values read from a config file
         Check for:
