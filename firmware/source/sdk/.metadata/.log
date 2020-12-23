@@ -9263,3 +9263,26 @@ Design is not opened in the current session.
 Design is not opened in the current session.
 
 , Time=1608695549621, Code=1}, ]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2020-12-22 22:58:49.081
+!MESSAGE XSCT Command: [ ::hsi::utils::set_current_hw_sw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwa_ps_bd_wrapper_hw_platform_0/system.hdf /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_echo1_bsp/system.mss ], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2020-12-22 22:58:49.083
+!MESSAGE XSCT command with result: [ ::hsi::utils::set_current_hw_sw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwa_ps_bd_wrapper_hw_platform_0/system.hdf /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_echo1_bsp/system.mss ], Result: [{Format=ERROR: [Common 17-39] 'hsi::open_sw_design' failed due to earlier errors.
+, Time=1608695929083, Code=1}, ]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2020-12-22 22:58:49.084
+!MESSAGE XSCT Command: [::hsi::utils::get_hw_sw_details -json /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwa_ps_bd_wrapper_hw_platform_0/system.hdf /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_echo1_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2020-12-22 22:58:49.086
+!MESSAGE XSCT command with result: [::hsi::utils::get_hw_sw_details -json /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwa_ps_bd_wrapper_hw_platform_0/system.hdf /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_echo1_bsp/system.mss], Result: [{Format=ERROR: [Common 17-39] 'hsi::open_sw_design' failed due to earlier errors.
+, Time=1608695929085, Code=1}, ]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2020-12-22 22:58:49.086
+!MESSAGE XSCT Command: [::hsi::utils::closesw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_echo1_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2020-12-22 22:58:49.086
+!MESSAGE XSCT command with result: [::hsi::utils::closesw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_echo1_bsp/system.mss], Result: [{Format=Cannot close sw design '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_echo1_bsp/system.mss'.
+Design is not opened in the current session.
+
+, Time=1608695929086, Code=1}, ]. Thread: main
