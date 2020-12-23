@@ -929,3 +929,20 @@ Reason: Cannot close sw design '/home/nate/projects/duneWireTension/ElectricalMe
 Design is not opened in the current session.
 
 
+22:52:29 ERROR : (XSDB Server)ERROR: [Hsi 55-1594] Core PLAXI_INTERFACE of version 1.0 not found in repositories
+ERROR: [Hsi 55-1403] /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_echo1_bsp/system.mss line 21 - No IP instance named PLAXI_INTERFACE_0 present in hardware design
+
+22:52:29 ERROR :  [Common 17-39] 'hsi::open_sw_design' failed due to earlier errors.
+22:52:29 ERROR : (XSDB Server)ERROR: [Hsi 55-1452] Error: running open_sw_design.
+
+22:52:29 ERROR : (XSDB Server)ERROR: [Hsi 55-1594] Core PLAXI_INTERFACE of version 1.0 not found in repositories
+ERROR: [Hsi 55-1403] /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_echo1_bsp/system.mss line 21 - No IP instance named PLAXI_INTERFACE_0 present in hardware design
+
+22:52:29 ERROR : (XSDB Server)ERROR: [Hsi 55-1452] Error: running open_sw_design.
+
+22:52:29 INFO  : Unable to read in MSS file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_echo1_bsp/system.mss : null
+22:52:29 ERROR : Failed to closesw "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_echo1_bsp/system.mss"
+Reason: Cannot close sw design '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/lwip_echo1_bsp/system.mss'.
+Design is not opened in the current session.
+
+

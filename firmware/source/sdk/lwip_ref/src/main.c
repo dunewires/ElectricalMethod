@@ -128,7 +128,7 @@ unsigned int udpMacAddr;
 	  u8_t *udpMacAddrB = (u8_t*) &udpMacAddr;
 
 	xil_printf("pre sleep MAC address 84, 2b, 2b, %x%x%x\r\n", udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0]);
-	udpMacAddr = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + 0x30);
+	udpMacAddr = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + (48 << 2));
 	sleep(3);
 	udpMacAddr = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + 0x30);
 	xil_printf("MAC address 84, 2b, 2b, %x%x%x\r\n", udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0]);	unsigned char mac_ethernet_address[] =
