@@ -70,6 +70,7 @@
 							<tool id="xilinx.gnu.armv7.size.debug.751645494" name="ARM v7 Print Size" superClass="xilinx.gnu.armv7.size.debug"/>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="xilinx.gnu.armv7.exe.debug.65501756.1786833255" name="lwip_ref.elf" rcbsApplicability="disable" resourcePath="Release/lwip_ref.elf" toolsToInvoke=""/>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -143,6 +144,7 @@
 							<tool id="xilinx.gnu.armv7.size.release.188618737" name="ARM v7 Print Size" superClass="xilinx.gnu.armv7.size.release"/>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="xilinx.gnu.armv7.exe.release.1066416525.1929541544" name="lwip_ref.elf" rcbsApplicability="disable" resourcePath="Release/lwip_ref.elf" toolsToInvoke=""/>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
