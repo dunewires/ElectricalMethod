@@ -1,4 +1,4 @@
-22:59:45 **** Auto Build of configuration Release for project lwip_ref ****
+23:35:56 **** Auto Build of configuration Release for project lwip_ref ****
 make pre-build main-build 
 a9-linaro-pre-build-step
  
@@ -6,11 +6,11 @@ Building file: ../src/main.c
 Invoking: ARM v7 gcc compiler
 arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/main.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I../../lwip_echo1_bsp/ps7_cortexa9_0/include -MMD -MP -MF"src/main.d" -MT"src/main.o" -o "src/main.o" "../src/main.c"
 ../src/main.c: In function 'main':
-../src/main.c:132:2: warning: implicit declaration of function 'sleep'; did you mean 'strsep'? [-Wimplicit-function-declaration]
-  sleep(3);
+../src/main.c:129:2: warning: implicit declaration of function 'sleep'; did you mean 'strsep'? [-Wimplicit-function-declaration]
+  sleep(3);// give time for the power up and  serial num read
   ^~~~~
   strsep
-../src/main.c:255:3: warning: implicit declaration of function 'drainDebugFifoUdp' [-Wimplicit-function-declaration]
+../src/main.c:253:3: warning: implicit declaration of function 'drainDebugFifoUdp' [-Wimplicit-function-declaration]
    drainDebugFifoUdp(0x18);
    ^~~~~~~~~~~~~~~~~
 Finished building: ../src/main.c
@@ -23,9 +23,9 @@ Finished building target: lwip_ref.elf
 Invoking: ARM v7 Print Size
 arm-none-eabi-size lwip_ref.elf  |tee "lwip_ref.elf.size"
    text	   data	    bss	    dec	    hex	filename
- 112000	   3048	5257232	5372280	 51f978	lwip_ref.elf
+ 111932	   3048	5257232	5372212	 51f934	lwip_ref.elf
 Finished building: lwip_ref.elf.size
  
 
-22:59:45 Build Finished (took 123ms)
+23:35:56 Build Finished (took 127ms)
 

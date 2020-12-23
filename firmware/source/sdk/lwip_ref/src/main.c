@@ -126,12 +126,10 @@ unsigned int udpMacAddr;
 
 #endif
 	  u8_t *udpMacAddrB = (u8_t*) &udpMacAddr;
-
+	sleep(3);// give time for the power up and  serial num read
 	udpMacAddr = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + (48 << 2));
-	xil_printf("pre sleep MAC address 84, 2b, 2b, %x%x%x\r\n", udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0]);
-	sleep(3);
-	udpMacAddr = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + 0x30);
-	xil_printf("MAC address 84, 2b, 2b, %x%x%x\r\n", udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0]);	unsigned char mac_ethernet_address[] =
+	xil_printf("MAC address 84, 2b, 2b, %x, %x, %x \r\n", udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0]);
+	unsigned char mac_ethernet_address[] =
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x00}; //"Jeff" microzed"
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x01}; //"Nate" microzed"
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x02}; //"James" microzed"
