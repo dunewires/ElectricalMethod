@@ -129,7 +129,7 @@ unsigned int udpMacAddr;
 
 	xil_printf("pre sleep MAC address 84, 2b, 2b, %x%x%x\r\n", udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0]);
 	udpMacAddr = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + 0x30);
-	sleep(3000);
+	sleep(3);
 	udpMacAddr = *(unsigned int *) (XPAR_PLAXI_INTERFACE_0_S00_AXI_BASEADDR + 0x30);
 	xil_printf("MAC address 84, 2b, 2b, %x%x%x\r\n", udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0]);	unsigned char mac_ethernet_address[] =
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x00}; //"Jeff" microzed"
