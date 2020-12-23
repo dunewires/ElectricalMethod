@@ -138,7 +138,7 @@ class Worker(qtc.QRunnable):
         # this will be passed on to self.fn so that function
         # has access to the callback
         #kwargs['progress_callback'] = self.signals.progress
-        kwargs['newdata_callback'] = self.signals.newUdpPayload
+        #kwargs['newdata_callback'] = self.signals.newUdpPayload
         
     @qtc.pyqtSlot()
     def run(self):
@@ -227,6 +227,9 @@ class MainWindow(qtw.QMainWindow):
 
         # Establish keyboard shortcuts and associated signals/slots
         self._keyboardShortcuts()
+
+        # signals for callback actions
+        self.signals = WorkerSignals()
 
         ############ Resize and launch GUI in bottom right corner of screen
         # tested on mac & linux (unclear about windows)
@@ -505,29 +508,25 @@ class MainWindow(qtw.QMainWindow):
 
     def udpListen(self):
         # Pass the function to execute
-        worker = Worker(self.startUdpReceiver)  # could have args/kwargs too..
+        worker = Worker(self.startUdpReceiver, newdata_callback=self.signals.newUdpPayload)
         worker.signals.result.connect(self.printOutput)
         worker.signals.finished.connect(self.threadComplete)
-        worker.signals.newUdpPayload.connect(self.processUdpPayload)
-
+        self.signals.newUdpPayload.connect(self.processUdpPayload)
+        
         # execute
         self.threadPool.start(worker)
 
     @pyqtSlot()
     def startRunThread(self):
         # Pass the function to execute
-        worker = Worker(self.startRun)  # could have args/kwargs too..
+        worker = Worker(self.startRun)  # could pass args/kwargs too..
         #worker.signals.result.connect(self.printOutput)
         #worker.signals.finished.connect(self.threadComplete)
-        #worker.signals.newUdpPayload.connect(self.processUdpPayload)
 
         # execute
         self.threadPool.start(worker)
 
-    def startRun(self, newdata_callback):
-        # FIXME: newdata_callback is needed by another thread, but not this one....
-        # how to implement different signatures for different threads???
-        
+    def startRun(self):
         #self.outputText.appendPlainText("CLICKED START")
         #self.outputText.update()
 
@@ -549,7 +548,10 @@ class MainWindow(qtw.QMainWindow):
         try:
             with open(self.configFile) as fh:
                 pass
+        except:
+            logger.error("Could not open config file -- cannot proceed")
 
+        try:
             logger.info('======= dwaReset() ===========')
             dwa.dwaReset(verbose=verbose)
             
@@ -568,8 +570,8 @@ class MainWindow(qtw.QMainWindow):
             #dwa.dwaStat(verbose=verbose)
 
         except:
-            logger.error("Could not open file -- cannot proceed")
-        
+            logger.error("DWA run configuration failed")
+            
 
     #@pyqtSlot()
     #def quitAll(self):
@@ -640,7 +642,10 @@ class MainWindow(qtw.QMainWindow):
             validConfigFilename = True
         except:
             textToDisplay = "Could not open file"
-            self.configFileContents.setPlainText(textToDisplay)
+            if updateGui:
+                self.configFileContents.setPlainText(textToDisplay)
+            else:
+                print(textToDisplay)
 
         # FIXME: should this all go in the try: above?
         if validConfigFilename:
@@ -690,6 +695,8 @@ class MainWindow(qtw.QMainWindow):
 
     def _logRawUdpTransmissionToFile(self, dataStrings):
         self.logger.info("Data came from:")
+        # FIXME: need to deal with this -- the file jsut gets bigger and bigger
+        # consider using a rolling log file, or erasing at the start of each GUI launch?
         rawFH = open("udpstream.txt", 'a')
         for item in dataStrings:
             rawFH.write(f'{item}\n')
@@ -728,8 +735,10 @@ class MainWindow(qtw.QMainWindow):
         # establish signal/slot for sending data from udp receiver to GUI
         # FIXME: this is run in a separate thread -- do we need to get logger?
         # logger = logging.getLogger()
-        
+
+        # This is in a separate thread... need to get logger
         logger = logging.getLogger()
+        logger.setLevel(logging.INFO)
         logger.info("============= startUdpReceiver() ===============")
         print("\n\n ============= startUdpReceiver() ===============\n\n")
         
@@ -755,6 +764,9 @@ class MainWindow(qtw.QMainWindow):
                     logger.info(f"popping udp word: {dataStrings[0]}")
                     dataStrings.pop(0)
 
+                print("post popping")
+                print(dataStrings)
+                    
                 # Parse UDP transmission
                 self.dwaDataParser.parse(dataStrings)
                 if 'FFFFFFFF' in dataStrings:
