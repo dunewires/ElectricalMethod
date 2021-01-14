@@ -6,16 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>964</width>
-    <height>641</height>
+    <width>972</width>
+    <height>724</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout_2">
-    <item row="0" column="0">
+   <layout class="QVBoxLayout" name="verticalLayout_4">
+    <item>
      <widget class="QWidget" name="horizontalWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
@@ -201,6 +201,20 @@
               </property>
              </widget>
             </item>
+            <item row="11" column="0">
+             <widget class="QLabel" name="label_16">
+              <property name="text">
+               <string>CTRL-T</string>
+              </property>
+             </widget>
+            </item>
+            <item row="11" column="1">
+             <widget class="QLabel" name="label_17">
+              <property name="text">
+               <string>Tensions</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
@@ -222,7 +236,7 @@
        <item>
         <widget class="QStackedWidget" name="stackedWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>6</number>
          </property>
          <widget class="QWidget" name="page_config">
           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,8">
@@ -606,6 +620,30 @@
            </item>
           </layout>
          </widget>
+         <widget class="QWidget" name="page_tensions">
+          <widget class="QWidget" name="">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>10</y>
+             <width>731</width>
+             <height>621</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_8">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Wire Tension Data Plots</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="PlotWidget" name="pw_tensionsPerWire"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
         </widget>
        </item>
       </layout>
@@ -618,7 +656,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>964</width>
+     <width>972</width>
      <height>22</height>
     </rect>
    </property>
@@ -659,7 +697,7 @@
   <customwidget>
    <class>PlotWidget</class>
    <extends>QGraphicsView</extends>
-   <header>pyqtgraph</header>
+   <header location="global">pyqtgraph</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

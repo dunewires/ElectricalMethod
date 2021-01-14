@@ -73,6 +73,7 @@ class View(IntEnum):
     CHAN = 3      # V(t) (channel view)
     AMPLGRID = 4  # A(f) (grid view)
     AMPLCHAN = 5  # A(f) (channel view)
+    TENSIONS = 6  # Wire tensions
     
 class WorkerSignals(qtc.QObject):
     '''
@@ -224,6 +225,7 @@ class MainWindow(qtw.QMainWindow):
         self._plotDummyTimeseries()
         #self._plotDummyGrid()
         #self._plotDummyChan()
+        self._plotDummyTension()
 
         # Establish keyboard shortcuts and associated signals/slots
         self._keyboardShortcuts()
@@ -362,7 +364,11 @@ class MainWindow(qtw.QMainWindow):
             getattr(self, f'pw_amplgrid_{ii}').setTitle(ii)
             getattr(self, f'pw_amplchan_{ii}').setBackground('w')
             getattr(self, f'pw_amplchan_{ii}').setTitle(ii)
-
+        #
+        getattr(self, f'pw_tensionsPerWire').setTitle('Tension Per Wire')
+        getattr(self, f'pw_tensionsPerWire').setBackground('w')
+        getattr(self, f'pw_tensionsPerWire').setLabels(bottom='Wire number', left='Tension [N]', right='')
+        
     def printOutput(self, s):
         print("printOutput():")
         print(s)
@@ -386,6 +392,14 @@ class MainWindow(qtw.QMainWindow):
                                       'y':xx[:]*ii+1
             }
 
+        xx = np.arange(1000)  # wire numbers
+        mu = 6.50 # Newtons
+        sigma = 0.5 # Newtons
+        tt = np.random.normal(mu, sigma, len(xx)) # wire tensions (Newtons)
+        self.dummyDataTension = {'x':xx[:],
+                                 'y':tt[:]}
+
+            
     def _makeCurves(self):
         ''' make one curve in each pyqtgraph PlotWidget '''
         # FIXME: merge all curves into self.curves = {}
@@ -407,6 +421,7 @@ class MainWindow(qtw.QMainWindow):
         self.curves['amplgrid'] = {}   # A(f), grid view
         self.curves['amplgrid']['all'] = {}   # A(f), all channels, single axes (in grid view)
         self.curves['amplchan'] = {}   # A(f), channel view
+        self.curves['tension'] = {} # Wire tension plots (multiple figures, all on "tension" page)
         self.curvesFit = {}  # FIXME: kluge -- merge w/ self.curves
         self.curvesFit['grid'] = {} # V(t), grid
         self.curvesFit['chan'] = {} # V(t), chan
@@ -435,6 +450,14 @@ class MainWindow(qtw.QMainWindow):
 
         # add in the main window, too (large view of A(f) for a single channel)
         self.curves['amplchan']['main'] = getattr(self, f'pw_amplchan_main').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
+
+        # Tension information
+        self.curves['tension']['tensionOfWireNumber'] = getattr(self, f'pw_tensionsPerWire').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
+        tensionPen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
+        tensionLowLimit = pg.InfiniteLine(pos=6.0, angle=0, movable=False, pen=tensionPen)
+        tensionHighLimit = pg.InfiniteLine(pos=7.0, angle=0, movable=False, pen=tensionPen)
+        self.pw_tensionsPerWire.addItem(tensionLowLimit)
+        self.pw_tensionsPerWire.addItem(tensionHighLimit)
 
         
     def _plotDummyAmpl(self):
@@ -476,7 +499,12 @@ class MainWindow(qtw.QMainWindow):
                                             self.dummyData[ii]['y'])
             self.curves['grid'][ii].setData(self.dummyData[ii]['x'],
                                             self.dummyData[ii]['y'])
-                
+
+
+    def _plotDummyTension(self):
+        self.curves['tension']['tensionOfWireNumber'].setData(self.dummyDataTension['x'],
+                                                              self.dummyDataTension['y'])
+            
     def _keyboardShortcuts(self):
         # Show configuration parameters
         self.scConfig = qtw.QShortcut(qtg.QKeySequence("Ctrl+C"), self)
@@ -493,6 +521,10 @@ class MainWindow(qtw.QMainWindow):
         # A(f) data (grid view)
         self.scAmplGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+F"), self)
         self.scAmplGridView.activated.connect(self.viewAmplGrid)
+
+        # Tension data
+        self.scTensionView = qtw.QShortcut(qtg.QKeySequence("Ctrl+T"), self)
+        self.scTensionView.activated.connect(self.viewTensions)
 
         # Show V(t) or A(f) (channel view)
         chans = range(8)
@@ -629,6 +661,11 @@ class MainWindow(qtw.QMainWindow):
             self.pw_chan_main.setTitle(chan)
             self.chanViewMain = chan
 
+    @pyqtSlot()
+    def viewTensions(self):
+        self.currentView = View.TENSIONS
+        self.stack.setCurrentIndex(self.currentView)
+        self.logger.info("View Tensions")
 
     def _loadConfigFile(self, updateGui=True):
         # try to read the requested file
