@@ -3,6 +3,8 @@
 # Created by James Battat
 # 2019 December 17
 
+# FIXME: change print() statements to logger statements
+
 import matplotlib.pyplot as plt
 
 import sys
@@ -16,15 +18,13 @@ import json, configparser
 import numpy as np
 
 import DwaDataParser as ddp
+import DwaConfigFile as dcf
 
-def processWaveform(udpDict):
-    # udpDict is a transfer that includes ADC data
-    # frequency is obtained from:
-    freq_Hz = 1./(udpDict[ddp.Frame.FREQ]['stimPeriodCounter']*1e-8)
+import logging
+logger = logging.getLogger(__name__)
+
+def fitSinusoidToTimeseries(yy, dt, freq_Hz):
     angFreq = 2*np.pi*freq_Hz
-    yy = np.array(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
-    # dt is given by the sampling time
-    dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
     tt = np.arange(len(yy)) * dt
     wt = angFreq*tt
     # Construct matrices for linear least-squares minimization
@@ -46,6 +46,15 @@ def processWaveform(udpDict):
     #print(BMAT)
     return (BMAT[0], BMAT[1], BMAT[2], freq_Hz)
 
+def processWaveform(udpDict):
+    # udpDict is a transfer that includes ADC data
+    # frequency is obtained from:
+    freq_Hz = 1./(udpDict[ddp.Frame.FREQ]['stimPeriodCounter']*1e-8)
+    yy = np.array(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
+    # dt is given by the sampling time
+    dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
+    return fitSinusoidToTimeseries(yy, dt, freq_Hz)
+    
 def splitFile(filename):
     ''' split a UDP file that has multiple frequencies
     into separate files, one per frequency'''
@@ -426,7 +435,7 @@ def dwaReset(verbose=0):
     time.sleep(0.2)
     tcpClose(s)
 
-   
+### DEFUNCT -- use DwaConfigFile.py class and DwaConfigFile.getConfigDict() instead!   
 def dwaGetConfigParameters(configFile):
     """Parse and return DWA configuration parameters from a file
 
@@ -535,7 +544,7 @@ def dwaSetDigipots(ss, cfgstr, verbose=0):
     # Odd digipots
     dwaRegWrite(ss, '00000010', cfgOdd, verbose=verbose)
     
-def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
+def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v3Relays=False):
     """
     Args:
         config (dict): dictionary containing configuration parameters
@@ -544,9 +553,14 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
 
     Example:
     """
+    print("\n\n dwaConfig()")
     print("verbose = {}".format(verbose))
-
-    config = dwaGetConfigParameters(configFile)
+    cf = dcf.DwaConfigFile(configFile)
+    print("\nafter making config file object\n")
+    config = cf.getConfigDict()
+    print("CONFIG DICTIONARY = ")
+    print(config)
+    #config = dwaGetConfigParameters(configFile)
 
     s = tcpOpen(verbose=verbose)
     sleepSec = 0.2
@@ -557,6 +571,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     dwaRegWrite(s, '00000001', config["auto"], verbose=verbose)
     time.sleep(sleepSec)
     #
+    print("Setting stimFreq parameters")
     #fromDaqReg.stimFreqReq  <= unsigned(slv_reg3(23 downto 0));
     dwaRegWrite(s, '00000003', config["stimFreqReq"], verbose=verbose)
     time.sleep(sleepSec)
@@ -569,6 +584,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     #fromDaqReg.stimFreqStep <= unsigned(slv_reg6(23 downto 0));
     dwaRegWrite(s, '00000006', config["stimFreqStep"], verbose=verbose)
     time.sleep(sleepSec)
+    print("Setting stimTime and Mag")
     #fromDaqReg.stimRampTime   <= unsigned(slv_reg7(23 downto 0));
     dwaRegWrite(s, '00000007', config["stimTime"], verbose=verbose)
     time.sleep(sleepSec)
@@ -583,14 +599,85 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini'):
     dwaRegWrite(s, '0000000B', config["adcSamplesPerCycle"], verbose=verbose)
     time.sleep(sleepSec)
     #
-    #fromDaqReg.relayMask      <= slv_reg13;
-    dwaRegWrite(s, '0000000D', config["relayMask"], verbose=verbose)
-    time.sleep(sleepSec)
-    #fromDaqReg.coilDrive      <= slv_reg14;
-    dwaRegWrite(s, '0000000E', config["coilDrive"], verbose=verbose)
-    time.sleep(sleepSec)
 
+    ### Defunct (v2 parameters)
+    #print("Setting v2 parameters: relayMask and coilDrive")
+    ##fromDaqReg.relayMask      <= slv_reg13;
+    #dwaRegWrite(s, '0000000D', config["relayMask"], verbose=verbose)
+    #time.sleep(sleepSec)
+    ##fromDaqReg.coilDrive      <= slv_reg14;
+    #dwaRegWrite(s, '0000000E', config["coilDrive"], verbose=verbose)
+    #time.sleep(sleepSec)
+
+    # Mains noise subtraction parameters
+    if doMainsSubtraction:
+        print("Setting mains subtraction parameters")
+        
+        #fromDaqReg.noiseFreqMin  <= unsigned(slv_reg25(23 downto 0));
+        dwaRegWrite(s, '00000019', config["noiseFreqMin"], verbose=verbose)
+        time.sleep(sleepSec)
+        
+        #fromDaqReg.noiseFreqMax  <= unsigned(slv_reg26(23 downto 0));
+        dwaRegWrite(s, '0000001A', config["noiseFreqMax"], verbose=verbose)
+        time.sleep(sleepSec)
+        
+        #fromDaqReg.noiseFreqStep <= unsigned(slv_reg27(23 downto 0));
+        dwaRegWrite(s, '0000001B', config["noiseFreqStep"], verbose=verbose)
+        time.sleep(sleepSec)
+        
+        #fromDaqReg.noiseSampPer  <= unsigned(slv_reg28(23 downto 0));
+        dwaRegWrite(s, '0000001C', config["noiseSamplingPeriod"], verbose=verbose)
+        time.sleep(sleepSec)
+        
+        #fromDaqReg.noiseNCnv     <= unsigned(slv_reg29(23 downto 0));
+        dwaRegWrite(s, '0000001D', config["noiseAdcSamplesPerFreq"], verbose=verbose)
+        time.sleep(sleepSec)
     
+        #fromDaqReg.noiseBpfSetTime     <= unsigned(slv_reg30(23 downto 0));
+        dwaRegWrite(s, '0000001E', config["noiseSettlingTime"], verbose=verbose)
+        time.sleep(sleepSec)
+    
+
+    if v3Relays:
+        #v3 relays.  16bits each relayWireBot(0), ... relayWireBot(3)
+        # relayWireTop(0), ..., relayWireTop(3)
+        # relayBusBot(0), relayBusBot(1)
+        # relayBusTop(0), relayBusTop(1)
+        # relayWireBot
+        print("Setting v3 relays")
+        dwaRegWrite(s, '00000020', config["relayWireBot0"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000021', config["relayWireBot1"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000022', config["relayWireBot2"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000023', config["relayWireBot3"], verbose=verbose)
+        time.sleep(sleepSec)
+        # relayBusBot
+        dwaRegWrite(s, '00000024', config["relayBusBot0"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000025', config["relayBusBot1"], verbose=verbose)
+        time.sleep(sleepSec)
+        # relayWireTop
+        dwaRegWrite(s, '00000026', config["relayWireTop0"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000027', config["relayWireTop1"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000028', config["relayWireTop2"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '00000029', config["relayWireTop3"], verbose=verbose)
+        time.sleep(sleepSec)
+        # relayBusTop
+        dwaRegWrite(s, '0000002A', config["relayBusTop0"], verbose=verbose)
+        time.sleep(sleepSec)
+        dwaRegWrite(s, '0000002B', config["relayBusTop1"], verbose=verbose)
+        time.sleep(sleepSec)
+        # OK to write
+        # Thee "update relays" signal will be the third bit in register 0
+        # similar to the reset, this bit just needs to be written and not cleared.
+        dwaRegWrite(s, '00000000', '00000004', verbose=verbose)
+        time.sleep(sleepSec)
+        
     ###############
     #time.sleep(sleepSec)
     #dwaRegWrite(s, '00000002',dwaCtrl, verbose=verbose)
@@ -667,7 +754,7 @@ def tcpClose(ss, verbose=0):
 def tcpOpen(verbose=1):
     # FIXME: move HOST to a config file
     # IP Address of microzed board
-    #HOST = '149.130.136.243'     # Wellesley Lab (MAC: 84:2b:2b:97:da:01)
+    ####HOST = '149.130.136.243'     # Wellesley Lab (MAC: 84:2b:2b:97:da:01)
     #HOST = '140.247.132.37' # NW Lab
     #HOST = '140.247.123.186'     # J156Lab
     HOST = '149.130.136.211' # Wellesley DWA (MAC 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x03)
@@ -780,16 +867,18 @@ def dwaRegComm(ss, payload_header='abcd1234', payload_type=None,
     try :
         packer = struct.Struct(packerString)
         packed_data = packer.pack(*values)
-        print('PAYLOAD_HEADER = {0:s}'.format(payload_header))
-        print('PAYLOAD_TYPE = {0:s}'.format(payload_type))
-        print('ADDRESS = {0:s}'.format(address))
-        print('values = {}'.format(values))
-        #
-        print('Sending...')
+        if verbose:
+            print('PAYLOAD_HEADER = {0:s}'.format(payload_header))
+            print('PAYLOAD_TYPE = {0:s}'.format(payload_type))
+            print('ADDRESS = {0:s}'.format(address))
+            print('values = {}'.format(values))
+            #
+            print('Sending...')
         ss.sendall(packed_data)
         time.sleep(0.25)
         #FIXME: don't actually know if msg is sent successfully...
-        print('Message sent successfully')
+        if verbose:
+            print('Message sent successfully')
     except socket.error:
         #Send failed
         print('Send failed')
@@ -797,12 +886,15 @@ def dwaRegComm(ss, payload_header='abcd1234', payload_type=None,
     
     #get reply and print
     if payload_type != 'FE170003':
-        print(dwaRecvTimeout(ss, timeout=2, verbose=verbose))
+        #print(dwaRecvTimeout(ss, timeout=2, verbose=verbose))
+        val = dwaRecvTimeout(ss, timeout=2, verbose=verbose)
+        print(val)
+        return val
     
 
 def dwaRegRead(ss, address, verbose=0):
-    dwaRegComm(ss, payload_header='abcd1234', payload_type='FE170001',
-               address=address, verbose=0)
+    return dwaRegComm(ss, payload_header='abcd1234', payload_type='FE170001',
+                      address=address, verbose=0)
 
 
 def dwaRegRead2(ss, address, verbose=0):
@@ -862,14 +954,18 @@ def dwaRecvTimeout(ss,timeout=2, verbose=0):
     data_bin = data[8:]      # third  4 bytes
 
     # FIXME: add verbose check
-    print('type(data) = {}'.format(type(data)))
-    print('binascii.hexlify(header_bin) = {}'.format(binascii.hexlify(header_bin)))
-    print('binascii.hexlify(address_bin) = {}'.format(binascii.hexlify(address_bin)))
-    print('binascii.hexlify(data_bin) = {}'.format(binascii.hexlify(data_bin)))
-    print('received: {}'.format(binascii.hexlify(data)))
+    if verbose:
+        print('type(data) = {}'.format(type(data)))
+        print('binascii.hexlify(header_bin) = {}'.format(binascii.hexlify(header_bin)))
+        print('binascii.hexlify(address_bin) = {}'.format(binascii.hexlify(address_bin)))
+        print('binascii.hexlify(data_bin) = {}'.format(binascii.hexlify(data_bin)))
+        print('received: {}'.format(binascii.hexlify(data)))
+
     unpacked_data = unpacker.unpack(data)
-    print('unpacked:')
-    print(unpacked_data)
+
+    if verbose:
+        print('unpacked:')
+        print(unpacked_data)
 
     return(unpacked_data)
 
@@ -911,7 +1007,7 @@ def dwaRegWrite(s, address, value, verbose=0):
         print('Send failed')
         sys.exit()
 
-    print("FIXME: SHOULD WE READ AFTER WRITE?")
+    #print("FIXME: SHOULD WE READ AFTER WRITE?")
 
     #get reply and print
     #print recv_timeout(s)

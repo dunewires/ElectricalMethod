@@ -451,8 +451,8 @@ dataSel => noiseCorrDataSel,
 
       firmwareId_date   => (others => '0'),
       firmwareId_hash   => (others => '0'),
-      stimPeriodActive  => (others => '0'),
-      stimPeriodCounter => acStim_nHPeriod(22 downto 0) & '0',
+      stimPeriodActive  => acStim_nHPeriod(22 downto 0) & '0',
+      stimPeriodCounter => (others => '0'),
 
       adcSamplingPeriod => adcCnv_nPeriod,
 
