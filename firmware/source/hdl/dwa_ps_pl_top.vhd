@@ -23,6 +23,7 @@ entity dwa_ps_pl_top is
     port (
         --DWA
         led : out std_logic_vector(3 downto 0);
+        pButton : in std_logic_vector(3 downto 0);
 
         acStimX200_obuf : out std_logic := '0';
 
@@ -364,6 +365,8 @@ begin
 
 
             led             => led,
+            pButton         => pButton,
+            
             acStimX200_obuf => acStimX200_obuf,
             mainsSquare     => mainsSquare,
 

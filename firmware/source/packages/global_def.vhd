@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Dec 21 17:50:51 2020
+-- Last update : Fri Jan  8 14:38:12 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ package global_def is
     constant adcRegOfst  : integer := 24;
     constant adcStatAddr : integer := 23;
     --set emulated data
-    constant useAdcEmu : boolean := true;
+    constant useAdcEmu : boolean := false;
     --constant useAdcEmu   : boolean := true;
 
 

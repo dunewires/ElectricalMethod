@@ -181,6 +181,18 @@ set_property PACKAGE_PIN B19 [get_ports led[2]]
 set_property IOSTANDARD LVCMOS25 [get_ports led[3]]
 set_property PACKAGE_PIN A20 [get_ports led[3]]
 
+set_property IOSTANDARD LVCMOS25 [get_ports pButton[0]]
+set_property PACKAGE_PIN G19 [get_ports pButton[0]]
+
+set_property IOSTANDARD LVCMOS25 [get_ports pButton[1]]
+set_property PACKAGE_PIN J20 [get_ports pButton[1]]
+
+set_property IOSTANDARD LVCMOS25 [get_ports pButton[2]]
+set_property PACKAGE_PIN G20 [get_ports pButton[2]]
+
+set_property IOSTANDARD LVCMOS25 [get_ports pButton[3]]
+set_property PACKAGE_PIN H20 [get_ports pButton[3]]
+
 set_property IOSTANDARD LVCMOS25 [get_ports adcCnv]
 set_property PACKAGE_PIN G17 [get_ports adcCnv]
 

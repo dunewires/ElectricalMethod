@@ -16,7 +16,10 @@ entity top_tension_analyzer is
     dwaClk100 : in std_logic;
     dwaClk10  : in std_logic;
 
-    led             : out std_logic_vector(3 downto 0);
+    led     : out std_logic_vector(3 downto 0);
+    pButton : in  std_logic_vector(3 downto 0);
+
+
     acStimX200_obuf : out std_logic := '0';
     mainsSquare     : in  std_logic := '0';
 
@@ -163,13 +166,20 @@ architecture STRUCT of top_tension_analyzer is
   signal dwaClk2          : std_logic                    := '0';
   signal vioUpdate        : std_logic                    := '0';
 
+  signal  flashCount :unsigned(23 downto 0);
 begin
+  lightsAndButtons : process (dwaClk10)
+  begin
+    if rising_edge(dwaClk10) then
+    flashCount  <= flashCount + 1;
+     -- flash lights in reverse order
+      led(0) <= pButton(3) and flashCount(flashCount'left - 0);
+      led(1) <= pButton(2) and flashCount(flashCount'left - 1);
+      led(2) <= pButton(1) and flashCount(flashCount'left - 2);
+      led(3) <= pButton(0) and flashCount(flashCount'left - 3);
+    end if;
+  end process;
 
-
-  led(1) <= '1';
-  led(0) <= '1' when toDaqReg.ctrlBusy else '0';
-  led(3) <= '1';
-  led(2) <= '1';
 
   BUFR_inst : BUFR
     generic map (
@@ -297,7 +307,7 @@ begin
   serialPromInterface_inst : entity work.serialPromInterface
     port map (
       fromDaqReg => fromDaqReg,
-        toDaqReg   => toDaqReg,
+      toDaqReg   => toDaqReg,
       --sim toDaqReg => open,
 
       sda       => SNUM_SDA,
@@ -310,7 +320,7 @@ begin
   wireRelayInterface_inst : entity duneDwa.wireRelayInterface
     port map (
       fromDaqReg => fromDaqReg,
-       toDaqReg   => toDaqReg,
+      toDaqReg   => toDaqReg,
       --sim toDaqReg => open,
 
       g_b     => CD_G_b,
@@ -329,7 +339,7 @@ begin
   dpotInterface_inst : entity duneDwa.dpotInterface
     port map (
       fromDaqReg => fromDaqReg,
-       toDaqReg => toDaqReg,
+      toDaqReg   => toDaqReg,
       --sim toDaqReg => open, --toDaqReg,
 
       sdi    => dpotSdo,
@@ -387,7 +397,7 @@ begin
   wtaController_inst : entity duneDwa.wtaController
     port map (
       fromDaqReg => fromDaqReg,
-       toDaqReg   => toDaqReg,
+      toDaqReg   => toDaqReg,
       --sim toDaqReg => open, --toDaqReg,
 
       freqSet       => ctrlFreqSet,
@@ -438,9 +448,9 @@ begin
   mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
     port map (
       fromDaqReg => fromDaqReg,
-       toDaqReg   => toDaqReg,
+      toDaqReg   => toDaqReg,
       --sim toDaqReg => open,--toDaqReg,
-      freqSet  => ctrlFreqSet,
+      freqSet => ctrlFreqSet,
 
       noiseReadoutBusy  => noiseReadoutBusy,
       noiseFirstReadout => noiseFirstReadout,
@@ -491,7 +501,7 @@ begin
       fromDaqReg => fromDaqReg,
       toDaqReg   => toDaqReg, -- Keep this one for sim
 
-      runOdometer   => (others => '0'),
+      runOdometer => (others => '0'),
 
       --udpDataRen         => false, --fromDaq
       sendRunHdr    => sendRunHdr,

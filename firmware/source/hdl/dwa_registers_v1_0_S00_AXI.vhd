@@ -939,6 +939,7 @@ begin
 			when b"100000" =>
 				reg_data_out <= x"0000" & toDaqReg.relayWireBot(0);
 			when b"110000" => -- sn reg 48
+				--reg_data_out <= x"0397da03";-- & std_logic_vector(toDaqReg.serNum);
 				reg_data_out <= x"00" & std_logic_vector(toDaqReg.serNum);
 			when b"110001" => --sn addres reg 49
 				reg_data_out                 <= b"0000000000000000000" & std_logic_vector(toDaqReg.serNumMemAddress);
