@@ -14,8 +14,8 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_4">
-    <item>
+   <layout class="QGridLayout" name="gridLayout_9">
+    <item row="0" column="0">
      <widget class="QWidget" name="horizontalWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
@@ -134,23 +134,6 @@
              </widget>
             </item>
             <item row="7" column="0">
-             <widget class="QLabel" name="label_8">
-              <property name="text">
-               <string>CTRL-F</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="1">
-             <widget class="QLabel" name="label_11">
-              <property name="text">
-               <string>A(f) grid</string>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="0">
              <widget class="QLabel" name="label_7">
               <property name="text">
                <string>CTRL-V</string>
@@ -160,31 +143,14 @@
               </property>
              </widget>
             </item>
-            <item row="8" column="1">
+            <item row="7" column="1">
              <widget class="QLabel" name="label_10">
               <property name="text">
                <string>V(t) grid</string>
               </property>
              </widget>
             </item>
-            <item row="9" column="0">
-             <widget class="QLabel" name="label_12">
-              <property name="text">
-               <string>CTRL-#</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="9" column="1">
-             <widget class="QLabel" name="label_13">
-              <property name="text">
-               <string>A(f) chan</string>
-              </property>
-             </widget>
-            </item>
-            <item row="10" column="0">
+            <item row="8" column="0">
              <widget class="QLabel" name="label_14">
               <property name="text">
                <string>ALT-#</string>
@@ -194,24 +160,72 @@
               </property>
              </widget>
             </item>
-            <item row="10" column="1">
+            <item row="8" column="1">
              <widget class="QLabel" name="label_15">
               <property name="text">
                <string>V(t) chan</string>
               </property>
              </widget>
             </item>
-            <item row="11" column="0">
-             <widget class="QLabel" name="label_16">
+            <item row="9" column="0">
+             <widget class="QLabel" name="label_8">
               <property name="text">
-               <string>CTRL-T</string>
+               <string>CTRL-A</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="1">
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>A(f) grid</string>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="0">
+             <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>CTRL-#</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="1">
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>A(f) chan</string>
+              </property>
+             </widget>
+            </item>
+            <item row="11" column="0">
+             <widget class="QLabel" name="label_19">
+              <property name="text">
+               <string>CTRL-F</string>
               </property>
              </widget>
             </item>
             <item row="11" column="1">
+             <widget class="QLabel" name="label_20">
+              <property name="text">
+               <string>f0 fit diag.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="12" column="1">
              <widget class="QLabel" name="label_17">
               <property name="text">
                <string>Tensions</string>
+              </property>
+             </widget>
+            </item>
+            <item row="12" column="0">
+             <widget class="QLabel" name="label_16">
+              <property name="text">
+               <string>CTRL-T</string>
               </property>
              </widget>
             </item>
@@ -620,8 +634,169 @@
            </item>
           </layout>
          </widget>
+         <widget class="QWidget" name="page_resfreqs">
+          <layout class="QGridLayout" name="gridLayout_10">
+           <item row="1" column="0">
+            <layout class="QGridLayout" name="gridOfFits">
+             <item row="0" column="2">
+              <widget class="PlotWidget" name="pw_resfreqfit_2"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="PlotWidget" name="pw_resfreqfit_3"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="PlotWidget" name="pw_resfreqfit_4"/>
+             </item>
+             <item row="0" column="1">
+              <widget class="PlotWidget" name="pw_resfreqfit_1"/>
+             </item>
+             <item row="1" column="2">
+              <widget class="PlotWidget" name="pw_resfreqfit_5"/>
+             </item>
+             <item row="0" column="0">
+              <widget class="PlotWidget" name="pw_resfreqfit_0"/>
+             </item>
+             <item row="2" column="0">
+              <widget class="PlotWidget" name="pw_resfreqfit_6"/>
+             </item>
+             <item row="2" column="1">
+              <widget class="PlotWidget" name="pw_resfreqfit_7"/>
+             </item>
+             <item row="2" column="2">
+              <layout class="QFormLayout" name="formLayout_5">
+               <property name="labelAlignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               </property>
+               <property name="formAlignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+               </property>
+               <item row="0" column="0">
+                <widget class="QLabel" name="lab_resfreq_0">
+                 <property name="text">
+                  <string>0:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_0">
+                 <property name="text">
+                  <string>f0_0</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="lab_resfreq_1">
+                 <property name="text">
+                  <string>1:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_1">
+                 <property name="text">
+                  <string>f0_1</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="lab_resfreq_2">
+                 <property name="text">
+                  <string>2:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="lab_resfreq_3">
+                 <property name="text">
+                  <string>3:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="lab_resfreq_4">
+                 <property name="text">
+                  <string>4:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="0">
+                <widget class="QLabel" name="lab_resfreq_5">
+                 <property name="text">
+                  <string>5:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="0">
+                <widget class="QLabel" name="lab_resfreq_6">
+                 <property name="text">
+                  <string>6:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="7" column="0">
+                <widget class="QLabel" name="lab_resfreq_7">
+                 <property name="text">
+                  <string>7:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_2">
+                 <property name="text">
+                  <string>f0_2</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_3">
+                 <property name="text">
+                  <string>f0_3</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_4">
+                 <property name="text">
+                  <string>f0_4</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_5">
+                 <property name="text">
+                  <string>f0_5</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_6">
+                 <property name="text">
+                  <string>f0_6</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="7" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_7">
+                 <property name="text">
+                  <string>f0_7</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_18">
+             <property name="text">
+              <string>A(f) Fits</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
          <widget class="QWidget" name="page_tensions">
-          <widget class="QWidget" name="">
+          <widget class="QWidget" name="layoutWidget">
            <property name="geometry">
             <rect>
              <x>10</x>
