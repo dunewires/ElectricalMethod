@@ -37,6 +37,7 @@ from enum import IntEnum
 import string
 
 import numpy as np
+from scipy.signal import find_peaks
 
 from PyQt5 import uic
 from PyQt5 import QtWidgets as qtw
@@ -52,7 +53,7 @@ import dwaTools as dwa
 import DwaDataParser as ddp
 import DwaConfigFile as dcf
 
-
+# Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
 #    """ handle logging events -- display them in a text box in the gui"""
 #    def __init__(self):
@@ -64,7 +65,14 @@ import DwaConfigFile as dcf
 #        self.logTextBox.appendPlainText(msg)
 #        #XStream.stdout().write("{}\n".format(record))
 
-        
+
+STIM_PERIOD_CURRENT = 'stimPeriodCounter' # KLUGE to account for firmware mistake
+
+class State(IntEnum):
+    IDLE = 0
+    SCAN = 1
+    POST_SCAN = 2
+
 class View(IntEnum):
     ''' for stackedWidget page indexing '''
     CONFIG = 0    # Show the configuration parameters
@@ -73,7 +81,8 @@ class View(IntEnum):
     CHAN = 3      # V(t) (channel view)
     AMPLGRID = 4  # A(f) (grid view)
     AMPLCHAN = 5  # A(f) (channel view)
-    TENSIONS = 6  # Wire tensions
+    RESFREQS = 6  # Wire tensions
+    TENSIONS = 7  # Wire tensions
     
 class WorkerSignals(qtc.QObject):
     '''
@@ -304,6 +313,18 @@ class MainWindow(qtw.QMainWindow):
             
         self.fnOfReg = {}  # file names for output (empty for now)
         self.ampData = {}  # hold amplitude vs. freq data for a scan
+
+        # Info about current run
+        self.stimFreqMin = 0
+        self.stimFreqMax = 0
+        
+        self.state = State.IDLE
+        # KLUGE: start
+        # must count how many channels reported and what freq we are on
+        self.stimPeriodCurrent = None
+        self.nChansReceived = 0
+        self.stimPeriodMax = None
+        # KLUGE: end
         
         # Start listening for UDP data in a Worker thread
         self.udpListen()
@@ -364,6 +385,8 @@ class MainWindow(qtw.QMainWindow):
             getattr(self, f'pw_amplgrid_{ii}').setTitle(ii)
             getattr(self, f'pw_amplchan_{ii}').setBackground('w')
             getattr(self, f'pw_amplchan_{ii}').setTitle(ii)
+            getattr(self, f'pw_resfreqfit_{ii}').setBackground('w')
+            getattr(self, f'pw_resfreqfit_{ii}').setTitle(ii)
         #
         getattr(self, f'pw_tensionsPerWire').setTitle('Tension Per Wire')
         getattr(self, f'pw_tensionsPerWire').setBackground('w')
@@ -421,6 +444,7 @@ class MainWindow(qtw.QMainWindow):
         self.curves['amplgrid'] = {}   # A(f), grid view
         self.curves['amplgrid']['all'] = {}   # A(f), all channels, single axes (in grid view)
         self.curves['amplchan'] = {}   # A(f), channel view
+        self.curves['resfreqfit'] = {}   # Fitting f0 values to A(f)
         self.curves['tension'] = {} # Wire tension plots (multiple figures, all on "tension" page)
         self.curvesFit = {}  # FIXME: kluge -- merge w/ self.curves
         self.curvesFit['grid'] = {} # V(t), grid
@@ -429,6 +453,7 @@ class MainWindow(qtw.QMainWindow):
                            pg.mkPen(color=(255,0, 0)), pg.mkPen(color=(255,165, 0)),
                            pg.mkPen(color=(255,255,0)), pg.mkPen(color=(0,255,0)),
                            pg.mkPen(color=(0,0,255)), pg.mkPen(color=(148,0,211))]
+        amplPlotPen = pg.mkPen(color=(0,0,0), style=qtc.Qt.DotLine, width=1)
         for loc in range(8):
             # V(t) plots
             self.curvesFit['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], pen=fitPen)
@@ -437,12 +462,13 @@ class MainWindow(qtw.QMainWindow):
             self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
             #
             # A(f) plots (grid view)
-            self.curves['amplgrid'][loc] = getattr(self, f'pw_amplgrid_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
+            self.curves['amplgrid'][loc] = getattr(self, f'pw_amplgrid_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
             # A(f), all channels on single axes
             self.curves['amplgrid']['all'][loc] = getattr(self, f'pw_amplgrid_all').plot([0],[0], pen=amplAllPlotPens[loc])
             # A(f) plots (channel view)
             self.curves['amplchan'][loc] = getattr(self, f'pw_amplchan_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
-
+            # Fitting f0 to A(f) plots
+            self.curves['resfreqfit'][loc] = getattr(self, f'pw_resfreqfit_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
             
         # add in the main window, too (large view of V(t) for a single channel)
         self.curvesFit['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0], pen=fitPen)
@@ -519,8 +545,12 @@ class MainWindow(qtw.QMainWindow):
         self.scGridView.activated.connect(self.viewGrid)
 
         # A(f) data (grid view)
-        self.scAmplGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+F"), self)
+        self.scAmplGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+A"), self)
         self.scAmplGridView.activated.connect(self.viewAmplGrid)
+
+        # Tension data
+        self.scResFreqFitView = qtw.QShortcut(qtg.QKeySequence("Ctrl+F"), self)
+        self.scResFreqFitView.activated.connect(self.viewResFreqFit)
 
         # Tension data
         self.scTensionView = qtw.QShortcut(qtg.QKeySequence("Ctrl+T"), self)
@@ -661,6 +691,13 @@ class MainWindow(qtw.QMainWindow):
             self.pw_chan_main.setTitle(chan)
             self.chanViewMain = chan
 
+
+    @pyqtSlot()
+    def viewResFreqFit(self):
+        self.currentView = View.RESFREQS
+        self.stack.setCurrentIndex(self.currentView)
+        self.logger.info("View Resonant Frequencies")
+            
     @pyqtSlot()
     def viewTensions(self):
         self.currentView = View.TENSIONS
@@ -849,22 +886,32 @@ class MainWindow(qtw.QMainWindow):
         self.outputText.appendPlainText("UDP Counter: {}".format(udpDict[ddp.Frame.UDP]['UDP_Counter']))
         
         # Look for run header frame
-        if ddp.Frame.RUN in udpDict:
+        if ddp.Frame.RUN in udpDict:   # Assumes this is start of a new scan
             self.outputText.appendPlainText("\nFOUND RUN HEADER")
             self.outputText.appendPlainText(str(udpDict))
             # FIXME: TEMPORARY...
             self.logger.info("\n\n\n\nFOUND RUN HEADER")
             # update the frequency information (min, max, step)
             # FIXME: move this to a subroutine...
+            self.stimFreqMin  = udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']
+            self.stimFreqMax  = udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']
+            self.stimFreqStep = udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']
             self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.2f}")
             self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.2f}")
             self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.2f}")
-            
-        if ddp.Frame.FREQ in udpDict:
+
+        # Look for frequency header
+        if ddp.Frame.FREQ in udpDict:  
             self.logger.info("FOUND FREQUENCY HEADER")
             self.logger.info(udpDict)
             self.globalFreqActive_val.setText(f"{udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']:.2f}")
-            
+            # is this the first payload for this frequency?
+            if udpDict[ddp.Frame.FREQ][STIM_PERIOD_CURRENT] != self.stimPeriodCurrent:
+                self.nChansReceived = 0
+                self.stimPeriodCurrent = udpDict[ddp.Frame.FREQ][STIM_PERIOD_CURRENT]
+
+            self.nChansReceived += 1
+                
         # Check to see if this is an ADC data transfer:
         if ddp.Frame.ADC_DATA in udpDict:
             self.outputText.appendPlainText("\nFOUND ADC DATA\n")
@@ -908,7 +955,76 @@ class MainWindow(qtw.QMainWindow):
             if regId == self.chanViewMainAmpl:
                 self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
 
+        # KLUGE: if the scan is done, then find resonant frequencies
+        if self.nChansReceived == 8:
+            print(f"\n\n\n ALL DATA IN FOR THIS FREQ [{self.stimPeriodCurrent} = {udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']}]\n\n\n")
+
+            # KLUGE: put in to trigger resonant freq. fitting/search
+            # for recorded data from sebastien...
+            # should eventually just look for the "end of scan" signal from uzed
+            #scanComplete = self.stimPeriodCurrent == 5423600
+            #scanComplete = udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz'] >= 17.5
+            scanComplete = udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz'] >= self.stimFreqMax
+
+            if scanComplete:
+                print("\n\n\n\n\n\n\n SCAN IN DONE!!!")
+                self._writeAmplitudesToFile()
+                self.postScanAnalysis()
+
+    def _writeAmplitudesToFile(self):
+        # write out the A(f) data for this frequency to a file
+        fh = open('udpData/amplitudes.txt', 'w')
+        for ii in range(len(self.ampData[0]['freq'])):
+            outstr = f"{self.ampData[0]['freq'][ii]:8.4f} "
+            for reg in range(8):
+                outstr += f"{self.ampData[reg]['ampl'][ii]:8.4f} "
+            outstr += "\n"
+            fh.write(outstr)
+        fh.close()
+
+    def baseline(self, x, y):
+        # get rid of polynomial background...
+        import numpy.polynomial.polynomial as poly
+        polyDeg = 2
+        pCoeffs = poly.polyfit(x, y, polyDeg)
+        return poly.polyval(x, pCoeffs)
+        
+    def postScanAnalysis(self):
+        # get A(f) data for each channel
+        # run peakfinding
+        # overlay f0 locations on A(f) plots
+        # loop over each register
+        print("postScanAnalysis():")
+        for reg in self.registers:
+            print(f'reg       = {reg}')
+            print(f'reg.value = {reg.value}')
+            if len(self.ampData[reg]['freq']) == 0:  # maybe a register has no data?
+                continue
+            #peakIds, _ = find_peaks(np.cumsum(self.ampData[reg]['ampl']))
+
+            # Cumulative sum, remove baseline, plot, fit peaks, annotate plot
+            cumsum = np.cumsum(self.ampData[reg]['ampl'])
+            cumsum -= self.baseline(self.ampData[reg]['freq'], cumsum)
+            # plot fxn that is used for peakfinding
+            self.curves['resfreqfit'][reg].setData(self.ampData[reg]['freq'], cumsum)
             
+            # FIXME: set width based on frequency, not hard-coded number of samples!
+            peakIds, _ = find_peaks(cumsum, prominence=(5.0, None), width=5)
+            print(f'peakIds = {peakIds}')
+            # update the label:
+            peakFreqs = [ self.ampData[reg]['freq'][id] for id in peakIds ]
+            labelStr = ' '.join([f'{ff:.2f}' for ff in peakFreqs])
+            getattr(self, f'lab_resfreq_val_{reg}').setText(labelStr)
+            
+            # FIXME: move pen definition to __init__ (self.f0pen)
+            f0Pen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
+            for ff in peakFreqs:
+                f0Line = pg.InfiniteLine(pos=ff, angle=90, movable=False, pen=f0Pen)
+                # Huh? Code seems to hang if I add f0Line to two different plots, so
+                # need to clone it to add to the second plot?
+                f0Line2 = pg.InfiniteLine(pos=ff, angle=90, movable=False, pen=f0Pen)
+                getattr(self, f'pw_amplgrid_{reg.value}').addItem(f0Line)
+                getattr(self, f'pw_resfreqfit_{reg.value}').addItem(f0Line2)
 
     def cleanUp(self):
         self.logger.info("App quitting:")
