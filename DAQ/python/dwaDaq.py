@@ -251,7 +251,7 @@ class MainWindow(qtw.QMainWindow):
         x = screen.width() - wgeom.width()
         y = screen.height() - wgeom.height()
         self.move(x, y)
-        
+        self.setWindowTitle("DWA: DUNE Wire Analyzer") # set the title 
         self.show()
         ####################### END LAYOUT ###############
         ##################################################
@@ -449,10 +449,16 @@ class MainWindow(qtw.QMainWindow):
         self.curvesFit = {}  # FIXME: kluge -- merge w/ self.curves
         self.curvesFit['grid'] = {} # V(t), grid
         self.curvesFit['chan'] = {} # V(t), chan
-        amplAllPlotPens = [pg.mkPen(color=(0,  0, 0)), pg.mkPen(color=(210,105,30)),
-                           pg.mkPen(color=(255,0, 0)), pg.mkPen(color=(255,165, 0)),
-                           pg.mkPen(color=(255,255,0)), pg.mkPen(color=(0,255,0)),
-                           pg.mkPen(color=(0,0,255)), pg.mkPen(color=(148,0,211))]
+        #amplAllPlotPens = [pg.mkPen(color=(0,  0, 0)), pg.mkPen(color=(210,105,30)),
+        #                   pg.mkPen(color=(255,0, 0)), pg.mkPen(color=(255,165, 0)),
+        #                   pg.mkPen(color=(255,255,0)), pg.mkPen(color=(0,255,0)),
+        #                   pg.mkPen(color=(0,0,255)), pg.mkPen(color=(148,0,211))]
+        amplAllPlotPens = [pg.mkPen(color='#2a1636'), pg.mkPen(color='#541e4e'),
+                           pg.mkPen(color='#841e5a'), pg.mkPen(color='#b41658'),
+                           pg.mkPen(color='#dd2c45'), pg.mkPen(color='#f06043'),
+                           pg.mkPen(color='#f5946b'), pg.mkPen(color='#f6c19f')]
+        for pen in amplAllPlotPens:
+            pen.setWidth(3)
         amplPlotPen = pg.mkPen(color=(0,0,0), style=qtc.Qt.DotLine, width=1)
         for loc in range(8):
             # V(t) plots
@@ -898,7 +904,7 @@ class MainWindow(qtw.QMainWindow):
             self.stimFreqStep = udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']
             self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.2f}")
             self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.2f}")
-            self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.2f}")
+            self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
 
         # Look for frequency header
         if ddp.Frame.FREQ in udpDict:  
