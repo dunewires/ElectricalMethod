@@ -1,10 +1,10 @@
-// Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+// Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
-// Tool Version: Vivado v.2018.3 (lin64) Build 2405991 Thu Dec  6 23:36:41 MST 2018
-// Date        : Fri Jan 24 15:37:35 2020
-// Host        : lt2 running 64-bit CentOS Linux release 7.6.1810 (Core)
+// Tool Version: Vivado v.2020.2 (lin64) Build 3064766 Wed Nov 18 09:12:47 MST 2020
+// Date        : Fri Feb  5 10:50:56 2021
+// Host        : pc0 running 64-bit CentOS Linux release 8.3.2011
 // Command     : write_verilog -force -mode synth_stub
-//               /home/nate/projects/duneWireTension/vivadoProjects/dwa_ps/dwa_ps.srcs/sources_1/bd/dwa_ps_bd/dwa_ps_bd_stub.v
+//               /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/dwa_ps.srcs/sources_1/bd/dwa_ps_bd/dwa_ps_bd_stub.v
 // Design      : dwa_ps_bd
 // Purpose     : Stub declaration of top-level module interface
 // Device      : xc7z020clg400-1

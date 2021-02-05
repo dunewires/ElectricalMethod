@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Root MajorVersion="0" MinorVersion="36">
+<Root MajorVersion="0" MinorVersion="39">
   <CompositeFile CompositeFileTopName="dwa_ps_bd" CanBeSetAsTop="false" CanDisplayChildGraph="true">
     <Description>Composite Fileset</Description>
-    <Generation Name="SYNTHESIS" State="GENERATED" Timestamp="1579898135"/>
-    <Generation Name="IMPLEMENTATION" State="GENERATED" Timestamp="1579898135"/>
-    <Generation Name="SIMULATION" State="GENERATED" Timestamp="1579898135"/>
-    <Generation Name="HW_HANDOFF" State="GENERATED" Timestamp="1579898135"/>
+    <Generation Name="SYNTHESIS" State="GENERATED" Timestamp="1612540199"/>
+    <Generation Name="IMPLEMENTATION" State="GENERATED" Timestamp="1612540199"/>
+    <Generation Name="SIMULATION" State="GENERATED" Timestamp="1612540199"/>
+    <Generation Name="HW_HANDOFF" State="GENERATED" Timestamp="1612540199"/>
     <FileCollection Name="SOURCES" Type="SOURCES">
       <File Name="dwa_ps_bd_sim_netlist.vhdl" Type="VHDL">
         <Properties IsEditable="true" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="false"/>
@@ -51,6 +51,14 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
+      <File Name="ip/dwa_ps_bd_rst_ps7_0_100M_1/dwa_ps_bd_rst_ps7_0_100M_1.xci" Type="IP">
+        <Instance HierarchyPath="rst_ps7_0_100M"/>
+        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
+        <Library Name="xil_defaultlib"/>
+        <UsedIn Val="SYNTHESIS"/>
+        <UsedIn Val="IMPLEMENTATION"/>
+        <UsedIn Val="SIMULATION"/>
+      </File>
       <File Name="synth/dwa_ps_bd.vhd" Type="VHDL">
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="false" IsStatusTracked="false"/>
         <Library Name="xil_defaultlib"/>
@@ -59,14 +67,6 @@
       <File Name="sim/dwa_ps_bd.vhd" Type="VHDL">
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="false" IsStatusTracked="false"/>
         <Library Name="xil_defaultlib"/>
-        <UsedIn Val="SIMULATION"/>
-      </File>
-      <File Name="ip/dwa_ps_bd_rst_ps7_0_100M_1/dwa_ps_bd_rst_ps7_0_100M_1.xci" Type="IP">
-        <Instance HierarchyPath="rst_ps7_0_100M"/>
-        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
-        <Library Name="xil_defaultlib"/>
-        <UsedIn Val="SYNTHESIS"/>
-        <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
       <File Name="ip/dwa_ps_bd_auto_pc_0/dwa_ps_bd_auto_pc_0.xci" Type="IP">
@@ -85,6 +85,11 @@
         <UsedIn Val="OUT_OF_CONTEXT"/>
       </File>
       <File Name="hw_handoff/dwa_ps_bd.hwh" Type="HwHandoff">
+        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="false" IsStatusTracked="false"/>
+        <Library Name="xil_defaultlib"/>
+        <UsedIn Val="HW_HANDOFF"/>
+      </File>
+      <File Name="dwa_ps_bd.bda">
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="false" IsStatusTracked="false"/>
         <Library Name="xil_defaultlib"/>
         <UsedIn Val="HW_HANDOFF"/>

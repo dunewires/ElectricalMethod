@@ -1,8 +1,8 @@
---Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+--Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 ----------------------------------------------------------------------------------
---Tool Version: Vivado v.2018.3 (lin64) Build 2405991 Thu Dec  6 23:36:41 MST 2018
---Date        : Fri Jan 24 15:35:18 2020
---Host        : lt2 running 64-bit CentOS Linux release 7.6.1810 (Core)
+--Tool Version: Vivado v.2020.2 (lin64) Build 3064766 Wed Nov 18 09:12:47 MST 2020
+--Date        : Fri Feb  5 10:49:59 2021
+--Host        : pc0 running 64-bit CentOS Linux release 8.3.2011
 --Command     : generate_target dwa_ps_bd_wrapper.bd
 --Design      : dwa_ps_bd_wrapper
 --Purpose     : IP block netlist
@@ -64,27 +64,7 @@ architecture STRUCTURE of dwa_ps_bd_wrapper is
   port (
     peripheral_aresetn_0 : out STD_LOGIC_VECTOR ( 0 to 0 );
     aclk : out STD_LOGIC;
-    DDR_cas_n : inout STD_LOGIC;
-    DDR_cke : inout STD_LOGIC;
-    DDR_ck_n : inout STD_LOGIC;
-    DDR_ck_p : inout STD_LOGIC;
-    DDR_cs_n : inout STD_LOGIC;
-    DDR_reset_n : inout STD_LOGIC;
-    DDR_odt : inout STD_LOGIC;
-    DDR_ras_n : inout STD_LOGIC;
-    DDR_we_n : inout STD_LOGIC;
-    DDR_ba : inout STD_LOGIC_VECTOR ( 2 downto 0 );
-    DDR_addr : inout STD_LOGIC_VECTOR ( 14 downto 0 );
-    DDR_dm : inout STD_LOGIC_VECTOR ( 3 downto 0 );
-    DDR_dq : inout STD_LOGIC_VECTOR ( 31 downto 0 );
-    DDR_dqs_n : inout STD_LOGIC_VECTOR ( 3 downto 0 );
-    DDR_dqs_p : inout STD_LOGIC_VECTOR ( 3 downto 0 );
-    FIXED_IO_mio : inout STD_LOGIC_VECTOR ( 53 downto 0 );
-    FIXED_IO_ddr_vrn : inout STD_LOGIC;
-    FIXED_IO_ddr_vrp : inout STD_LOGIC;
-    FIXED_IO_ps_srstb : inout STD_LOGIC;
-    FIXED_IO_ps_clk : inout STD_LOGIC;
-    FIXED_IO_ps_porb : inout STD_LOGIC;
+    FCLK_CLK1_0 : out STD_LOGIC;
     M00_AXI_0_awaddr : out STD_LOGIC_VECTOR ( 31 downto 0 );
     M00_AXI_0_awprot : out STD_LOGIC_VECTOR ( 2 downto 0 );
     M00_AXI_0_awvalid : out STD_LOGIC;
@@ -104,7 +84,27 @@ architecture STRUCTURE of dwa_ps_bd_wrapper is
     M00_AXI_0_rresp : in STD_LOGIC_VECTOR ( 1 downto 0 );
     M00_AXI_0_rvalid : in STD_LOGIC;
     M00_AXI_0_rready : out STD_LOGIC;
-    FCLK_CLK1_0 : out STD_LOGIC
+    FIXED_IO_mio : inout STD_LOGIC_VECTOR ( 53 downto 0 );
+    FIXED_IO_ddr_vrn : inout STD_LOGIC;
+    FIXED_IO_ddr_vrp : inout STD_LOGIC;
+    FIXED_IO_ps_srstb : inout STD_LOGIC;
+    FIXED_IO_ps_clk : inout STD_LOGIC;
+    FIXED_IO_ps_porb : inout STD_LOGIC;
+    DDR_cas_n : inout STD_LOGIC;
+    DDR_cke : inout STD_LOGIC;
+    DDR_ck_n : inout STD_LOGIC;
+    DDR_ck_p : inout STD_LOGIC;
+    DDR_cs_n : inout STD_LOGIC;
+    DDR_reset_n : inout STD_LOGIC;
+    DDR_odt : inout STD_LOGIC;
+    DDR_ras_n : inout STD_LOGIC;
+    DDR_we_n : inout STD_LOGIC;
+    DDR_ba : inout STD_LOGIC_VECTOR ( 2 downto 0 );
+    DDR_addr : inout STD_LOGIC_VECTOR ( 14 downto 0 );
+    DDR_dm : inout STD_LOGIC_VECTOR ( 3 downto 0 );
+    DDR_dq : inout STD_LOGIC_VECTOR ( 31 downto 0 );
+    DDR_dqs_n : inout STD_LOGIC_VECTOR ( 3 downto 0 );
+    DDR_dqs_p : inout STD_LOGIC_VECTOR ( 3 downto 0 )
   );
   end component dwa_ps_bd;
 begin

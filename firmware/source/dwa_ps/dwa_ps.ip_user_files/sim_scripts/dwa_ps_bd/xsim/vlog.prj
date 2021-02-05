@@ -1,4 +1,4 @@
-verilog xil_defaultlib --include "../../../../dwa_ps.srcs/sources_1/bd/dwa_ps_bd/ipshared/ec67/hdl" --include "../../../../dwa_ps.srcs/sources_1/bd/dwa_ps_bd/ipshared/70cf/hdl" --include "../../../../dwa_ps.srcs/sources_1/bd/dwa_ps_bd/ip/dwa_ps_bd_processing_system7_0_0" \
+verilog xil_defaultlib --include "/home/tools/bulkDrive/Xilinx/Vivado/2020.2/data/xilinx_vip/include" --include "../../../../dwa_ps.srcs/sources_1/bd/dwa_ps_bd/ipshared/ec67/hdl" --include "../../../../dwa_ps.srcs/sources_1/bd/dwa_ps_bd/ipshared/34f8/hdl" \
 "../../../bd/dwa_ps_bd/ip/dwa_ps_bd_processing_system7_0_0/sim/dwa_ps_bd_processing_system7_0_0.v" \
 "../../../bd/dwa_ps_bd/ip/dwa_ps_bd_auto_pc_0/sim/dwa_ps_bd_auto_pc_0.v" \
 

@@ -1,8 +1,8 @@
---Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+--Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 ----------------------------------------------------------------------------------
---Tool Version: Vivado v.2018.3 (lin64) Build 2405991 Thu Dec  6 23:36:41 MST 2018
---Date        : Fri Jan 24 15:35:18 2020
---Host        : lt2 running 64-bit CentOS Linux release 7.6.1810 (Core)
+--Tool Version: Vivado v.2020.2 (lin64) Build 3064766 Wed Nov 18 09:12:47 MST 2020
+--Date        : Fri Feb  5 10:49:59 2021
+--Host        : pc0 running 64-bit CentOS Linux release 8.3.2011
 --Command     : generate_target dwa_ps_bd.bd
 --Design      : dwa_ps_bd
 --Purpose     : IP block netlist
@@ -831,7 +831,7 @@ architecture STRUCTURE of dwa_ps_bd is
   attribute X_INTERFACE_INFO of DDR_we_n : signal is "xilinx.com:interface:ddrx:1.0 DDR WE_N";
   attribute X_INTERFACE_INFO of FCLK_CLK1_0 : signal is "xilinx.com:signal:clock:1.0 CLK.FCLK_CLK1_0 CLK";
   attribute X_INTERFACE_PARAMETER : string;
-  attribute X_INTERFACE_PARAMETER of FCLK_CLK1_0 : signal is "XIL_INTERFACENAME CLK.FCLK_CLK1_0, CLK_DOMAIN dwa_ps_bd_processing_system7_0_0_FCLK_CLK1, FREQ_HZ 10000000, INSERT_VIP 0, PHASE 0.000";
+  attribute X_INTERFACE_PARAMETER of FCLK_CLK1_0 : signal is "XIL_INTERFACENAME CLK.FCLK_CLK1_0, CLK_DOMAIN dwa_ps_bd_processing_system7_0_0_FCLK_CLK1, FREQ_HZ 10000000, FREQ_TOLERANCE_HZ 0, INSERT_VIP 0, PHASE 0.000";
   attribute X_INTERFACE_INFO of FIXED_IO_ddr_vrn : signal is "xilinx.com:display_processing_system7:fixedio:1.0 FIXED_IO DDR_VRN";
   attribute X_INTERFACE_PARAMETER of FIXED_IO_ddr_vrn : signal is "XIL_INTERFACENAME FIXED_IO, CAN_DEBUG false";
   attribute X_INTERFACE_INFO of FIXED_IO_ddr_vrp : signal is "xilinx.com:display_processing_system7:fixedio:1.0 FIXED_IO DDR_VRP";
@@ -849,7 +849,7 @@ architecture STRUCTURE of dwa_ps_bd is
   attribute X_INTERFACE_INFO of M00_AXI_0_wready : signal is "xilinx.com:interface:aximm:1.0 M00_AXI_0 WREADY";
   attribute X_INTERFACE_INFO of M00_AXI_0_wvalid : signal is "xilinx.com:interface:aximm:1.0 M00_AXI_0 WVALID";
   attribute X_INTERFACE_INFO of aclk : signal is "xilinx.com:signal:clock:1.0 CLK.ACLK CLK";
-  attribute X_INTERFACE_PARAMETER of aclk : signal is "XIL_INTERFACENAME CLK.ACLK, CLK_DOMAIN dwa_ps_bd_processing_system7_0_0_FCLK_CLK0, FREQ_HZ 100000000, INSERT_VIP 0, PHASE 0.000";
+  attribute X_INTERFACE_PARAMETER of aclk : signal is "XIL_INTERFACENAME CLK.ACLK, CLK_DOMAIN dwa_ps_bd_processing_system7_0_0_FCLK_CLK0, FREQ_HZ 100000000, FREQ_TOLERANCE_HZ 0, INSERT_VIP 0, PHASE 0.000";
   attribute X_INTERFACE_INFO of DDR_addr : signal is "xilinx.com:interface:ddrx:1.0 DDR ADDR";
   attribute X_INTERFACE_PARAMETER of DDR_addr : signal is "XIL_INTERFACENAME DDR, AXI_ARBITRATION_SCHEME TDM, BURST_LENGTH 8, CAN_DEBUG false, CAS_LATENCY 11, CAS_WRITE_LATENCY 11, CS_ENABLED true, DATA_MASK_ENABLED true, DATA_WIDTH 8, MEMORY_TYPE COMPONENTS, MEM_ADDR_MAP ROW_COLUMN_BANK, SLOT Single, TIMEPERIOD_PS 1250";
   attribute X_INTERFACE_INFO of DDR_ba : signal is "xilinx.com:interface:ddrx:1.0 DDR BA";

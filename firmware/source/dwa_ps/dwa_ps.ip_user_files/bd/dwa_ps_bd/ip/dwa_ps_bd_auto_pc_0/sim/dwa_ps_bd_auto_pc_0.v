@@ -1,4 +1,4 @@
-// (c) Copyright 1995-2020 Xilinx, Inc. All rights reserved.
+// (c) Copyright 1995-2021 Xilinx, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
@@ -48,7 +48,7 @@
 
 
 // IP VLNV: xilinx.com:ip:axi_protocol_converter:2.1
-// IP Revision: 18
+// IP Revision: 22
 
 `timescale 1ns/1ps
 
@@ -115,7 +115,7 @@ module dwa_ps_bd_auto_pc_0 (
   m_axi_rready
 );
 
-(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK, FREQ_HZ 100000000, PHASE 0.000, CLK_DOMAIN dwa_ps_bd_processing_system7_0_0_FCLK_CLK0, ASSOCIATED_BUSIF S_AXI:M_AXI, ASSOCIATED_RESET ARESETN, INSERT_VIP 0" *)
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME CLK, FREQ_HZ 100000000, FREQ_TOLERANCE_HZ 0, PHASE 0.000, CLK_DOMAIN dwa_ps_bd_processing_system7_0_0_FCLK_CLK0, ASSOCIATED_BUSIF S_AXI:M_AXI, ASSOCIATED_RESET ARESETN, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 CLK CLK" *)
 input wire aclk;
 (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME RST, POLARITY ACTIVE_LOW, INSERT_VIP 0, TYPE INTERCONNECT" *)
@@ -240,7 +240,7 @@ DS 4, NUM_WRITE_THREADS 4, RUSER_BITS_PER_BYTE 0, WUSER_BITS_PER_BYTE 0, INSERT_
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 M_AXI RREADY" *)
 output wire m_axi_rready;
 
-  axi_protocol_converter_v2_1_18_axi_protocol_converter #(
+  axi_protocol_converter_v2_1_22_axi_protocol_converter #(
     .C_FAMILY("zynq"),
     .C_M_AXI_PROTOCOL(2),
     .C_S_AXI_PROTOCOL(1),

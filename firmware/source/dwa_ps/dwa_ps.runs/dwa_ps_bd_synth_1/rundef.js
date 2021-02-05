@@ -1,7 +1,7 @@
 //
 // Vivado(TM)
 // rundef.js: a Vivado-generated Runs Script for WSH 5.1/5.6
-// Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+// Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 //
 
 echo "This script was generated under a different operating system."
@@ -12,9 +12,9 @@ var WshShell = new ActiveXObject( "WScript.Shell" );
 var ProcEnv = WshShell.Environment( "Process" );
 var PathVal = ProcEnv("PATH");
 if ( PathVal.length == 0 ) {
-  PathVal = "/home/nate/opt/Xilinx/SDK/2018.3/bin:/home/nate/opt/Xilinx/Vivado/2018.3/ids_lite/ISE/bin/lin64;/home/nate/opt/Xilinx/Vivado/2018.3/ids_lite/ISE/lib/lin64;/home/nate/opt/Xilinx/Vivado/2018.3/bin;";
+  PathVal = "/home/tools/bulkDrive/Xilinx/Vitis/2020.2/bin:/home/tools/bulkDrive/Xilinx/Vivado/2020.2/ids_lite/ISE/bin/lin64;/home/tools/bulkDrive/Xilinx/Vivado/2020.2/bin;";
 } else {
-  PathVal = "/home/nate/opt/Xilinx/SDK/2018.3/bin:/home/nate/opt/Xilinx/Vivado/2018.3/ids_lite/ISE/bin/lin64;/home/nate/opt/Xilinx/Vivado/2018.3/ids_lite/ISE/lib/lin64;/home/nate/opt/Xilinx/Vivado/2018.3/bin;" + PathVal;
+  PathVal = "/home/tools/bulkDrive/Xilinx/Vitis/2020.2/bin:/home/tools/bulkDrive/Xilinx/Vivado/2020.2/ids_lite/ISE/bin/lin64;/home/tools/bulkDrive/Xilinx/Vivado/2020.2/bin;" + PathVal;
 }
 
 ProcEnv("PATH") = PathVal;

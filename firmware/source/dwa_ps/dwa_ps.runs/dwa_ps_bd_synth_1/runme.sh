@@ -3,24 +3,24 @@
 # 
 # Vivado(TM)
 # runme.sh: a Vivado-generated Runs Script for UNIX
-# Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+# Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 # 
 
 if [ -z "$PATH" ]; then
-  PATH=/home/nate/opt/Xilinx/SDK/2018.3/bin:/home/nate/opt/Xilinx/Vivado/2018.3/ids_lite/ISE/bin/lin64:/home/nate/opt/Xilinx/Vivado/2018.3/bin
+  PATH=/home/tools/bulkDrive/Xilinx/Vitis/2020.2/bin:/home/tools/bulkDrive/Xilinx/Vivado/2020.2/ids_lite/ISE/bin/lin64:/home/tools/bulkDrive/Xilinx/Vivado/2020.2/bin
 else
-  PATH=/home/nate/opt/Xilinx/SDK/2018.3/bin:/home/nate/opt/Xilinx/Vivado/2018.3/ids_lite/ISE/bin/lin64:/home/nate/opt/Xilinx/Vivado/2018.3/bin:$PATH
+  PATH=/home/tools/bulkDrive/Xilinx/Vitis/2020.2/bin:/home/tools/bulkDrive/Xilinx/Vivado/2020.2/ids_lite/ISE/bin/lin64:/home/tools/bulkDrive/Xilinx/Vivado/2020.2/bin:$PATH
 fi
 export PATH
 
 if [ -z "$LD_LIBRARY_PATH" ]; then
-  LD_LIBRARY_PATH=/home/nate/opt/Xilinx/Vivado/2018.3/ids_lite/ISE/lib/lin64
+  LD_LIBRARY_PATH=
 else
-  LD_LIBRARY_PATH=/home/nate/opt/Xilinx/Vivado/2018.3/ids_lite/ISE/lib/lin64:$LD_LIBRARY_PATH
+  LD_LIBRARY_PATH=:$LD_LIBRARY_PATH
 fi
 export LD_LIBRARY_PATH
 
-HD_PWD='/home/nate/projects/duneWireTension/vivadoProjects/dwa_ps/dwa_ps.runs/dwa_ps_bd_synth_1'
+HD_PWD='/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/dwa_ps.runs/dwa_ps_bd_synth_1'
 cd "$HD_PWD"
 
 HD_LOG=runme.log
