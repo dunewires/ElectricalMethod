@@ -33,7 +33,7 @@ import sys
 import logging
 
 from functools import partial
-from enum import IntEnum
+from enum import Enum, IntEnum
 import string
 
 import numpy as np
@@ -75,15 +75,23 @@ class State(IntEnum):
 
 class View(IntEnum):
     ''' for stackedWidget page indexing '''
-    CONFIG = 0    # Show the configuration parameters
-    LOG = 1       # Log-file output
-    GRID = 2      # V(t) (grid view)
-    CHAN = 3      # V(t) (channel view)
-    AMPLGRID = 4  # A(f) (grid view)
-    AMPLCHAN = 5  # A(f) (channel view)
-    RESFREQS = 6  # Wire tensions
-    TENSIONS = 7  # Wire tensions
-    
+    CONFIG  = 0  # Show the configuration parameters
+    LOG     = 1  # Log-file output
+    V_GRID  = 2  # V(t) (grid view)
+    V_CHAN  = 3  # V(t) (channel view)
+    A_GRID  = 4  # A(f) (grid view)
+    A_CHAN  = 5  # A(f) (channel view)
+    RESFREQ = 6  # Wire tensions
+    TENSION = 7  # Wire tensions
+
+class Shortcut(Enum):
+    CONFIG  = "CTRL+C"
+    LOG     = "CTRL+L"
+    V_GRID  = "CTRL+V"
+    A_GRID  = "CTRL+A"
+    RESFREQ = "CTRL+F"
+    TENSION = "CTRL+T"
+
 class WorkerSignals(qtc.QObject):
     '''
     Defines the signals available from a running worker thread.
@@ -179,7 +187,38 @@ class Worker(qtc.QRunnable):
             print("\n\n ======== Worker.run() finally ========== \n\n")
             self.logger.info("Thread complete")
         
+# new additions
+# From:
+# https://stackoverflow.com/questions/51404102/pyqt5-tabwidget-vertical-tab-horizontal-text-alignment-left
+class TabBar(qtw.QTabBar):
+    def tabSizeHint(self, index):
+        s = qtw.QTabBar.tabSizeHint(self, index)
+        s.transpose()
+        return s
 
+    def paintEvent(self, event):
+        painter = qtw.QStylePainter(self)
+        opt = qtw.QStyleOptionTab()
+
+        for i in range(self.count()):
+            self.initStyleOption(opt, i)
+            painter.drawControl(qtw.QStyle.CE_TabBarTabShape, opt)
+            painter.save()
+
+            s = opt.rect.size()
+            s.transpose()
+            r = qtc.QRect(qtc.QPoint(), s)
+            r.moveCenter(opt.rect.center())
+            opt.rect = r
+
+            c = self.tabRect(i).center()
+            painter.translate(c)
+            painter.rotate(90)
+            painter.translate(-c)
+            painter.drawControl(qtw.QStyle.CE_TabBarTabLabel, opt)
+            painter.restore()
+
+            
 class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -190,6 +229,14 @@ class MainWindow(qtw.QMainWindow):
         ################# START LAYOUT ##################
         # Load the UI (built in Qt Designer)
         uic.loadUi('dwaDaqUI.ui', self)
+        # adapt the tabs...
+        # see https://stackoverflow.com/questions/51404102/pyqt5-tabwidget-vertical-tab-horizontal-text-alignment-left
+        #self.tabWidget.setTabBar(TabBar(self.tabWidget))
+        #self.tabWidget.setTabPosition(self.tabWidget.West)
+        #self.tabWidget.insertTab(0, self.tab_config, "Config")
+        #self.tabWidget.insertTab(1, self.tab_tension, "Tension")
+        #self.pushButton_reach.clicked.connect(self.display)
+        
         ####self.logTextBox = QTextEditLogger(self.page_logging)
         self.logTextBox.appendPlainText("log viewing not yet implemented")
         #logging.getLogger().addHandler(self.logTextBox)
@@ -209,11 +256,14 @@ class MainWindow(qtw.QMainWindow):
         self.configFileContents.setReadOnly(True)
 
         # Make handles for widgets in the UI
-        self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
-        self.stack.setStyleSheet("background-color:white")
+        #self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
+        #self.stack.setStyleSheet("background-color:white")
         self.currentView = View.CONFIG
-        self.stack.setCurrentIndex(self.currentView)
-
+        self.tabWidget.setCurrentIndex(self.currentView)
+        # testing updating tab labels
+        #self.tabWidget.setTabText(View.TENSION, "Tension\nCTRL+t")
+        self._setTabTooltips()
+        
         # Connect slots/signals
         self.btnStart.clicked.connect(self.startRunThread)
         #self.btnQuit.clicked.connect(self.close)
@@ -251,7 +301,6 @@ class MainWindow(qtw.QMainWindow):
         x = screen.width() - wgeom.width()
         y = screen.height() - wgeom.height()
         self.move(x, y)
-        self.setWindowTitle("DWA: DUNE Wire Analyzer") # set the title 
         self.show()
         ####################### END LAYOUT ###############
         ##################################################
@@ -331,6 +380,13 @@ class MainWindow(qtw.QMainWindow):
         
     # end of __init__ for class MainWindow
 
+    def _setTabTooltips(self):
+        self.tabWidget.setTabToolTip(View.CONFIG, Shortcut.CONFIG.value)
+        self.tabWidget.setTabToolTip(View.LOG, Shortcut.LOG.value)
+        self.tabWidget.setTabToolTip(View.V_GRID, Shortcut.V_GRID.value)
+        self.tabWidget.setTabToolTip(View.A_GRID, Shortcut.A_GRID.value)
+        self.tabWidget.setTabToolTip(View.RESFREQ, Shortcut.RESFREQ.value)
+        self.tabWidget.setTabToolTip(View.TENSION, Shortcut.TENSION.value)
 
     def _initLogging(self):
         # logging levels (in order of severity): DEBUG, INFO, WARNING, ERROR, CRITICAL
@@ -486,8 +542,8 @@ class MainWindow(qtw.QMainWindow):
         # Tension information
         self.curves['tension']['tensionOfWireNumber'] = getattr(self, f'pw_tensionsPerWire').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
         tensionPen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
-        tensionLowLimit = pg.InfiniteLine(pos=6.0, angle=0, movable=False, pen=tensionPen)
-        tensionHighLimit = pg.InfiniteLine(pos=7.0, angle=0, movable=False, pen=tensionPen)
+        tensionLowLimit = pg.InfiniteLine(pos=6.0, angle=0, movable=True, pen=tensionPen)
+        tensionHighLimit = pg.InfiniteLine(pos=7.0, angle=0, movable=True, pen=tensionPen)
         self.pw_tensionsPerWire.addItem(tensionLowLimit)
         self.pw_tensionsPerWire.addItem(tensionHighLimit)
 
@@ -539,30 +595,31 @@ class MainWindow(qtw.QMainWindow):
             
     def _keyboardShortcuts(self):
         # Show configuration parameters
-        self.scConfig = qtw.QShortcut(qtg.QKeySequence("Ctrl+C"), self)
+        self.scConfig = qtw.QShortcut(qtg.QKeySequence(Shortcut.CONFIG.value), self)
         self.scConfig.activated.connect(self.viewConfig)
 
         # Show log
-        self.scLog = qtw.QShortcut(qtg.QKeySequence("Ctrl+L"), self)
+        self.scLog = qtw.QShortcut(qtg.QKeySequence(Shortcut.LOG.value), self)
         self.scLog.activated.connect(self.viewLog)
 
         # V(t) data (grid view)
-        self.scGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+V"), self)
+        self.scGridView = qtw.QShortcut(qtg.QKeySequence(Shortcut.V_GRID.value), self)
         self.scGridView.activated.connect(self.viewGrid)
 
         # A(f) data (grid view)
-        self.scAmplGridView = qtw.QShortcut(qtg.QKeySequence("Ctrl+A"), self)
+        self.scAmplGridView = qtw.QShortcut(qtg.QKeySequence(Shortcut.A_GRID.value), self)
         self.scAmplGridView.activated.connect(self.viewAmplGrid)
 
-        # Tension data
-        self.scResFreqFitView = qtw.QShortcut(qtg.QKeySequence("Ctrl+F"), self)
+        # Resonant frequency fit
+        self.scResFreqFitView = qtw.QShortcut(qtg.QKeySequence(Shortcut.RESFREQ.value), self)
         self.scResFreqFitView.activated.connect(self.viewResFreqFit)
 
         # Tension data
-        self.scTensionView = qtw.QShortcut(qtg.QKeySequence("Ctrl+T"), self)
+        self.scTensionView = qtw.QShortcut(qtg.QKeySequence(Shortcut.TENSION.value), self)
         self.scTensionView.activated.connect(self.viewTensions)
-
+        
         # Show V(t) or A(f) (channel view)
+        # FIXME: move these to "Shortucut" ENUM?
         chans = range(8)
         self.chanViewShortcuts = []  # FIXME: no need to save these, just need to connect slot...
         for chan in chans:
@@ -652,32 +709,32 @@ class MainWindow(qtw.QMainWindow):
     @pyqtSlot()
     def viewConfig(self):
         self.currentView = View.CONFIG
-        self.stack.setCurrentIndex(self.currentView)
+        self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View CONFIG")
 
     @pyqtSlot()
     def viewLog(self):
         self.currentView = View.LOG
-        self.stack.setCurrentIndex(self.currentView)
+        self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View LOG")
         
     @pyqtSlot()
     def viewGrid(self):
-        self.currentView = View.GRID
-        self.stack.setCurrentIndex(self.currentView)
+        self.currentView = View.V_GRID
+        self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View V(t) GRID")
 
     @pyqtSlot()
     def viewAmplGrid(self):
-        self.currentView = View.AMPLGRID
-        self.stack.setCurrentIndex(self.currentView)
+        self.currentView = View.A_GRID
+        self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View A(f) GRID")
 
     @pyqtSlot(int)
     def viewAmplChan(self, chan):
-        self.currentView = View.AMPLCHAN
-        self.stack.setCurrentIndex(self.currentView)
-        self.logger.info("View A(f) AMPLCHAN.  Channel = {}".format(chan))
+        self.currentView = View.A_CHAN
+        self.tabWidget.setCurrentIndex(self.currentView)
+        self.logger.info("View A(f) A_CHAN.  Channel = {}".format(chan))
 
         if self.chanViewMainAmpl != chan:
             x, y = self.curves['amplchan'][chan].getData()
@@ -687,9 +744,9 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot(int)
     def viewChan(self, chan):
-        self.currentView = View.CHAN
-        self.stack.setCurrentIndex(self.currentView)
-        self.logger.info("View V(t) AMPLCHAN.  Channel = {}".format(chan))
+        self.currentView = View.V_CHAN
+        self.tabWidget.setCurrentIndex(self.currentView)
+        self.logger.info("View V(t) A_CHAN.  Channel = {}".format(chan))
 
         if self.chanViewMain != chan:
             x, y = self.curves['chan'][chan].getData()
@@ -700,14 +757,14 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def viewResFreqFit(self):
-        self.currentView = View.RESFREQS
-        self.stack.setCurrentIndex(self.currentView)
+        self.currentView = View.RESFREQ
+        self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View Resonant Frequencies")
             
     @pyqtSlot()
     def viewTensions(self):
-        self.currentView = View.TENSIONS
-        self.stack.setCurrentIndex(self.currentView)
+        self.currentView = View.TENSION
+        self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View Tensions")
 
     def _loadConfigFile(self, updateGui=True):
@@ -927,7 +984,7 @@ class MainWindow(qtw.QMainWindow):
             reg = self.registerOfVal[regId]
             #self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
             # FIXME: check which view is active and only update that one...
-            # can use self.stack.currentIndex()
+            # can use self.tabWidget.currentIndex()
             dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
             tt = np.arange(len(udpDict[ddp.Frame.ADC_DATA]['adcSamples']))*dt
 
