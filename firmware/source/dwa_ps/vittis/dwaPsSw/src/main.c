@@ -120,13 +120,22 @@ int IicPhyReset(void);
 
 int main()
 {
+unsigned int udpMacAddr;
 #if LWIP_IPV6==0
 	ip_addr_t ipaddr, netmask, gw;
 
 #endif
-	/* the mac address of the board. this should be unique per board */
+	  u8_t *udpMacAddrB = (u8_t*) &udpMacAddr;
+	sleep(3);// give time for the power up and  serial num read
+	udpMacAddr = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (48 << 2));
+	xil_printf("MAC address 84, 2b, 2b, %x, %x, %x \r\n", udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0]);
 	unsigned char mac_ethernet_address[] =
-	{ 0x00, 0x0a, 0x35, 0x00, 0x01, 0x02 };
+	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x00}; //"Jeff" microzed"
+	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x01}; //"Nate" microzed"
+	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x02}; //"James" microzed"
+	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x03}; //"DWA_v2" microzed"
+	//{ 0xfc, 0xc2, 0xde, 0x36, 0xd5, 0x7e}; //"edison"
+	{ 0x84, 0x2b, 0x2b, udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0] }; //"DWA_v2" microzed"
 
 	echo_netif = &server_netif;
 #if defined (__arm__) && !defined (ARMR5)
@@ -152,10 +161,12 @@ int main()
 	gw.addr = 0;
 	netmask.addr = 0;
 #else
-	/* initialize IP addresses to be used */
-	IP4_ADDR(&ipaddr,  192, 168,   1, 10);
+	/* initliaze IP addresses to be used */
+	IP4_ADDR(&ipaddr,  128,	103, 100, 173);
+//	IP4_ADDR(&ipaddr,  192, 168,   1, 10);
 	IP4_ADDR(&netmask, 255, 255, 255,  0);
-	IP4_ADDR(&gw,      192, 168,   1,  1);
+	IP4_ADDR(&gw,      128, 103,   1,  1);
+//	IP4_ADDR(&gw,      192, 168,   1,  1);
 #endif
 #endif
 	print_app_header();
@@ -210,6 +221,7 @@ int main()
 			xil_printf("DHCP Timeout\r\n");
 			xil_printf("Configuring default IP of 192.168.1.10\r\n");
 			IP4_ADDR(&(echo_netif->ip_addr),  192, 168,   1, 10);
+			//IP4_ADDR(&(echo_netif->ip_addr),  128, 103,   100, 173);
 			IP4_ADDR(&(echo_netif->netmask), 255, 255, 255,  0);
 			IP4_ADDR(&(echo_netif->gw),      192, 168,   1,  1);
 		}
@@ -238,6 +250,14 @@ int main()
 		}
 		xemacif_input(echo_netif);
 		transfer_data();
+		drainDebugFifoUdp(0x18);
+		drainDebugFifoUdp(0x19);
+		drainDebugFifoUdp(0x1A);
+		drainDebugFifoUdp(0x1B);
+		drainDebugFifoUdp(0x1C);
+		drainDebugFifoUdp(0x1D);
+		drainDebugFifoUdp(0x1E);
+		drainDebugFifoUdp(0x1F);
 	}
 
 	/* never reached */
