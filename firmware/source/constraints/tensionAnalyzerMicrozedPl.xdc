@@ -42,113 +42,156 @@ set_property PACKAGE_PIN W18 [get_ports dpotSck]
 set_property IOSTANDARD LVCMOS33 [get_ports dpotShdn_b]
 set_property PACKAGE_PIN R17 [get_ports dpotShdn_b]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[0]]
-set_property PACKAGE_PIN U13 [get_ports CoilDrive[0]]
+#DWA V2 CoilDrive[0]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_Din]
+set_property PACKAGE_PIN U13 [get_ports CD_Din]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[1]]
-set_property PACKAGE_PIN V12 [get_ports CoilDrive[1]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[2]]
-set_property PACKAGE_PIN V13 [get_ports CoilDrive[2]]
+#DWA V2 CoilDrive[1]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_SCLR_b[3]]
+set_property PACKAGE_PIN V12 [get_ports CD_SCLR_b[3]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[3]]
-set_property PACKAGE_PIN W13 [get_ports CoilDrive[3]]
+#DWA V2 CoilDrive[2]unconnected
+# set_property IOSTANDARD LVCMOS33 [get_ports s]
+# set_property PACKAGE_PIN V13 [get_ports s]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[4]]
-set_property PACKAGE_PIN T14 [get_ports CoilDrive[4]]
+#DWA V2 CoilDrive[3]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_SCLR_b[1]]
+set_property PACKAGE_PIN W13 [get_ports CD_SCLR_b[1]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[5]]
-set_property PACKAGE_PIN P14 [get_ports CoilDrive[5]]
+#DWA V2 CoilDrive[4]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_SCK[3]]
+set_property PACKAGE_PIN T14 [get_ports CD_SCK[3]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[6]]
-set_property PACKAGE_PIN T15 [get_ports CoilDrive[6]]
+#DWA V2 CoilDrive[5]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_RCK[3]]
+set_property PACKAGE_PIN P14 [get_ports CD_RCK[3]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[7]]
-set_property PACKAGE_PIN R14 [get_ports CoilDrive[7]]
+#DWA V2 CoilDrive[6]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_SCK[1]]
+set_property PACKAGE_PIN T15 [get_ports CD_SCK[1]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[8]]
-set_property PACKAGE_PIN Y16 [get_ports CoilDrive[8]]
+#DWA V2 CoilDrive[7]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_RCK[1]]
+set_property PACKAGE_PIN R14 [get_ports CD_RCK[1]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[9]]
-set_property PACKAGE_PIN W14 [get_ports CoilDrive[9]]
+#DWA V2 CoilDrive[8]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_G_b[3]]
+set_property PACKAGE_PIN Y16 [get_ports CD_G_b[3]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[10]]
-set_property PACKAGE_PIN Y17 [get_ports CoilDrive[10]]
+#DWA V2 CoilDrive[9]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_Dout[3]]
+set_property PACKAGE_PIN W14 [get_ports CD_Dout[3]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[11]]
-set_property PACKAGE_PIN Y14 [get_ports CoilDrive[11]]
+#DWA V2 CoilDrive[10]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_G_b[1]]
+set_property PACKAGE_PIN Y17 [get_ports CD_G_b[1]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[12]]
-set_property PACKAGE_PIN T16 [get_ports CoilDrive[12]]
+#DWA V2 CoilDrive[11]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_Dout[1]]
+set_property PACKAGE_PIN Y14 [get_ports CD_Dout[1]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[13]]
-set_property PACKAGE_PIN V15 [get_ports CoilDrive[13]]
+#DWA V2 CoilDrive[12]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_SCLR_b[2]]
+set_property PACKAGE_PIN T16 [get_ports CD_SCLR_b[2]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[14]]
-set_property PACKAGE_PIN U17 [get_ports CoilDrive[14]]
+#DWA V2 CoilDrive[13]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_SCK[2]]
+set_property PACKAGE_PIN V15 [get_ports CD_SCK[2]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[15]]
-set_property PACKAGE_PIN W15 [get_ports CoilDrive[15]]
+#DWA V2 CoilDrive[14]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_SCLR_b[0]]
+set_property PACKAGE_PIN U17 [get_ports CD_SCLR_b[0]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[16]]
-set_property PACKAGE_PIN U14 [get_ports CoilDrive[16]]
+#DWA V2 CoilDrive[15]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_SCK[0]]
+set_property PACKAGE_PIN W15 [get_ports CD_SCK[0]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[17]]
-set_property PACKAGE_PIN U18 [get_ports CoilDrive[17]]
+#DWA V2 CoilDrive[16]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_RCK[2]]
+set_property PACKAGE_PIN U14 [get_ports CD_RCK[2]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[18]]
-set_property PACKAGE_PIN U15 [get_ports CoilDrive[18]]
+#DWA V2 CoilDrive[17]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_G_b[2]]
+set_property PACKAGE_PIN U18 [get_ports CD_G_b[2]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[19]]
-set_property PACKAGE_PIN U19 [get_ports CoilDrive[19]]
+#DWA V2 CoilDrive[18]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_RCK[0]]
+set_property PACKAGE_PIN U15 [get_ports CD_RCK[0]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[20]]
-set_property PACKAGE_PIN N18 [get_ports CoilDrive[20]]
+#DWA V2 CoilDrive[19]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_G_b[0]]
+set_property PACKAGE_PIN U19 [get_ports CD_G_b[0]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[21]]
-set_property PACKAGE_PIN N20 [get_ports CoilDrive[21]]
+#DWA V2 CoilDrive[20]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_Dout[2]]
+set_property PACKAGE_PIN N18 [get_ports CD_Dout[2]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[22]]
-set_property PACKAGE_PIN P19 [get_ports CoilDrive[22]]
+#DWA V2 CoilDrive[21]
+set_property IOSTANDARD LVCMOS33 [get_ports SNUM_SDA]
+set_property PACKAGE_PIN N20 [get_ports SNUM_SDA]
+set_property PULLUP TRUE [get_ports SNUM_SDA]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[23]]
-set_property PACKAGE_PIN P20 [get_ports CoilDrive[23]]
+#DWA V2 CoilDrive[22]
+set_property IOSTANDARD LVCMOS33 [get_ports CD_Dout[0]]
+set_property PACKAGE_PIN P19 [get_ports CD_Dout[0]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[24]]
-set_property PACKAGE_PIN T20 [get_ports CoilDrive[24]]
+#DWA V2 CoilDrive[23]
+set_property IOSTANDARD LVCMOS33 [get_ports SNUM_SCL]
+set_property PACKAGE_PIN P20 [get_ports SNUM_SCL]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[25]]
-set_property PACKAGE_PIN V20 [get_ports CoilDrive[25]]
+#DWA V2 CoilDrive[24]
+set_property IOSTANDARD LVCMOS33 [get_ports SNUM_A[2]]
+set_property PACKAGE_PIN T20 [get_ports SNUM_A[2]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[26]]
-set_property PACKAGE_PIN U20 [get_ports CoilDrive[26]]
+#DWA V2 CoilDrive[25]
+set_property IOSTANDARD LVCMOS33 [get_ports SNUM_A[1]]
+set_property PACKAGE_PIN V20 [get_ports SNUM_A[1]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[27]]
-set_property PACKAGE_PIN W20 [get_ports CoilDrive[27]]
+#DWA V2 CoilDrive[26] unconnected
+# set_property IOSTANDARD LVCMOS33 [get_ports s]
+# set_property PACKAGE_PIN U20 [get_ports s]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[28]]
-set_property PACKAGE_PIN Y18 [get_ports CoilDrive[28]]
+#DWA V2 CoilDrive[27]
+set_property IOSTANDARD LVCMOS33 [get_ports SNUM_A[0]]
+set_property PACKAGE_PIN W20 [get_ports SNUM_A[0]]
 
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[29]]
-set_property PACKAGE_PIN V16 [get_ports CoilDrive[29]]
-
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[30]]
-set_property PACKAGE_PIN Y19 [get_ports CoilDrive[30]]
-
-set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[31]]
-set_property PACKAGE_PIN W16 [get_ports CoilDrive[31]]
+#DWA V2 CoilDrive 28:31 unconnected
+# set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[28]]
+# set_property PACKAGE_PIN Y18 [get_ports CoilDrive[28]]
+# 
+# set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[29]]
+# set_property PACKAGE_PIN V16 [get_ports CoilDrive[29]]
+# 
+# set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[30]]
+# set_property PACKAGE_PIN Y19 [get_ports CoilDrive[30]]
+# 
+# set_property IOSTANDARD LVCMOS33 [get_ports CoilDrive[31]]
+# set_property PACKAGE_PIN W16 [get_ports CoilDrive[31]]
 
 set_property IOSTANDARD LVCMOS25 [get_ports led[0]]
 set_property PACKAGE_PIN C20 [get_ports led[0]]
 
 set_property IOSTANDARD LVCMOS25 [get_ports led[1]]
-set_property PACKAGE_PIN B20 [get_ports led[1]]
+set_property PACKAGE_PIN B19 [get_ports led[1]]
 
 set_property IOSTANDARD LVCMOS25 [get_ports led[2]]
-set_property PACKAGE_PIN B19 [get_ports led[2]]
+set_property PACKAGE_PIN B20 [get_ports led[2]]
 
 set_property IOSTANDARD LVCMOS25 [get_ports led[3]]
 set_property PACKAGE_PIN A20 [get_ports led[3]]
+
+set_property IOSTANDARD LVCMOS25 [get_ports pButton[0]]
+set_property PACKAGE_PIN G19 [get_ports pButton[0]]
+
+set_property IOSTANDARD LVCMOS25 [get_ports pButton[1]]
+set_property PACKAGE_PIN J20 [get_ports pButton[1]]
+
+set_property IOSTANDARD LVCMOS25 [get_ports pButton[2]]
+set_property PACKAGE_PIN G20 [get_ports pButton[2]]
+
+set_property IOSTANDARD LVCMOS25 [get_ports pButton[3]]
+set_property PACKAGE_PIN H20 [get_ports pButton[3]]
 
 set_property IOSTANDARD LVCMOS25 [get_ports adcCnv]
 set_property PACKAGE_PIN G17 [get_ports adcCnv]

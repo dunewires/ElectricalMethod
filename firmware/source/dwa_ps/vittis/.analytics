@@ -1,0 +1,52 @@
+timestamp=[2021-01-27 14:53:31], mode=WORKBENCH_START, duration=0:00:11.280, duration_ms=11280, data={}
+timestamp=[2021-01-27 14:53:33], mode=WORKBENCH_UI_INIT, duration=0:00:01.893, duration_ms=1893, data={editors_count=0, platform_editors_count=0, projects_count=0, platform_projects_count=0, active_platform_editor=false, projects=}
+timestamp=[2021-01-27 14:53:35], mode=PLATFORM_REPOSITORY_INIT, duration=0:00:03.062, duration_ms=3062, data={}
+timestamp=[2021-01-27 15:03:25], mode=WORKBENCH_START, duration=0:00:06.479, duration_ms=6479, data={}
+timestamp=[2021-01-27 15:03:27], mode=WORKBENCH_UI_INIT, duration=0:00:01.556, duration_ms=1556, data={editors_count=0, platform_editors_count=0, projects_count=3, platform_projects_count=0, active_platform_editor=false, projects=RemoteSystemsTempFiles,dwaFsbl,lwip_ref}
+timestamp=[2021-01-27 15:03:27], mode=PLATFORM_REPOSITORY_INIT, duration=0:00:01.706, duration_ms=1706, data={}
+timestamp=[2021-01-27 15:49:34], mode=PLATFORM_CREATION, duration=0:00:04.526, duration_ms=4526, data={platform_source=dsa, os=standalone, processor=ps7_cortexa9, platform=null}
+timestamp=[2021-01-27 15:56:40], mode=PLATFORM_GENERATION, duration=0:00:05.405, duration_ms=5405, data={name=dwaEthIo}
+timestamp=[2021-01-27 16:04:42], mode=PLATFORM_GENERATION, duration=0:00:07.998, duration_ms=7998, data={name=dwaEthIo}
+timestamp=[2021-01-27 16:12:28], mode=PLATFORM_GENERATION, duration=0:00:05.836, duration_ms=5836, data={name=dwaEthIo}
+timestamp=[2021-01-27 16:13:28], mode=PLATFORM_GENERATION, duration=0:00:04.964, duration_ms=4964, data={name=dwaEthIo}
+timestamp=[2021-01-27 16:14:20], mode=PLATFORM_GENERATION, duration=0:00:07.967, duration_ms=7967, data={name=dwaEthIo}
+timestamp=[2021-01-27 16:25:50], mode=APP_CREATION, duration=0:00:07.698, duration_ms=7698, data={name=blat2, project_type=sdk, os=standalone, processor=cortex-a9, runtime=cpp, platform=dwaEthIo, application_type=application}
+timestamp=[2021-01-27 16:26:35], mode=PLATFORM_GENERATION, duration=0:00:08.991, duration_ms=8991, data={name=dwaEthIo}
+timestamp=[2021-01-27 16:26:37], mode=BUILD, duration=0:00:00.979, duration_ms=979, data={name=blat2, configuration=Debug, clean_build=false}
+timestamp=[2021-01-27 16:26:44], mode=BUILD, duration=0:00:05.895, duration_ms=5895, data={name=blat2_system, configuration=Debug, clean_build=false}
+timestamp=[2021-01-27 22:11:56], mode=PLATFORM_CREATION, duration=0:00:04.069, duration_ms=4069, data={platform_source=dsa, os=standalone, processor=ps7_cortexa9, platform=null}
+timestamp=[2021-01-27 22:15:23], mode=APP_CREATION, duration=0:00:04.851, duration_ms=4851, data={name=dwaEth2Axi, project_type=sdk, os=standalone, processor=cortex-a9, runtime=cpp, platform=dwaPs, application_type=application}
+timestamp=[2021-01-27 22:19:41], mode=PLATFORM_GENERATION, duration=0:00:11.502, duration_ms=11502, data={name=dwaPs}
+timestamp=[2021-01-27 22:19:42], mode=BUILD, duration=0:00:00.142, duration_ms=142, data={name=dwaEth2Axi, configuration=Debug, clean_build=false}
+timestamp=[2021-01-27 22:19:47], mode=BUILD, duration=0:00:05.050, duration_ms=5050, data={name=dwaEth2Axi_system, configuration=Debug, clean_build=false}
+timestamp=[2021-01-28 14:39:57], mode=PLATFORM_GENERATION, duration=0:00:04.924, duration_ms=4924, data={name=dwaPs}
+timestamp=[2021-01-28 14:40:32], mode=BUILD, duration=0:00:00.135, duration_ms=135, data={name=dwaEth2Axi, configuration=Debug, clean_build=false}
+timestamp=[2021-01-28 14:40:40], mode=BUILD, duration=0:00:04.750, duration_ms=4750, data={name=dwaEth2Axi_system, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 10:54:23], mode=WORKBENCH_START, duration=0:00:09.284, duration_ms=9284, data={}
+timestamp=[2021-02-05 10:54:24], mode=PLATFORM_REPOSITORY_INIT, duration=0:00:00.124, duration_ms=124, data={}
+timestamp=[2021-02-05 10:54:26], mode=WORKBENCH_UI_INIT, duration=0:00:03.141, duration_ms=3141, data={editors_count=5, platform_editors_count=2, projects_count=4, platform_projects_count=1, active_platform_editor=true, projects=RemoteSystemsTempFiles,dwaEth2Axi,dwaEth2Axi_system,dwaPs}
+timestamp=[2021-02-05 10:57:11], mode=PLATFORM_CREATION, duration=0:00:08.110, duration_ms=8110, data={platform_source=dsa, os=standalone, processor=ps7_cortexa9, platform=null}
+timestamp=[2021-02-05 11:00:21], mode=APP_CREATION, duration=0:00:07.000, duration_ms=7000, data={name=dwaPsSw, project_type=sdk, os=standalone, processor=cortex-a9, runtime=cpp, platform=dwaPsHw, application_type=application}
+timestamp=[2021-02-05 11:13:42], mode=PLATFORM_GENERATION, duration=0:00:11.791, duration_ms=11791, data={name=dwaPsHw}
+timestamp=[2021-02-05 11:13:44], mode=BUILD, duration=0:00:00.204, duration_ms=204, data={name=dwaPsSw, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 11:13:49], mode=BUILD, duration=0:00:04.987, duration_ms=4987, data={name=dwaPsSw_system, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 11:33:03], mode=BUILD, duration=0:00:00.125, duration_ms=125, data={name=dwaPsSw, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 11:33:08], mode=BUILD, duration=0:00:04.686, duration_ms=4686, data={name=dwaPsSw_system, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 11:40:27], mode=BUILD, duration=0:00:00.176, duration_ms=176, data={name=dwaPsSw, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 11:40:32], mode=BUILD, duration=0:00:04.741, duration_ms=4741, data={name=dwaPsSw_system, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 11:47:24], mode=APP_CREATION, duration=0:00:04.036, duration_ms=4036, data={name=dwaPsSw, project_type=sdk, os=standalone, processor=cortex-a9, runtime=C/C++, platform=dwaPsHw, application_type=application}
+timestamp=[2021-02-05 11:50:09], mode=APP_CREATION, duration=0:00:03.876, duration_ms=3876, data={name=dwaPsSw, project_type=sdk, os=standalone, processor=cortex-a9, runtime=C/C++, platform=dwaPsHw, application_type=application}
+timestamp=[2021-02-05 22:03:07], mode=PLATFORM_REPOSITORY_INIT, duration=0:00:00.016, duration_ms=16, data={}
+timestamp=[2021-02-05 22:03:08], mode=WORKBENCH_START, duration=0:00:08.737, duration_ms=8737, data={}
+timestamp=[2021-02-05 22:03:10], mode=WORKBENCH_UI_INIT, duration=0:00:02.653, duration_ms=2653, data={editors_count=6, platform_editors_count=2, projects_count=4, platform_projects_count=1, active_platform_editor=false, projects=RemoteSystemsTempFiles,dwaPsHw,dwaPsSw,dwaPsSw_system}
+timestamp=[2021-02-05 22:03:48], mode=PLATFORM_GENERATION, duration=0:00:07.560, duration_ms=7560, data={name=dwaPsHw}
+timestamp=[2021-02-05 22:03:50], mode=BUILD, duration=0:00:00.532, duration_ms=532, data={name=dwaPsSw, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 22:03:56], mode=BUILD, duration=0:00:05.945, duration_ms=5945, data={name=dwaPsSw_system, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 22:25:45], mode=PLATFORM_GENERATION, duration=0:00:04.715, duration_ms=4715, data={name=dwaPsHw}
+timestamp=[2021-02-05 22:25:47], mode=BUILD, duration=0:00:00.525, duration_ms=525, data={name=dwaPsSw, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 22:25:53], mode=BUILD, duration=0:00:05.493, duration_ms=5493, data={name=dwaPsSw_system, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 22:39:20], mode=BUILD, duration=0:00:00.073, duration_ms=73, data={name=dwaPsSw, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 22:39:25], mode=BUILD, duration=0:00:05.540, duration_ms=5540, data={name=dwaPsSw_system, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 22:40:22], mode=MISC, duration=0:00:02.098, duration_ms=2098, data={name=dwaPsSw_system, type=bif_creation}
+timestamp=[2021-02-05 22:45:00], mode=BUILD, duration=0:00:00.574, duration_ms=574, data={name=dwaPsSw, configuration=Release, clean_build=false}
+timestamp=[2021-02-05 22:45:06], mode=BUILD, duration=0:00:05.536, duration_ms=5536, data={name=dwaPsSw_system, configuration=Release, clean_build=false}

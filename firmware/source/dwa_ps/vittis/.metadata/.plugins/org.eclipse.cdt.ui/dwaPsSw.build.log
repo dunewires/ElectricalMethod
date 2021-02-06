@@ -1,0 +1,142 @@
+22:44:59 **** Incremental Build of configuration Release for project dwaPsSw ****
+make all 
+make --no-print-directory pre-build
+a9-linaro-pre-build-step
+ 
+make --no-print-directory main-build
+Building file: ../src/echo.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/echo.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/echo.d" -MT"src/echo.o" -o "src/echo.o" "../src/echo.c"
+../src/echo.c:42:12: warning: initialization of 'int *' from 'unsigned int' makes pointer from integer without a cast [-Wint-conversion]
+   42 | int *ptr = 0xc2000000;
+      |            ^~~~~~~~~~
+../src/echo.c: In function 'recv_callback':
+../src/echo.c:160:5: warning: implicit declaration of function 'transferTcpData'; did you mean 'transfer_data'? [-Wimplicit-function-declaration]
+  160 |     transferTcpData(tcpTxbuf, 12, tpcb);
+      |     ^~~~~~~~~~~~~~~
+      |     transfer_data
+../src/echo.c:188:7: warning: implicit declaration of function 'start_udp' [-Wimplicit-function-declaration]
+  188 |       start_udp(pktAddr);
+      |       ^~~~~~~~~
+../src/echo.c:142:9: warning: unused variable 'wAckBuffLength' [-Wunused-variable]
+  142 |     int wAckBuffLength = 8;
+      |         ^~~~~~~~~~~~~~
+../src/echo.c:60:7: warning: variable 'cyLiteCmd' set but not used [-Wunused-but-set-variable]
+   60 |   int cyLiteCmd;
+      |       ^~~~~~~~~
+../src/echo.c:56:7: warning: variable 'pktSN' set but not used [-Wunused-but-set-variable]
+   56 |   int pktSN;
+      |       ^~~~~
+../src/echo.c:54:9: warning: variable 'errCode' set but not used [-Wunused-but-set-variable]
+   54 |   u32_t errCode = 0;
+      |         ^~~~~~~
+Finished building: ../src/echo.c
+ 
+Building file: ../src/i2c_access.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/i2c_access.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/i2c_access.d" -MT"src/i2c_access.o" -o "src/i2c_access.o" "../src/i2c_access.c"
+Finished building: ../src/i2c_access.c
+ 
+Building file: ../src/iic_phyreset.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/iic_phyreset.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/iic_phyreset.d" -MT"src/iic_phyreset.o" -o "src/iic_phyreset.o" "../src/iic_phyreset.c"
+Finished building: ../src/iic_phyreset.c
+ 
+Building file: ../src/main.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/main.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/main.d" -MT"src/main.o" -o "src/main.o" "../src/main.c"
+../src/main.c: In function 'main':
+../src/main.c:129:2: warning: implicit declaration of function 'sleep' [-Wimplicit-function-declaration]
+  129 |  sleep(3);// give time for the power up and  serial num read
+      |  ^~~~~
+../src/main.c:253:3: warning: implicit declaration of function 'drainDebugFifoUdp' [-Wimplicit-function-declaration]
+  253 |   drainDebugFifoUdp(0x18);
+      |   ^~~~~~~~~~~~~~~~~
+Finished building: ../src/main.c
+ 
+Building file: ../src/mmUdpTx.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/mmUdpTx.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/mmUdpTx.d" -MT"src/mmUdpTx.o" -o "src/mmUdpTx.o" "../src/mmUdpTx.c"
+../src/mmUdpTx.c: In function 'send_write_ack':
+../src/mmUdpTx.c:42:3: warning: implicit declaration of function 'transfer_mmUdpTx_data' [-Wimplicit-function-declaration]
+   42 |   transfer_mmUdpTx_data(udpTxbuf, wAckBuffLength, mmDataTxPcb);
+      |   ^~~~~~~~~~~~~~~~~~~~~
+../src/mmUdpTx.c: In function 'drainDebugFifoUdp':
+../src/mmUdpTx.c:98:5: warning: implicit declaration of function 'xil_printf'; did you mean 'viprintf'? [-Wimplicit-function-declaration]
+   98 |     xil_printf("UDP FIFO sent  %x\r\n",fifoAddr);
+      |     ^~~~~~~~~~
+      |     viprintf
+../src/mmUdpTx.c:53:7: warning: unused variable 'rfifo' [-Wunused-variable]
+   53 |   int rfifo;
+      |       ^~~~~
+../src/mmUdpTx.c:49:7: warning: unused variable 'i' [-Wunused-variable]
+   49 |   int i;
+      |       ^
+../src/mmUdpTx.c:48:26: warning: unused variable 'regStatusNext' [-Wunused-variable]
+   48 |   u32_t regStatusInitial,regStatusNext;
+      |                          ^~~~~~~~~~~~~
+../src/mmUdpTx.c:48:9: warning: unused variable 'regStatusInitial' [-Wunused-variable]
+   48 |   u32_t regStatusInitial,regStatusNext;
+      |         ^~~~~~~~~~~~~~~~
+../src/mmUdpTx.c: In function 'start_udp':
+../src/mmUdpTx.c:151:3: warning: implicit declaration of function 'print_ip'; did you mean 'printf'? [-Wimplicit-function-declaration]
+  151 |   print_ip("UDP Data is now sent to IP  : ", &udpDstIpAddr);
+      |   ^~~~~~~~
+      |   printf
+../src/mmUdpTx.c:158:12: warning: 'return' with a value, in function returning void [-Wreturn-type]
+  158 |     return -1;
+      |            ^
+../src/mmUdpTx.c:138:6: note: declared here
+  138 | void start_udp(u32_t ipAddrSel){
+      |      ^~~~~~~~~
+Finished building: ../src/mmUdpTx.c
+ 
+Building file: ../src/platform.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/platform.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/platform.d" -MT"src/platform.o" -o "src/platform.o" "../src/platform.c"
+Finished building: ../src/platform.c
+ 
+Building file: ../src/platform_mb.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/platform_mb.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/platform_mb.d" -MT"src/platform_mb.o" -o "src/platform_mb.o" "../src/platform_mb.c"
+Finished building: ../src/platform_mb.c
+ 
+Building file: ../src/platform_ppc.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/platform_ppc.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/platform_ppc.d" -MT"src/platform_ppc.o" -o "src/platform_ppc.o" "../src/platform_ppc.c"
+Finished building: ../src/platform_ppc.c
+ 
+Building file: ../src/platform_zynq.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/platform_zynq.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/platform_zynq.d" -MT"src/platform_zynq.o" -o "src/platform_zynq.o" "../src/platform_zynq.c"
+Finished building: ../src/platform_zynq.c
+ 
+Building file: ../src/platform_zynqmp.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/platform_zynqmp.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/platform_zynqmp.d" -MT"src/platform_zynqmp.o" -o "src/platform_zynqmp.o" "../src/platform_zynqmp.c"
+Finished building: ../src/platform_zynqmp.c
+ 
+Building file: ../src/sfp.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/sfp.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/sfp.d" -MT"src/sfp.o" -o "src/sfp.o" "../src/sfp.c"
+Finished building: ../src/sfp.c
+ 
+Building file: ../src/si5324.c
+Invoking: ARM v7 gcc compiler
+arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/si5324.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/si5324.d" -MT"src/si5324.o" -o "src/si5324.o" "../src/si5324.c"
+Finished building: ../src/si5324.c
+ 
+Building target: dwaPsSw.elf
+Invoking: ARM v7 gcc linker
+arm-none-eabi-gcc -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec -Wl,-T -Wl,../src/lscript.ld -L/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bsplib/lib -o "dwaPsSw.elf"  ./src/echo.o ./src/i2c_access.o ./src/iic_phyreset.o ./src/main.o ./src/mmUdpTx.o ./src/platform.o ./src/platform_mb.o ./src/platform_ppc.o ./src/platform_zynq.o ./src/platform_zynqmp.o ./src/sfp.o ./src/si5324.o   -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-llwip4,-lgcc,-lc,--end-group
+Finished building target: dwaPsSw.elf
+ 
+Invoking: ARM v7 Print Size
+arm-none-eabi-size dwaPsSw.elf  |tee "dwaPsSw.elf.size"
+   text	   data	    bss	    dec	    hex	filename
+ 110876	   3048	5363776	5477700	 539544	dwaPsSw.elf
+Finished building: dwaPsSw.elf.size
+ 
+
+22:45:00 Build Finished (took 569ms)
+

@@ -17,7 +17,7 @@ src/pcap.o src/pcap.o: ../src/pcap.c ../src/pcap.h \
  ../../dwaFsbl_bsp/ps7_cortexa9_0/include/xpseudo_asm.h \
  ../../dwaFsbl_bsp/ps7_cortexa9_0/include/xil_printf.h \
  ../src/fsbl_debug.h \
- /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.h \
+ /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwa_ps_bd_wrapper_hw_platform_0/ps7_init.h \
  ../src/image_mover.h \
  ../../dwaFsbl_bsp/ps7_cortexa9_0/include/xil_exception.h \
  ../../dwaFsbl_bsp/ps7_cortexa9_0/include/sleep.h \
@@ -65,7 +65,7 @@ src/pcap.o src/pcap.o: ../src/pcap.c ../src/pcap.h \
 
 ../src/fsbl_debug.h:
 
-/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.h:
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwa_ps_bd_wrapper_hw_platform_0/ps7_init.h:
 
 ../src/image_mover.h:
 
