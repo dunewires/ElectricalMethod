@@ -50,3 +50,6 @@ timestamp=[2021-02-05 22:39:25], mode=BUILD, duration=0:00:05.540, duration_ms=5
 timestamp=[2021-02-05 22:40:22], mode=MISC, duration=0:00:02.098, duration_ms=2098, data={name=dwaPsSw_system, type=bif_creation}
 timestamp=[2021-02-05 22:45:00], mode=BUILD, duration=0:00:00.574, duration_ms=574, data={name=dwaPsSw, configuration=Release, clean_build=false}
 timestamp=[2021-02-05 22:45:06], mode=BUILD, duration=0:00:05.536, duration_ms=5536, data={name=dwaPsSw_system, configuration=Release, clean_build=false}
+timestamp=[2021-02-06 16:47:43], mode=PLATFORM_GENERATION, duration=0:00:09.266, duration_ms=9266, data={name=dwaPsHw}
+timestamp=[2021-02-06 16:47:44], mode=BUILD, duration=0:00:00.632, duration_ms=632, data={name=dwaPsSw, configuration=Release, clean_build=false}
+timestamp=[2021-02-06 16:47:50], mode=BUILD, duration=0:00:05.507, duration_ms=5507, data={name=dwaPsSw_system, configuration=Release, clean_build=false}

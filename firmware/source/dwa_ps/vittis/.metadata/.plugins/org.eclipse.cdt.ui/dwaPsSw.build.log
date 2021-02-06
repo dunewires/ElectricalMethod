@@ -1,4 +1,4 @@
-22:44:59 **** Incremental Build of configuration Release for project dwaPsSw ****
+16:47:44 **** Incremental Build of configuration Release for project dwaPsSw ****
 make all 
 make --no-print-directory pre-build
 a9-linaro-pre-build-step
@@ -138,5 +138,5 @@ arm-none-eabi-size dwaPsSw.elf  |tee "dwaPsSw.elf.size"
 Finished building: dwaPsSw.elf.size
  
 
-22:45:00 Build Finished (took 569ms)
+16:47:44 Build Finished (took 588ms)
 
