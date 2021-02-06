@@ -173,10 +173,10 @@ set_property IOSTANDARD LVCMOS25 [get_ports led[0]]
 set_property PACKAGE_PIN C20 [get_ports led[0]]
 
 set_property IOSTANDARD LVCMOS25 [get_ports led[1]]
-set_property PACKAGE_PIN B20 [get_ports led[1]]
+set_property PACKAGE_PIN B19 [get_ports led[1]]
 
 set_property IOSTANDARD LVCMOS25 [get_ports led[2]]
-set_property PACKAGE_PIN B19 [get_ports led[2]]
+set_property PACKAGE_PIN B20 [get_ports led[2]]
 
 set_property IOSTANDARD LVCMOS25 [get_ports led[3]]
 set_property PACKAGE_PIN A20 [get_ports led[3]]
