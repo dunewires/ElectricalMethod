@@ -166,13 +166,22 @@ architecture STRUCT of top_tension_analyzer is
   signal dwaClk2          : std_logic                    := '0';
   signal vioUpdate        : std_logic                    := '0';
 
-  signal  flashCount :unsigned(23 downto 0);
+  signal flashCount : unsigned(23 downto 0);
+
+  signal 
+  toDaqReg_headerGenerator,
+  toDaqReg_dpotInterface,
+  toDaqReg_wtaController,
+  toDaqReg_wireRelayInterface,
+  toDaqReg_serialPromInterface,
+  toDaqReg_mainsNoiseCorrection : toDaqRegType;
+
 begin
   lightsAndButtons : process (dwaClk10)
   begin
     if rising_edge(dwaClk10) then
-    flashCount  <= flashCount + 1;
-     -- flash lights in reverse order
+      flashCount <= flashCount + 1;
+      -- flash lights in reverse order
       led(0) <= pButton(3) and flashCount(flashCount'left - 0);
       led(1) <= pButton(2) and flashCount(flashCount'left - 1);
       led(2) <= pButton(1) and flashCount(flashCount'left - 2);
@@ -307,7 +316,7 @@ begin
   serialPromInterface_inst : entity work.serialPromInterface
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg,
+      toDaqReg   => toDaqReg_serialPromInterface,
       --sim toDaqReg => open,
 
       sda       => SNUM_SDA,
@@ -320,7 +329,7 @@ begin
   wireRelayInterface_inst : entity duneDwa.wireRelayInterface
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg,
+      toDaqReg   => toDaqReg_wireRelayInterface,
       --sim toDaqReg => open,
 
       g_b     => CD_G_b,
@@ -339,7 +348,7 @@ begin
   dpotInterface_inst : entity duneDwa.dpotInterface
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg,
+      toDaqReg   => toDaqReg_dpotInterface,
       --sim toDaqReg => open, --toDaqReg,
 
       sdi    => dpotSdo,
@@ -397,7 +406,7 @@ begin
   wtaController_inst : entity duneDwa.wtaController
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg,
+      toDaqReg   => toDaqReg_wtaController,
       --sim toDaqReg => open, --toDaqReg,
 
       freqSet       => ctrlFreqSet,
@@ -448,7 +457,7 @@ begin
   mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg,
+      toDaqReg   => toDaqReg_mainsNoiseCorrection,
       --sim toDaqReg => open,--toDaqReg,
       freqSet => ctrlFreqSet,
 
@@ -499,7 +508,7 @@ begin
   headerGenerator_inst : entity duneDwa.headerGenerator
     port map (
       fromDaqReg => fromDaqReg,
-      toDaqReg   => toDaqReg, -- Keep this one for sim
+      toDaqReg   => toDaqReg_headerGenerator, -- Keep this one for sim
 
       runOdometer => (others => '0'),
 
@@ -563,5 +572,18 @@ begin
       probe_out11(4 downto 2) => msimDumy,
       probe_out11(1 downto 0) => noiseCorrDataSel
     );
+
+  toDaqReg.ctrlBusy         <= toDaqReg_wtaController.ctrlBusy;
+  toDaqReg.udpDataWord      <= toDaqReg_headerGenerator.udpDataWord;
+  toDaqReg.udpDataRdy       <= toDaqReg_headerGenerator.udpDataRdy;
+  toDaqReg.senseWireGain    <= toDaqReg_dpotInterface.senseWireGain;
+  toDaqReg.relayBusTop      <= toDaqReg_wireRelayInterface.relayBusTop;
+  toDaqReg.relayWireTop     <= toDaqReg_wireRelayInterface.relayWireTop;
+  toDaqReg.relayBusBot      <= toDaqReg_wireRelayInterface.relayBusBot;
+  toDaqReg.relayWireBot     <= toDaqReg_wireRelayInterface.relayWireBot;
+  toDaqReg.serNum           <= toDaqReg_serialPromInterface.serNum;
+  toDaqReg.serNumMemAddress <= toDaqReg_serialPromInterface.serNumMemAddress;
+  toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
+
 end STRUCT;
 
