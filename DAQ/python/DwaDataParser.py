@@ -67,8 +67,33 @@ class DwaDataParser():
         self.frameKeys[Frame.RUN]["2B"] = "clientIP_16LSb" # 16bit
         self.frameKeys[Frame.RUN]["2C"] = "stimTime" # ??bit
         self.frameKeys[Frame.RUN]["2D"] = "activeChannels" # ??bit
-        self.frameKeys[Frame.RUN]["2E"] = "relayMask_16MSb" # ??bit
-        self.frameKeys[Frame.RUN]["2F"] = "relayMask_16LSb" # ??bit
+        #self.frameKeys[Frame.RUN]["2E"] = "relayMask_16MSb" # ??bit
+        #self.frameKeys[Frame.RUN]["2F"] = "relayMask_16LSb" # ??bit
+        # Digipot settings
+        self.frameKeys[Frame.RUN]["30"] = "digipotGainAdc01" # ??bit
+        self.frameKeys[Frame.RUN]["31"] = "digipotGainAdc23" # ??bit
+        self.frameKeys[Frame.RUN]["32"] = "digipotGainAdc45" # ??bit
+        self.frameKeys[Frame.RUN]["33"] = "digipotGainAdc67" # ??bit
+        # Mains noise subtraction
+        self.frameKeys[Frame.RUN]["34"] = "noiseFreqMin" # 24bit
+        self.frameKeys[Frame.RUN]["35"] = "noiseFreqMax" # 24bit
+        self.frameKeys[Frame.RUN]["36"] = "noiseFreqStep" # 24bit
+        self.frameKeys[Frame.RUN]["37"] = "noiseSamplingPeriod" # 
+        self.frameKeys[Frame.RUN]["38"] = "noiseAdcSamplesPerFreq" # 
+        self.frameKeys[Frame.RUN]["39"] = "noiseSettlingTime" # 
+        # v3 relays
+        self.frameKeys[Frame.RUN]["40"] = "relayBusTop0"  # 16bits
+        self.frameKeys[Frame.RUN]["41"] = "relayBusTop1"  # 16bits
+        self.frameKeys[Frame.RUN]["42"] = "relayBusBot0"  # 16bits
+        self.frameKeys[Frame.RUN]["43"] = "relayBusBot1"  # 16bits
+        self.frameKeys[Frame.RUN]["44"] = "relayWireTop0"  # 16bits
+        self.frameKeys[Frame.RUN]["45"] = "relayWireTop1"  # 16bits
+        self.frameKeys[Frame.RUN]["46"] = "relayWireTop2"  # 16bits
+        self.frameKeys[Frame.RUN]["47"] = "relayWireTop3"  # 16bits
+        self.frameKeys[Frame.RUN]["48"] = "relayWireBot0"  # 16bits
+        self.frameKeys[Frame.RUN]["49"] = "relayWireBot1"  # 16bits
+        self.frameKeys[Frame.RUN]["4A"] = "relayWireBot2"  # 16bits
+        self.frameKeys[Frame.RUN]["4B"] = "relayWireBot3"  # 16bits
         #
         # Frequency Frame entries
         self.frameKeys[Frame.FREQ]["11"] = "Register_ID_Freq"  #  8bit
@@ -105,25 +130,66 @@ class DwaDataParser():
 
         self._infoLineParserSelector = {
             # keys are the Unique keys in self.frameKeys
+            # UDP frame
             "UDP_Counter": self._parseInfoLineAsInt,
             "Register_ID": self._parseInfoLineAsInt,
-            "DWA_Ctrl": self._parseInfoLineAsInt,
-            "fixedPeriod": self._parseInfoLineAsInt,
-            "stimPeriodMin": self._parseInfoLineAsInt,
-            "stimPeriodMax": self._parseInfoLineAsInt,
-            "stimPeriodStep": self._parseInfoLineAsInt,
-            "nCyclesPerFreq": self._parseInfoLineAsInt,
+            # RUN frame
+            "runOdometer": self._parseInfoLineAsInt,
+            "fpgaSerialNumber": self._parseInfoLineAsInt,
+            "firmwareIdDate_24MSb": self._parseInfoLineAsInt,
+            "firmwareIdDate_24LSb": self._parseInfoLineAsInt,
+            "firmwareIdHash_16MSb": self._parseInfoLineAsInt,
+            "firmwareIdHash_16LSb": self._parseInfoLineAsInt,
+            "stimFreqReq": self._parseInfoLineAsInt,
+            "stimFreqMin": self._parseInfoLineAsInt,
+            "stimFreqMax": self._parseInfoLineAsInt,
+            "stimFreqStep": self._parseInfoLineAsInt,
+            "cyclesPerFreq": self._parseInfoLineAsInt,
             "adcSamplesPerCycle": self._parseInfoLineAsInt,
             "stimMag": self._parseInfoLineAsInt,
-            "clientIP_16MSb":self._parseRunLineClientIP, 
-            "clientIP_16LSb":self._parseRunLineClientIP, 
+            "clientIP_16MSb": self._parseRunLineClientIP, 
+            "clientIP_16LSb": self._parseRunLineClientIP, 
+            "stimTime": self._parseInfoLineAsInt,
+            # Digipot settings
+            "digipotGainAdc01": self._parseDigipotGain,
+            "digipotGainAdc23": self._parseDigipotGain,
+            "digipotGainAdc45": self._parseDigipotGain,
+            "digipotGainAdc67": self._parseDigipotGain,
+            # Mains noise subtraction
+            "noiseFreqMin": self._parseInfoLineAsInt,
+            "noiseFreqMax": self._parseInfoLineAsInt,
+            "noiseFreqStep": self._parseInfoLineAsInt,
+            "noiseSamplingPeriod": self._parseInfoLineAsInt,
+            "noiseAdcSamplesPerFreq": self._parseInfoLineAsInt,
+            "noiseSettlingTime": self._parseInfoLineAsInt,
+            # v3 relays
+            "relayBusTop0": self._parseRelayLine,
+            "relayBusTop1": self._parseRelayLine,
+            "relayBusBot0": self._parseRelayLine,
+            "relayBusBot1": self._parseRelayLine,
+            "relayWireTop0": self._parseRelayLine,
+            "relayWireTop1": self._parseRelayLine,
+            "relayWireTop2": self._parseRelayLine,
+            "relayWireTop3": self._parseRelayLine,
+            "relayWireBot0": self._parseRelayLine,
+            "relayWireBot1": self._parseRelayLine,
+            "relayWireBot2": self._parseRelayLine,
+            "relayWireBot3": self._parseRelayLine,
             #
             # Frequency Frame keys
             "Register_ID_Freq": self._parseInfoLineAsInt,
             "stimPeriodCounter":self._parseInfoLineAsInt,
             "adcSamplesPerFreq": self._parseInfoLineAsInt,
-            #"stimPeriod": self._parseInfoLineAsInt,
+            "stimPeriodActive": self._parseInfoLineAsInt,
             "adcSamplingPeriod":self._parseInfoLineAsInt,
+            # Defunct (FIXME: remove?)
+            "DWA_Ctrl": self._parseInfoLineAsInt,
+            #"relayMask_16MSb"
+            #"relayMask_16LSb"
+            #
+            # FIXME: need to add
+            #"activeChannels"
+            # 
             #"UNHANDLED_LINES": self._parseUnknownInfoLine  # do this if a key is not recognized...
         }
 
@@ -137,7 +203,7 @@ class DwaDataParser():
 
         self._framePostProcSelector = {
             Frame.UDP: self._postProcessUdpFrame,
-            #Frame.FREQ: self._postProcessFreqFrame,
+            Frame.FREQ: self._postProcessFreqFrame,
             Frame.ADC_DATA: self._postProcessAdcDataFrame,
             Frame.RUN: self._postProcessRunFrame,
             #Frame.STATUS: self._postProcessStatusFrame,
@@ -194,6 +260,14 @@ class DwaDataParser():
     def _parseRunLineClientIP(self, infoLine):
         return infoLine[-4:]  # last 4 characters, as string
 
+    def _parseDigipotGain(self, infoLine):
+        print("FIXME: digipot gain info not correctly parsed yet")
+        return -1
+
+    def _parseRelayLine(self, infoLine):
+        print("FIXME: v3 relay info lines not correctly parsed yet")
+        return -1
+    
     def _getKey(self, infoLine, frameType):
         key = infoLine[0:2]    # this key may be re-used in a different frame type, can't assume it's unique...
         print("key = [{}]".format(key))
@@ -220,10 +294,12 @@ class DwaDataParser():
         print("frameDict = {}".format(frameDict))
 
         for line in infoLines:
-            #print("line = {}".format(line))
+            print("line, frameType = {}, {}".format(line, frameType))
             key, uniqueKey = self._getKey(line, frameType)
+            print("key, uniqueKey = {}, {}".format(key, uniqueKey))
             parserFxn = self._infoLineParserSelector.get(uniqueKey, self._parseUnknownInfoLine)
             val = parserFxn(line)
+            print('parserFxn = {}', parserFxn)
             if val is not line: # for unknown key, val==line
                 frameDict[uniqueKey] = val
             else:
@@ -263,15 +339,25 @@ class DwaDataParser():
         # Construct IP address in the form 'xxx.yyy.zzz.www'
         hexStr = dd['clientIP_16MSb'] + dd['clientIP_16LSb']
         dd['clientIP'] = dwa.hexStrToIpAddressStr(hexStr)
+
+        # Convert frequencies to Hz
+        dd['stimFreqMin_Hz'] = dd['stimFreqMin']/16.
+        dd['stimFreqMax_Hz'] = dd['stimFreqMax']/16.
+        dd['stimFreqStep_Hz'] = dd['stimFreqStep']/16.
         return dd
 
     def _postProcessUdpFrame(self, dd):
         dd['Register_ID_hexStr'] = '{:02X}'.format(dd['Register_ID'])
         return dd
 
-    #def _postProcessFreqFrame(self, dd):
-    #    return dd
-    #
+    def _postProcessFreqFrame(self, dd):
+        # FIXME: this is a kluge to account for an error in firmware... will need to be updated
+        print("stimPeriodCounter = {}".format(dd['stimPeriodCounter']))
+        dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodCounter'] # convert period in 10ns to freq in Hz
+        dd['adcSamplingPeriod_sec'] = dd['adcSamplingPeriod']*1e-8
+
+        return dd
+    
 
     def _postProcessAdcDataFrame(self, dd):
         # Convert the ADC samples from a hex string
@@ -308,6 +394,10 @@ class DwaDataParser():
         inHeader = False
         delimIdxs = []  # line numbers of frame delimiters
         for ii, line in enumerate(udpPayload):
+            ### FIXME: KLUGE KLUGE!!!!
+            print("MAJOR KLUGE NEEDS TO BE REMOVED!")
+            if line.startswith("8"):
+                continue
             if dwa.isHeaderLine(line):
                 delimIdxs.append(ii)
         print("Header lines = ")
@@ -330,7 +420,7 @@ class DwaDataParser():
 
             # FIXME: kluge b/c we don't specify the number of ADC data lines yet...
             if frameStartLine.startswith('DDDD'):
-                frameEndIdx = udpPayload.index('DDDDDDDD')
+                frameEndIdx = udpPayload.index('DDDDDDDD', frameStartIdx)
             else:
                 # Number of Frame Information lines
                 nFrameInfo = int(frameStartLine[4:], hexBase)
@@ -339,8 +429,15 @@ class DwaDataParser():
             
             # FIXME: add an "assert" here if delimiters don't match
             print("frameEndLine = {}".format(udpPayload[frameEndIdx]))
-            
+            print("frame = ")
+            print(udpPayload[frameStartIdx:frameEndIdx+1])
             frameParser = self._frameParserSelector[frameType]
+            # For debugging only
+            #if frameStartLine.startswith('DDDD'):
+            #    print(f'frameStartIdx = {frameStartIdx}')
+            #    print(f'frameEndIdx   = {frameEndIdx}')
+            #    print(udpPayload[frameStartIdx+1:frameEndIdx])
+                
             frameDict = frameParser(udpPayload[frameStartIdx+1:frameEndIdx])
         
             print("frameDict = ")
@@ -375,3 +472,85 @@ class DwaDataParser():
         # to human-usable values: again, like the IP address
         # which is in hex form)
 
+    def getFreqData(self, filename):
+        """ return all frequencies (in Hz) in this dataset
+
+        This is a post-processing utility function,
+        not used during realtime data collection
+        """
+        with open(filename) as fh:
+            lines = fh.readlines()
+            lines = [line.strip() for line in lines]
+
+        dout = {}  # output dictionary
+            
+        delimIdxs = []
+        for ii, line in enumerate(lines):
+            if dwa.isHeaderLine(line) and line.startswith('CCCC'):
+                delimIdxs.append(ii)
+        delimIdxs = delimIdxs[::2]   # every other entry is a 'CCCCCCCC' line, ignore those
+        #print("Header lines = ")
+        #print(delimIdxs)
+        #for idx in delimIdxs:
+        #    print(lines[idx])
+        # Number of Frame Information lines
+        for startIdx in delimIdxs:
+            nFrameInfo = int(lines[startIdx][4:], hexBase)
+            #print("nFrameInfo = {}".format(nFrameInfo))
+            endIdx = startIdx + nFrameInfo + 1
+            #print(f'startIdx = {startIdx}')
+            #print(f'endIdx   = {endIdx}')
+            #print(lines[startIdx+1:endIdx])
+                
+            freqDict = self._parseFreqFrame(lines[startIdx+1:endIdx])
+            freqDict = self._postProcessFreqFrame(freqDict)
+
+            keys = freqDict.keys()
+            if len(dout) == 0:  # first pass through... init the dict
+                for key in keys:
+                    dout[key] = []
+
+            for key in keys:
+                dout[key].append(freqDict[key])
+                    
+        return dout
+
+            
+    def getAdcData(self, filename):
+        """ return a list of lists of ADC data from a file
+
+        the file is in the format as saved by the python DAQ
+        This is a post-processing utility function,
+        not used during realtime data collection
+        """
+        with open(filename) as fh:
+            lines = fh.readlines()
+            lines = [line.strip() for line in lines]
+
+        # list to hold ADC data (will be a list of lists)
+        adcData = []
+
+        # look at each ADC data section (delimiters are DDDD5151 and DDDD)
+        # extract/convert the ADC data hex strings
+        
+        # find the ADC delimiters
+        ADC_DATA_DELIMITER = 'DDDD5151'
+        ids = [ii for ii, xx in enumerate(lines) if xx==ADC_DATA_DELIMITER]
+        #print(ids)
+        #print(len(ids))
+
+        # Loop over each section and extract/parse/convert the ADC data strings
+        for startIdx in ids:
+            endIdx = lines.index('DDDDDDDD', startIdx)
+
+            #print(f'startIdx = {startIdx}')
+            #print(f'endIdx   = {endIdx}')
+            #print(lines[startIdx+1:endIdx])
+                
+            dd = self._parseAdcDataFrame(lines[startIdx+1:endIdx])
+            dd = self._postProcessAdcDataFrame(dd)
+            #print(dd)
+            adcData.append(dd['adcSamples'])
+
+        return adcData
+        
