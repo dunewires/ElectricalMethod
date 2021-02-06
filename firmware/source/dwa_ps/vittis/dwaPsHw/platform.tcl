@@ -24,3 +24,6 @@ domain active {standalone_domain}
 domain active {standalone_ps7_cortexa9_0}
 platform generate -quick
 platform generate
+platform generate
+platform active {dwaPsHw}
+platform generate -domains 

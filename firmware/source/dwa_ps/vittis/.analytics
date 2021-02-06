@@ -36,3 +36,17 @@ timestamp=[2021-02-05 11:40:27], mode=BUILD, duration=0:00:00.176, duration_ms=1
 timestamp=[2021-02-05 11:40:32], mode=BUILD, duration=0:00:04.741, duration_ms=4741, data={name=dwaPsSw_system, configuration=Debug, clean_build=false}
 timestamp=[2021-02-05 11:47:24], mode=APP_CREATION, duration=0:00:04.036, duration_ms=4036, data={name=dwaPsSw, project_type=sdk, os=standalone, processor=cortex-a9, runtime=C/C++, platform=dwaPsHw, application_type=application}
 timestamp=[2021-02-05 11:50:09], mode=APP_CREATION, duration=0:00:03.876, duration_ms=3876, data={name=dwaPsSw, project_type=sdk, os=standalone, processor=cortex-a9, runtime=C/C++, platform=dwaPsHw, application_type=application}
+timestamp=[2021-02-05 22:03:07], mode=PLATFORM_REPOSITORY_INIT, duration=0:00:00.016, duration_ms=16, data={}
+timestamp=[2021-02-05 22:03:08], mode=WORKBENCH_START, duration=0:00:08.737, duration_ms=8737, data={}
+timestamp=[2021-02-05 22:03:10], mode=WORKBENCH_UI_INIT, duration=0:00:02.653, duration_ms=2653, data={editors_count=6, platform_editors_count=2, projects_count=4, platform_projects_count=1, active_platform_editor=false, projects=RemoteSystemsTempFiles,dwaPsHw,dwaPsSw,dwaPsSw_system}
+timestamp=[2021-02-05 22:03:48], mode=PLATFORM_GENERATION, duration=0:00:07.560, duration_ms=7560, data={name=dwaPsHw}
+timestamp=[2021-02-05 22:03:50], mode=BUILD, duration=0:00:00.532, duration_ms=532, data={name=dwaPsSw, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 22:03:56], mode=BUILD, duration=0:00:05.945, duration_ms=5945, data={name=dwaPsSw_system, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 22:25:45], mode=PLATFORM_GENERATION, duration=0:00:04.715, duration_ms=4715, data={name=dwaPsHw}
+timestamp=[2021-02-05 22:25:47], mode=BUILD, duration=0:00:00.525, duration_ms=525, data={name=dwaPsSw, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 22:25:53], mode=BUILD, duration=0:00:05.493, duration_ms=5493, data={name=dwaPsSw_system, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 22:39:20], mode=BUILD, duration=0:00:00.073, duration_ms=73, data={name=dwaPsSw, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 22:39:25], mode=BUILD, duration=0:00:05.540, duration_ms=5540, data={name=dwaPsSw_system, configuration=Debug, clean_build=false}
+timestamp=[2021-02-05 22:40:22], mode=MISC, duration=0:00:02.098, duration_ms=2098, data={name=dwaPsSw_system, type=bif_creation}
+timestamp=[2021-02-05 22:45:00], mode=BUILD, duration=0:00:00.574, duration_ms=574, data={name=dwaPsSw, configuration=Release, clean_build=false}
+timestamp=[2021-02-05 22:45:06], mode=BUILD, duration=0:00:05.536, duration_ms=5536, data={name=dwaPsSw_system, configuration=Release, clean_build=false}
