@@ -96,8 +96,10 @@ proc setup {} {
     set post_route_wns xxx
     set proj_dir $firmware_dir/vivadoProjects/$proj_name
    
-    set fsbl_elf $proj_sources_dir/sdk/dwaFsbl/Debug/dwaFsbl.elf
-    set lwip_elf $proj_sources_dir/sdk/lwip_ref/Release/lwip_ref.elf
+    #set fsbl_elf $proj_sources_dir/sdk/dwaFsbl/Debug/dwaFsbl.elf
+    #set lwip_elf $proj_sources_dir/sdk/lwip_ref/Release/lwip_ref.elf
+    set fsbl_elf $proj_sources_dir/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/boot/fsbl.elf
+    set lwip_elf $proj_sources_dir/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
     set boot_bin $firmware_dir/flash/BOOT.bin
     set hardware_loc TCP:127.0.0.1:3124
     puts "Target: $target"
