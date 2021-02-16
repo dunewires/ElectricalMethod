@@ -1,4 +1,9 @@
 # FIXME/TODO:
+# * Resonance tab
+#   - raw A(f) data, processed A(f) data.
+#   - ability to add/remove/drag f0 lines
+#   - ability to enter frequencies by hand and have lines respond
+#   - ability to tweak find_peak parameters in real time
 # * Logging: use RotatingFileHandler for log file, and don't create a new log file each time... ???
 # * UDP header will eventually contain status bits as well (currently not used)
 # * look for dropped UDP packets by monitoring the UDP counter
@@ -454,12 +459,31 @@ class MainWindow(qtw.QMainWindow):
             getattr(self, f'pw_amplgrid_{ii}').setTitle(ii)
             getattr(self, f'pw_amplchan_{ii}').setBackground('w')
             getattr(self, f'pw_amplchan_{ii}').setTitle(ii)
-            getattr(self, f'pw_resfreqfit_{ii}').setBackground('w')
-            getattr(self, f'pw_resfreqfit_{ii}').setTitle(ii)
+            #getattr(self, f'pw_resfreqfit_{ii}').setBackground('w')
+            #getattr(self, f'pw_resfreqfit_{ii}').setTitle(ii)
         #
         getattr(self, f'pw_tensionsPerWire').setTitle('Tension Per Wire')
         getattr(self, f'pw_tensionsPerWire').setBackground('w')
         getattr(self, f'pw_tensionsPerWire').setLabels(bottom='Wire number', left='Tension [N]', right='')
+
+        # Resonance Tab, raw A(f) plots (will also show f0 lines)
+        self.resonanceRawDataGLW.setBackground('w')
+        self.resonanceProcessedDataGLW.setBackground('w')
+
+        self.resonanceRawPlots = []
+        self.resonanceProcessedPlots = []
+        chanNum = 0
+        for irow in range(4):
+            for icol in range(2):
+                self.resonanceRawPlots.append(self.resonanceRawDataGLW.addPlot())
+                self.resonanceRawPlots[-1].setTitle(f'A(f) raw Chan {chanNum}')
+                self.resonanceProcessedPlots.append(self.resonanceProcessedDataGLW.addPlot())
+                self.resonanceProcessedPlots[-1].setTitle(f'A(f) proc. Chan {chanNum}')
+                chanNum += 1
+            self.resonanceRawDataGLW.nextRow()
+            self.resonanceProcessedDataGLW.nextRow()
+
+
         
     def printOutput(self, s):
         print("printOutput():")
@@ -514,6 +538,8 @@ class MainWindow(qtw.QMainWindow):
         self.curves['amplgrid']['all'] = {}   # A(f), all channels, single axes (in grid view)
         self.curves['amplchan'] = {}   # A(f), channel view
         self.curves['resfreqfit'] = {}   # Fitting f0 values to A(f)
+        self.curves['resRawFit'] = {}    # Raw A(f) data on Resonance tab
+        self.curves['resProcFit'] = {}   # Processed A(f) data on Resonance tab
         self.curves['tension'] = {} # Wire tension plots (multiple figures, all on "tension" page)
         self.curvesFit = {}  # FIXME: kluge -- merge w/ self.curves
         self.curvesFit['grid'] = {} # V(t), grid
@@ -541,16 +567,17 @@ class MainWindow(qtw.QMainWindow):
             # A(f), all channels on single axes
             self.curves['amplgrid']['all'][loc] = getattr(self, f'pw_amplgrid_all').plot([0],[0], pen=amplAllPlotPens[loc])
             # A(f) plots (channel view)
-            self.curves['amplchan'][loc] = getattr(self, f'pw_amplchan_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
+            self.curves['amplchan'][loc] = getattr(self, f'pw_amplchan_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
             # Fitting f0 to A(f) plots
-            self.curves['resfreqfit'][loc] = getattr(self, f'pw_resfreqfit_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
+            self.curves['resRawFit'][loc] = self.resonanceRawPlots[loc].plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
+            self.curves['resProcFit'][loc] = self.resonanceProcessedPlots[loc].plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
             
         # add in the main window, too (large view of V(t) for a single channel)
         self.curvesFit['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0], pen=fitPen)
         self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
 
         # add in the main window, too (large view of A(f) for a single channel)
-        self.curves['amplchan']['main'] = getattr(self, f'pw_amplchan_main').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
+        self.curves['amplchan']['main'] = getattr(self, f'pw_amplchan_main').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
 
         # Tension information
         self.curves['tension']['tensionOfWireNumber'] = getattr(self, f'pw_tensionsPerWire').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
@@ -1045,6 +1072,8 @@ class MainWindow(qtw.QMainWindow):
                 self.curvesFit['chan']['main'].setData(tfit, yfit)
 
             # Update A(f) plot
+            self.curves['resRawFit'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+
             self.curves['amplgrid'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
             self.curves['amplgrid']['all'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
             self.curves['amplchan'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
@@ -1102,7 +1131,7 @@ class MainWindow(qtw.QMainWindow):
             cumsum = np.cumsum(self.ampData[reg]['ampl'])
             cumsum -= self.baseline(self.ampData[reg]['freq'], cumsum)
             # plot fxn that is used for peakfinding
-            self.curves['resfreqfit'][reg].setData(self.ampData[reg]['freq'], cumsum)
+            self.curves['resProcFit'][reg].setData(self.ampData[reg]['freq'], cumsum)
             
             # FIXME: set width based on frequency, not hard-coded number of samples!
             peakIds, _ = find_peaks(cumsum, prominence=(5.0, None), width=5)
@@ -1119,8 +1148,10 @@ class MainWindow(qtw.QMainWindow):
                 # Huh? Code seems to hang if I add f0Line to two different plots, so
                 # need to clone it to add to the second plot?
                 f0Line2 = pg.InfiniteLine(pos=ff, angle=90, movable=False, pen=f0Pen)
-                getattr(self, f'pw_amplgrid_{reg.value}').addItem(f0Line)
-                getattr(self, f'pw_resfreqfit_{reg.value}').addItem(f0Line2)
+                self.resonanceRawPlots[reg.value].addItem(f0Line)
+                self.resonanceProcessedPlots[reg.value].addItem(f0Line2)
+                #getattr(self, f'pw_amplgrid_{reg.value}').addItem(f0Line)
+                #getattr(self, f'pw_resfreqfit_{reg.value}').addItem(f0Line2)
 
     def cleanUp(self):
         self.logger.info("App quitting:")

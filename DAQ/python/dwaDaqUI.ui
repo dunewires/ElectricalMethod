@@ -126,7 +126,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -529,34 +529,37 @@
           <attribute name="title">
            <string>Resonance</string>
           </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_8">
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QTabWidget" name="tabResonanceGraphs">
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="tabResonanceRawData">
+              <attribute name="title">
+               <string>Raw A(f)</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_5">
+               <item>
+                <widget class="GraphicsLayoutWidget" name="resonanceRawDataGLW"/>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tabResonanceProcessedData">
+              <attribute name="title">
+               <string>Processed A(f)</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_8">
+               <item>
+                <widget class="GraphicsLayoutWidget" name="resonanceProcessedDataGLW"/>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
            <item>
             <layout class="QGridLayout" name="gridOfFits_2">
-             <item row="0" column="2">
-              <widget class="PlotWidget" name="pw_resfreqfit_2"/>
-             </item>
-             <item row="1" column="0">
-              <widget class="PlotWidget" name="pw_resfreqfit_3"/>
-             </item>
-             <item row="1" column="1">
-              <widget class="PlotWidget" name="pw_resfreqfit_4"/>
-             </item>
-             <item row="0" column="1">
-              <widget class="PlotWidget" name="pw_resfreqfit_1"/>
-             </item>
-             <item row="1" column="2">
-              <widget class="PlotWidget" name="pw_resfreqfit_5"/>
-             </item>
              <item row="0" column="0">
-              <widget class="PlotWidget" name="pw_resfreqfit_0"/>
-             </item>
-             <item row="2" column="0">
-              <widget class="PlotWidget" name="pw_resfreqfit_6"/>
-             </item>
-             <item row="2" column="1">
-              <widget class="PlotWidget" name="pw_resfreqfit_7"/>
-             </item>
-             <item row="2" column="2">
               <layout class="QFormLayout" name="formLayout_6">
                <property name="labelAlignment">
                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -801,6 +804,11 @@
    <extends>QGraphicsView</extends>
    <header location="global">pyqtgraph</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>GraphicsLayoutWidget</class>
+   <extends>QGraphicsView</extends>
+   <header>pyqtgraph</header>
   </customwidget>
  </customwidgets>
  <resources/>
