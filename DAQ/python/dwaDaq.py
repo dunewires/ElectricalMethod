@@ -31,6 +31,7 @@ import datetime
 import os
 import sys
 import logging
+import json
 
 from functools import partial
 from enum import Enum, IntEnum
@@ -266,6 +267,7 @@ class MainWindow(qtw.QMainWindow):
         
         # Connect slots/signals
         self.btnStart.clicked.connect(self.startRunThread)
+        self.btnSave.clicked.connect(self.saveRun)
         #self.btnQuit.clicked.connect(self.close)
         self.configFileName.returnPressed.connect(self.configFileNameEnter)
 
@@ -335,7 +337,18 @@ class MainWindow(qtw.QMainWindow):
             logging.info("  Directory did not exist... made {}".format(self.udpDataDir))
         except FileExistsError:
             # directory already exists
-            logging.warning("  Directory already exists: [{}]".format(self.udpDataDir))
+            logging.warning("  Directory already exists: [{}]".format(self.udpDataDir))        
+        
+        ###########################################
+        # Ensure there is a directory to save amplitude data
+        self.ampDataDir = './ampData/'
+        try:
+            logging.info("Checking for Amplitude Data directory...")
+            os.makedirs(self.ampDataDir)
+            logging.info("  Directory did not exist... made {}".format(self.ampDataDir))
+        except FileExistsError:
+            # directory already exists
+            logging.warning("  Directory already exists: [{}]".format(self.ampDataDir))
 
         ###########################################
         # Configure the UDP connection
@@ -767,6 +780,24 @@ class MainWindow(qtw.QMainWindow):
         self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View Tensions")
 
+    @pyqtSlot()
+    def saveRun(self):
+        if ("fnOfAmpData" in self.__dict__):
+            # add metadata to ampData before writing to file (this could also be done earlier)
+            # FIXME: grab these values from user input
+            self.ampData["dwa_num"] = ""
+            self.ampData["headboard_num"] = ""
+            self.ampData["layer"] = ""
+            self.ampData["user"] = ""
+            self.ampData["location"] = ""
+            self.ampData["stage"] = ""
+            with open(self.fnOfAmpData, 'w') as outfile:
+                json.dump(self.ampData, outfile)
+            self.logger.info(f"Saved as {self.fnOfAmpData}") 
+        else:
+            self.logger.info(f"No run to save.") 
+        
+
     def _loadConfigFile(self, updateGui=True):
         # try to read the requested file
         # if found, display contents
@@ -856,14 +887,16 @@ class MainWindow(qtw.QMainWindow):
         # FIXME: move this to a higher level (only do it once...)
         #def getUniqueFileroot():
         #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
-        froot = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
-        froot = os.path.join(self.udpDataDir, froot)
+        timestring = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        froot = os.path.join(self.udpDataDir, timestring)
         self.logger.info(f"fileroot = {froot}")
         # create new output filenames
         self.fnOfReg = {}  # file names for output. Keys are 2-digit hex string (e.g. '03' or 'FF'). values are filenames
         for reg in self.registers_all:
             self.fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
         self.logger.info(f"self.fnOfReg = {self.fnOfReg}")
+        self.fnOfAmpData = os.path.join(self.ampDataDir, "DWANUM_HEADBOARDNUM_LAYER_"+timestring+".json") # FIXME: get the DWANUM HEADBOARDNUM and LAYER from user input
+        self.logger.info(f"self.fnOfAmpData = {self.fnOfAmpData}") 
 
     def startUdpReceiver(self, newdata_callback):
         # initiate a DWA acquisition

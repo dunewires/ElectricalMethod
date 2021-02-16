@@ -156,6 +156,13 @@
                   </widget>
                  </item>
                  <item>
+                  <widget class="QPushButton" name="btnSave">
+                   <property name="text">
+                    <string>Save</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <layout class="QFormLayout" name="formLayout_2">
                    <property name="labelAlignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
