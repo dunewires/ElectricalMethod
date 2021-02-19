@@ -287,7 +287,7 @@ class MainWindow(qtw.QMainWindow):
         self.configFileName.returnPressed.connect(self.configFileNameEnter)
         self.ampDataFilename.returnPressed.connect(self.ampDataFilenameEnter)
         for reg in self.registers:
-            getattr(self, f'le_resfreq_val_{reg}').returnPressed.connect(self.resFreqUserInputText)
+            getattr(self, f'le_resfreq_val_{reg}').returnPressed.connect(self._resFreqUserInputText)
 
         # Configure/label plots
         self.chanViewMain = 0  # which channel to show large for V(t) data
@@ -759,16 +759,6 @@ class MainWindow(qtw.QMainWindow):
     #def quitAll(self):
 
 
-    def _getResFreqFromTextFields(self):
-        # FIXME: add check for which channel's textbox this came frome
-        # and only update the f0 values and GUI display for that associated channel
-        # FIXME: add check to guard against failed parse
-        for reg in self.registers:
-            fString = getattr(self, f'le_resfreq_val_{reg}').text()
-            toks = fString.split(',')
-            self.resonantFreqs[reg.value] = [ float(tok) for tok in toks ]
-        self._updateResonantFreqDisplay(chan=None)
-
         
     @pyqtSlot()
     def configFileNameEnter(self):
@@ -779,10 +769,36 @@ class MainWindow(qtw.QMainWindow):
         self.doResonanceAnalysis()
 
     @pyqtSlot()
-    def resFreqUserInputText(self):
+    def _resFreqUserInputText(self):
         for reg in self.registers:
             print(getattr(self, f'le_resfreq_val_{reg}').text())
-        self._getResFreqFromTextFields()
+
+        # FIXME: add check for which channel's textbox this came from
+        # and only update the f0 values and GUI display for that associated channel
+        # FIXME: add check to guard against failed parse
+        for reg in self.registers:
+            fString = getattr(self, f'le_resfreq_val_{reg}').text()
+            toks = fString.split(',')
+            self.resonantFreqs[reg.value] = [ float(tok) for tok in toks ]
+        self._updateResonantFreqDisplay(chan=None)
+
+    @pyqtSlot()
+    def _f0LineMoved(self):
+        print("f0Line moved")
+        # FIXME: *which line* was moved???
+        # can find out with self.sender()
+        # print(self.sender())
+
+        # FIXME: need to know if user dragged line on the 'raw' plot or on the 'proc' plot
+        
+        # loop over all channels. Get locations of lines
+        for reg in self.registers:
+            self.resonantFreqs[reg.value] = []  # start w/ empty list
+            for infLine in self.resFitLines['raw'][reg]: # re-create resFreq list
+                self.resonantFreqs[reg.value].append(infLine.value())
+        
+        # update GUI
+        self._updateResonantFreqDisplay(chan=None)
 
         
     @pyqtSlot()
@@ -1227,28 +1243,31 @@ class MainWindow(qtw.QMainWindow):
         only update the indicated channels...
         """
 
-
-        # Remove any existing InfiniteLines
+        # Remove any existing InfiniteLines from A(f) plots and reset dict
         for reg in self.registers:
             for infLine in self.resFitLines['proc'][reg]:
                 self.resonanceProcessedPlots[reg].removeItem(infLine)
             for infLine in self.resFitLines['raw'][reg]:
                 self.resonanceRawPlots[reg].removeItem(infLine)
-        
+        self._initResonanceFitLines()
+                
         # FIXME: move pen definition to __init__ (self.f0pen)
         f0Pen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
 
         for reg in self.registers:
             chan = reg.value
+            print("in update: ", self.resonantFreqs[chan])
             labelStr = ', '.join([f'{ff:.2f}' for ff in self.resonantFreqs[chan]])
             getattr(self, f'le_resfreq_val_{reg}').setText(labelStr)
             
-            # Create infinite line instances
+            # Create/display new InfiniteLine instance for each resonant freq
             for ff in self.resonantFreqs[chan]:
                 self.resFitLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
+                self.resFitLines['proc'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
                 self.resFitLines['raw'][reg].append( self.resonanceRawPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
+                self.resFitLines['raw'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
 
-        
+                
     def cleanUp(self):
         self.logger.info("App quitting:")
         self.logger.info("   closing UDP connection")
