@@ -255,6 +255,8 @@ class MainWindow(qtw.QMainWindow):
         self.logFilename_val.setText(self.logFilename)  # must come after loadUi() call
         self.logFilenameLog_val.setText(self.logFilename)  
 
+        
+
         #self.log_tb.append("logging window...")  # FIXME... how to update...?
         
         # Set defaults...
@@ -298,6 +300,26 @@ class MainWindow(qtw.QMainWindow):
 
         # signals for callback actions
         self.signals = WorkerSignals()
+
+        
+        # Tension Tab
+        #self.tensionStageComboBox.setText("dwaConfigWC.ini")
+        self.tensionStageComboBox.addItem("Pre-production")
+        self.tensionStageComboBox.addItem("Production")
+        self.tensionStageComboBox.addItem("Commissioning")
+        self.btnLoadTensions.clicked.connect(self.saveRun)
+
+        self.tensionData = {
+            'col1':['1','2','3','4'],
+            'col2':['1','2','1','3'],
+            'col3':['1','1','2','1']
+        }
+        self.setTensionData()
+        self.tensionTable.resizeColumnsToContents()
+        self.tensionTable.resizeRowsToContents()
+ 
+
+
 
         ############ Resize and launch GUI in bottom right corner of screen
         # tested on mac & linux (unclear about windows)
@@ -397,6 +419,14 @@ class MainWindow(qtw.QMainWindow):
         self.udpListen()
         
     # end of __init__ for class MainWindow
+    def setTensionData(self): 
+        horHeaders = []
+        for n, key in enumerate(sorted(self.tensionData.keys())):
+            horHeaders.append(key)
+            for m, item in enumerate(self.tensionData[key]):
+                newitem = qtw.QTableWidgetItem(item)
+                self.tensionTable.setItem(m, n, newitem)
+        self.tensionTable.setHorizontalHeaderLabels(horHeaders)
 
     def _setTabTooltips(self):
         self.tabWidget.setTabToolTip(View.CONFIG, Shortcut.CONFIG.value)

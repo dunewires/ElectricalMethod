@@ -685,6 +685,7 @@
            </item>
           </layout>
          </widget>
+                  
          <widget class="QWidget" name="tabTension">
           <attribute name="title">
            <string>Tensions</string>
@@ -697,8 +698,66 @@
              </property>
             </widget>
            </item>
+
            <item>
-            <widget class="PlotWidget" name="pw_tensionsPerWire"/>
+            <layout class="QFormLayout" name="formLayout">
+             <property name="fieldGrowthPolicy">
+              <enum>QFormLayout::ExpandingFieldsGrow</enum>
+             </property>
+
+             <item row="1" column="0">
+              <widget class="QLineEdit" name="configFileName">
+               <property name="autoFillBackground">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="placeholderText">
+                <string>APA Number</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QComboBox" name="tensionStageComboBox">
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QPushButton" name="btnLoadTensions">
+               <property name="text">
+                <string>Load</string>
+               </property>
+              </widget>
+             </item>
+
+            </layout>
+           </item>
+           <item>
+            <widget class="QTabWidget" name="tabTensionData">
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="tabTensionTable">
+              <attribute name="title">
+               <string>Table</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_5">
+               <item>
+                <widget class="QTableWidget" name="tensionTable"/>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tabTensionGraphs">
+              <attribute name="title">
+               <string>Graphs</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_8">
+               <item>
+                <widget class="PlotWidget" name="pw_tensionsPerWire"/>
+               </item>
+              </layout>
+             </widget>
+            </widget>
            </item>
           </layout>
          </widget>
