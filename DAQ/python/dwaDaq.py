@@ -224,6 +224,31 @@ class TabBar(qtw.QTabBar):
             painter.drawControl(qtw.QStyle.CE_TabBarTabLabel, opt)
             painter.restore()
 
+class TensionTableModel(qtc.QAbstractTableModel):
+    # See: https://www.learnpyqt.com/tutorials/qtableview-modelviews-numpy-pandas/
+    def __init__(self, data):
+        super(TensionTableModel, self).__init__()
+        self._data = data
+
+    def data(self, index, role):
+        if role == qtc.Qt.DisplayRole:
+            kk = list(sorted(self._data.keys()))[index.column()]
+            return self._data[kk][index.row()]
+
+    def rowCount(self, index):
+        return len(self._data[list(self._data.keys())[0]])
+
+    def columnCount(self, index):
+        # assumes all rows are the same length!
+        return len(self._data.keys())
+
+    def headerData(self, section, orientation, role):
+        if role == qtc.Qt.DisplayRole:
+            if orientation == qtc.Qt.Horizontal:
+                return str(sorted(self._data.keys())[section])
+            if orientation == qtc.Qt.Vertical:
+                return str(section+1)
+    
             
 class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -312,7 +337,6 @@ class MainWindow(qtw.QMainWindow):
 
         # signals for callback actions
         self.signals = WorkerSignals()
-
         
         # Tension Tab
         #self.tensionStageComboBox.setText("dwaConfigWC.ini")
@@ -326,13 +350,12 @@ class MainWindow(qtw.QMainWindow):
             'col2':['1','2','1','3'],
             'col3':['1','1','2','1']
         }
-        self.setTensionData()
-        self.tensionTable.resizeColumnsToContents()
-        self.tensionTable.resizeRowsToContents()
- 
 
-
-
+        self.tensionTableModel = TensionTableModel(self.tensionData)
+        self.tensionTableView.setModel(self.tensionTableModel)
+        self.tensionTableView.resizeColumnsToContents()
+        self.tensionTableView.resizeRowsToContents()
+        
         ############ Resize and launch GUI in bottom right corner of screen
         # tested on mac & linux (unclear about windows)
         # https://stackoverflow.com/questions/39046059/pyqt-location-of-the-window
@@ -429,17 +452,7 @@ class MainWindow(qtw.QMainWindow):
         
     # end of __init__ for class MainWindow
 
-    def setTensionData(self): 
-        self.tensionTable.setRowCount(len(self.tensionData['col1']))
-        self.tensionTable.setColumnCount(len(self.tensionData.keys()))
-        horHeaders = []
-        for icol, key in enumerate(sorted(self.tensionData.keys())):
-            horHeaders.append(key)
-            for irow, item in enumerate(self.tensionData[key]):
-                newitem = qtw.QTableWidgetItem(item)
-                self.tensionTable.setItem(irow, icol, newitem)
-        self.tensionTable.setHorizontalHeaderLabels(horHeaders)
-
+    
     def _initResonanceFitLines(self):
         self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
                             'proc':{}  # raw and processed A(f) plots
@@ -511,10 +524,6 @@ class MainWindow(qtw.QMainWindow):
             getattr(self, f'pw_amplchan_{ii}').setTitle(ii)
             #getattr(self, f'pw_resfreqfit_{ii}').setBackground('w')
             #getattr(self, f'pw_resfreqfit_{ii}').setTitle(ii)
-        #
-        getattr(self, f'pw_tensionsPerWire').setTitle('Tension Per Wire')
-        getattr(self, f'pw_tensionsPerWire').setBackground('w')
-        getattr(self, f'pw_tensionsPerWire').setLabels(bottom='Wire number', left='Tension [N]', right='')
 
         # Resonance Tab, raw A(f) plots (will also show f0 lines)
         self.resonanceRawDataGLW.setBackground('w')        # "GLW" = GraphicsLayoutWidget
@@ -533,7 +542,13 @@ class MainWindow(qtw.QMainWindow):
             self.resonanceRawDataGLW.nextRow()
             self.resonanceProcessedDataGLW.nextRow()
 
-
+        # Tension tab
+        self.tensionGLW.setBackground('w')
+        self.tensionPlots = {}
+        self.tensionPlots['tensionOfWireNumber'] = self.tensionGLW.addPlot(title="Tensions", labels={'left':"Tension [N]", 'bottom':"Wire number"})
+        tensionSpecRegion = pg.LinearRegionItem(values=(6.0, 7.0), orientation=1,  movable=False) # 1=horizontal, 0=vert.
+        self.tensionPlots['tensionOfWireNumber'].addItem(tensionSpecRegion)
+            
         
     def printOutput(self, s):
         print("printOutput():")
@@ -630,12 +645,7 @@ class MainWindow(qtw.QMainWindow):
         self.curves['amplchan']['main'] = getattr(self, f'pw_amplchan_main').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
 
         # Tension information
-        self.curves['tension']['tensionOfWireNumber'] = getattr(self, f'pw_tensionsPerWire').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
-        tensionPen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
-        tensionLowLimit = pg.InfiniteLine(pos=6.0, angle=0, movable=False, pen=tensionPen)
-        tensionHighLimit = pg.InfiniteLine(pos=7.0, angle=0, movable=False, pen=tensionPen)
-        self.pw_tensionsPerWire.addItem(tensionLowLimit)
-        self.pw_tensionsPerWire.addItem(tensionHighLimit)
+        self.curves['tension']['tensionOfWireNumber'] = self.tensionPlots['tensionOfWireNumber'].plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
 
         
     def _plotDummyAmpl(self):
@@ -799,6 +809,7 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def ampDataFilenameEnter(self):
+        self.tensionData['col1'] = [5,6,7,8]
         self.doResonanceAnalysis()
 
     @pyqtSlot()
@@ -931,6 +942,7 @@ class MainWindow(qtw.QMainWindow):
     def _loadAmpData(self):
         ampFilename = self.ampDataFilename.text()
         print(f"ampFilename = {ampFilename}")
+        self.ampDataActiveLabel.setText(ampFilename)
         # read in the json file
         # FIXME: add check that the filename exists...
         with open(ampFilename, "r") as fh:
