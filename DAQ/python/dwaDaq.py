@@ -231,6 +231,15 @@ class MainWindow(qtw.QMainWindow):
 
         self._initLogging()
 
+        ###########################################
+        # Define list of registers
+        # wire registers only
+        self.registers = [ddp.Registers.D0, ddp.Registers.D1, ddp.Registers.D2,
+                          ddp.Registers.D3, ddp.Registers.D4, ddp.Registers.D5,
+                          ddp.Registers.D6, ddp.Registers.D7]
+        # inclues wires & run & status registers
+        self.registers_all = [item for item in ddp.Registers]  
+
         #################################################
         ################# START LAYOUT ##################
         # Load the UI (built in Qt Designer)
@@ -262,6 +271,7 @@ class MainWindow(qtw.QMainWindow):
         # Set defaults...
         self.configFileName.setText("dwaConfigWC.ini")
         self.configFileContents.setReadOnly(True)
+        self.ampDataFilename.setText("ampData/DWANUM_HEADBOARDNUM_LAYER_20210219T002321.json")
 
         # Make handles for widgets in the UI
         #self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
@@ -274,11 +284,13 @@ class MainWindow(qtw.QMainWindow):
         
         # Connect slots/signals
         self.btnStart.clicked.connect(self.startRunThread)
-        self.btnSave.clicked.connect(self.saveRun)
+        self.btnSaveAmpl.clicked.connect(self.saveAmplitudeData)
         #self.btnQuit.clicked.connect(self.close)
         self.configFileName.returnPressed.connect(self.configFileNameEnter)
+        self.ampDataFilename.returnPressed.connect(self.ampDataFilenameEnter)
+        for reg in self.registers:
+            getattr(self, f'le_resfreq_val_{reg}').returnPressed.connect(self._resFreqUserInputText)
 
-        
         # Configure/label plots
         self.chanViewMain = 0  # which channel to show large for V(t) data
         self.chanViewMainAmpl = 0  # which channel to show large for A(f) data
@@ -334,14 +346,6 @@ class MainWindow(qtw.QMainWindow):
         ####################### END LAYOUT ###############
         ##################################################
 
-        ###########################################
-        # Define list of registers
-        # wire registers only
-        self.registers = [ddp.Registers.D0, ddp.Registers.D1, ddp.Registers.D2,
-                          ddp.Registers.D3, ddp.Registers.D4, ddp.Registers.D5,
-                          ddp.Registers.D6, ddp.Registers.D7]
-        # inclues wires & run & status registers
-        self.registers_all = [item for item in ddp.Registers]  
 
         ###########################################
         # Set up multithreading
@@ -402,7 +406,12 @@ class MainWindow(qtw.QMainWindow):
             
         self.fnOfReg = {}  # file names for output (empty for now)
         self.ampData = {}  # hold amplitude vs. freq data for a scan
-
+        self.resonantFreqs = {}
+        for reg in self.registers:
+            self.ampData[reg.value] = {'freq':[], 'ampl':[]}
+            self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
+        self._initResonanceFitLines()
+        
         # Info about current run
         self.stimFreqMin = 0
         self.stimFreqMax = 0
@@ -428,6 +437,14 @@ class MainWindow(qtw.QMainWindow):
                 self.tensionTable.setItem(m, n, newitem)
         self.tensionTable.setHorizontalHeaderLabels(horHeaders)
 
+    def _initResonanceFitLines(self):
+        self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
+                            'proc':{}  # raw and processed A(f) plots
+                            }  
+        for reg in self.registers:
+            self.resFitLines['raw'][reg] = []
+            self.resFitLines['proc'][reg] = []
+            
     def _setTabTooltips(self):
         self.tabWidget.setTabToolTip(View.CONFIG, Shortcut.CONFIG.value)
         self.tabWidget.setTabToolTip(View.LOG, Shortcut.LOG.value)
@@ -497,7 +514,7 @@ class MainWindow(qtw.QMainWindow):
         getattr(self, f'pw_tensionsPerWire').setLabels(bottom='Wire number', left='Tension [N]', right='')
 
         # Resonance Tab, raw A(f) plots (will also show f0 lines)
-        self.resonanceRawDataGLW.setBackground('w')
+        self.resonanceRawDataGLW.setBackground('w')        # "GLW" = GraphicsLayoutWidget
         self.resonanceProcessedDataGLW.setBackground('w')
 
         self.resonanceRawPlots = []
@@ -612,8 +629,8 @@ class MainWindow(qtw.QMainWindow):
         # Tension information
         self.curves['tension']['tensionOfWireNumber'] = getattr(self, f'pw_tensionsPerWire').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
         tensionPen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
-        tensionLowLimit = pg.InfiniteLine(pos=6.0, angle=0, movable=True, pen=tensionPen)
-        tensionHighLimit = pg.InfiniteLine(pos=7.0, angle=0, movable=True, pen=tensionPen)
+        tensionLowLimit = pg.InfiniteLine(pos=6.0, angle=0, movable=False, pen=tensionPen)
+        tensionHighLimit = pg.InfiniteLine(pos=7.0, angle=0, movable=False, pen=tensionPen)
         self.pw_tensionsPerWire.addItem(tensionLowLimit)
         self.pw_tensionsPerWire.addItem(tensionHighLimit)
 
@@ -771,10 +788,48 @@ class MainWindow(qtw.QMainWindow):
     #@pyqtSlot()
     #def quitAll(self):
 
-   
+
+        
     @pyqtSlot()
     def configFileNameEnter(self):
         self._loadConfigFile()
+
+    @pyqtSlot()
+    def ampDataFilenameEnter(self):
+        self.doResonanceAnalysis()
+
+    @pyqtSlot()
+    def _resFreqUserInputText(self):
+        for reg in self.registers:
+            print(getattr(self, f'le_resfreq_val_{reg}').text())
+
+        # FIXME: add check for which channel's textbox this came from
+        # and only update the f0 values and GUI display for that associated channel
+        # FIXME: add check to guard against failed parse
+        for reg in self.registers:
+            fString = getattr(self, f'le_resfreq_val_{reg}').text()
+            toks = fString.split(',')
+            self.resonantFreqs[reg.value] = [ float(tok) for tok in toks ]
+        self._updateResonantFreqDisplay(chan=None)
+
+    @pyqtSlot()
+    def _f0LineMoved(self):
+        print("f0Line moved")
+        # FIXME: *which line* was moved???
+        # can find out with self.sender()
+        # print(self.sender())
+
+        # FIXME: need to know if user dragged line on the 'raw' plot or on the 'proc' plot
+        
+        # loop over all channels. Get locations of lines
+        for reg in self.registers:
+            self.resonantFreqs[reg.value] = []  # start w/ empty list
+            for infLine in self.resFitLines['raw'][reg]: # re-create resFreq list
+                self.resonantFreqs[reg.value].append(infLine.value())
+        
+        # update GUI
+        self._updateResonantFreqDisplay(chan=None)
+
         
     @pyqtSlot()
     def viewConfig(self):
@@ -838,7 +893,7 @@ class MainWindow(qtw.QMainWindow):
         self.logger.info("View Tensions")
 
     @pyqtSlot()
-    def saveRun(self):
+    def saveAmplitudeData(self):
         if ("fnOfAmpData" in self.__dict__):
             # add metadata to ampData before writing to file (this could also be done earlier)
             # FIXME: grab these values from user input
@@ -854,7 +909,36 @@ class MainWindow(qtw.QMainWindow):
         else:
             self.logger.info(f"No run to save.") 
         
+    def _writeAmplitudesToFile(self):
+        # write out the A(f) data for this frequency to a file
+        fh = open(self.fnOfAmpData.replace('.json', '.txt'), 'w')
+        for ii in range(len(self.ampData[0]['freq'])):
+            outstr = f"{self.ampData[0]['freq'][ii]:8.4f} "
+            for reg in range(8):
+                outstr += f"{self.ampData[reg]['ampl'][ii]:8.4f} "
+            outstr += "\n"
+            fh.write(outstr)
+        fh.close()
 
+
+    def doResonanceAnalysis(self):
+        self._loadAmpData()
+        self.postScanAnalysis()
+        
+    def _loadAmpData(self):
+        ampFilename = self.ampDataFilename.text()
+        print(f"ampFilename = {ampFilename}")
+        # read in the json file
+        # FIXME: add check that the filename exists...
+        with open(ampFilename, "r") as fh:
+            data = json.load(fh)
+        for reg in self.registers:
+            print(data[str(reg.value)]['freq'])
+            self.ampData[reg.value]['freq'] = data[str(reg.value)]['freq']
+            self.ampData[reg.value]['ampl'] = data[str(reg.value)]['ampl']
+            self.curves['resRawFit'][reg].setData(self.ampData[reg.value]['freq'],
+                                                  self.ampData[reg.value]['ampl'])
+        
     def _loadConfigFile(self, updateGui=True):
         # try to read the requested file
         # if found, display contents
@@ -927,7 +1011,20 @@ class MainWindow(qtw.QMainWindow):
             rawFH.write(f'{item}\n')
         rawFH.close()
 
+    def _clearResonanceFits(self):
+        print("Clearing fit lines from the resonance plots")
 
+        for reg in self.registers:
+            print(f"self.resFitLines['proc'][{reg}] = ")
+            print(self.resFitLines['proc'][reg])
+            for infLine in self.resFitLines['proc'][reg]:
+                self.resonanceProcessedPlots[reg].removeItem(infLine)
+            for infLine in self.resFitLines['raw'][reg]:
+                self.resonanceRawPlots[reg].removeItem(infLine)
+
+        self._initResonanceFitLines()
+
+                
     def _clearAmplitudeData(self):
         self.ampData = {}
         for reg in self.registers:
@@ -1006,6 +1103,7 @@ class MainWindow(qtw.QMainWindow):
                     logger.info("New run detected... creating new filenames")
                     self._makeOutputFilenames()
                     self._clearAmplitudeData()
+                    self._clearResonanceFits()
                     logger.info(self.fnOfReg)
                 
                 # write data to file by register
@@ -1114,7 +1212,7 @@ class MainWindow(qtw.QMainWindow):
         if self.nChansReceived == 8:
             print(f"\n\n\n ALL DATA IN FOR THIS FREQ [{self.stimPeriodCurrent} = {udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']}]\n\n\n")
 
-            # KLUGE: put in to trigger resonant freq. fitting/search
+            # FIXME: put in to trigger resonant freq. fitting/search
             # for recorded data from sebastien...
             # should eventually just look for the "end of scan" signal from uzed
             #scanComplete = self.stimPeriodCurrent == 5423600
@@ -1122,20 +1220,11 @@ class MainWindow(qtw.QMainWindow):
             scanComplete = udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz'] >= self.stimFreqMax
 
             if scanComplete:
-                print("\n\n\n\n\n\n\n SCAN IN DONE!!!")
+                print("\n\n\n\n\n\n\n SCAN IS DONE!!!")
                 self._writeAmplitudesToFile()
+                self.saveAmplitudeData()
                 self.postScanAnalysis()
 
-    def _writeAmplitudesToFile(self):
-        # write out the A(f) data for this frequency to a file
-        fh = open('udpData/amplitudes.txt', 'w')
-        for ii in range(len(self.ampData[0]['freq'])):
-            outstr = f"{self.ampData[0]['freq'][ii]:8.4f} "
-            for reg in range(8):
-                outstr += f"{self.ampData[reg]['ampl'][ii]:8.4f} "
-            outstr += "\n"
-            fh.write(outstr)
-        fh.close()
 
     def baseline(self, x, y):
         # get rid of polynomial background...
@@ -1166,23 +1255,49 @@ class MainWindow(qtw.QMainWindow):
             # FIXME: set width based on frequency, not hard-coded number of samples!
             peakIds, _ = find_peaks(cumsum, prominence=(5.0, None), width=5)
             print(f'peakIds = {peakIds}')
+
+            # FIXME: could add interpolation for better precision
+
             # update the label:
             peakFreqs = [ self.ampData[reg]['freq'][id] for id in peakIds ]
-            labelStr = ' '.join([f'{ff:.2f}' for ff in peakFreqs])
-            getattr(self, f'lab_resfreq_val_{reg}').setText(labelStr)
-            
-            # FIXME: move pen definition to __init__ (self.f0pen)
-            f0Pen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
-            for ff in peakFreqs:
-                f0Line = pg.InfiniteLine(pos=ff, angle=90, movable=False, pen=f0Pen)
-                # Huh? Code seems to hang if I add f0Line to two different plots, so
-                # need to clone it to add to the second plot?
-                f0Line2 = pg.InfiniteLine(pos=ff, angle=90, movable=False, pen=f0Pen)
-                self.resonanceRawPlots[reg.value].addItem(f0Line)
-                self.resonanceProcessedPlots[reg.value].addItem(f0Line2)
-                #getattr(self, f'pw_amplgrid_{reg.value}').addItem(f0Line)
-                #getattr(self, f'pw_resfreqfit_{reg.value}').addItem(f0Line2)
 
+            # Store the resonant *frequencies* and then update the GUI based on that
+            self.resonantFreqs[reg.value] = peakFreqs[:]
+            
+        self._updateResonantFreqDisplay(chan=None)
+
+        
+    def _updateResonantFreqDisplay(self, chan=None):
+        """ 
+        FIXME: if chan=None, update all channels, otherwise, 
+        only update the indicated channels...
+        """
+
+        # Remove any existing InfiniteLines from A(f) plots and reset dict
+        for reg in self.registers:
+            for infLine in self.resFitLines['proc'][reg]:
+                self.resonanceProcessedPlots[reg].removeItem(infLine)
+            for infLine in self.resFitLines['raw'][reg]:
+                self.resonanceRawPlots[reg].removeItem(infLine)
+        self._initResonanceFitLines()
+                
+        # FIXME: move pen definition to __init__ (self.f0pen)
+        f0Pen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
+
+        for reg in self.registers:
+            chan = reg.value
+            print("in update: ", self.resonantFreqs[chan])
+            labelStr = ', '.join([f'{ff:.2f}' for ff in self.resonantFreqs[chan]])
+            getattr(self, f'le_resfreq_val_{reg}').setText(labelStr)
+            
+            # Create/display new InfiniteLine instance for each resonant freq
+            for ff in self.resonantFreqs[chan]:
+                self.resFitLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
+                self.resFitLines['proc'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
+                self.resFitLines['raw'][reg].append( self.resonanceRawPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
+                self.resFitLines['raw'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
+
+                
     def cleanUp(self):
         self.logger.info("App quitting:")
         self.logger.info("   closing UDP connection")
