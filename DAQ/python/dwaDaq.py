@@ -599,8 +599,8 @@ class MainWindow(qtw.QMainWindow):
         # Tension information
         self.curves['tension']['tensionOfWireNumber'] = getattr(self, f'pw_tensionsPerWire').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
         tensionPen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
-        tensionLowLimit = pg.InfiniteLine(pos=6.0, angle=0, movable=True, pen=tensionPen)
-        tensionHighLimit = pg.InfiniteLine(pos=7.0, angle=0, movable=True, pen=tensionPen)
+        tensionLowLimit = pg.InfiniteLine(pos=6.0, angle=0, movable=False, pen=tensionPen)
+        tensionHighLimit = pg.InfiniteLine(pos=7.0, angle=0, movable=False, pen=tensionPen)
         self.pw_tensionsPerWire.addItem(tensionLowLimit)
         self.pw_tensionsPerWire.addItem(tensionHighLimit)
 
