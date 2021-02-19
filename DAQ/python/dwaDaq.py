@@ -319,7 +319,7 @@ class MainWindow(qtw.QMainWindow):
         self.tensionStageComboBox.addItem("Pre-production")
         self.tensionStageComboBox.addItem("Production")
         self.tensionStageComboBox.addItem("Commissioning")
-        self.btnLoadTensions.clicked.connect(self.saveRun)
+        #self.btnLoadTensions.clicked.connect(self.saveRun)
 
         self.tensionData = {
             'col1':['1','2','3','4'],
@@ -428,13 +428,16 @@ class MainWindow(qtw.QMainWindow):
         self.udpListen()
         
     # end of __init__ for class MainWindow
+
     def setTensionData(self): 
+        self.tensionTable.setRowCount(len(self.tensionData['col1']))
+        self.tensionTable.setColumnCount(len(self.tensionData.keys()))
         horHeaders = []
-        for n, key in enumerate(sorted(self.tensionData.keys())):
+        for icol, key in enumerate(sorted(self.tensionData.keys())):
             horHeaders.append(key)
-            for m, item in enumerate(self.tensionData[key]):
+            for irow, item in enumerate(self.tensionData[key]):
                 newitem = qtw.QTableWidgetItem(item)
-                self.tensionTable.setItem(m, n, newitem)
+                self.tensionTable.setItem(irow, icol, newitem)
         self.tensionTable.setHorizontalHeaderLabels(horHeaders)
 
     def _initResonanceFitLines(self):
