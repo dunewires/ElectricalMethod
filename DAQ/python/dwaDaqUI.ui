@@ -126,7 +126,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -727,13 +727,6 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_2">
            <item>
-            <widget class="QLabel" name="label_5">
-             <property name="text">
-              <string>Wire Tension Data Plots (replace these with a pyqtgraph GraphicsLayoutWidget)</string>
-             </property>
-            </widget>
-           </item>
-           <item>
             <layout class="QFormLayout" name="formLayout">
              <property name="fieldGrowthPolicy">
               <enum>QFormLayout::ExpandingFieldsGrow</enum>
@@ -764,15 +757,45 @@
             </layout>
            </item>
            <item>
+            <widget class="QTabWidget" name="tabWidget_2">
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="tab">
+              <attribute name="title">
+               <string>Table</string>
+              </attribute>
+              <widget class="QTableView" name="tensionTableView">
+               <property name="geometry">
+                <rect>
+                 <x>10</x>
+                 <y>10</y>
+                 <width>491</width>
+                 <height>161</height>
+                </rect>
+               </property>
+              </widget>
+             </widget>
+             <widget class="QWidget" name="tab_2">
+              <attribute name="title">
+               <string>Graphs</string>
+              </attribute>
+              <widget class="GraphicsLayoutWidget" name="tensionGLW">
+               <property name="geometry">
+                <rect>
+                 <x>17</x>
+                 <y>11</y>
+                 <width>1141</width>
+                 <height>251</height>
+                </rect>
+               </property>
+              </widget>
+             </widget>
+            </widget>
+           </item>
+           <item>
             <widget class="QWidget" name="widget_4" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="1,10">
-              <item>
-               <widget class="QTableView" name="tensionTableView"/>
-              </item>
-              <item>
-               <widget class="GraphicsLayoutWidget" name="tensionGLW"/>
-              </item>
-             </layout>
+             <layout class="QHBoxLayout" name="horizontalLayout_7" stretch=""/>
             </widget>
            </item>
           </layout>
@@ -825,7 +848,7 @@
      <x>0</x>
      <y>0</y>
      <width>1313</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -864,7 +887,7 @@
   <customwidget>
    <class>PlotWidget</class>
    <extends>QGraphicsView</extends>
-   <header location="global">pyqtgraph</header>
+   <header>pyqtgraph</header>
    <container>1</container>
   </customwidget>
   <customwidget>
