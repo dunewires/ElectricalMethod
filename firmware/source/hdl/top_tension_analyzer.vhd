@@ -419,6 +419,9 @@ begin
       sendRunHdr  => sendRunHdr,
       sendAdcData => sendAdcData,
 
+      pktBuildBusy => pktBuildBusy,
+      freqScanBusy => freqScanBusy,
+
       adcAutoDc_af => adcAutoDc_af,
 
       adcStart => adcStart,
@@ -516,6 +519,9 @@ begin
       sendRunHdr    => sendRunHdr,
       sendAdcData   => sendAdcData,
       sendStatusHdr => false,
+
+      pktBuildBusy => pktBuildBusy,
+      freqScanBusy => freqScanBusy,
 
       firmwareId_date   => (others => '0'),
       firmwareId_hash   => (others => '0'),

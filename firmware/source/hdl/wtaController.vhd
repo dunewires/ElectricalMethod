@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Mar  4 10:00:44 2021
+-- Last update : Sun Mar  7 16:04:45 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -43,8 +43,8 @@ entity wtaController is
 		sendRunHdr  : out boolean := false;
 		sendAdcData : out boolean := false;
 
-        pktBuildBusy : out boolean;
-        freqScanBusy : in boolean;
+        pktBuildBusy : in boolean;
+        freqScanBusy : out boolean;
 
 
 		adcAutoDc_af : in std_logic_vector(7 downto 0) := (others => '0');

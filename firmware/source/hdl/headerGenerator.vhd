@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Mar  4 09:39:40 2021
+-- Last update : Sun Mar  7 16:05:10 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ entity headerGenerator is
         sendAdcData   : in boolean;
         sendStatusHdr : in boolean;
 
-        pktBuildDone : out boolean;
+        pktBuildBusy : out boolean;
         freqScanBusy : in boolean;
 
         firmwareId_date   : in unsigned(47 downto 0); -- Firmware identifier (date) YYMMDDHHMMSS (in hex)
@@ -132,8 +132,6 @@ architecture rtl of headerGenerator is
 
 signal stimPeriodActive_reg :unsigned(23 downto 0) := (others => '0');
 signal adcSamplingPeriod_reg :unsigned(23 downto 0) := (others => '0');
-
-signal pktBuildBusy :boolean := false;
 
 begin
 
@@ -256,8 +254,7 @@ begin
                 adcIdx         <= adcIdx_next;
                 rqstType       <= rqstType_next;
                 pktBuildBusy  <=  state_reg /= idle_s;
-                --generate pulse when we finish a task
-                pktBuildDone <= pktBuildBusy and state_reg = idle_s;
+
             end if;
         end if;
     end process state_seq;
