@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Sun Mar  7 16:04:45 2021
+-- Last update : Sun Mar  7 16:24:09 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ entity wtaController is
 end entity wtaController;
 architecture rtl of wtaController is
 
-	type ctrlState_type is (idle_s, noisePrep_s, noiseReadout_s, stimPrep_s, stimRun_s, stimReadout_s, freqScanFinish_s);
+	type ctrlState_type is (idle_s, noisePrep_s, noiseReadout_s, stimPrep_s, stimRun_s, stimReadout_s, freqScanFinish_s, pktBuildFinish_s);
 	signal ctrlState       : ctrlState_type        := idle_s;
 	signal ctrlStart_del   : boolean               := false;
 	signal scanDone        : boolean               := false;
@@ -81,7 +81,7 @@ begin
 						noiseFirstReadout <= noiseReadoutCnt = x"1";
 
 						                --generate pulse when we finish a task
-                pktBuildDone <= pktBuildBusy and pktBuildBusy_del;
+                pktBuildDone <= not pktBuildBusy and pktBuildBusy_del;
 
 			if fromDaqReg.reset then
 				ctrlState <= idle_s;
@@ -152,7 +152,7 @@ begin
 							adcStart  <= true;
 						end if;
 
-					when stimReadout_s =>
+					when stimReadout_s =>  --sending of ADC data packet
 						-- wait for falling edge of adcBusy;
 						if adcBusy = '0' and adcBusy_del = '1' then
 							sendAdcData <= true;
@@ -165,12 +165,16 @@ begin
 							end if;
 						end if;
 
-						when freqScanFinish_s  => 
+						when freqScanFinish_s  => --sending of final run header
 						if pktBuildDone then
 							sendRunHdr       <= true; --send run header at end of test.
-							ctrlState <= idle_s;
-						else
+							ctrlState <= pktBuildFinish_s;
+						end if;
 
+						when pktBuildFinish_s  => --wait for packet to be sent before allowing another test
+						if pktBuildDone then
+							ctrlState <= idle_s;
+						end if;
 
 					when others =>
 						ctrlState <= idle_s;
