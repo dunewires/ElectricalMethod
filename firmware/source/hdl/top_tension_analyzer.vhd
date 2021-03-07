@@ -168,6 +168,9 @@ architecture STRUCT of top_tension_analyzer is
 
   signal flashCount : unsigned(23 downto 0);
 
+  signal pktBuildBusy: boolean := false;
+signal freqScanBusy: boolean := false;
+
   signal 
   toDaqReg_headerGenerator,
   toDaqReg_dpotInterface,
