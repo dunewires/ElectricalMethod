@@ -220,3 +220,5 @@ set_property PACKAGE_PIN G18 [get_ports mainsSquare]
 # temp clock false paths.  Replace with sync clock
 set_false_path -from [get_clocks aclk] -to [get_clocks BB_CLK]
 set_false_path -from [get_clocks BB_CLK] -to [get_clocks aclk]
+
+create_clock -period 10.000 -name {dwa_ps_bd_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]} -waveform {0.000 5.000} [get_pins {dwa_ps_bd_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]}]

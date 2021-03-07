@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Oct 20 00:33:50 2020
+-- Last update : Thu Mar  4 10:00:44 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -43,6 +43,10 @@ entity wtaController is
 		sendRunHdr  : out boolean := false;
 		sendAdcData : out boolean := false;
 
+        pktBuildBusy : out boolean;
+        freqScanBusy : in boolean;
+
+
 		adcAutoDc_af : in std_logic_vector(7 downto 0) := (others => '0');
 
 		adcStart : out boolean   := false;
@@ -53,13 +57,15 @@ entity wtaController is
 end entity wtaController;
 architecture rtl of wtaController is
 
-	type ctrlState_type is (idle_s, noisePrep_s, noiseReadout_s, stimPrep_s, stimRun_s, stimReadout_s);
+	type ctrlState_type is (idle_s, noisePrep_s, noiseReadout_s, stimPrep_s, stimRun_s, stimReadout_s, freqScanFinish_s);
 	signal ctrlState       : ctrlState_type        := idle_s;
 	signal ctrlStart_del   : boolean               := false;
 	signal scanDone        : boolean               := false;
 	signal timerCnt        : unsigned(31 downto 0) := (others => '0');
 	signal noiseReadoutCnt : unsigned(3 downto 0)  := (others => '0');
 	signal adcBusy_del     : std_logic             := '0';
+	signal pktBuildBusy_del   : boolean               := false;
+	signal pktBuildDone   : boolean               := false;
 begin
 
 	ctrlState_seq : process (dwaClk100)
@@ -73,6 +79,9 @@ begin
 			sendRunHdr        <= false;
 			sendAdcData       <= false;
 						noiseFirstReadout <= noiseReadoutCnt = x"1";
+
+						                --generate pulse when we finish a task
+                pktBuildDone <= pktBuildBusy and pktBuildBusy_del;
 
 			if fromDaqReg.reset then
 				ctrlState <= idle_s;
@@ -93,6 +102,7 @@ begin
 							noiseReadoutBusy <= true; -- only count 
 							freqSet          <= fromDaqReg.noiseFreqMin;
 							ctrlState        <= noisePrep_s;
+							freqScanBusy <= true;
 						end if;
 
 					when noisePrep_s =>                 
@@ -147,12 +157,20 @@ begin
 						if adcBusy = '0' and adcBusy_del = '1' then
 							sendAdcData <= true;
 							if scanDone then
-								ctrlState <= idle_s;
+								ctrlState <= freqScanFinish_s;
+								freqScanBusy <= false;
 							else
 								freqSet   <= freqSet+fromDaqReg.stimFreqStep;
 								ctrlState <= stimPrep_s;
 							end if;
 						end if;
+
+						when freqScanFinish_s  => 
+						if pktBuildDone then
+							sendRunHdr       <= true; --send run header at end of test.
+							ctrlState <= idle_s;
+						else
+
 
 					when others =>
 						ctrlState <= idle_s;

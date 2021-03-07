@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Dec 22 17:53:30 2020
+-- Last update : Thu Mar  4 09:39:40 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -49,6 +49,9 @@ entity headerGenerator is
         sendRunHdr    : in boolean;
         sendAdcData   : in boolean;
         sendStatusHdr : in boolean;
+
+        pktBuildDone : out boolean;
+        freqScanBusy : in boolean;
 
         firmwareId_date   : in unsigned(47 downto 0); -- Firmware identifier (date) YYMMDDHHMMSS (in hex)
         firmwareId_hash   : in unsigned(31 downto 0); -- Firmware identifier (git hash) use 32 bits
@@ -127,8 +130,23 @@ architecture rtl of headerGenerator is
     signal udpCnt_next : unsigned(15 downto 0) := (others => '0');
     signal udpPktCnt   : unsigned(15 downto 0) := (others => '0');
 
+signal stimPeriodActive_reg :unsigned(23 downto 0) := (others => '0');
+signal adcSamplingPeriod_reg :unsigned(23 downto 0) := (others => '0');
+
+signal pktBuildBusy :boolean := false;
 
 begin
+
+    dataLatch : process (dwaClk100) -- latch the packet data validated by the sendData strobe
+    begin
+        if rising_edge(dwaClk100) then
+            if sendAdcData then
+                stimPeriodActive_reg  <= stimPeriodActive;
+                adcSamplingPeriod_reg <= adcSamplingPeriod;
+            end if;
+
+        end if;
+    end process;
 
     --header data indexed list with 0 at bottom of list
     -- UDP Header
@@ -142,6 +160,7 @@ begin
     --RUN Header
     headFDataList <= (
             x"FFFF" & std_logic_vector(to_unsigned(nHeadF-2, 16)), -- header delimiter (start)
+            x"77" & x"00000" & "000" & BOOL2SL(freqScanBusy),
             x"00" & std_logic_vector(runOdometer),
             x"01" & std_logic_vector(fromDaqReg.serNum),
             x"02" & std_logic_vector(firmwareId_date(47 downto 24)),         --24MSb
@@ -197,8 +216,8 @@ begin
             x"40" & std_logic_vector(stimPeriodCounter),
             --FIXME: the following product can overflow...
             x"41" & std_logic_vector(adcSamplesPerFreq(23 downto 0)),
-            x"42" & std_logic_vector(stimPeriodActive),
-            x"43" & std_logic_vector(adcSamplingPeriod),
+            x"42" & std_logic_vector(stimPeriodActive_reg),
+            x"43" & std_logic_vector(adcSamplingPeriod_reg),
             x"CCCCCCCC",
             x"DDDD" & x"5151" -- FIXME: this shoould be in the genDFrame_s...
     );
@@ -236,6 +255,9 @@ begin
                 udpCnt_reg     <= udpCnt_next;
                 adcIdx         <= adcIdx_next;
                 rqstType       <= rqstType_next;
+                pktBuildBusy  <=  state_reg /= idle_s;
+                --generate pulse when we finish a task
+                pktBuildDone <= pktBuildBusy and state_reg = idle_s;
             end if;
         end if;
     end process state_seq;

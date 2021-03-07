@@ -19,7 +19,6 @@ entity top_tension_analyzer is
     led     : out std_logic_vector(3 downto 0);
     pButton : in  std_logic_vector(3 downto 0);
 
-
     acStimX200_obuf : out std_logic := '0';
     mainsSquare     : in  std_logic := '0';
 
@@ -122,6 +121,7 @@ architecture STRUCT of top_tension_analyzer is
   signal acStim_nHPeriod      : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_periodCnt : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriod  : unsigned(23 downto 0) := (others => '0');
+  signal acStimX200_nHPeriod_fxp8  : unsigned(31 downto 0) := (others => '0'); -- floating point at 8
   --initial value non zero
   signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
   signal ctrlFreqSet : unsigned(23 downto 0) := (others => '1');
@@ -182,10 +182,10 @@ begin
     if rising_edge(dwaClk10) then
       flashCount <= flashCount + 1;
       -- flash lights in reverse order
-      led(0) <= pButton(3) and flashCount(flashCount'left - 0);
-      led(1) <= pButton(2) and flashCount(flashCount'left - 1);
-      led(2) <= pButton(1) and flashCount(flashCount'left - 2);
-      led(3) <= pButton(0) and flashCount(flashCount'left - 3);
+      led(0) <= not pButton(3) and flashCount(flashCount'left - 0);
+      led(1) <= not pButton(2) and flashCount(flashCount'left - 1);
+      led(2) <= not pButton(1) and flashCount(flashCount'left - 2);
+      led(3) <= not pButton(0) and flashCount(flashCount'left - 3);
     end if;
   end process;
 
@@ -259,8 +259,8 @@ begin
   -- convert requested stim frequency to number of 100Mhz clocks
   -- move this to the processor!
   compute_n_periods : process (dwaClk10)
-    variable acStim_nHPeriod_all : unsigned(47 downto 0 );
-    variable adcCnv_nPeriod_all  : unsigned(47 downto 0 );
+    variable acStim_nHPeriod_all : unsigned(63 downto 0 );
+    variable adcCnv_nPeriod_all  : unsigned(63 downto 0 );
     variable adcCnv_nCnv_all     : unsigned(39 downto 0 );
 
   begin
@@ -274,14 +274,14 @@ begin
         acStim_enable <= '1';
       end if;
 
-      acStimX200_nHPeriod <= (x"3d0900"/ stimFreqReq);
+      acStimX200_nHPeriod_fxp8 <= (x"3d090000"/ stimFreqReq);
       -- trim off 8 MSbs because we don't need to go below ~10Hz
       -- acStim_nHPeriod_all := (x"5F5E1000"/unsigned(stimFreqReq));
       -- acStim_nHPeriod     <= acStim_nHPeriod_all(acStim_nHPeriod'range);
       -- use the acStim_nHPeriod as the basis for the other freq to maintain exact sync
       -- this will produce a greater error in the actual freq being measured.
-      acStim_nHPeriod_all := acStimX200_nHPeriod * 200;
-      adcCnv_nPeriod_all  := acStimX200_nHPeriod * 50;
+      acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * 200;
+      adcCnv_nPeriod_all  := acStimX200_nHPeriod_fxp8 * 50;
       --  let's start with a fixed conversion from half wave to ADC samples
       -- 100 = 4 samples/period
       -- 400 = 1 samples/period
@@ -290,8 +290,8 @@ begin
       -- find the number of total canversions for each frequency
       adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
 
-      acStim_nHPeriod <= acStim_nHPeriod_all(23 downto 0);
-      adcCnv_nPeriod  <= adcCnv_nPeriod_all(23 downto 0);
+      acStim_nHPeriod <= acStim_nHPeriod_all(31 downto 8);
+      adcCnv_nPeriod  <= adcCnv_nPeriod_all(31 downto 8);
       adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
 
     end if;

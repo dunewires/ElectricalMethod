@@ -84,6 +84,7 @@ begin
       dwaClk100       => dwaClk100,
       dwaClk10        => dwaClk10,
       led             => led,
+      pButton => (others => '0'),
       acStimX200_obuf => acStimX200_obuf,
       mainsSquare     => mainsSquare,
       DAC_SDI         => DAC_SDI,

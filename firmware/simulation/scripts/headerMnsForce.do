@@ -15,9 +15,9 @@ force -freeze sim:/tb_adc_emu/fromDaqReg.auto TRUE 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.coilDrive 32'h8421aa55 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.fixedPeriod 24'h0F0F0F 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqReq 24'h000100 0
-force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqMin 24'h00003D 0
-force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqMax 24'h00003F 0
-force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqStep 24'h000008 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqMin 24'h001F00 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqMax 24'h001F10 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqStep 24'h000001 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.cyclesPerFreq 24'h0000008 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.adcSamplesPerCycle 16'h0008 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.stimMag 12'h023 0

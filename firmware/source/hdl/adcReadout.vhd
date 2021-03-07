@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Oct  6 20:21:54 2020
+-- Last update : Wed Mar  3 15:23:56 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ end entity adcReadout;
 architecture rtl of adcReadout is
 
 	type ctrlState_type is (idle_s, adcCnvStart_s, adcCnvWait_s, adcReadout_s,readoutDone_s);
-	signal ctrlState            : ctrlState_type        := idle_s;
+	signal ctrlStateAdc            : ctrlState_type        := idle_s;
 	signal timerCnt             : unsigned(11 downto 0) := (others => '0');
 	signal adcSckEnable         : std_logic             := '0';
 	signal adcSckEnableEmu      : std_logic             := '0';
@@ -222,12 +222,12 @@ begin
 			adcSckEnable <= '0';
 			cnvDone      <= '0';
 
-			case (ctrlState) is
+			case (ctrlStateAdc) is
 
 				when idle_s =>
 					if cnvSyncStrb then
 						timerCnt  <= x"001";
-						ctrlState <= adcCnvStart_s;
+						ctrlStateAdc <= adcCnvStart_s;
 					end if;
 
 				when adcCnvStart_s =>
@@ -235,7 +235,7 @@ begin
 					-- adcCnv high time 30 ns min
 					if timerCnt = x"3" then
 						timerCnt  <= x"001";
-						ctrlState <= adcCnvWait_s;
+						ctrlStateAdc <= adcCnvWait_s;
 					else
 						timerCnt <= timerCnt+1;
 					end if;
@@ -244,7 +244,7 @@ begin
 					--conversion time 450ns max
 					if timerCnt = x"030" then
 						timerCnt  <= x"001";
-						ctrlState <= adcReadout_s;
+						ctrlStateAdc <= adcReadout_s;
 					else
 						timerCnt <= timerCnt+1;
 					end if;
@@ -254,17 +254,17 @@ begin
 					adcSckEnable <= '1';
 					if timerCnt = x"020" then
 						timerCnt  <= x"001";
-						ctrlState <= readoutDone_s;
+						ctrlStateAdc <= readoutDone_s;
 					else
 						timerCnt <= timerCnt+1;
 					end if;
 
 				when readoutDone_s =>
 					cnvDone   <= '1';
-					ctrlState <= idle_s;
+					ctrlStateAdc <= idle_s;
 
 				when others =>
-					ctrlState <= idle_s;
+					ctrlStateAdc <= idle_s;
 			end case;
 		end if;
 	end process ctrlState_seq;
