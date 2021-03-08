@@ -292,7 +292,7 @@ begin
       -- 25 = 16
       -- find the number of total canversions for each frequency
       adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
-
+      acStimX200_nHPeriod <= acStimX200_nHPeriod_fxp8(31 downto 8);
       acStim_nHPeriod <= acStim_nHPeriod_all(31 downto 8);
       adcCnv_nPeriod  <= adcCnv_nPeriod_all(31 downto 8);
       adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
