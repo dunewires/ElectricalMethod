@@ -2,7 +2,7 @@ function[data] = udpRecDsp()
 LocalIPPort = 'LocalIPPort';
 port = 6008;
 maxPacketLength = 1024;
-fileName = 'mmTest';
+fileName = '/home/nate/cernbox/shared/dune/matlab/dwaTest';
 fileExt = '.txt';
 timeout = 300;% in seconds
 % make sure to read before the input buffer 8K? fills up
