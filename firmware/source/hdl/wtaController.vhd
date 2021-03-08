@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Sun Mar  7 16:24:09 2021
+-- Last update : Mon Mar  8 17:19:16 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -36,15 +36,15 @@ entity wtaController is
 		freqSet       : out unsigned(23 downto 0) := (others => '1');
 		acStim_enable : out std_logic             := '0';
 
-		noiseReadoutBusy : out boolean := false;
+		noiseReadoutBusy  : out boolean := false;
 		noiseFirstReadout : out boolean := false;
-		noiseResetBusy   : in  boolean := false;
+		noiseResetBusy    : in  boolean := false;
 
 		sendRunHdr  : out boolean := false;
 		sendAdcData : out boolean := false;
 
-        pktBuildBusy : in boolean;
-        freqScanBusy : out boolean;
+		pktBuildBusy : in  boolean;
+		freqScanBusy : out boolean;
 
 
 		adcAutoDc_af : in std_logic_vector(7 downto 0) := (others => '0');
@@ -58,14 +58,14 @@ end entity wtaController;
 architecture rtl of wtaController is
 
 	type ctrlState_type is (idle_s, noisePrep_s, noiseReadout_s, stimPrep_s, stimRun_s, stimReadout_s, freqScanFinish_s, pktBuildFinish_s);
-	signal ctrlState       : ctrlState_type        := idle_s;
-	signal ctrlStart_del   : boolean               := false;
-	signal scanDone        : boolean               := false;
-	signal timerCnt        : unsigned(31 downto 0) := (others => '0');
-	signal noiseReadoutCnt : unsigned(3 downto 0)  := (others => '0');
-	signal adcBusy_del     : std_logic             := '0';
-	signal pktBuildBusy_del   : boolean               := false;
-	signal pktBuildDone   : boolean               := false;
+	signal ctrlState        : ctrlState_type        := idle_s;
+	signal ctrlStart_del    : boolean               := false;
+	signal scanDone         : boolean               := false;
+	signal timerCnt         : unsigned(31 downto 0) := (others => '0');
+	signal noiseReadoutCnt  : unsigned(3 downto 0)  := (others => '0');
+	signal adcBusy_del      : std_logic             := '0';
+	signal pktBuildBusy_del : boolean               := false;
+	signal pktBuildDone     : boolean               := false;
 begin
 
 	ctrlState_seq : process (dwaClk100)
@@ -78,10 +78,10 @@ begin
 			adcStart          <= false;
 			sendRunHdr        <= false;
 			sendAdcData       <= false;
-						noiseFirstReadout <= noiseReadoutCnt = x"1";
-
-						                --generate pulse when we finish a task
-                pktBuildDone <= not pktBuildBusy and pktBuildBusy_del;
+			noiseFirstReadout <= noiseReadoutCnt = x"1";
+			pktBuildBusy_del <= pktBuildBusy;
+			--generate pulse when we finish a task
+			pktBuildDone <= not pktBuildBusy and pktBuildBusy_del;
 
 			if fromDaqReg.reset then
 				ctrlState <= idle_s;
@@ -102,15 +102,15 @@ begin
 							noiseReadoutBusy <= true; -- only count 
 							freqSet          <= fromDaqReg.noiseFreqMin;
 							ctrlState        <= noisePrep_s;
-							freqScanBusy <= true;
+							freqScanBusy     <= true;
 						end if;
 
-					when noisePrep_s =>                 
-					--wait a bit for the divison to update and BPF to respond to the new setting
-						if timerCnt(31 downto 8) <= fromDaqReg.noiseBPFSetTime then 
-							timerCnt <= timerCnt +1;    -- only count 
-					-- check FIFOs are not almost full
-						elsif not noiseResetBusy then   -- wait for the noise memory to be reset
+					when noisePrep_s =>
+						--wait a bit for the divison to update and BPF to respond to the new setting
+						if timerCnt(31 downto 8) <= fromDaqReg.noiseBPFSetTime then
+							timerCnt <= timerCnt +1;  -- only count 
+						                              -- check FIFOs are not almost full
+						elsif not noiseResetBusy then -- wait for the noise memory to be reset
 							adcStart  <= true;
 							timerCnt  <= x"00000000";
 							ctrlState <= noiseReadout_s;
@@ -125,7 +125,7 @@ begin
 									noiseReadoutBusy <= false; -- only count 
 									ctrlState        <= stimPrep_s;
 								else -- accumulate more noise samples to average 
-									freqSet <= fromDaqReg.noiseFreqMin;
+									freqSet         <= fromDaqReg.noiseFreqMin;
 									noiseReadoutCnt <= noiseReadoutCnt +1;
 									ctrlState       <= noisePrep_s;
 								end if;
@@ -152,12 +152,12 @@ begin
 							adcStart  <= true;
 						end if;
 
-					when stimReadout_s =>  --sending of ADC data packet
-						-- wait for falling edge of adcBusy;
+					when stimReadout_s => --sending of ADC data packet
+						                  -- wait for falling edge of adcBusy;
 						if adcBusy = '0' and adcBusy_del = '1' then
 							sendAdcData <= true;
 							if scanDone then
-								ctrlState <= freqScanFinish_s;
+								ctrlState    <= freqScanFinish_s;
 								freqScanBusy <= false;
 							else
 								freqSet   <= freqSet+fromDaqReg.stimFreqStep;
@@ -165,13 +165,13 @@ begin
 							end if;
 						end if;
 
-						when freqScanFinish_s  => --sending of final run header
+					when freqScanFinish_s => --sending of final run header
 						if pktBuildDone then
-							sendRunHdr       <= true; --send run header at end of test.
-							ctrlState <= pktBuildFinish_s;
+							sendRunHdr <= true; --send run header at end of test.
+							ctrlState  <= pktBuildFinish_s;
 						end if;
 
-						when pktBuildFinish_s  => --wait for packet to be sent before allowing another test
+					when pktBuildFinish_s => --wait for packet to be sent before allowing another test
 						if pktBuildDone then
 							ctrlState <= idle_s;
 						end if;
