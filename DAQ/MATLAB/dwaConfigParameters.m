@@ -1,6 +1,6 @@
 
 % dwaCtrl  => (relayMakeBeforeBreak mainsMinus_enable auto)%2
-dwaCtrl = "00000001";2
+dwaCtrl = "00000001"
 udpDataDone = "00000000";
 stimFreqReq = "00000000";
 stimFreqMin = "00001FE0";
