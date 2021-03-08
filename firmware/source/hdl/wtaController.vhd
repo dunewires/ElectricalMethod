@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Mar  8 17:19:16 2021
+-- Last update : Mon Mar  8 18:42:51 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -157,7 +157,9 @@ begin
 						if adcBusy = '0' and adcBusy_del = '1' then
 							sendAdcData <= true;
 							if scanDone then
-								ctrlState    <= freqScanFinish_s;
+							-- temp disable new feature
+							ctrlState <= idle_s;
+								--ctrlState    <= freqScanFinish_s;
 								freqScanBusy <= false;
 							else
 								freqSet   <= freqSet+fromDaqReg.stimFreqStep;
