@@ -43,6 +43,7 @@ from enum import Enum, IntEnum
 import string
 
 import numpy as np
+import scipy
 from scipy.signal import find_peaks
 
 from PyQt5 import uic
@@ -298,7 +299,8 @@ class MainWindow(qtw.QMainWindow):
         # Set defaults...
         self.configFileName.setText("dwaConfigWC.ini")
         self.configFileContents.setReadOnly(True)
-        self.ampDataFilename.setText("ampData/DWANUM_HEADBOARDNUM_LAYER_20210219T002321.json")
+        #self.ampDataFilename.setText("ampData/DWANUM_HEADBOARDNUM_LAYER_20210219T002321.json")
+        self.ampDataFilename.setText("ampData/slowScan.json")
 
         # Make handles for widgets in the UI
         #self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
@@ -317,6 +319,10 @@ class MainWindow(qtw.QMainWindow):
         self.ampDataFilename.returnPressed.connect(self.ampDataFilenameEnter)
         for reg in self.registers:
             getattr(self, f'le_resfreq_val_{reg}').returnPressed.connect(self._resFreqUserInputText)
+        self.resFitPreDetrend.stateChanged.connect(self.resFitParameterUpdate)
+        self.resFitBkgPoly.returnPressed.connect(self.resFitParameterUpdate)
+        self.resFitWidth.returnPressed.connect(self.resFitParameterUpdate)
+        self.resFitProminence.returnPressed.connect(self.resFitParameterUpdate)
 
         # Configure/label plots
         self.chanViewMain = 0  # which channel to show large for V(t) data
@@ -366,7 +372,10 @@ class MainWindow(qtw.QMainWindow):
         ###########################################
         # Set up multithreading
         self.threadPool = qtc.QThreadPool()
+        self.threadPool.setMaxThreadCount(32)
         logging.info("Multithreading with maximum %d threads" %
+              self.threadPool.maxThreadCount())
+        print("Multithreading with maximum %d threads" %
               self.threadPool.maxThreadCount())
 
         ###########################################
@@ -439,6 +448,19 @@ class MainWindow(qtw.QMainWindow):
         self.nChansReceived = 0
         self.stimPeriodMax = None
         # KLUGE: end
+
+        # Set A(f) peak detection parameters
+        self.resFitParams = {}
+        self.resFitParams['preprocess'] = {'detrend':True}  # detrend: subtract a line from A(f) before processing?
+        self.resFitParams['find_peaks'] = {'bkgPoly':2, 'width':5, 'prominence':(5.0,None)}
+        # FIXME: replace this with a Model/View approach
+        self.resFitPreDetrend.blockSignals(True)
+        self.resFitPreDetrend.setChecked(self.resFitParams['preprocess']['detrend'])
+        self.resFitPreDetrend.blockSignals(False)
+        self.resFitBkgPoly.setText(str(self.resFitParams['find_peaks']['bkgPoly']))
+        print(f"str(self.resFitParams['find_peaks']['width']) = {str(self.resFitParams['find_peaks']['width'])}")
+        self.resFitWidth.setText(str(self.resFitParams['find_peaks']['width']))
+        self.resFitProminence.setText(str(self.resFitParams['find_peaks']['prominence']))
         
         # Start listening for UDP data in a Worker thread
         self.udpListen()
@@ -795,7 +817,46 @@ class MainWindow(qtw.QMainWindow):
     #def quitAll(self):
 
 
-        
+    @pyqtSlot()
+    def resFitParameterUpdate(self):
+
+        # Should we detrend the A(f) data first?
+        self.resFitParams['preprocess']['detrend'] = self.resFitPreDetrend.isChecked()
+
+        # polynomial order for background subtraction (after integrating)
+        try:
+            print(f'self.resFitBkgPoly.text() = {self.resFitBkgPoly.text()}')
+            self.resFitParams['find_peaks']['bkgPoly'] = int(self.resFitBkgPoly.text())
+        except:
+            print('failed')
+            self.resFitParams['find_peaks']['bkgPoly'] = 2
+
+        # peak width parameter
+        print(f'self.resFitWidth.text() = {self.resFitWidth.text()}')
+        entryStr = self.resFitWidth.text().strip()
+        toks = [x.strip() for x in entryStr.split(",")]
+        self.resFitParams['find_peaks']['width'] = [None, None]
+        for ii, tok in enumerate(toks):
+            try:
+                self.resFitParams['find_peaks']['width'][ii] = int(tok)
+            except:
+                print(f"invalid entry resFit width: {tok} in {entryStr}")
+
+        # prominence parameter
+        print(f'self.resFitProminence.text() = {self.resFitProminence.text()}')
+        entryStr = self.resFitProminence.text().strip()
+        toks = [x.strip() for x in entryStr.split(",")]
+        self.resFitParams['find_peaks']['prominence'] = [None, None]
+        for ii, tok in enumerate(toks):
+            try:
+                self.resFitParams['find_peaks']['prominence'][ii] = int(tok)
+            except:
+                print(f"invalid entry resFit prominence: {tok} in {entryStr}")
+
+        # Print params and refit
+        print(f'self.resFitParams = {self.resFitParams}')
+        self.postScanAnalysis()
+
     @pyqtSlot()
     def configFileNameEnter(self):
         self._loadConfigFile()
@@ -827,11 +888,21 @@ class MainWindow(qtw.QMainWindow):
         # print(self.sender())
 
         # FIXME: need to know if user dragged line on the 'raw' plot or on the 'proc' plot
-        
+        rawLines = [x for v in self.resFitLines['raw'].values() for x in v]
+        procLines = [x for v in self.resFitLines['proc'].values() for x in v]
+        if self.sender() in rawLines:
+            source = 'raw'
+        elif self.sender() in procLines:
+            source = 'proc'
+        else:
+            print("ERROR: unknown source of signal: {self.sender}")
+            return
+        print("_f0LineMoved(): sender is from {source}")
+            
         # loop over all channels. Get locations of lines
         for reg in self.registers:
             self.resonantFreqs[reg.value] = []  # start w/ empty list
-            for infLine in self.resFitLines['raw'][reg]: # re-create resFreq list
+            for infLine in self.resFitLines[source][reg]: # re-create resFreq list
                 self.resonantFreqs[reg.value].append(infLine.value())
         
         # update GUI
@@ -1304,36 +1375,50 @@ class MainWindow(qtw.QMainWindow):
                 self.postScanAnalysis()
 
 
-    def baseline(self, x, y):
-        # get rid of polynomial background...
-        import numpy.polynomial.polynomial as poly
-        polyDeg = 2
-        pCoeffs = poly.polyfit(x, y, polyDeg)
-        return poly.polyval(x, pCoeffs)
-        
     def postScanAnalysis(self):
         # get A(f) data for each channel
         # run peakfinding
         # overlay f0 locations on A(f) plots
         # loop over each register
+
         print("postScanAnalysis():")
         for reg in self.registers:
-            print(f'reg       = {reg}')
-            print(f'reg.value = {reg.value}')
+            #print(f'reg       = {reg}')
+            #print(f'reg.value = {reg.value}')
             if len(self.ampData[reg]['freq']) == 0:  # maybe a register has no data?
                 continue
             #peakIds, _ = find_peaks(np.cumsum(self.ampData[reg]['ampl']))
 
+            # Make a copy of the data to work with
+            dataToFit = self.ampData[reg]['ampl'][:]
+            
+            # subtract a line first?
+            if self.resFitParams['preprocess']['detrend']:
+                # remove linear fit
+                print("detrending")
+                dataToFit -= dwa.baseline(self.ampData[reg]['freq'], dataToFit, polyDeg=1)
+                # FIXME: REMOVE!!!!
+                #print(f"\n\n reg = {reg}")
+                #print(dataToFit)
+                #self.curves['amplchan'][reg].setData(self.ampData[reg]['freq'], dataToFit)
+                #if (reg == 0):
+                #    self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], dataToFit)
+            
             # Cumulative sum, remove baseline, plot, fit peaks, annotate plot
-            cumsum = np.cumsum(self.ampData[reg]['ampl'])
-            cumsum -= self.baseline(self.ampData[reg]['freq'], cumsum)
+            # Vertical shift to start the y-values at zero
+            dataToFit -= np.min(dataToFit)
+            dataToFit  = scipy.integrate.cumtrapz(dataToFit, x=self.ampData[reg]['freq'], initial=0)
+            dataToFit -= dwa.baseline(self.ampData[reg]['freq'], dataToFit,
+                                      polyDeg=self.resFitParams['find_peaks']['bkgPoly'])
+
             # plot fxn that is used for peakfinding
-            self.curves['resProcFit'][reg].setData(self.ampData[reg]['freq'], cumsum)
+            self.curves['resProcFit'][reg].setData(self.ampData[reg]['freq'], dataToFit)
             
             # FIXME: set width based on frequency, not hard-coded number of samples!
-            peakIds, _ = find_peaks(cumsum, prominence=(5.0, None), width=5)
-            print(f'peakIds = {peakIds}')
-
+            peakIds, _ = find_peaks(dataToFit,
+                                    prominence=self.resFitParams['find_peaks']['prominence'],
+                                    width=self.resFitParams['find_peaks']['width']
+                                    )
             # FIXME: could add interpolation for better precision
 
             # update the label:

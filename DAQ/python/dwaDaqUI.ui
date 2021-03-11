@@ -222,7 +222,7 @@
                    <item row="3" column="1">
                     <widget class="QLabel" name="stimTime_val">
                      <property name="text">
-                      <string>.....</string>
+                      <string/>
                      </property>
                     </widget>
                    </item>
@@ -600,13 +600,6 @@
                <widget class="QWidget" name="widget_6" native="true">
                 <layout class="QVBoxLayout" name="verticalLayout_14">
                  <item>
-                  <widget class="QPushButton" name="pushButton_2">
-                   <property name="text">
-                    <string>Tune fit params</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
                   <layout class="QFormLayout" name="formLayout_6">
                    <property name="labelAlignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -710,6 +703,57 @@
                    </item>
                   </layout>
                  </item>
+                 <item>
+                  <widget class="QLabel" name="label_9">
+                   <property name="text">
+                    <string>Tune Fit Parameters (find_peaks)</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QFormLayout" name="formLayout_5">
+                   <property name="horizontalSpacing">
+                    <number>6</number>
+                   </property>
+                   <item row="2" column="0">
+                    <widget class="QLabel" name="label_8">
+                     <property name="text">
+                      <string>Baseline poly</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="QLineEdit" name="resFitBkgPoly"/>
+                   </item>
+                   <item row="3" column="0">
+                    <widget class="QLabel" name="label_10">
+                     <property name="text">
+                      <string>Width</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="1">
+                    <widget class="QLineEdit" name="resFitWidth"/>
+                   </item>
+                   <item row="4" column="1">
+                    <widget class="QLineEdit" name="resFitProminence"/>
+                   </item>
+                   <item row="4" column="0">
+                    <widget class="QLabel" name="label_11">
+                     <property name="text">
+                      <string>Prominence</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QCheckBox" name="resFitPreDetrend">
+                     <property name="text">
+                      <string>Detrend A(f)</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
                 </layout>
                </widget>
               </item>
@@ -795,7 +839,7 @@
            </item>
            <item>
             <widget class="QWidget" name="widget_4" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_7" stretch=""/>
+             <layout class="QHBoxLayout" name="horizontalLayout_7"/>
             </widget>
            </item>
           </layout>
