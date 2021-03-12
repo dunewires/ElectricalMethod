@@ -243,24 +243,40 @@ def sendDummyDataNewHeaders(sock):
     #fileroot = 'data/fromSebastien_20010101/'
     #scanId = '20210125T010957'
 
-    #fileroot = 'data/fromSebastien_quickScan/'
-    #scanId = '20210224T212726'
-    fileroot = 'data/fromSebastien_slowScan/'
-    scanId = '20210224T205700'
+    fileroot = 'data/fromSebastien_quickScan/'
+    scanId = '20210224T212726'
+    endFrame = False
+    #fileroot = 'data/fromSebastien_slowScan/'
+    #scanId = '20210224T205700'
+    #fileroot = 'data/fromSebastien_60Hz/'
+    #scanId = '20210302T190358'
 
+    #fileroot = 'data/dummy_endOfRunFrame/'
+    #scanId   = '20210224T205700'
+    #fileroot = 'data/dummy_endOfRunFrameShort/'
+    #scanId   = '20210302T190358'
+    #endFrame = True
+
+    
     nChan = 8
     wireDataFilenames = [ f'{scanId}_{nn:02d}.txt' for nn in range(nChan) ]
     wireDataFilenames = [ os.path.join(fileroot, ff) for ff in wireDataFilenames ]
     runHeaderFile = os.path.join(fileroot, f'{scanId}_FF.txt')
+    if endFrame == True:
+        runEndFile = os.path.join(fileroot, f'{scanId}_FF_END.txt')
 
     print("Replaying data from the following files: ")
     print(f"  runHeaderFile = {runHeaderFile}")
     for ff in wireDataFilenames:
         print(f"                  {ff}")
+    if endFrame == True:
+        print(f"  runEndFile = {runHeaderFile}")
 
     # Open/parse all files in memory
     udpData = {}
     udpData['FF'] = getAllLines(runHeaderFile)
+    if endFrame == True:
+        udpData['FF_END'] = getAllLines(runEndFile)
 
     for chan in range(nChan):
         # Read the full file into memory
@@ -297,6 +313,13 @@ def sendDummyDataNewHeaders(sock):
             
         time.sleep(0.07)  # pause after all channels send a single freq.
 
+    # Transmit end of run file
+    if endFrame == True:
+        time.sleep(0.07)
+        dataToSend = b''.join(udpData['FF_END'])
+        bytesToSend = binascii.unhexlify(dataToSend)  # convert string to bytes.  e.g. dataToSend is 'CAFE805E' and bytesToSend is b'\xca\xfe\x80^'
+        sock.sendto(bytesToSend, address)
+        
 #sendDummyDataSine(sock)
 #sendDummyDataDwa(sock)
 #sendDummyDataDwaMultiregister(sock)
