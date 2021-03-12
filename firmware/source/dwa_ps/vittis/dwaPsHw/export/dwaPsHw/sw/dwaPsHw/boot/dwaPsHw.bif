@@ -1,0 +1,8 @@
+/*dwaPsHw*/
+the_ROM_image:
+{
+  [bootloader]<dwaPsHw/boot/fsbl.elf>
+   <bitstream> 
+  <elf,ps7_cortexa9_0>
+  <elf,ps7_cortexa9_0>
+}

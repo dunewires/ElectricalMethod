@@ -2,6 +2,10 @@
 <?scdStore version="2"?><scannerInfo id="org.eclipse.cdt.make.core.discoveredScannerInfo">
 <instance id="xilinx.gnu.armv7.exe.debug.65501756;xilinx.gnu.armv7.exe.debug.65501756.">
 <collector id="org.eclipse.cdt.make.core.PerProjectSICollector">
+<includePath path="/bulkDrive/tools/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/7.3.1/include"/>
+<includePath path="/bulkDrive/tools/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/7.3.1/include-fixed"/>
+<includePath path="/bulkDrive/tools/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/include"/>
+<includePath path="/bulkDrive/tools/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../arm-none-eabi/libc/usr/include"/>
 <includePath path="/home/nate/opt/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/7.3.1/include"/>
 <includePath path="/home/nate/opt/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/7.3.1/include-fixed"/>
 <includePath path="/home/nate/opt/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/include"/>
@@ -836,6 +840,10 @@
 </instance>
 <instance id="xilinx.gnu.armv7.exe.debug.65501756;xilinx.gnu.armv7.exe.debug.65501756.;xilinx.gnu.armv7.c.toolchain.compiler.debug.658516914;xilinx.gnu.armv7.c.compiler.input.1443710744">
 <collector id="org.eclipse.cdt.make.core.PerProjectSICollector">
+<includePath path="/bulkDrive/tools/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/7.3.1/include"/>
+<includePath path="/bulkDrive/tools/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/7.3.1/include-fixed"/>
+<includePath path="/bulkDrive/tools/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/include"/>
+<includePath path="/bulkDrive/tools/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../arm-none-eabi/libc/usr/include"/>
 <includePath path="/home/nate/opt/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/7.3.1/include"/>
 <includePath path="/home/nate/opt/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/7.3.1/include-fixed"/>
 <includePath path="/home/nate/opt/Xilinx/SDK/2018.3/gnu/aarch32/lin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/include"/>

@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>972</width>
-    <height>724</height>
+    <width>1313</width>
+    <height>718</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>DWA: DUNE Wire Analyzer</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -20,11 +20,24 @@
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QWidget" name="controls" native="true">
-         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0,10">
           <item>
-           <widget class="QPushButton" name="btnStart">
+           <widget class="QLabel" name="label_21">
             <property name="text">
-             <string>Start</string>
+             <string>DWA Status</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignHCenter|Qt::AlignTop</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Run Status</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignBottom|Qt::AlignHCenter</set>
             </property>
            </widget>
           </item>
@@ -99,330 +112,591 @@
               </property>
              </widget>
             </item>
-            <item row="5" column="0">
-             <widget class="QLabel" name="label">
-              <property name="text">
-               <string>CTRL-C</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="1">
-             <widget class="QLabel" name="label_4">
-              <property name="text">
-               <string>Config</string>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="0">
-             <widget class="QLabel" name="label_6">
-              <property name="text">
-               <string>CTRL-L</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="1">
-             <widget class="QLabel" name="label_9">
-              <property name="text">
-               <string>Log</string>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="0">
-             <widget class="QLabel" name="label_8">
-              <property name="text">
-               <string>CTRL-F</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="1">
-             <widget class="QLabel" name="label_11">
-              <property name="text">
-               <string>A(f) grid</string>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="0">
-             <widget class="QLabel" name="label_7">
-              <property name="text">
-               <string>CTRL-V</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="1">
-             <widget class="QLabel" name="label_10">
-              <property name="text">
-               <string>V(t) grid</string>
-              </property>
-             </widget>
-            </item>
-            <item row="9" column="0">
-             <widget class="QLabel" name="label_12">
-              <property name="text">
-               <string>CTRL-#</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="9" column="1">
-             <widget class="QLabel" name="label_13">
-              <property name="text">
-               <string>A(f) chan</string>
-              </property>
-             </widget>
-            </item>
-            <item row="10" column="0">
-             <widget class="QLabel" name="label_14">
-              <property name="text">
-               <string>ALT-#</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="10" column="1">
-             <widget class="QLabel" name="label_15">
-              <property name="text">
-               <string>V(t) chan</string>
-              </property>
-             </widget>
-            </item>
-            <item row="11" column="0">
-             <widget class="QLabel" name="label_16">
-              <property name="text">
-               <string>CTRL-T</string>
-              </property>
-             </widget>
-            </item>
-            <item row="11" column="1">
-             <widget class="QLabel" name="label_17">
-              <property name="text">
-               <string>Tensions</string>
-              </property>
-             </widget>
-            </item>
            </layout>
           </item>
          </layout>
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+        <widget class="QTabWidget" name="tabWidgetStages">
+         <property name="tabPosition">
+          <enum>QTabWidget::North</enum>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
+         <property name="tabShape">
+          <enum>QTabWidget::Triangular</enum>
          </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QStackedWidget" name="stackedWidget">
          <property name="currentIndex">
-          <number>6</number>
+          <number>0</number>
          </property>
-         <widget class="QWidget" name="page_config">
-          <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,8">
+         <widget class="QWidget" name="tabStimulus">
+          <attribute name="title">
+           <string>Stimulus</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout">
            <item>
-            <layout class="QFormLayout" name="formLayout_2">
-             <property name="labelAlignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <widget class="QTabWidget" name="tabWidget">
+             <property name="tabPosition">
+              <enum>QTabWidget::North</enum>
              </property>
-             <property name="formAlignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+             <property name="currentIndex">
+              <number>0</number>
              </property>
-             <item row="0" column="0">
-              <widget class="QLabel" name="freqMin_label">
-               <property name="text">
-                <string>Freq Min [Hz]</string>
-               </property>
-              </widget>
+             <widget class="QWidget" name="tab_config">
+              <attribute name="title">
+               <string>Config</string>
+              </attribute>
+              <layout class="QHBoxLayout" name="horizontalLayout_6">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_13">
+                 <item>
+                  <widget class="QPushButton" name="btnStart">
+                   <property name="text">
+                    <string>Start</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QFormLayout" name="formLayout_2">
+                   <property name="labelAlignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                   <property name="formAlignment">
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                   </property>
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="freqMin_label">
+                     <property name="text">
+                      <string>Freq Min [Hz]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QLabel" name="freqMin_val">
+                     <property name="text">
+                      <string>.....</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QLabel" name="freqMax_label">
+                     <property name="text">
+                      <string>Freq Max [Hz]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QLabel" name="freqMax_val">
+                     <property name="text">
+                      <string>.....</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="0">
+                    <widget class="QLabel" name="freqStep_label">
+                     <property name="text">
+                      <string>Freq Step [Hz]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="QLabel" name="freqStep_val">
+                     <property name="text">
+                      <string>.....</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="0">
+                    <widget class="QLabel" name="stimTime_label">
+                     <property name="text">
+                      <string>Stim Time [?]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="1">
+                    <widget class="QLabel" name="stimTime_val">
+                     <property name="text">
+                      <string>.....</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="4" column="0">
+                    <widget class="QLabel" name="cycPerFreq_label">
+                     <property name="text">
+                      <string>Cycles Per Freq [dec]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="4" column="1">
+                    <widget class="QLabel" name="cycPerFreq_val">
+                     <property name="text">
+                      <string>.....</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="5" column="0">
+                    <widget class="QLabel" name="sampPerCyc_label">
+                     <property name="text">
+                      <string>Samples per cycle [dec]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="5" column="1">
+                    <widget class="QLabel" name="sampPerCyc_val">
+                     <property name="text">
+                      <string>.....</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="6" column="0">
+                    <widget class="QLabel" name="clientIP_label">
+                     <property name="text">
+                      <string>Client IP</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="6" column="1">
+                    <widget class="QLabel" name="clientIP_val">
+                     <property name="text">
+                      <string>.....</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QFormLayout" name="formLayout">
+                 <property name="fieldGrowthPolicy">
+                  <enum>QFormLayout::ExpandingFieldsGrow</enum>
+                 </property>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="configFileName_label">
+                   <property name="text">
+                    <string>Config File:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QLineEdit" name="configFileName">
+                   <property name="autoFillBackground">
+                    <bool>false</bool>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="placeholderText">
+                    <string>Config file name</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="omitComments_label">
+                   <property name="text">
+                    <string>Omit comments:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QCheckBox" name="omitComments_cb">
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                   <property name="tristate">
+                    <bool>false</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
+                  <widget class="QLabel" name="configFileContents_label">
+                   <property name="text">
+                    <string>Config file contents:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1">
+                  <widget class="QPlainTextEdit" name="configFileContents"/>
+                 </item>
+                 <item row="5" column="0">
+                  <widget class="QLabel" name="logFilename_label">
+                   <property name="text">
+                    <string>Log file:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="1">
+                  <widget class="QLabel" name="logFilename_val">
+                   <property name="text">
+                    <string>.....</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_timeseriesGrid">
+              <attribute name="title">
+               <string>V(t) grid</string>
+              </attribute>
+              <layout class="QGridLayout" name="gridLayout_2">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_3">
+                 <property name="text">
+                  <string>All V(t) data</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <layout class="QGridLayout" name="gridOfPlots">
+                 <item row="0" column="0">
+                  <widget class="PlotWidget" name="pw_grid_0"/>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="PlotWidget" name="pw_grid_1"/>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="PlotWidget" name="pw_grid_2"/>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="PlotWidget" name="pw_grid_3"/>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="PlotWidget" name="pw_grid_4"/>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="PlotWidget" name="pw_grid_5"/>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="PlotWidget" name="pw_grid_6"/>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="PlotWidget" name="pw_grid_7"/>
+                 </item>
+                 <item row="2" column="2">
+                  <widget class="QPlainTextEdit" name="outputText"/>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_timeseriesChan">
+              <attribute name="title">
+               <string>V(t) chan</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_7" stretch="1,10,40">
+               <item>
+                <widget class="QLabel" name="label_2">
+                 <property name="text">
+                  <string>V(t) for single channel</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0,0,0,0,0,0">
+                 <item>
+                  <widget class="PlotWidget" name="pw_chan_0"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_chan_1"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_chan_2"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_chan_3"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_chan_4"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_chan_5"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_chan_6"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_chan_7"/>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_6" stretch="5">
+                 <item>
+                  <widget class="PlotWidget" name="pw_chan_main"/>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_amplitudeGrid">
+              <attribute name="title">
+               <string>A(f) grid</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_9">
+               <item>
+                <widget class="QWidget" name="widget" native="true">
+                 <layout class="QGridLayout" name="gridLayout_5">
+                  <item row="0" column="0">
+                   <layout class="QGridLayout" name="gridLayout">
+                    <item row="0" column="0">
+                     <widget class="PlotWidget" name="pw_amplgrid_0"/>
+                    </item>
+                    <item row="0" column="2">
+                     <widget class="PlotWidget" name="pw_amplgrid_2"/>
+                    </item>
+                    <item row="0" column="1">
+                     <widget class="PlotWidget" name="pw_amplgrid_1"/>
+                    </item>
+                    <item row="1" column="0">
+                     <widget class="PlotWidget" name="pw_amplgrid_3"/>
+                    </item>
+                    <item row="1" column="2">
+                     <widget class="PlotWidget" name="pw_amplgrid_5"/>
+                    </item>
+                    <item row="1" column="1">
+                     <widget class="PlotWidget" name="pw_amplgrid_4"/>
+                    </item>
+                    <item row="2" column="0">
+                     <widget class="PlotWidget" name="pw_amplgrid_6"/>
+                    </item>
+                    <item row="2" column="1">
+                     <widget class="PlotWidget" name="pw_amplgrid_7"/>
+                    </item>
+                    <item row="2" column="2">
+                     <widget class="PlotWidget" name="pw_amplgrid_all"/>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_amplitudeChan">
+              <attribute name="title">
+               <string>A(f) chan</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_10" stretch="1,5">
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_3">
+                 <item>
+                  <widget class="PlotWidget" name="pw_amplchan_0"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_amplchan_1"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_amplchan_2"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_amplchan_3"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_amplchan_4"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_amplchan_5"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_amplchan_6"/>
+                 </item>
+                 <item>
+                  <widget class="PlotWidget" name="pw_amplchan_7"/>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <widget class="PlotWidget" name="pw_amplchan_main"/>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabResonance">
+          <attribute name="title">
+           <string>Resonance</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_8">
+           <item>
+            <layout class="QGridLayout" name="gridOfFits_2">
+             <item row="0" column="2">
+              <widget class="PlotWidget" name="pw_resfreqfit_2"/>
+             </item>
+             <item row="1" column="0">
+              <widget class="PlotWidget" name="pw_resfreqfit_3"/>
+             </item>
+             <item row="1" column="1">
+              <widget class="PlotWidget" name="pw_resfreqfit_4"/>
              </item>
              <item row="0" column="1">
-              <widget class="QLabel" name="freqMin_val">
-               <property name="text">
-                <string>.....</string>
-               </property>
-              </widget>
+              <widget class="PlotWidget" name="pw_resfreqfit_1"/>
              </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="freqMax_label">
-               <property name="text">
-                <string>Freq Max [Hz]</string>
-               </property>
-              </widget>
+             <item row="1" column="2">
+              <widget class="PlotWidget" name="pw_resfreqfit_5"/>
              </item>
-             <item row="1" column="1">
-              <widget class="QLabel" name="freqMax_val">
-               <property name="text">
-                <string>.....</string>
-               </property>
-              </widget>
+             <item row="0" column="0">
+              <widget class="PlotWidget" name="pw_resfreqfit_0"/>
              </item>
              <item row="2" column="0">
-              <widget class="QLabel" name="freqStep_label">
-               <property name="text">
-                <string>Freq Step [Hz]</string>
-               </property>
-              </widget>
+              <widget class="PlotWidget" name="pw_resfreqfit_6"/>
              </item>
              <item row="2" column="1">
-              <widget class="QLabel" name="freqStep_val">
-               <property name="text">
-                <string>.....</string>
-               </property>
-              </widget>
+              <widget class="PlotWidget" name="pw_resfreqfit_7"/>
              </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="stimTime_label">
-               <property name="text">
-                <string>Stim Time [?]</string>
+             <item row="2" column="2">
+              <layout class="QFormLayout" name="formLayout_6">
+               <property name="labelAlignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QLabel" name="stimTime_val">
-               <property name="text">
-                <string>.....</string>
+               <property name="formAlignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
                </property>
-              </widget>
-             </item>
-             <item row="4" column="0">
-              <widget class="QLabel" name="cycPerFreq_label">
-               <property name="text">
-                <string>Cycles Per Freq [dec]</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="1">
-              <widget class="QLabel" name="cycPerFreq_val">
-               <property name="text">
-                <string>.....</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="0">
-              <widget class="QLabel" name="sampPerCyc_label">
-               <property name="text">
-                <string>Samples per cycle [dec]</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="1">
-              <widget class="QLabel" name="sampPerCyc_val">
-               <property name="text">
-                <string>.....</string>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="0">
-              <widget class="QLabel" name="clientIP_label">
-               <property name="text">
-                <string>Client IP</string>
-               </property>
-              </widget>
-             </item>
-             <item row="6" column="1">
-              <widget class="QLabel" name="clientIP_val">
-               <property name="text">
-                <string>.....</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QFormLayout" name="formLayout">
-             <property name="fieldGrowthPolicy">
-              <enum>QFormLayout::ExpandingFieldsGrow</enum>
-             </property>
-             <item row="1" column="0">
-              <widget class="QLabel" name="configFileName_label">
-               <property name="text">
-                <string>Config File:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLineEdit" name="configFileName">
-               <property name="autoFillBackground">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="placeholderText">
-                <string>Config file name</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="0">
-              <widget class="QLabel" name="configFileContents_label">
-               <property name="text">
-                <string>Config file contents:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="1">
-              <widget class="QPlainTextEdit" name="configFileContents"/>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="omitComments_label">
-               <property name="text">
-                <string>Omit comments:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QCheckBox" name="omitComments_cb">
-               <property name="text">
-                <string/>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-               <property name="tristate">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="0">
-              <widget class="QLabel" name="logFilename_label">
-               <property name="text">
-                <string>Log file:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="1">
-              <widget class="QLabel" name="logFilename_val">
-               <property name="text">
-                <string>.....</string>
-               </property>
-              </widget>
+               <item row="0" column="0">
+                <widget class="QLabel" name="lab_resfreq_0">
+                 <property name="text">
+                  <string>0:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_0">
+                 <property name="text">
+                  <string>f0_0</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="lab_resfreq_1">
+                 <property name="text">
+                  <string>1:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_1">
+                 <property name="text">
+                  <string>f0_1</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="lab_resfreq_2">
+                 <property name="text">
+                  <string>2:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="lab_resfreq_3">
+                 <property name="text">
+                  <string>3:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="lab_resfreq_4">
+                 <property name="text">
+                  <string>4:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="0">
+                <widget class="QLabel" name="lab_resfreq_5">
+                 <property name="text">
+                  <string>5:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="0">
+                <widget class="QLabel" name="lab_resfreq_6">
+                 <property name="text">
+                  <string>6:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="7" column="0">
+                <widget class="QLabel" name="lab_resfreq_7">
+                 <property name="text">
+                  <string>7:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_2">
+                 <property name="text">
+                  <string>f0_2</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_3">
+                 <property name="text">
+                  <string>f0_3</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_4">
+                 <property name="text">
+                  <string>f0_4</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_5">
+                 <property name="text">
+                  <string>f0_5</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_6">
+                 <property name="text">
+                  <string>f0_6</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="7" column="1">
+                <widget class="QLabel" name="lab_resfreq_val_7">
+                 <property name="text">
+                  <string>f0_7</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="page_logging">
-          <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,15">
+         <widget class="QWidget" name="tabTension">
+          <attribute name="title">
+           <string>Tensions</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Wire Tension Data Plots (replace these with a pyqtgraph GraphicsLayoutWidget)</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="PlotWidget" name="pw_tensionsPerWire"/>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabLog">
+          <attribute name="title">
+           <string>Log</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_11">
            <item>
             <layout class="QFormLayout" name="formLayout_4">
              <property name="fieldGrowthPolicy">
@@ -452,211 +726,33 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="page_timeseriesGrid">
-          <layout class="QGridLayout" name="gridLayout_3">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_3">
-             <property name="text">
-              <string>All V(t) data</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <layout class="QGridLayout" name="gridOfPlots">
-             <item row="0" column="0">
-              <widget class="PlotWidget" name="pw_grid_0"/>
-             </item>
-             <item row="0" column="1">
-              <widget class="PlotWidget" name="pw_grid_1"/>
-             </item>
-             <item row="0" column="2">
-              <widget class="PlotWidget" name="pw_grid_2"/>
-             </item>
-             <item row="1" column="0">
-              <widget class="PlotWidget" name="pw_grid_3"/>
-             </item>
-             <item row="1" column="1">
-              <widget class="PlotWidget" name="pw_grid_4"/>
-             </item>
-             <item row="1" column="2">
-              <widget class="PlotWidget" name="pw_grid_5"/>
-             </item>
-             <item row="2" column="0">
-              <widget class="PlotWidget" name="pw_grid_6"/>
-             </item>
-             <item row="2" column="1">
-              <widget class="PlotWidget" name="pw_grid_7"/>
-             </item>
-             <item row="2" column="2">
-              <widget class="QPlainTextEdit" name="outputText"/>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="page_timeseriesChan">
-          <layout class="QGridLayout" name="gridLayout_4">
-           <item row="1" column="0">
-            <layout class="QVBoxLayout" name="verticalLayout_6" stretch="1,5">
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0,0,0,0,0,0">
-               <item>
-                <widget class="PlotWidget" name="pw_chan_0"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_chan_1"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_chan_2"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_chan_3"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_chan_4"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_chan_5"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_chan_6"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_chan_7"/>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <widget class="PlotWidget" name="pw_chan_main"/>
-             </item>
-            </layout>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>V(t) for single channel</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="page_amplitudeGrid">
-          <layout class="QGridLayout" name="gridLayout_6">
-           <item row="0" column="0">
-            <widget class="QWidget" name="widget" native="true">
-             <layout class="QGridLayout" name="gridLayout_5">
-              <item row="0" column="0">
-               <layout class="QGridLayout" name="gridLayout">
-                <item row="0" column="0">
-                 <widget class="PlotWidget" name="pw_amplgrid_0"/>
-                </item>
-                <item row="0" column="2">
-                 <widget class="PlotWidget" name="pw_amplgrid_2"/>
-                </item>
-                <item row="0" column="1">
-                 <widget class="PlotWidget" name="pw_amplgrid_1"/>
-                </item>
-                <item row="1" column="0">
-                 <widget class="PlotWidget" name="pw_amplgrid_3"/>
-                </item>
-                <item row="1" column="2">
-                 <widget class="PlotWidget" name="pw_amplgrid_5"/>
-                </item>
-                <item row="1" column="1">
-                 <widget class="PlotWidget" name="pw_amplgrid_4"/>
-                </item>
-                <item row="2" column="0">
-                 <widget class="PlotWidget" name="pw_amplgrid_6"/>
-                </item>
-                <item row="2" column="1">
-                 <widget class="PlotWidget" name="pw_amplgrid_7"/>
-                </item>
-                <item row="2" column="2">
-                 <widget class="PlotWidget" name="pw_amplgrid_all"/>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="page_amplitudeChan">
-          <layout class="QGridLayout" name="gridLayout_7">
-           <item row="1" column="1">
-            <layout class="QVBoxLayout" name="verticalLayout" stretch="1,5">
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_3">
-               <item>
-                <widget class="PlotWidget" name="pw_amplchan_0"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_amplchan_1"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_amplchan_2"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_amplchan_3"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_amplchan_4"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_amplchan_5"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_amplchan_6"/>
-               </item>
-               <item>
-                <widget class="PlotWidget" name="pw_amplchan_7"/>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <widget class="PlotWidget" name="pw_amplchan_main"/>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="page_tensions">
-          <widget class="QWidget" name="">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>10</y>
-             <width>731</width>
-             <height>621</height>
-            </rect>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_8">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_5">
-              <property name="text">
-               <string>Wire Tension Data Plots</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="PlotWidget" name="pw_tensionsPerWire"/>
-            </item>
-           </layout>
-          </widget>
-         </widget>
         </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
     </item>
    </layout>
   </widget>
+  <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>972</width>
+     <width>1313</width>
      <height>22</height>
     </rect>
    </property>
@@ -676,7 +772,6 @@
    <addaction name="menuFIle"/>
    <addaction name="menuViews"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <action name="actionPage1">
    <property name="text">
     <string>Page1</string>

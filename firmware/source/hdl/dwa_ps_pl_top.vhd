@@ -23,6 +23,7 @@ entity dwa_ps_pl_top is
     port (
         --DWA
         led : out std_logic_vector(3 downto 0);
+        pButton : in std_logic_vector(3 downto 0);
 
         acStimX200_obuf : out std_logic := '0';
 
@@ -35,13 +36,22 @@ entity dwa_ps_pl_top is
         DAC_CLK   : out std_logic := '0';
 
         dpotSdi    : out std_logic := '0';
-        dpotSdo    : in std_logic := '0';
+        dpotSdo    : in  std_logic := '0';
         dpotPr_b   : out std_logic := '0';
         dpotCs_b   : out std_logic := '0';
         dpotSck    : out std_logic := '0';
         dpotShdn_b : out std_logic := '0';
 
-        CoilDrive : out std_logic_vector(31 downto 0) := (others => '0');
+        CD_Din    : out std_logic                    := '0';
+        CD_Dout   : in  std_logic_vector(3 downto 0) := (others => '0');
+        CD_SCLR_b : out std_logic_vector(3 downto 0) := (others => '0');
+        CD_SCK    : out std_logic_vector(3 downto 0) := (others => '0');
+        CD_RCK    : out std_logic_vector(3 downto 0) := (others => '0');
+        CD_G_b    : out std_logic_vector(3 downto 0) := (others => '0');
+
+        SNUM_SDA : inout  std_logic                    := '0';
+        SNUM_SCL : out std_logic                    := '0';
+        SNUM_A   : out std_logic_vector(2 downto 0) := (others => '0');
 
         adcCnv          : out std_logic                    := '0';
         adcSck_p        : out std_logic                    := '0';
@@ -133,7 +143,7 @@ architecture STRUCTURE of dwa_ps_pl_top is
     component dwa_registers_v1_0_S00_AXI is
         generic (
             C_S_AXI_DATA_WIDTH : integer := 32;
-            C_S_AXI_ADDR_WIDTH : integer := 7
+            C_S_AXI_ADDR_WIDTH : integer := 8
         );
         port (
             S_AXI_ACLK    : in  std_logic;
@@ -159,31 +169,50 @@ architecture STRUCTURE of dwa_ps_pl_top is
             S_AXI_RREADY  : in  std_logic
         );
     end component dwa_registers_v1_0_S00_AXI;
+    component clk_dwa_pl
+        port
+        (   -- Clock in ports
+            -- Clock out ports
+            clk_out1 : out std_logic;
+            clk_out2 : out std_logic;
+            clk_out3 : out std_logic;
+            -- Status and control signals
+            reset   : in  std_logic;
+            locked  : out std_logic;
+            clk_in1 : in  std_logic
+        );
+    end component;
+
+    -- COMP_TAG_END ------ End COMPONENT Declaration ------------
+    -- The following code must appear in the VHDL architecture
+    -- body. Substitute your own instance name and net names.
+    ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
 
 
 
-    signal M00_AXI_0_awaddr     : STD_LOGIC_VECTOR ( 31 downto 0 );
-    signal M00_AXI_0_awprot     : STD_LOGIC_VECTOR ( 2 downto 0 );
-    signal M00_AXI_0_awvalid    : STD_LOGIC;
-    signal M00_AXI_0_awready    : STD_LOGIC;
-    signal M00_AXI_0_wdata      : STD_LOGIC_VECTOR ( 31 downto 0 );
-    signal M00_AXI_0_wstrb      : STD_LOGIC_VECTOR ( 3 downto 0 );
-    signal M00_AXI_0_wvalid     : STD_LOGIC;
-    signal M00_AXI_0_wready     : STD_LOGIC;
-    signal M00_AXI_0_bresp      : STD_LOGIC_VECTOR ( 1 downto 0 );
-    signal M00_AXI_0_bvalid     : STD_LOGIC;
-    signal M00_AXI_0_bready     : STD_LOGIC;
-    signal M00_AXI_0_araddr     : STD_LOGIC_VECTOR ( 31 downto 0 );
-    signal M00_AXI_0_arprot     : STD_LOGIC_VECTOR ( 2 downto 0 );
-    signal M00_AXI_0_arvalid    : STD_LOGIC;
-    signal M00_AXI_0_arready    : STD_LOGIC;
-    signal M00_AXI_0_rdata      : STD_LOGIC_VECTOR ( 31 downto 0 );
-    signal M00_AXI_0_rresp      : STD_LOGIC_VECTOR ( 1 downto 0 );
-    signal M00_AXI_0_rvalid     : STD_LOGIC;
-    signal M00_AXI_0_rready     : STD_LOGIC;
-    signal peripheral_aresetn_0 : STD_LOGIC_VECTOR ( 0 to 0 );
-    signal S_AXI_ACLK_100       : STD_LOGIC;
-    signal S_AXI_ACLK_10        : STD_LOGIC;
+    signal M00_AXI_0_awaddr             : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal M00_AXI_0_awprot             : STD_LOGIC_VECTOR ( 2 downto 0 );
+    signal M00_AXI_0_awvalid            : STD_LOGIC;
+    signal M00_AXI_0_awready            : STD_LOGIC;
+    signal M00_AXI_0_wdata              : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal M00_AXI_0_wstrb              : STD_LOGIC_VECTOR ( 3 downto 0 );
+    signal M00_AXI_0_wvalid             : STD_LOGIC;
+    signal M00_AXI_0_wready             : STD_LOGIC;
+    signal M00_AXI_0_bresp              : STD_LOGIC_VECTOR ( 1 downto 0 );
+    signal M00_AXI_0_bvalid             : STD_LOGIC;
+    signal M00_AXI_0_bready             : STD_LOGIC;
+    signal M00_AXI_0_araddr             : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal M00_AXI_0_arprot             : STD_LOGIC_VECTOR ( 2 downto 0 );
+    signal M00_AXI_0_arvalid            : STD_LOGIC;
+    signal M00_AXI_0_arready            : STD_LOGIC;
+    signal M00_AXI_0_rdata              : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal M00_AXI_0_rresp              : STD_LOGIC_VECTOR ( 1 downto 0 );
+    signal M00_AXI_0_rvalid             : STD_LOGIC;
+    signal M00_AXI_0_rready             : STD_LOGIC;
+    signal peripheral_aresetn_0         : STD_LOGIC_VECTOR ( 0 to 0 );
+    signal S_AXI_ACLK_100               : STD_LOGIC;
+    signal S_AXI_ACLK_10                : STD_LOGIC;
+    signal plClk_100,plClk_10,plClk_5_2 : STD_LOGIC;
 
     signal fromDaqReg : fromDaqRegType;
     signal toDaqReg   : toDaqRegType;
@@ -284,7 +313,7 @@ begin
         port map (
             S_AXI_ACLK    => S_AXI_ACLK_100,
             S_AXI_ARESETN => peripheral_aresetn_0(0),
-            S_AXI_AWADDR  => M00_AXI_0_AWADDR(6 downto 0),
+            S_AXI_AWADDR  => M00_AXI_0_AWADDR(7 downto 0),
             S_AXI_AWPROT  => M00_AXI_0_AWPROT,
             S_AXI_AWVALID => M00_AXI_0_AWVALID,
             S_AXI_AWREADY => M00_AXI_0_AWREADY,
@@ -295,7 +324,7 @@ begin
             S_AXI_BRESP   => M00_AXI_0_BRESP,
             S_AXI_BVALID  => M00_AXI_0_BVALID,
             S_AXI_BREADY  => M00_AXI_0_BREADY,
-            S_AXI_ARADDR  => M00_AXI_0_ARADDR(6 downto 0),
+            S_AXI_ARADDR  => M00_AXI_0_ARADDR(7 downto 0),
             S_AXI_ARPROT  => M00_AXI_0_ARPROT,
             S_AXI_ARVALID => M00_AXI_0_ARVALID,
             S_AXI_ARREADY => M00_AXI_0_ARREADY,
@@ -309,6 +338,19 @@ begin
 
         );
 
+    clk_dwa_pl_inst : clk_dwa_pl
+        port map (
+            -- Clock out ports  
+            clk_out1 => plClk_100,
+            clk_out2 => plClk_10,
+            clk_out3 => plClk_5_2,
+            -- Status and control signals                
+            reset  => '0',
+            locked => open,
+            -- Clock in ports
+            clk_in1 => S_AXI_ACLK_100
+        );
+
     top_tension_analyzer_1 : entity work.top_tension_analyzer
 
         port map (
@@ -316,11 +358,15 @@ begin
             toDaqReg   => toDaqReg,
 
 
-            dwaClk100 => S_AXI_ACLK_100,
-            dwaClk10  => S_AXI_ACLK_10,
+            --dwaClk100 => S_AXI_ACLK_100,
+            dwaClk100 => plClk_100,
+            --dwaClk10  => S_AXI_ACLK_10,
+            dwaClk10 => plClk_10,
 
 
             led             => led,
+            pButton         => pButton,
+            
             acStimX200_obuf => acStimX200_obuf,
             mainsSquare     => mainsSquare,
 
@@ -337,7 +383,16 @@ begin
             dpotSck    => dpotSck,
             dpotShdn_b => dpotShdn_b,
 
-            CoilDrive => CoilDrive,
+            CD_Din    => CD_Din,
+            CD_Dout   => CD_Dout,
+            CD_SCLR_b => CD_SCLR_b,
+            CD_SCK    => CD_SCK,
+            CD_RCK    => CD_RCK,
+            CD_G_b    => CD_G_b,
+
+            SNUM_SDA => SNUM_SDA,
+            SNUM_SCL => SNUM_SCL,
+            SNUM_A   => SNUM_A,
 
             adcCnv        => adcCnv,
             adcSck        => adcSck,
@@ -345,16 +400,5 @@ begin
             adcSrcSyncClk => adcSrcSyncClk
 
         );
-
-
-    -- COMP_TAG_END ------ End COMPONENT Declaration ------------
-
-    -- The following code must appear in the VHDL architecture
-    -- body. Substitute your own instance name and net names.
-
-    ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-
-
-
 
 end STRUCTURE;

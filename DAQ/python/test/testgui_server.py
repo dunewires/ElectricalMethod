@@ -188,11 +188,15 @@ def sendDummyDataNewHeaders(sock):
     #             'newdata_adc_4.dat', 'newdata_adc_5.dat',
     #             'newdata_adc_6.dat', 'newdata_adc_7.dat']
     #filenames = ['data/{}'.format(ff) for ff in filenames]  # prepend subdir
-    fileroot = 'data/fromSebastien/20200813T000904'
+    #fileroot = 'data/fromSebastien/20200813T000904'
+    fileroot = 'data/fromSebastien_20210125T010957/20210125T010957'
     filenames = [f'{fileroot}_FF.txt']
-    freqMax = 50
+    #freqMin, freqMax = 0, 157
+    #freqMin, freqMax = 50, 130
+    freqMin, freqMax = 0, 80
     chanMax = 7
-    for freq in range(0,freqMax+1):
+    #for freq in range(0,freqMax+1):
+    for freq in range(freqMin,freqMax+1):
         for chan in range(0, chanMax+1):
             filenames.append(f'{fileroot}_{chan:02}_{freq:04}.txt')
 
@@ -206,7 +210,7 @@ def sendDummyDataNewHeaders(sock):
             freqNum = freqNum[0:4]
             print(freqNum)
             if freqNum != oldFreq:
-                time.sleep(0.1)
+                time.sleep(0.05)
                 oldFreq = freqNum
         except:
             pass

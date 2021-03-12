@@ -32,7 +32,7 @@ entity dpotInterface is
 		sck    : out std_logic := '0';
 		shdn_b : out std_logic := '0';
 
-		dwaClk10 : in std_logic := '0'
+		dwaClk2 : in std_logic := '0'
 	);
 end entity dpotInterface;
 
@@ -61,20 +61,8 @@ architecture STRUCT of dpotInterface is
 	signal clkEn,clkEn_del : std_logic                    := '0';
 	signal writeReg        : std_logic                    := '0';
 	signal update          : std_logic_vector(1 downto 0) := (others => '0');
-	signal dwaClk2         : std_logic                    := '0';
 begin
 
-	BUFR_inst : BUFR
-		generic map (
-			BUFR_DIVIDE => "5",      -- Values: "BYPASS, 1, 2, 3, 4, 5, 6, 7, 8"
-			SIM_DEVICE  => "7SERIES" -- Must be set to "7SERIES"
-		)
-		port map (
-			O   => dwaClk2, -- 1-bit output: Clock output port
-			CE  => '1',     -- 1-bit input: Active high, clock enable (Divided modes only)
-			CLR => '0',     -- 1-bit input: Active high, asynchronous clear (Divided modes only)
-			I   => dwaClk10 -- 1-bit input: Clock buffer input driven by an IBUF, MMCM or local interconnect
-		);
 
 	ODDR_SCK : ODDR
 		generic map(
