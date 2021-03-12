@@ -77,6 +77,9 @@ from SietchConnect import SietchConnect
 
 STIM_PERIOD_CURRENT = 'stimPeriodCounter' # KLUGE to account for firmware mistake
 
+RUN_START = 1
+RUN_END = 0
+
 class State(IntEnum):
     IDLE = 0
     SCAN = 1
@@ -883,13 +886,13 @@ class MainWindow(qtw.QMainWindow):
     @pyqtSlot()
     def _f0LineMoved(self):
         print("f0Line moved")
-        # FIXME: *which line* was moved???
-        # can find out with self.sender()
-        # print(self.sender())
 
-        # FIXME: need to know if user dragged line on the 'raw' plot or on the 'proc' plot
-        rawLines = [x for v in self.resFitLines['raw'].values() for x in v]
-        procLines = [x for v in self.resFitLines['proc'].values() for x in v]
+        # Figure out which plot the line drag was in
+        # Flatten the list of InfiniteLines and match to source of signal
+        rawLines = list(chain(*self.resFitLines['raw'].values()))
+        procLines = list(chain(*self.resFitLines['proc'].values()))
+        #rawLines = [x for v in self.resFitLines['raw'].values() for x in v]
+        #procLines = [x for v in self.resFitLines['proc'].values() for x in v]
         if self.sender() in rawLines:
             source = 'raw'
         elif self.sender() in procLines:
@@ -897,7 +900,7 @@ class MainWindow(qtw.QMainWindow):
         else:
             print("ERROR: unknown source of signal: {self.sender}")
             return
-        print("_f0LineMoved(): sender is from {source}")
+        print(f"_f0LineMoved(): sender is from {source}")
             
         # loop over all channels. Get locations of lines
         for reg in self.registers:
