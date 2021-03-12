@@ -49,6 +49,8 @@ class DwaDataParser():
         self.frameKeys[Frame.UDP]["11"] = "Register_ID"    #  8bit
         #
         # Run Frame Entries
+        self.frameKeys[Frame.RUN]["77"] = "runStatus" # 24bit
+        #
         self.frameKeys[Frame.RUN]["00"] = "runOdometer"    # ??bit
         self.frameKeys[Frame.RUN]["01"] = "fpgaSerialNumber" # ??bit
         self.frameKeys[Frame.RUN]["02"] = "firmwareIdDate_24MSb" # 24-bit
@@ -99,9 +101,9 @@ class DwaDataParser():
         self.frameKeys[Frame.FREQ]["11"] = "Register_ID_Freq"  #  8bit
         self.frameKeys[Frame.FREQ]["40"] = "stimPeriodCounter" # 24bit (currently-used stimulus period)
         self.frameKeys[Frame.FREQ]["41"] = "adcSamplesPerFreq" # 24bit
-        self.frameKeys[Frame.FREQ]["42"] = "stimPeriodActive"  # 24bit NOT USED
+        self.frameKeys[Frame.FREQ]["42"] = "stimPeriodActive"  # 24bit
         self.frameKeys[Frame.FREQ]["43"] = "adcSamplingPeriod" # 24bit
-        #
+        # 
         # ADC Data Frame entries
         # N/A
         #
@@ -134,6 +136,7 @@ class DwaDataParser():
             "UDP_Counter": self._parseInfoLineAsInt,
             "Register_ID": self._parseInfoLineAsInt,
             # RUN frame
+            "runStatus": self._parseInfoLineAsInt,
             "runOdometer": self._parseInfoLineAsInt,
             "fpgaSerialNumber": self._parseInfoLineAsInt,
             "firmwareIdDate_24MSb": self._parseInfoLineAsInt,
@@ -351,9 +354,9 @@ class DwaDataParser():
         return dd
 
     def _postProcessFreqFrame(self, dd):
-        # FIXME: this is a kluge to account for an error in firmware... will need to be updated
         print("stimPeriodCounter = {}".format(dd['stimPeriodCounter']))
-        dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodCounter'] # convert period in 10ns to freq in Hz
+        print("stimPeriodActive  = {}".format(dd['stimPeriodActive']))
+        dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodActive'] # convert period in 10ns to freq in Hz
         dd['adcSamplingPeriod_sec'] = dd['adcSamplingPeriod']*1e-8
 
         return dd
