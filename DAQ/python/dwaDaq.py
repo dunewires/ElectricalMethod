@@ -60,6 +60,8 @@ import dwaTools as dwa
 import DwaDataParser as ddp
 import DwaConfigFile as dcf
 
+from SietchConnect import SietchConnect
+
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
 #    """ handle logging events -- display them in a text box in the gui"""
@@ -349,18 +351,9 @@ class MainWindow(qtw.QMainWindow):
         self.tensionStageComboBox.addItem("Pre-production")
         self.tensionStageComboBox.addItem("Production")
         self.tensionStageComboBox.addItem("Commissioning")
-        #self.btnLoadTensions.clicked.connect(self.saveRun)
+        self.btnLoadTensions.clicked.connect(self.loadTensions)
 
-        self.tensionData = {
-            'col1':['1','2','3','4'],
-            'col2':['1','2','1','3'],
-            'col3':['1','1','2','1']
-        }
 
-        self.tensionTableModel = TensionTableModel(self.tensionData)
-        self.tensionTableView.setModel(self.tensionTableModel)
-        self.tensionTableView.resizeColumnsToContents()
-        self.tensionTableView.resizeRowsToContents()
         
         ############ Resize and launch GUI in bottom right corner of screen
         # tested on mac & linux (unclear about windows)
@@ -993,6 +986,76 @@ class MainWindow(qtw.QMainWindow):
             self.logger.info(f"Saved as {self.fnOfAmpData}") 
         else:
             self.logger.info(f"No run to save.") 
+
+    @pyqtSlot()
+    def loadTensions(self):
+        self.tensionData = {
+            'XA':[0]*960,
+            'XB':[0]*960,
+            'UA':[0]*960,
+            'UB':[0]*960,
+            'VA':[0]*960,
+            'VB':[0]*960,
+            'GA':[0]*960,
+            'GB':[0]*960,
+        }
+        sietch = SietchConnect("sietch.creds")
+        # Get APA UUID from text box
+        pointerTableApaUuid = self.pointerTableApaUuid.text()
+        # Loop over layers
+        for layer in ["X", "U", "V", "G"]:
+            # Get most recent pointer table for this layer
+            mostRecentPointerTableLookup = ""
+            try:
+                mostRecentPointerTableLookup = sietch.api("/search/test?limit=1", {
+                    "formId": "wire_tension_pointer", 
+                    "componentUuid": pointerTableApaUuid,
+                    "layer": layer
+                })
+            except:
+                self.configFileContents.setPlainText("Invalid UUID")
+                return
+            # Get database id for this pointer table
+            mostRecentPointerTableDBid = mostRecentPointerTableLookup[0]["_id"]
+            logging.warning("APA Uuid:")
+            logging.warning(pointerTableApaUuid)
+            # Get table from database
+            pointer_table = sietch.api("/test/"+mostRecentPointerTableDBid)
+            logging.warning("pointer table for APA:")
+            logging.warning(pointer_table)
+            logging.warning(json.dumps(pointer_table,indent=2))
+            # Separate the A and B sides
+            pointers_A = pointer_table["data"]["wires"]["A"]
+            pointers_B = pointer_table["data"]["wires"]["B"]
+            logging.warning("pointers_A")
+            logging.warning(json.dumps(pointers_A,indent=2))
+            # Get list of database ids for the individual wire measurements
+            record_ids_A = [x["testId"] for x in pointers_A]
+            record_ids_B = [x["testId"] for x in pointers_B]
+            logging.warning("record_ids_A")
+            logging.warning(record_ids_A)
+            # Get database entries for the individual wire resonance measurements
+            resonance_entries_A = [sietch.api("/test/"+x) for x in record_ids_A]
+            resonance_entries_B = [sietch.api("/test/"+x) for x in record_ids_B]
+            logging.warning("resonance_entries_A")
+            logging.warning(json.dumps(resonance_entries_A,indent=2))
+            # Extract the list of resonances from the database entries
+            resonances_A = [entry["data"]["wires"][str(i)] for i,entry in enumerate(resonance_entries_A)]
+            resonances_B = [entry["data"]["wires"][str(i)] for i,entry in enumerate(resonance_entries_B)]
+            logging.warning("resonances_A")
+            logging.warning(resonances_A)
+            # Compute the tension and save it to the table.
+            # FIXME: currently this is done is a very dumb way with no logic to which resonances get picked (just uses the maximum resonance).
+            for i, res in enumerate(resonances_A):
+                logging.warning(res)
+                self.tensionData[layer+"A"][i] = 4*1.16e-4*1.15**2*res[-1]**2
+            for i, res in enumerate(resonances_B):
+                self.tensionData[layer+"B"][i] = 4*1.16e-4*1.15**2*res[-1]**2
+
+        self.tensionTableModel = TensionTableModel(self.tensionData)
+        self.tensionTableView.setModel(self.tensionTableModel)
+        self.tensionTableView.resizeColumnsToContents()
+        self.tensionTableView.resizeRowsToContents()
         
     def _writeAmplitudesToFile(self):
         # write out the A(f) data for this frequency to a file
