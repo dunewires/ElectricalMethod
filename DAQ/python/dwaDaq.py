@@ -1167,8 +1167,8 @@ class MainWindow(qtw.QMainWindow):
         print("Clearing fit lines from the resonance plots")
 
         for reg in self.registers:
-            print(f"self.resFitLines['proc'][{reg}] = ")
-            print(self.resFitLines['proc'][reg])
+            #print(f"self.resFitLines['proc'][{reg}] = ")
+            #print(self.resFitLines['proc'][reg])
             for infLine in self.resFitLines['proc'][reg]:
                 self.resonanceProcessedPlots[reg].removeItem(infLine)
             for infLine in self.resFitLines['raw'][reg]:
@@ -1249,14 +1249,17 @@ class MainWindow(qtw.QMainWindow):
                     logger.info('\n\n')
                     logger.info(f'self.dwaDataParser.dwaPayload = {self.dwaDataParser.dwaPayload}')
 
-                # If there is a run frame, this is a new run
-                # so need to create new filenames
+                # FIXME: this should go into processUdpPayload() !!!
+                # If there is a run frame with no '77' key, or if this is a run start frame
+                # then this is a new run, so need to clear plots and create new filenames
                 if ddp.Frame.RUN in self.dwaDataParser.dwaPayload:
-                    logger.info("New run detected... creating new filenames")
-                    self._makeOutputFilenames()
-                    self._clearAmplitudeData()
-                    self._clearResonanceFits()
-                    logger.info(self.fnOfReg)
+                    if ('runStatus' not in self.dwaDataParser.dwaPayload[ddp.Frame.RUN]) or self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == RUN_START:
+                        print("New run detected... creating new filenames")
+                        logger.info("New run detected... creating new filenames")
+                        self._makeOutputFilenames()
+                        self._clearAmplitudeData()
+                        self._clearResonanceFits()
+                        logger.info(self.fnOfReg)
                 
                 # write data to file by register
                 reg = self.dwaDataParser.dwaPayload[ddp.Frame.UDP]['Register_ID_hexStr']

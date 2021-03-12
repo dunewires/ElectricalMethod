@@ -49,6 +49,7 @@ class DwaDataParser():
         self.frameKeys[Frame.UDP]["11"] = "Register_ID"    #  8bit
         #
         # Run Frame Entries
+        self.frameKeys[Frame.RUN]["77"] = "runStatus"    # 24bit
         self.frameKeys[Frame.RUN]["00"] = "runOdometer"    # ??bit
         self.frameKeys[Frame.RUN]["01"] = "fpgaSerialNumber" # ??bit
         self.frameKeys[Frame.RUN]["02"] = "firmwareIdDate_24MSb" # 24-bit
@@ -134,6 +135,7 @@ class DwaDataParser():
             "UDP_Counter": self._parseInfoLineAsInt,
             "Register_ID": self._parseInfoLineAsInt,
             # RUN frame
+            "runStatus": self._parseInfoLineAsInt,
             "runOdometer": self._parseInfoLineAsInt,
             "fpgaSerialNumber": self._parseInfoLineAsInt,
             "firmwareIdDate_24MSb": self._parseInfoLineAsInt,
@@ -351,13 +353,9 @@ class DwaDataParser():
         return dd
 
     def _postProcessFreqFrame(self, dd):
-        # FIXME: this is a kluge to account for an error in firmware... will need to be updated
-        print("stimPeriodCounter = {}".format(dd['stimPeriodCounter']))
-        dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodCounter'] # convert period in 10ns to freq in Hz
+        dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodActive'] # convert period in 10ns to freq in Hz
         dd['adcSamplingPeriod_sec'] = dd['adcSamplingPeriod']*1e-8
-
         return dd
-    
 
     def _postProcessAdcDataFrame(self, dd):
         # Convert the ADC samples from a hex string
