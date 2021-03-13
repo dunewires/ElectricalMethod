@@ -16,6 +16,7 @@ import struct
 import binascii
 import json, configparser
 import numpy as np
+import numpy.polynomial.polynomial as poly
 
 import DwaDataParser as ddp
 import DwaConfigFile as dcf
@@ -49,12 +50,18 @@ def fitSinusoidToTimeseries(yy, dt, freq_Hz):
 def processWaveform(udpDict):
     # udpDict is a transfer that includes ADC data
     # frequency is obtained from:
-    freq_Hz = 1./(udpDict[ddp.Frame.FREQ]['stimPeriodCounter']*1e-8)
+    freq_Hz = udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']
     yy = np.array(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
     # dt is given by the sampling time
     dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
     return fitSinusoidToTimeseries(yy, dt, freq_Hz)
-    
+
+
+def baseline(x, y, polyDeg=2):
+    # get rid of polynomial background...
+    pCoeffs = poly.polyfit(x, y, polyDeg)
+    return poly.polyval(x, pCoeffs)
+        
 def splitFile(filename):
     ''' split a UDP file that has multiple frequencies
     into separate files, one per frequency'''
@@ -63,7 +70,7 @@ def splitFile(filename):
     lines = [line.strip() for line in lines]
 
     # FIX the "C" header bug
-    lines = ["CCCC0005" if line == "CCCC0006" else line for line in lines]
+    #lines = ["CCCC0005" if line == "CCCC0006" else line for line in lines]
     
     # find indices of lines that are 'DDDDDDDD' (and of ADC data)
     idxs = [ii+1 for ii, val in enumerate(lines) if val == 'DDDDDDDD']
