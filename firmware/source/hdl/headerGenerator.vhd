@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Mar  8 18:45:59 2021
+-- Last update : Mon Mar  8 20:21:56 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -53,8 +53,6 @@ entity headerGenerator is
         pktBuildBusy : out boolean;
         freqScanBusy : in boolean;
 
-        firmwareId_date   : in unsigned(47 downto 0); -- Firmware identifier (date) YYMMDDHHMMSS (in hex)
-        firmwareId_hash   : in unsigned(31 downto 0); -- Firmware identifier (git hash) use 32 bits
         stimPeriodActive  : in unsigned(23 downto 0); -- current period (10ns)
         stimPeriodCounter : in unsigned(23 downto 0); -- track how many freqs
                                                       -- have been done in
@@ -166,10 +164,10 @@ begin
             --x"77" & x"00000" & "000" & BOOL2SL(freqScanBusy),
             x"00" & std_logic_vector(runOdometer),
             x"01" & std_logic_vector(fromDaqReg.serNum),
-            x"02" & std_logic_vector(firmwareId_date(47 downto 24)),         --24MSb
-            x"03" & std_logic_vector(firmwareId_date(23 downto 0)),          --24LSb
-            x"04" & x"00" & std_logic_vector(firmwareId_hash(31 downto 16)), --16MSb
-            x"05" & x"00" & std_logic_vector(firmwareId_hash(15 downto 0)),  --16LSb
+            x"02" & std_logic_vector(fromDaqReg.dateCode(47 downto 24)),         --24MSb
+            x"03" & std_logic_vector(fromDaqReg.dateCode(23 downto 0)),          --24LSb
+            x"04" & x"00" & std_logic_vector(fromDaqReg.hashCode(31 downto 16)), --16MSb
+            x"05" & x"00" & std_logic_vector(fromDaqReg.hashCode(15 downto 0)),  --16LSb
                                                                              --x"20" & std_logic_vector(fromDaqReg.dwaCtrl),
             x"21" & std_logic_vector(fromDaqReg.fixedPeriod),
             -- fixme: should be period...

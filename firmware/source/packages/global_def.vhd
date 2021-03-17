@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Fri Jan  8 14:38:12 2021
+-- Last update : Mon Mar  8 20:24:46 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -36,15 +36,15 @@ package global_def is
     type INTEGER_VECTOR_TYPE is array (natural range <>) of integer;
 
     type toDaqRegType is record
-        ctrlBusy         : boolean; --nf
-        udpDataWord      : std_logic_vector(31 downto 0);
-        udpDataRdy       : boolean;
-        senseWireGain    : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
-        coilDrive        : std_logic_vector(31 downto 0);
-        relayBusTop      : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
-        relayWireTop     : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
-        relayBusBot      : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
-        relayWireBot     : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
+        ctrlBusy      : boolean; --nf
+        udpDataWord   : std_logic_vector(31 downto 0);
+        udpDataRdy    : boolean;
+        senseWireGain : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
+        coilDrive     : std_logic_vector(31 downto 0);
+        relayBusTop   : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
+        relayWireTop  : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
+        relayBusBot   : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);
+        relayWireBot  : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
 
         serNum           : unsigned(23 downto 0);
         serNumMemAddress : unsigned(12 downto 0);
@@ -79,10 +79,10 @@ package global_def is
         serNum           : unsigned(23 downto 0);
         serNumMemAddress : unsigned(12 downto 0);
         serNumMemData    : unsigned(31 downto 0);
-        
-        serNumMemRead    : std_logic;
-        serNumMemAddrStrb    : std_logic;
-        serNumMemWrite   : std_logic;
+
+        serNumMemRead     : std_logic;
+        serNumMemAddrStrb : std_logic;
+        serNumMemWrite    : std_logic;
         --stimPeriodActive   : unsigned(23 downto 0);
         --stimPeriodCounter  : unsigned(23 downto 0); -- bits???
         --- Number of stimulus cycles per frequency (unitless)
@@ -92,6 +92,8 @@ package global_def is
                                                     --- AC Stimulus magnitude (12bit DAC value)
         stimMag       : unsigned(11 downto 0);
         senseWireGain : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0);
+        dateCode      : std_logic_vector(47 downto 0);
+        hashCode      : std_logic_vector(31 downto 0);
         -- Client IP address (where UDP data is sent)
         clientIp : unsigned(31 downto 0);
         --- After switching to a new frequency, how long to wait before

@@ -888,8 +888,10 @@ begin
 			when b"010001" =>
 				reg_data_out(0)           <= '1' when toDaqReg.ctrlBusy else '0';
 				reg_data_out(31 downto 1) <= (others => '0');
+			when b"010010" =>
+				reg_data_out <= dateCode(23 downto 0);
 			when b"010011" =>
-				reg_data_out <= dateCode;
+				reg_data_out <= dateCode(47 downto 24);
 			when b"010100" =>
 				reg_data_out <= hashCode;
 			when b"010111" =>
@@ -1006,6 +1008,11 @@ begin
 	fromDaqReg.senseWireGain(2)   <= slv_reg15(23 downto 16);
 	fromDaqReg.senseWireGain(1)   <= slv_reg15(15 downto 8);
 	fromDaqReg.senseWireGain(0)   <= slv_reg15(7 downto 0);
+
+	fromDaqReg.dateCode   <= dateCode;
+	-- read dateCode from registers 0x12 and 0x13
+	fromDaqReg.hashCode   <= hashCode;
+	-- read hashCode from registers 0x14
 	--temp hard code
 	fromDaqReg.noiseFreqMin    <= unsigned(slv_reg25(23 downto 0));
 	fromDaqReg.noiseFreqMax    <= unsigned(slv_reg26(23 downto 0));
