@@ -57,16 +57,20 @@ int drainDebugFifoUdp(int fifoAddr) {
   // eg when AXI register is 18 we will look at the first bit in the status reg
   statusBit = fifoAddr - 0x18;
   //  xil_printf("start drain fifo %x\r\n", statusBit);
-  udpTxbuf[0] = 0xF0;
-  udpTxbuf[1] = 0x00;
-  udpTxbuf[2] = 0x00;
 
-  rDFifoData = fifoAddr;
-  udpTxbuf[4] = rDFifoB[3];
-  udpTxbuf[5] = rDFifoB[2];
-  udpTxbuf[6] = rDFifoB[1];
-  udpTxbuf[7] = rDFifoB[0];
-  rDFifoTxIndex = 8;
+  // when used for the DWA, the UDP header is added in the PL
+  	  //udpTxbuf[0] = 0xF0;
+  	  //udpTxbuf[1] = 0x00;
+  	  //udpTxbuf[2] = 0x00;
+
+  	  //rDFifoData = fifoAddr;
+  	  //udpTxbuf[4] = rDFifoB[3];
+  	  //udpTxbuf[5] = rDFifoB[2];
+  	  //udpTxbuf[6] = rDFifoB[1];
+  	  //udpTxbuf[7] = rDFifoB[0];
+  	  //rDFifoTxIndex = 8;
+  rDFifoTxIndex = 0;
+
   //regStatusInitial = *(u32_t *) (XPAR_M00_AXI_0_BASEADDR + (0x0005 << 2));
   //regStatusNext = *(u32_t *) (XPAR_M00_AXI_0_BASEADDR + (0x0003 << 2));
 
