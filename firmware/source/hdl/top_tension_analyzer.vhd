@@ -13,6 +13,8 @@ entity top_tension_analyzer is
     toDaqReg   : out toDaqRegType;
 
     --regToDwa       : in SLV_VECTOR_TYPE_32(31 downto 0);
+    dwaClk400 : in std_logic;
+    dwaClk200 : in std_logic;
     dwaClk100 : in std_logic;
     dwaClk10  : in std_logic;
 
@@ -119,10 +121,13 @@ architecture STRUCT of top_tension_analyzer is
   signal ctrl_acStim_enable   : std_logic             := '0';
   signal acStim_trigger       : std_logic             := '0';
   signal acStim_nHPeriod      : unsigned(23 downto 0) := (others => '0');
-  signal acStimX200_periodCnt : unsigned(23 downto 0) := (others => '0');
-  signal acStimX200_nHPeriod  : unsigned(23 downto 0) := (others => '0');
-  signal acStimX200_nHPeriod_fxp8  : unsigned(31 downto 0) := (others => '0'); -- floating point at 8
-  --initial value non zero
+
+  signal acStimX200_hPeriodCnt : unsigned(25 downto 0) := (others => '0');
+  signal acStimX200_nPeriod  : unsigned(26 downto 0) := (others => '0');
+  signal acStimX200_nHPeriod_fxp8  : unsigned(35 downto 0) := (others => '0'); -- floating point at 8
+  signal periodCntStart   std_logic  := '0';
+
+  -- --initial value non zero
   signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
   signal ctrlFreqSet : unsigned(23 downto 0) := (others => '1');
 
@@ -260,10 +265,9 @@ begin
   --    );
 
   -- convert requested stim frequency to number of 100Mhz clocks
-  -- move this to the processor!
   compute_n_periods : process (dwaClk10)
-    variable acStim_nHPeriod_all : unsigned(63 downto 0 );
-    variable adcCnv_nPeriod_all  : unsigned(63 downto 0 );
+    variable acStim_nHPeriod_all : unsigned(67 downto 0 );
+    variable adcCnv_nPeriod_all  : unsigned(67 downto 0 );
     variable adcCnv_nCnv_all     : unsigned(39 downto 0 );
 
   begin
@@ -277,12 +281,11 @@ begin
         acStim_enable <= '1';
       end if;
 
-      acStimX200_nHPeriod_fxp8 <= (x"3d090000"/ stimFreqReq);
-      -- trim off 8 MSbs because we don't need to go below ~10Hz
-      -- acStim_nHPeriod_all := (x"5F5E1000"/unsigned(stimFreqReq));
-      -- acStim_nHPeriod     <= acStim_nHPeriod_all(acStim_nHPeriod'range);
-      -- use the acStim_nHPeriod as the basis for the other freq to maintain exact sync
-      -- this will produce a greater error in the actual freq being measured.
+  -- move this to the processor!
+  -- if left in PL, will be implemented with lots of LUTs, yuck
+      acStimX200_nHPeriod_fxp8 <= (x"3d0900000"/ stimFreqReq);
+
+      -- infer into dsp48
       acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * 200;
       adcCnv_nPeriod_all  := acStimX200_nHPeriod_fxp8 * 50;
       --  let's start with a fixed conversion from half wave to ADC samples
@@ -290,9 +293,12 @@ begin
       -- 400 = 1 samples/period
       -- 50 = 8
       -- 25 = 16
-      -- find the number of total canversions for each frequency
+      -- find the number of total conversions for each frequency
       adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
-      acStimX200_nHPeriod <= acStimX200_nHPeriod_fxp8(31 downto 8);
+
+      -- 400 MHz clock is used for the x200 bandpass frequency so shift left 2 bits
+      -- the x200 needs the full period count to accommodate an odd nPeriod
+      acStimX200_nPeriod <= acStimX200_nHPeriod_fxp8(31 downto 5);
       acStim_nHPeriod <= acStim_nHPeriod_all(31 downto 8);
       adcCnv_nPeriod  <= adcCnv_nPeriod_all(31 downto 8);
       adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
@@ -300,17 +306,20 @@ begin
     end if;
   end process compute_n_periods;
 
-  make_ac_stimX200 : process (dwaClk100)
+  make_ac_stimX200 : process (dwaClk400)
   begin
-    if rising_edge(dwaClk100) then
-      -- Default Increment
+    if rising_edge(dwaClk400) then
+     -- periodCntStart will handle an odd phase count
+      periodCntStart <= not(acStimX200 and acStimX200_nPeriod(0));
       -- need the > to catch when the nPeriod decreases at the wrong time
-      if acStimX200_periodCnt >= acStimX200_nHPeriod then
-        -- dont use the enable here to keep the filter working
+      if acStimX200_hPeriodCnt >= acStimX200_nPeriod(acStimX200_nPeriod'left downto 1) then
+        -- don't use the enable here to keep the filter working
         acStimX200           <= not acStimX200;
-        acStimX200_periodCnt <= (acStimX200_periodCnt'left downto 1 => '0', 0 => '1'); --x"000001";
+        -- reset the counter to 0 then 1 if the nPeriods is odd else always '1'
+        acStimX200_hPeriodCnt <= (acStimX200_hPeriodCnt'left downto 1 => '0', 0 => periodCntStart); --x"000001";
       else
-        acStimX200_periodCnt <= acStimX200_periodCnt +1;
+        -- count until the next half period
+        acStimX200_hPeriodCnt <= acStimX200_hPeriodCnt +1;
       end if;
 
     end if;
@@ -347,6 +356,7 @@ begin
       dwaClk100 => dwaClk100,
       dwaClk2   => dwaClk2
     );
+
   --gain DPOT
   dpotInterface_inst : entity duneDwa.dpotInterface
     port map (
@@ -370,7 +380,7 @@ begin
     if rising_edge(dwaClk100) then
       mainsSquare_del1 <= mainsSquare;
       mainsSquare_del2 <= mainsSquare_del1;
-      -- not yet supported by xilinx simulation 
+      -- not yet supported by Xilinx simulation 
       -- mainsTrig        <= '1' when mainsTrig_filter = (mainsTrig_filter'left downto 1 => '0', 0 => '1') else '0';
       if mainsTrig_filter = "00" & x"0001" then
         mainsTrig <= '1';
