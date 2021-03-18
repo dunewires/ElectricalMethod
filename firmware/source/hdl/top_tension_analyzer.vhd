@@ -116,16 +116,16 @@ architecture STRUCT of top_tension_analyzer is
   signal adcCnv_nPeriod          : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriodAuto : unsigned(23 downto 0) := (others => '0');
 
-  signal acStim_mag           : unsigned(11 downto 0) := (others => '0');
-  signal acStim_enable        : std_logic             := '0';
-  signal ctrl_acStim_enable   : std_logic             := '0';
-  signal acStim_trigger       : std_logic             := '0';
-  signal acStim_nHPeriod      : unsigned(23 downto 0) := (others => '0');
+  signal acStim_mag         : unsigned(11 downto 0) := (others => '0');
+  signal acStim_enable      : std_logic             := '0';
+  signal ctrl_acStim_enable : std_logic             := '0';
+  signal acStim_trigger     : std_logic             := '0';
+  signal acStim_nHPeriod    : unsigned(23 downto 0) := (others => '0');
 
-  signal acStimX200_hPeriodCnt : unsigned(25 downto 0) := (others => '0');
-  signal acStimX200_nPeriod  : unsigned(26 downto 0) := (others => '0');
-  signal acStimX200_nHPeriod_fxp8  : unsigned(35 downto 0) := (others => '0'); -- floating point at 8
-  signal periodCntStart  : std_logic  := '0';
+  signal acStimX200_hPeriodCnt    : unsigned(25 downto 0) := (others => '0');
+  signal acStimX200_nPeriod       : unsigned(26 downto 0) := (others => '0');
+  signal acStimX200_nHPeriod_fxp8 : unsigned(35 downto 0) := (others => '0'); -- floating point at 8
+  signal periodCntStart           : std_logic             := '0';
 
   -- --initial value non zero
   signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
@@ -173,10 +173,10 @@ architecture STRUCT of top_tension_analyzer is
 
   signal flashCount : unsigned(23 downto 0);
 
-  signal pktBuildBusy: boolean := false;
-signal freqScanBusy: boolean := false;
-
-  signal 
+  signal pktBuildBusy : boolean := false;
+  signal freqScanBusy : boolean := false;
+  
+  signal
   toDaqReg_headerGenerator,
   toDaqReg_dpotInterface,
   toDaqReg_wtaController,
@@ -281,13 +281,13 @@ begin
         acStim_enable <= '1';
       end if;
 
-  -- move this to the processor!
-  -- if left in PL, will be implemented with lots of LUTs, yuck
+      -- move this to the processor!
+      -- if left in PL, will be implemented with lots of LUTs, yuck
       acStimX200_nHPeriod_fxp8 <= (x"3d0900000"/ stimFreqReq);
 
       -- infer into dsp48
-      acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * 200;
-      adcCnv_nPeriod_all  := acStimX200_nHPeriod_fxp8 * 50;
+      acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * x"00000000000000000000C8";
+      adcCnv_nPeriod_all  := acStimX200_nHPeriod_fxp8 * x"0000000000000000000032";
       --  let's start with a fixed conversion from half wave to ADC samples
       -- 100 = 4 samples/period
       -- 400 = 1 samples/period
@@ -299,9 +299,9 @@ begin
       -- 400 MHz clock is used for the x200 bandpass frequency so shift left 2 bits
       -- the x200 needs the full period count to accommodate an odd nPeriod
       acStimX200_nPeriod <= acStimX200_nHPeriod_fxp8(31 downto 5);
-      acStim_nHPeriod <= acStim_nHPeriod_all(31 downto 8);
-      adcCnv_nPeriod  <= adcCnv_nPeriod_all(31 downto 8);
-      adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
+      acStim_nHPeriod    <= acStim_nHPeriod_all(31 downto 8);
+      adcCnv_nPeriod     <= adcCnv_nPeriod_all(31 downto 8);
+      adcCnv_nCnv        <= adcCnv_nCnv_all(15 downto 0);
 
     end if;
   end process compute_n_periods;
@@ -309,12 +309,12 @@ begin
   make_ac_stimX200 : process (dwaClk400)
   begin
     if rising_edge(dwaClk400) then
-     -- periodCntStart will handle an odd phase count
+      -- periodCntStart will handle an odd phase count
       periodCntStart <= not(acStimX200 and acStimX200_nPeriod(0));
       -- need the > to catch when the nPeriod decreases at the wrong time
       if acStimX200_hPeriodCnt >= acStimX200_nPeriod(acStimX200_nPeriod'left downto 1) then
         -- don't use the enable here to keep the filter working
-        acStimX200           <= not acStimX200;
+        acStimX200 <= not acStimX200;
         -- reset the counter to 0 then 1 if the nPeriods is odd else always '1'
         acStimX200_hPeriodCnt <= (acStimX200_hPeriodCnt'left downto 1 => '0', 0 => periodCntStart); --x"000001";
       else
