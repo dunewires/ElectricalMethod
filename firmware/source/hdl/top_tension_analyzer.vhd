@@ -125,7 +125,7 @@ architecture STRUCT of top_tension_analyzer is
   signal acStimX200_hPeriodCnt : unsigned(25 downto 0) := (others => '0');
   signal acStimX200_nPeriod  : unsigned(26 downto 0) := (others => '0');
   signal acStimX200_nHPeriod_fxp8  : unsigned(35 downto 0) := (others => '0'); -- floating point at 8
-  signal periodCntStart   std_logic  := '0';
+  signal periodCntStart  : std_logic  := '0';
 
   -- --initial value non zero
   signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
