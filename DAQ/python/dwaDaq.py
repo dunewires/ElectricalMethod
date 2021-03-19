@@ -42,6 +42,8 @@ from functools import partial
 from enum import Enum, IntEnum
 import string
 
+from itertools import chain
+
 import numpy as np
 import scipy
 from scipy.signal import find_peaks
@@ -298,6 +300,9 @@ class MainWindow(qtw.QMainWindow):
         
 
         #self.log_tb.append("logging window...")  # FIXME... how to update...?
+
+        # KLUGE:
+        self.oldDataFormat = True
         
         # Set defaults...
         self.configFileName.setText("dwaConfigWC.ini")
@@ -334,6 +339,9 @@ class MainWindow(qtw.QMainWindow):
         
         # make dummy data to display
         self._makeDummyData()
+
+        #
+        self.tensionData = {}
 
         # get refs to curves on each plot
         self._makeCurves()
@@ -1193,11 +1201,13 @@ class MainWindow(qtw.QMainWindow):
         # FIXME: move this to a higher level (only do it once...)
         #def getUniqueFileroot():
         #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
+        print("_makeOutputFilenames()")
         timestring = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
         froot = os.path.join(self.udpDataDir, timestring)
         self.logger.info(f"fileroot = {froot}")
         # create new output filenames
         self.fnOfReg = {}  # file names for output. Keys are 2-digit hex string (e.g. '03' or 'FF'). values are filenames
+        #self.fnOfReg['FF'] = "{}_{:02X}.txt".format(froot, 'FF')
         for reg in self.registers_all:
             self.fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
         self.logger.info(f"self.fnOfReg = {self.fnOfReg}")
@@ -1253,7 +1263,11 @@ class MainWindow(qtw.QMainWindow):
                 # If there is a run frame with no '77' key, or if this is a run start frame
                 # then this is a new run, so need to clear plots and create new filenames
                 if ddp.Frame.RUN in self.dwaDataParser.dwaPayload:
-                    if ('runStatus' not in self.dwaDataParser.dwaPayload[ddp.Frame.RUN]) or self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == RUN_START:
+                    if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == None:
+                        self.oldDataFormat = True
+                    print("GOT HERE")
+                    if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == RUN_START or \
+                       self.oldDataFormat:
                         print("New run detected... creating new filenames")
                         logger.info("New run detected... creating new filenames")
                         self._makeOutputFilenames()
