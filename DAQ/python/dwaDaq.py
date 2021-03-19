@@ -87,25 +87,33 @@ class State(IntEnum):
     SCAN = 1
     POST_SCAN = 2
 
-class View(IntEnum):
+class MainView(IntEnum):
+    STIMULUS  = 0 # config/V(t)/A(f) [Stimulus view]
+    RESFREQ   = 1 # A(f) data and fitting
+    TENSION   = 2 # Tension view
+    LOG       = 3 # Log-file output    
+
+class StimView(IntEnum):
     ''' for stackedWidget page indexing '''
     CONFIG  = 0  # Show the configuration parameters
-    LOG     = 1  # Log-file output
-    V_GRID  = 2  # V(t) (grid view)
-    V_CHAN  = 3  # V(t) (channel view)
-    A_GRID  = 4  # A(f) (grid view)
-    A_CHAN  = 5  # A(f) (channel view)
-    RESFREQ = 6  # Wire tensions
-    TENSION = 7  # Wire tensions
+    V_GRID  = 1  # V(t) (grid view)
+    V_CHAN  = 2  # V(t) (channel view)
+    A_GRID  = 3  # A(f) (grid view)
+    A_CHAN  = 4  # A(f) (channel view)
 
 class Shortcut(Enum):
-    CONFIG  = "CTRL+C"
-    LOG     = "CTRL+L"
-    V_GRID  = "CTRL+V"
-    A_GRID  = "CTRL+A"
-    RESFREQ = "CTRL+F"
-    TENSION = "CTRL+T"
+    STIMULUS = "CTRL+S"
+    RESFREQ  = "CTRL+R"
+    TENSION  = "CTRL+T"
+    LOG      = "CTRL+L"
+    #
+    CONFIG   = "CTRL+C"
+    V_GRID   = "CTRL+V"
+    A_GRID   = "CTRL+A"
 
+
+
+    
 class WorkerSignals(qtc.QObject):
     '''
     Defines the signals available from a running worker thread.
@@ -313,10 +321,10 @@ class MainWindow(qtw.QMainWindow):
         # Make handles for widgets in the UI
         #self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
         #self.stack.setStyleSheet("background-color:white")
-        self.currentView = View.CONFIG
+        self.currentView = MainView.STIMULUS
         self.tabWidget.setCurrentIndex(self.currentView)
         # testing updating tab labels
-        #self.tabWidget.setTabText(View.TENSION, "Tension\nCTRL+t")
+        #self.tabWidget.setTabText(StimView.TENSION, "Tension\nCTRL+t")
         self._setTabTooltips()
         
         # Connect slots/signals
@@ -488,12 +496,14 @@ class MainWindow(qtw.QMainWindow):
             self.resFitLines['proc'][reg] = []
             
     def _setTabTooltips(self):
-        self.tabWidget.setTabToolTip(View.CONFIG, Shortcut.CONFIG.value)
-        self.tabWidget.setTabToolTip(View.LOG, Shortcut.LOG.value)
-        self.tabWidget.setTabToolTip(View.V_GRID, Shortcut.V_GRID.value)
-        self.tabWidget.setTabToolTip(View.A_GRID, Shortcut.A_GRID.value)
-        self.tabWidget.setTabToolTip(View.RESFREQ, Shortcut.RESFREQ.value)
-        self.tabWidget.setTabToolTip(View.TENSION, Shortcut.TENSION.value)
+        self.tabWidgetStages.setTabToolTip(MainView.STIMULUS, Shortcut.STIMULUS.value)
+        self.tabWidgetStages.setTabToolTip(MainView.RESFREQ, Shortcut.RESFREQ.value)
+        self.tabWidgetStages.setTabToolTip(MainView.TENSION, Shortcut.TENSION.value)
+        self.tabWidgetStages.setTabToolTip(MainView.LOG, Shortcut.LOG.value)
+        #
+        self.tabWidget.setTabToolTip(StimView.CONFIG, Shortcut.CONFIG.value)
+        self.tabWidget.setTabToolTip(StimView.V_GRID, Shortcut.V_GRID.value)
+        self.tabWidget.setTabToolTip(StimView.A_GRID, Shortcut.A_GRID.value)
 
     def _initLogging(self):
         # logging levels (in order of severity): DEBUG, INFO, WARNING, ERROR, CRITICAL
@@ -720,21 +730,10 @@ class MainWindow(qtw.QMainWindow):
                                                               self.dummyDataTension['y'])
             
     def _keyboardShortcuts(self):
-        # Show configuration parameters
-        self.scConfig = qtw.QShortcut(qtg.QKeySequence(Shortcut.CONFIG.value), self)
-        self.scConfig.activated.connect(self.viewConfig)
 
-        # Show log
-        self.scLog = qtw.QShortcut(qtg.QKeySequence(Shortcut.LOG.value), self)
-        self.scLog.activated.connect(self.viewLog)
-
-        # V(t) data (grid view)
-        self.scGridView = qtw.QShortcut(qtg.QKeySequence(Shortcut.V_GRID.value), self)
-        self.scGridView.activated.connect(self.viewGrid)
-
-        # A(f) data (grid view)
-        self.scAmplGridView = qtw.QShortcut(qtg.QKeySequence(Shortcut.A_GRID.value), self)
-        self.scAmplGridView.activated.connect(self.viewAmplGrid)
+        # Stimulus Screen
+        self.scStimulusView = qtw.QShortcut(qtg.QKeySequence(Shortcut.STIMULUS.value), self)
+        self.scStimulusView.activated.connect(self.viewStimulus)
 
         # Resonant frequency fit
         self.scResFreqFitView = qtw.QShortcut(qtg.QKeySequence(Shortcut.RESFREQ.value), self)
@@ -743,6 +742,22 @@ class MainWindow(qtw.QMainWindow):
         # Tension data
         self.scTensionView = qtw.QShortcut(qtg.QKeySequence(Shortcut.TENSION.value), self)
         self.scTensionView.activated.connect(self.viewTensions)
+
+        # Show log
+        self.scLog = qtw.QShortcut(qtg.QKeySequence(Shortcut.LOG.value), self)
+        self.scLog.activated.connect(self.viewLog)
+
+        # Show configuration parameters
+        self.scConfig = qtw.QShortcut(qtg.QKeySequence(Shortcut.CONFIG.value), self)
+        self.scConfig.activated.connect(self.viewConfig)
+
+        # V(t) data (grid view)
+        self.scGridView = qtw.QShortcut(qtg.QKeySequence(Shortcut.V_GRID.value), self)
+        self.scGridView.activated.connect(self.viewGrid)
+
+        # A(f) data (grid view)
+        self.scAmplGridView = qtw.QShortcut(qtg.QKeySequence(Shortcut.A_GRID.value), self)
+        self.scAmplGridView.activated.connect(self.viewAmplGrid)
         
         # Show V(t) or A(f) (channel view)
         # FIXME: move these to "Shortucut" ENUM?
@@ -921,32 +936,50 @@ class MainWindow(qtw.QMainWindow):
 
         
     @pyqtSlot()
+    def viewStimulus(self):
+        self.currentView = MainView.STIMULUS
+        self.tabWidgetStages.setCurrentIndex(self.currentView)
+        self.logger.info("View Stimulus")
+
+    @pyqtSlot()
+    def viewResFreqFit(self):
+        self.currentView = MainView.RESFREQ
+        self.tabWidgetStages.setCurrentIndex(self.currentView)
+        self.logger.info("View Resonant Frequencies")
+            
+    @pyqtSlot()
+    def viewTensions(self):
+        self.currentView = MainView.TENSION
+        self.tabWidgetStages.setCurrentIndex(self.currentView)
+        self.logger.info("View Tensions")
+
+    @pyqtSlot()
+    def viewLog(self):
+        self.currentView = MainView.LOG
+        self.tabWidgetStages.setCurrentIndex(self.currentView)
+        self.logger.info("View LOG")
+        
+    @pyqtSlot()
     def viewConfig(self):
-        self.currentView = View.CONFIG
+        self.currentView = StimView.CONFIG
         self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View CONFIG")
 
     @pyqtSlot()
-    def viewLog(self):
-        self.currentView = View.LOG
-        self.tabWidget.setCurrentIndex(self.currentView)
-        self.logger.info("View LOG")
-        
-    @pyqtSlot()
     def viewGrid(self):
-        self.currentView = View.V_GRID
+        self.currentView = StimView.V_GRID
         self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View V(t) GRID")
 
     @pyqtSlot()
     def viewAmplGrid(self):
-        self.currentView = View.A_GRID
+        self.currentView = StimView.A_GRID
         self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View A(f) GRID")
 
     @pyqtSlot(int)
     def viewAmplChan(self, chan):
-        self.currentView = View.A_CHAN
+        self.currentView = StimView.A_CHAN
         self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View A(f) A_CHAN.  Channel = {}".format(chan))
 
@@ -958,7 +991,7 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot(int)
     def viewChan(self, chan):
-        self.currentView = View.V_CHAN
+        self.currentView = StimView.V_CHAN
         self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View V(t) A_CHAN.  Channel = {}".format(chan))
 
@@ -968,18 +1001,6 @@ class MainWindow(qtw.QMainWindow):
             self.pw_chan_main.setTitle(chan)
             self.chanViewMain = chan
 
-
-    @pyqtSlot()
-    def viewResFreqFit(self):
-        self.currentView = View.RESFREQ
-        self.tabWidget.setCurrentIndex(self.currentView)
-        self.logger.info("View Resonant Frequencies")
-            
-    @pyqtSlot()
-    def viewTensions(self):
-        self.currentView = View.TENSION
-        self.tabWidget.setCurrentIndex(self.currentView)
-        self.logger.info("View Tensions")
 
     @pyqtSlot()
     def saveAmplitudeData(self):
