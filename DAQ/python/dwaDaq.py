@@ -42,6 +42,8 @@ from functools import partial
 from enum import Enum, IntEnum
 import string
 
+from itertools import chain
+
 import numpy as np
 import scipy
 from scipy.signal import find_peaks
@@ -77,30 +79,41 @@ from SietchConnect import SietchConnect
 
 STIM_PERIOD_CURRENT = 'stimPeriodCounter' # KLUGE to account for firmware mistake
 
+RUN_START = 1
+RUN_END = 0
+
 class State(IntEnum):
     IDLE = 0
     SCAN = 1
     POST_SCAN = 2
 
-class View(IntEnum):
+class MainView(IntEnum):
+    STIMULUS  = 0 # config/V(t)/A(f) [Stimulus view]
+    RESFREQ   = 1 # A(f) data and fitting
+    TENSION   = 2 # Tension view
+    LOG       = 3 # Log-file output    
+
+class StimView(IntEnum):
     ''' for stackedWidget page indexing '''
     CONFIG  = 0  # Show the configuration parameters
-    LOG     = 1  # Log-file output
-    V_GRID  = 2  # V(t) (grid view)
-    V_CHAN  = 3  # V(t) (channel view)
-    A_GRID  = 4  # A(f) (grid view)
-    A_CHAN  = 5  # A(f) (channel view)
-    RESFREQ = 6  # Wire tensions
-    TENSION = 7  # Wire tensions
+    V_GRID  = 1  # V(t) (grid view)
+    V_CHAN  = 2  # V(t) (channel view)
+    A_GRID  = 3  # A(f) (grid view)
+    A_CHAN  = 4  # A(f) (channel view)
 
 class Shortcut(Enum):
-    CONFIG  = "CTRL+C"
-    LOG     = "CTRL+L"
-    V_GRID  = "CTRL+V"
-    A_GRID  = "CTRL+A"
-    RESFREQ = "CTRL+F"
-    TENSION = "CTRL+T"
+    STIMULUS = "CTRL+S"
+    RESFREQ  = "CTRL+R"
+    TENSION  = "CTRL+T"
+    LOG      = "CTRL+L"
+    #
+    CONFIG   = "CTRL+C"
+    V_GRID   = "CTRL+V"
+    A_GRID   = "CTRL+A"
 
+
+
+    
 class WorkerSignals(qtc.QObject):
     '''
     Defines the signals available from a running worker thread.
@@ -295,6 +308,9 @@ class MainWindow(qtw.QMainWindow):
         
 
         #self.log_tb.append("logging window...")  # FIXME... how to update...?
+
+        # KLUGE:
+        self.oldDataFormat = True
         
         # Set defaults...
         self.configFileName.setText("dwaConfigWC.ini")
@@ -305,10 +321,10 @@ class MainWindow(qtw.QMainWindow):
         # Make handles for widgets in the UI
         #self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
         #self.stack.setStyleSheet("background-color:white")
-        self.currentView = View.CONFIG
+        self.currentView = MainView.STIMULUS
         self.tabWidget.setCurrentIndex(self.currentView)
         # testing updating tab labels
-        #self.tabWidget.setTabText(View.TENSION, "Tension\nCTRL+t")
+        #self.tabWidget.setTabText(StimView.TENSION, "Tension\nCTRL+t")
         self._setTabTooltips()
         
         # Connect slots/signals
@@ -348,6 +364,9 @@ class MainWindow(qtw.QMainWindow):
         
         # make dummy data to display
         self._makeDummyData()
+
+        #
+        self.tensionData = {}
 
         # get refs to curves on each plot
         self._makeCurves()
@@ -487,12 +506,14 @@ class MainWindow(qtw.QMainWindow):
             self.resFitLines['proc'][reg] = []
             
     def _setTabTooltips(self):
-        self.tabWidget.setTabToolTip(View.CONFIG, Shortcut.CONFIG.value)
-        self.tabWidget.setTabToolTip(View.LOG, Shortcut.LOG.value)
-        self.tabWidget.setTabToolTip(View.V_GRID, Shortcut.V_GRID.value)
-        self.tabWidget.setTabToolTip(View.A_GRID, Shortcut.A_GRID.value)
-        self.tabWidget.setTabToolTip(View.RESFREQ, Shortcut.RESFREQ.value)
-        self.tabWidget.setTabToolTip(View.TENSION, Shortcut.TENSION.value)
+        self.tabWidgetStages.setTabToolTip(MainView.STIMULUS, Shortcut.STIMULUS.value)
+        self.tabWidgetStages.setTabToolTip(MainView.RESFREQ, Shortcut.RESFREQ.value)
+        self.tabWidgetStages.setTabToolTip(MainView.TENSION, Shortcut.TENSION.value)
+        self.tabWidgetStages.setTabToolTip(MainView.LOG, Shortcut.LOG.value)
+        #
+        self.tabWidget.setTabToolTip(StimView.CONFIG, Shortcut.CONFIG.value)
+        self.tabWidget.setTabToolTip(StimView.V_GRID, Shortcut.V_GRID.value)
+        self.tabWidget.setTabToolTip(StimView.A_GRID, Shortcut.A_GRID.value)
 
     def _initLogging(self):
         # logging levels (in order of severity): DEBUG, INFO, WARNING, ERROR, CRITICAL
@@ -735,21 +756,10 @@ class MainWindow(qtw.QMainWindow):
                                                               #self.dummyDataTension['y'])
             
     def _keyboardShortcuts(self):
-        # Show configuration parameters
-        self.scConfig = qtw.QShortcut(qtg.QKeySequence(Shortcut.CONFIG.value), self)
-        self.scConfig.activated.connect(self.viewConfig)
 
-        # Show log
-        self.scLog = qtw.QShortcut(qtg.QKeySequence(Shortcut.LOG.value), self)
-        self.scLog.activated.connect(self.viewLog)
-
-        # V(t) data (grid view)
-        self.scGridView = qtw.QShortcut(qtg.QKeySequence(Shortcut.V_GRID.value), self)
-        self.scGridView.activated.connect(self.viewGrid)
-
-        # A(f) data (grid view)
-        self.scAmplGridView = qtw.QShortcut(qtg.QKeySequence(Shortcut.A_GRID.value), self)
-        self.scAmplGridView.activated.connect(self.viewAmplGrid)
+        # Stimulus Screen
+        self.scStimulusView = qtw.QShortcut(qtg.QKeySequence(Shortcut.STIMULUS.value), self)
+        self.scStimulusView.activated.connect(self.viewStimulus)
 
         # Resonant frequency fit
         self.scResFreqFitView = qtw.QShortcut(qtg.QKeySequence(Shortcut.RESFREQ.value), self)
@@ -758,6 +768,22 @@ class MainWindow(qtw.QMainWindow):
         # Tension data
         self.scTensionView = qtw.QShortcut(qtg.QKeySequence(Shortcut.TENSION.value), self)
         self.scTensionView.activated.connect(self.viewTensions)
+
+        # Show log
+        self.scLog = qtw.QShortcut(qtg.QKeySequence(Shortcut.LOG.value), self)
+        self.scLog.activated.connect(self.viewLog)
+
+        # Show configuration parameters
+        self.scConfig = qtw.QShortcut(qtg.QKeySequence(Shortcut.CONFIG.value), self)
+        self.scConfig.activated.connect(self.viewConfig)
+
+        # V(t) data (grid view)
+        self.scGridView = qtw.QShortcut(qtg.QKeySequence(Shortcut.V_GRID.value), self)
+        self.scGridView.activated.connect(self.viewGrid)
+
+        # A(f) data (grid view)
+        self.scAmplGridView = qtw.QShortcut(qtg.QKeySequence(Shortcut.A_GRID.value), self)
+        self.scAmplGridView.activated.connect(self.viewAmplGrid)
         
         # Show V(t) or A(f) (channel view)
         # FIXME: move these to "Shortucut" ENUM?
@@ -909,13 +935,13 @@ class MainWindow(qtw.QMainWindow):
     @pyqtSlot()
     def _f0LineMoved(self):
         print("f0Line moved")
-        # FIXME: *which line* was moved???
-        # can find out with self.sender()
-        # print(self.sender())
 
-        # FIXME: need to know if user dragged line on the 'raw' plot or on the 'proc' plot
-        rawLines = [x for v in self.resFitLines['raw'].values() for x in v]
-        procLines = [x for v in self.resFitLines['proc'].values() for x in v]
+        # Figure out which plot the line drag was in
+        # Flatten the list of InfiniteLines and match to source of signal
+        rawLines = list(chain(*self.resFitLines['raw'].values()))
+        procLines = list(chain(*self.resFitLines['proc'].values()))
+        #rawLines = [x for v in self.resFitLines['raw'].values() for x in v]
+        #procLines = [x for v in self.resFitLines['proc'].values() for x in v]
         if self.sender() in rawLines:
             source = 'raw'
         elif self.sender() in procLines:
@@ -923,7 +949,7 @@ class MainWindow(qtw.QMainWindow):
         else:
             print("ERROR: unknown source of signal: {self.sender}")
             return
-        print("_f0LineMoved(): sender is from {source}")
+        print(f"_f0LineMoved(): sender is from {source}")
             
         # loop over all channels. Get locations of lines
         for reg in self.registers:
@@ -936,32 +962,50 @@ class MainWindow(qtw.QMainWindow):
 
         
     @pyqtSlot()
+    def viewStimulus(self):
+        self.currentView = MainView.STIMULUS
+        self.tabWidgetStages.setCurrentIndex(self.currentView)
+        self.logger.info("View Stimulus")
+
+    @pyqtSlot()
+    def viewResFreqFit(self):
+        self.currentView = MainView.RESFREQ
+        self.tabWidgetStages.setCurrentIndex(self.currentView)
+        self.logger.info("View Resonant Frequencies")
+            
+    @pyqtSlot()
+    def viewTensions(self):
+        self.currentView = MainView.TENSION
+        self.tabWidgetStages.setCurrentIndex(self.currentView)
+        self.logger.info("View Tensions")
+
+    @pyqtSlot()
+    def viewLog(self):
+        self.currentView = MainView.LOG
+        self.tabWidgetStages.setCurrentIndex(self.currentView)
+        self.logger.info("View LOG")
+        
+    @pyqtSlot()
     def viewConfig(self):
-        self.currentView = View.CONFIG
+        self.currentView = StimView.CONFIG
         self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View CONFIG")
 
     @pyqtSlot()
-    def viewLog(self):
-        self.currentView = View.LOG
-        self.tabWidget.setCurrentIndex(self.currentView)
-        self.logger.info("View LOG")
-        
-    @pyqtSlot()
     def viewGrid(self):
-        self.currentView = View.V_GRID
+        self.currentView = StimView.V_GRID
         self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View V(t) GRID")
 
     @pyqtSlot()
     def viewAmplGrid(self):
-        self.currentView = View.A_GRID
+        self.currentView = StimView.A_GRID
         self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View A(f) GRID")
 
     @pyqtSlot(int)
     def viewAmplChan(self, chan):
-        self.currentView = View.A_CHAN
+        self.currentView = StimView.A_CHAN
         self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View A(f) A_CHAN.  Channel = {}".format(chan))
 
@@ -973,7 +1017,7 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot(int)
     def viewChan(self, chan):
-        self.currentView = View.V_CHAN
+        self.currentView = StimView.V_CHAN
         self.tabWidget.setCurrentIndex(self.currentView)
         self.logger.info("View V(t) A_CHAN.  Channel = {}".format(chan))
 
@@ -983,18 +1027,6 @@ class MainWindow(qtw.QMainWindow):
             self.pw_chan_main.setTitle(chan)
             self.chanViewMain = chan
 
-
-    @pyqtSlot()
-    def viewResFreqFit(self):
-        self.currentView = View.RESFREQ
-        self.tabWidget.setCurrentIndex(self.currentView)
-        self.logger.info("View Resonant Frequencies")
-            
-    @pyqtSlot()
-    def viewTensions(self):
-        self.currentView = View.TENSION
-        self.tabWidget.setCurrentIndex(self.currentView)
-        self.logger.info("View Tensions")
 
     @pyqtSlot()
     def saveAmplitudeData(self):
@@ -1214,8 +1246,8 @@ class MainWindow(qtw.QMainWindow):
         print("Clearing fit lines from the resonance plots")
 
         for reg in self.registers:
-            print(f"self.resFitLines['proc'][{reg}] = ")
-            print(self.resFitLines['proc'][reg])
+            #print(f"self.resFitLines['proc'][{reg}] = ")
+            #print(self.resFitLines['proc'][reg])
             for infLine in self.resFitLines['proc'][reg]:
                 self.resonanceProcessedPlots[reg].removeItem(infLine)
             for infLine in self.resFitLines['raw'][reg]:
@@ -1240,11 +1272,13 @@ class MainWindow(qtw.QMainWindow):
         # FIXME: move this to a higher level (only do it once...)
         #def getUniqueFileroot():
         #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
+        print("_makeOutputFilenames()")
         timestring = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
         froot = os.path.join(self.udpDataDir, timestring)
         self.logger.info(f"fileroot = {froot}")
         # create new output filenames
         self.fnOfReg = {}  # file names for output. Keys are 2-digit hex string (e.g. '03' or 'FF'). values are filenames
+        #self.fnOfReg['FF'] = "{}_{:02X}.txt".format(froot, 'FF')
         for reg in self.registers_all:
             self.fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
         self.logger.info(f"self.fnOfReg = {self.fnOfReg}")
@@ -1296,14 +1330,21 @@ class MainWindow(qtw.QMainWindow):
                     logger.info('\n\n')
                     logger.info(f'self.dwaDataParser.dwaPayload = {self.dwaDataParser.dwaPayload}')
 
-                # If there is a run frame, this is a new run
-                # so need to create new filenames
+                # FIXME: this should go into processUdpPayload() !!!
+                # If there is a run frame with no '77' key, or if this is a run start frame
+                # then this is a new run, so need to clear plots and create new filenames
                 if ddp.Frame.RUN in self.dwaDataParser.dwaPayload:
-                    logger.info("New run detected... creating new filenames")
-                    self._makeOutputFilenames()
-                    self._clearAmplitudeData()
-                    self._clearResonanceFits()
-                    logger.info(self.fnOfReg)
+                    if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == None:
+                        self.oldDataFormat = True
+                    print("GOT HERE")
+                    if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == RUN_START or \
+                       self.oldDataFormat:
+                        print("New run detected... creating new filenames")
+                        logger.info("New run detected... creating new filenames")
+                        self._makeOutputFilenames()
+                        self._clearAmplitudeData()
+                        self._clearResonanceFits()
+                        logger.info(self.fnOfReg)
                 
                 # write data to file by register
                 reg = self.dwaDataParser.dwaPayload[ddp.Frame.UDP]['Register_ID_hexStr']
