@@ -305,8 +305,6 @@ class MainWindow(qtw.QMainWindow):
         self.logFilename_val.setText(self.logFilename)  # must come after loadUi() call
         self.logFilenameLog_val.setText(self.logFilename)  
 
-        
-
         #self.log_tb.append("logging window...")  # FIXME... how to update...?
 
         # KLUGE:
@@ -341,7 +339,6 @@ class MainWindow(qtw.QMainWindow):
         self.resFitProminence.returnPressed.connect(self.resFitParameterUpdate)
 
         # Tension Tab
-        #self.tensionStageComboBox.setText("dwaConfigWC.ini")
         self.tensionStageComboBox.addItem("Pre-production")
         self.tensionStageComboBox.addItem("Production")
         self.tensionStageComboBox.addItem("Commissioning")
@@ -364,9 +361,6 @@ class MainWindow(qtw.QMainWindow):
         
         # make dummy data to display
         self._makeDummyData()
-
-        #
-        self.tensionData = {}
 
         # get refs to curves on each plot
         self._makeCurves()
@@ -706,8 +700,15 @@ class MainWindow(qtw.QMainWindow):
         # add in the main window, too (large view of A(f) for a single channel)
         self.curves['amplchan']['main'] = getattr(self, f'pw_amplchan_main').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
 
-        # Tension information
-        #self.curves['tension']['tensionOfWireNumber'] = self.tensionPlots['tensionOfWireNumber'].plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
+        # Tension
+        #self.curves['tension']['TofWireNum'] = {}
+        #tensionPen = pg.mkPen(width=5, color='r')
+        #for layer in ["G","U","V","X"]:
+        #    for side in ["A","B"]:
+        #        self.curves['tension']['TofWireNum'][layer+side] = pg.ScatterPlotItem(pen=tensionPen, symbol='o', size=1)
+        
+        ### Tension information
+        ###self.curves['tension']['tensionOfWireNumber'] = self.tensionPlots['tensionOfWireNumber'].plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
 
         
     def _plotDummyAmpl(self):
@@ -916,7 +917,6 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def ampDataFilenameEnter(self):
-        self.tensionData['col1'] = [5,6,7,8]
         self.doResonanceAnalysis()
 
     @pyqtSlot()
@@ -1127,11 +1127,14 @@ class MainWindow(qtw.QMainWindow):
                         logging.warning(res)
                         self.tensionData[layer+side][i] = 4*1.16e-4*1.15**2*res[0]**2
 
+                        
+                    # FIXME: this should only happen once -- in _makeCurves()
                     # Create the scatter plot and add it to the view
                     scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
                     self.tensionPlots[layer][side].addItem(scatter)
                     pos = [{'pos': [i,self.tensionData[layer+side][i]]} for i in range(len(self.tensionData[layer+side]))]
                     scatter.setData(pos)
+                    #self.curves['tension']['TofWireNum'][layer+side].setData(pos)
 
         self.tensionTableModel = TensionTableModel(self.tensionData)
         self.tensionTableView.setModel(self.tensionTableModel)

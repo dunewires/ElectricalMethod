@@ -126,7 +126,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -790,7 +790,7 @@
               <rect>
                <x>10</x>
                <y>10</y>
-               <width>431</width>
+               <width>601</width>
                <height>511</height>
               </rect>
              </property>
@@ -914,7 +914,7 @@
      <x>0</x>
      <y>0</y>
      <width>1313</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -953,7 +953,7 @@
   <customwidget>
    <class>PlotWidget</class>
    <extends>QGraphicsView</extends>
-   <header>pyqtgraph</header>
+   <header location="global">pyqtgraph</header>
    <container>1</container>
   </customwidget>
   <customwidget>
