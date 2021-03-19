@@ -324,6 +324,23 @@ class MainWindow(qtw.QMainWindow):
         self.resFitWidth.returnPressed.connect(self.resFitParameterUpdate)
         self.resFitProminence.returnPressed.connect(self.resFitParameterUpdate)
 
+        # Tension Tab
+        #self.tensionStageComboBox.setText("dwaConfigWC.ini")
+        self.tensionStageComboBox.addItem("Pre-production")
+        self.tensionStageComboBox.addItem("Production")
+        self.tensionStageComboBox.addItem("Commissioning")
+        self.btnLoadTensions.clicked.connect(self.loadTensions)
+        self.tensionData = {
+            'XA':[0]*8,
+            'XB':[0]*8,
+            'UA':[0]*8,
+            'UB':[0]*8,
+            'VA':[0]*8,
+            'VB':[0]*8,
+            'GA':[0]*8,
+            'GB':[0]*8,
+        }
+
         # Configure/label plots
         self.chanViewMain = 0  # which channel to show large for V(t) data
         self.chanViewMainAmpl = 0  # which channel to show large for A(f) data
@@ -346,13 +363,6 @@ class MainWindow(qtw.QMainWindow):
         # signals for callback actions
         self.signals = WorkerSignals()
         
-        # Tension Tab
-        #self.tensionStageComboBox.setText("dwaConfigWC.ini")
-        self.tensionStageComboBox.addItem("Pre-production")
-        self.tensionStageComboBox.addItem("Production")
-        self.tensionStageComboBox.addItem("Commissioning")
-        self.btnLoadTensions.clicked.connect(self.loadTensions)
-
 
         
         ############ Resize and launch GUI in bottom right corner of screen
@@ -560,9 +570,24 @@ class MainWindow(qtw.QMainWindow):
         # Tension tab
         self.tensionGLW.setBackground('w')
         self.tensionPlots = {}
-        self.tensionPlots['tensionOfWireNumber'] = self.tensionGLW.addPlot(title="Tensions", labels={'left':"Tension [N]", 'bottom':"Wire number"})
-        tensionSpecRegion = pg.LinearRegionItem(values=(6.0, 7.0), orientation=1,  movable=False) # 1=horizontal, 0=vert.
-        self.tensionPlots['tensionOfWireNumber'].addItem(tensionSpecRegion)
+        for layer in ["G","U","V","X"]:
+            self.tensionPlots[layer] = {}
+            for side in ["A", "B"]:
+                self.tensionPlots[layer][side] = (self.tensionGLW.addPlot())
+                self.tensionPlots[layer][side].setTitle(f'Layer {layer} Side {side}')
+
+        #self.tensionPlots = {}
+        #self.tensionPlots['tensionOfWireNumber'] = self.tensionGLW.addPlot(title="Tensions", labels={'left':"Tension [N]", 'bottom':"Wire number"})
+        # logging.warning("self.tensionData[GA]")
+        # logging.warning(self.tensionData["GA"])
+        # # tensionSpecRegion = pg.LinearRegionItem(values=self.tensionData["GA"], orientation=1,  movable=False) # 1=horizontal, 0=vert.
+
+        # # Create the scatter plot and add it to the view
+        # scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
+        # self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
+        # pos = [{'pos': [i,self.tensionData["GA"][i]]} for i in range(960)]
+        # scatter.setData(pos)
+        # self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
             
         
     def printOutput(self, s):
@@ -660,7 +685,7 @@ class MainWindow(qtw.QMainWindow):
         self.curves['amplchan']['main'] = getattr(self, f'pw_amplchan_main').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
 
         # Tension information
-        self.curves['tension']['tensionOfWireNumber'] = self.tensionPlots['tensionOfWireNumber'].plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
+        #self.curves['tension']['tensionOfWireNumber'] = self.tensionPlots['tensionOfWireNumber'].plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
 
         
     def _plotDummyAmpl(self):
@@ -705,8 +730,9 @@ class MainWindow(qtw.QMainWindow):
 
 
     def _plotDummyTension(self):
-        self.curves['tension']['tensionOfWireNumber'].setData(self.dummyDataTension['x'],
-                                                              self.dummyDataTension['y'])
+        pass
+        #self.curves['tension']['tensionOfWireNumber'].setData(self.dummyDataTension['x'],
+                                                              #self.dummyDataTension['y'])
             
     def _keyboardShortcuts(self):
         # Show configuration parameters
@@ -989,73 +1015,97 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def loadTensions(self):
-        self.tensionData = {
-            'XA':[0]*960,
-            'XB':[0]*960,
-            'UA':[0]*960,
-            'UB':[0]*960,
-            'VA':[0]*960,
-            'VB':[0]*960,
-            'GA':[0]*960,
-            'GB':[0]*960,
-        }
+
         sietch = SietchConnect("sietch.creds")
         # Get APA UUID from text box
         pointerTableApaUuid = self.pointerTableApaUuid.text()
-        # Loop over layers
-        for layer in ["X", "U", "V", "G"]:
-            # Get most recent pointer table for this layer
-            mostRecentPointerTableLookup = ""
-            try:
-                mostRecentPointerTableLookup = sietch.api("/search/test?limit=1", {
-                    "formId": "wire_tension_pointer", 
-                    "componentUuid": pointerTableApaUuid,
-                    "layer": layer
-                })
-            except:
-                self.configFileContents.setPlainText("Invalid UUID")
-                return
+        # Get all wire resonance entries
+        allResonanceEntriesList = sietch.api("/search/test?limit=1000000", {
+                "formId": "wire_resonance_measurement", 
+                "componentUuid": pointerTableApaUuid
+        })
+        allResonanceEntries = {}
+        for entry in allResonanceEntriesList:
+            allResonanceEntries[entry["_id"]] = entry
+        # Get most recent pointer table for this layer
+        mostRecentPointerTableLookup = ""
+        try:
+            mostRecentPointerTableLookup = sietch.api("/search/test?limit=1", {
+                "formId": "wire_tension_pointer", 
+                "componentUuid": pointerTableApaUuid,
+                # "layer": layer
+            })
+        except:
+            # No pointer table found for UUID
+            self.configFileContents.setPlainText("Invalid UUID")
+        
+
+        if mostRecentPointerTableLookup:
+            logging.warning("mostRecentPointerTableLookup")
+            logging.warning(json.dumps(mostRecentPointerTableLookup,indent=2))
             # Get database id for this pointer table
             mostRecentPointerTableDBid = mostRecentPointerTableLookup[0]["_id"]
             logging.warning("APA Uuid:")
             logging.warning(pointerTableApaUuid)
             # Get table from database
-            pointer_table = sietch.api("/test/"+mostRecentPointerTableDBid)
-            logging.warning("pointer table for APA:")
-            logging.warning(pointer_table)
-            logging.warning(json.dumps(pointer_table,indent=2))
-            # Separate the A and B sides
-            pointers_A = pointer_table["data"]["wires"]["A"]
-            pointers_B = pointer_table["data"]["wires"]["B"]
-            logging.warning("pointers_A")
-            logging.warning(json.dumps(pointers_A,indent=2))
-            # Get list of database ids for the individual wire measurements
-            record_ids_A = [x["testId"] for x in pointers_A]
-            record_ids_B = [x["testId"] for x in pointers_B]
-            logging.warning("record_ids_A")
-            logging.warning(record_ids_A)
-            # Get database entries for the individual wire resonance measurements
-            resonance_entries_A = [sietch.api("/test/"+x) for x in record_ids_A]
-            resonance_entries_B = [sietch.api("/test/"+x) for x in record_ids_B]
-            logging.warning("resonance_entries_A")
-            logging.warning(json.dumps(resonance_entries_A,indent=2))
-            # Extract the list of resonances from the database entries
-            resonances_A = [entry["data"]["wires"][str(i)] for i,entry in enumerate(resonance_entries_A)]
-            resonances_B = [entry["data"]["wires"][str(i)] for i,entry in enumerate(resonance_entries_B)]
-            logging.warning("resonances_A")
-            logging.warning(resonances_A)
-            # Compute the tension and save it to the table.
-            # FIXME: currently this is done is a very dumb way with no logic to which resonances get picked (just uses the maximum resonance).
-            for i, res in enumerate(resonances_A):
-                logging.warning(res)
-                self.tensionData[layer+"A"][i] = 4*1.16e-4*1.15**2*res[-1]**2
-            for i, res in enumerate(resonances_B):
-                self.tensionData[layer+"B"][i] = 4*1.16e-4*1.15**2*res[-1]**2
+            pointerTable = sietch.api("/test/"+mostRecentPointerTableDBid)
+            # Lookup table found, loop over layers
+            wirePointersAllLayers = pointerTable["data"]["wires"]
+            for layer in ["G", "U", "V", "X"]:
+                if layer in wirePointersAllLayers.keys():
+                    wirePointersForLayer = wirePointersAllLayers[layer]
+                else:
+                    logging.warning("No pointer table found for layer "+layer+".")
+                    continue      
+
+                for side in ["A", "B"]:          
+                    # if not mostRecentPointerTableLookup:
+                    #     logging.warning("No pointer table found for layer "+layer+".")
+                    #     continue
+                    # logging.warning("mostRecentPointerTableLookup")
+                    # logging.warning(json.dumps(mostRecentPointerTableLookup,indent=2))
+                    # # Get database id for this pointer table
+                    # mostRecentPointerTableDBid = mostRecentPointerTableLookup[0]["_id"]
+                    # logging.warning("APA Uuid:")
+                    # logging.warning(pointerTableApaUuid)
+                    # # Get table from database
+                    # pointer_table = sietch.api("/test/"+mostRecentPointerTableDBid)
+                    logging.warning("wirePointersForLayer")
+                    logging.warning(json.dumps(wirePointersForLayer,indent=2))
+                    # Separate the A and B sides
+                    pointers = wirePointersForLayer[side]
+                    logging.warning("pointers")
+                    logging.warning(json.dumps(pointers,indent=2))
+                    # Get list of database ids for the individual wire measurements
+                    recordIds = [x["testId"] for x in pointers]
+                    logging.warning("recordIds")
+                    logging.warning(recordIds)
+                    # Get database entries for the individual wire resonance measurements
+                    resonanceEntries = [sietch.api("/test/"+x) for x in recordIds]
+                    logging.warning("resonanceEntries")
+                    logging.warning(json.dumps(resonanceEntries,indent=2))
+                    # Extract the list of resonances from the database entries
+                    resonances = [entry["data"]["wires"][str(i)] for i,entry in enumerate(resonanceEntries)]
+                    logging.warning("resonances")
+                    logging.warning(resonances)
+                    # Compute the tension and save it to the table.
+                    # FIXME: currently this is done is a very dumb way with no logic to which resonances get picked (just uses the first resonance).
+                    for i, res in enumerate(resonances):
+                        logging.warning(res)
+                        self.tensionData[layer+side][i] = 4*1.16e-4*1.15**2*res[0]**2
+
+                    # Create the scatter plot and add it to the view
+                    scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
+                    self.tensionPlots[layer][side].addItem(scatter)
+                    pos = [{'pos': [i,self.tensionData[layer+side][i]]} for i in range(len(self.tensionData[layer+side]))]
+                    scatter.setData(pos)
 
         self.tensionTableModel = TensionTableModel(self.tensionData)
         self.tensionTableView.setModel(self.tensionTableModel)
         self.tensionTableView.resizeColumnsToContents()
         self.tensionTableView.resizeRowsToContents()
+
+        #self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
         
     def _writeAmplitudesToFile(self):
         # write out the A(f) data for this frequency to a file

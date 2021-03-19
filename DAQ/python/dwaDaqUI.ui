@@ -769,80 +769,102 @@
           <attribute name="title">
            <string>Tensions</string>
           </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_2">
-           <item>
-            <layout class="QFormLayout" name="formLayout">
-             <property name="fieldGrowthPolicy">
-              <enum>QFormLayout::ExpandingFieldsGrow</enum>
+          <widget class="QTabWidget" name="tabWidget_2">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>100</y>
+             <width>1151</width>
+             <height>561</height>
+            </rect>
+           </property>
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <widget class="QWidget" name="tab">
+            <attribute name="title">
+             <string>Table</string>
+            </attribute>
+            <widget class="QTableView" name="tensionTableView">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>10</y>
+               <width>431</width>
+               <height>511</height>
+              </rect>
              </property>
-             <item row="1" column="0">
-              <widget class="QLineEdit" name="pointerTableApaUuid">
-               <property name="autoFillBackground">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="placeholderText">
-                <string>APA Number</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QComboBox" name="tensionStageComboBox"/>
-             </item>
-             <item row="3" column="0">
-              <widget class="QPushButton" name="btnLoadTensions">
-               <property name="text">
-                <string>Load</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QTabWidget" name="tabWidget_2">
-             <property name="currentIndex">
-              <number>0</number>
+            </widget>
+           </widget>
+           <widget class="QWidget" name="tab_2">
+            <attribute name="title">
+             <string>Graphs</string>
+            </attribute>
+            <widget class="GraphicsLayoutWidget" name="tensionGLW">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>10</y>
+               <width>1131</width>
+               <height>521</height>
+              </rect>
              </property>
-             <widget class="QWidget" name="tab">
-              <attribute name="title">
-               <string>Table</string>
-              </attribute>
-              <widget class="QTableView" name="tensionTableView">
-               <property name="geometry">
-                <rect>
-                 <x>10</x>
-                 <y>10</y>
-                 <width>431</width>
-                 <height>481</height>
-                </rect>
-               </property>
-              </widget>
-             </widget>
-             <widget class="QWidget" name="tab_2">
-              <attribute name="title">
-               <string>Graphs</string>
-              </attribute>
-              <widget class="GraphicsLayoutWidget" name="tensionGLW">
-               <property name="geometry">
-                <rect>
-                 <x>17</x>
-                 <y>11</y>
-                 <width>1141</width>
-                 <height>251</height>
-                </rect>
-               </property>
-              </widget>
-             </widget>
             </widget>
-           </item>
-           <item>
-            <widget class="QWidget" name="widget_4" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_7"/>
-            </widget>
-           </item>
-          </layout>
+           </widget>
+          </widget>
+          <widget class="QWidget" name="widget_4" native="true">
+           <property name="geometry">
+            <rect>
+             <x>9</x>
+             <y>645</y>
+             <width>18</width>
+             <height>18</height>
+            </rect>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_7"/>
+          </widget>
+          <widget class="QPushButton" name="btnLoadTensions">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>62</y>
+             <width>131</width>
+             <height>23</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Load</string>
+           </property>
+          </widget>
+          <widget class="QLineEdit" name="pointerTableApaUuid">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>10</y>
+             <width>133</width>
+             <height>20</height>
+            </rect>
+           </property>
+           <property name="autoFillBackground">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="placeholderText">
+            <string>APA Number</string>
+           </property>
+          </widget>
+          <widget class="QComboBox" name="tensionStageComboBox">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>36</y>
+             <width>131</width>
+             <height>20</height>
+            </rect>
+           </property>
+          </widget>
          </widget>
          <widget class="QWidget" name="tabLog">
           <attribute name="title">
