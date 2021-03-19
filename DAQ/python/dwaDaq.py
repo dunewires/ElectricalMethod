@@ -596,6 +596,7 @@ class MainWindow(qtw.QMainWindow):
             for side in ["A", "B"]:
                 self.tensionPlots[layer][side] = (self.tensionGLW.addPlot())
                 self.tensionPlots[layer][side].setTitle(f'Layer {layer} Side {side}')
+            self.tensionGLW.nextRow()
 
         #self.tensionPlots = {}
         #self.tensionPlots['tensionOfWireNumber'] = self.tensionGLW.addPlot(title="Tensions", labels={'left':"Tension [N]", 'bottom':"Wire number"})
