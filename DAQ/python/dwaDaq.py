@@ -331,6 +331,7 @@ class MainWindow(qtw.QMainWindow):
         #self.btnQuit.clicked.connect(self.close)
         self.configFileName.returnPressed.connect(self.configFileNameEnter)
         self.ampDataFilename.returnPressed.connect(self.ampDataFilenameEnter)
+        self.pb_ampDataLoad.clicked.connect(self.ampDataFilenameEnter)
         for reg in self.registers:
             getattr(self, f'le_resfreq_val_{reg}').returnPressed.connect(self._resFreqUserInputText)
         self.resFitPreDetrend.stateChanged.connect(self.resFitParameterUpdate)

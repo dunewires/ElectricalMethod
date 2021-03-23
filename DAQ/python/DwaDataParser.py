@@ -354,6 +354,7 @@ class DwaDataParser():
 
     def _postProcessFreqFrame(self, dd):
         dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodActive'] # convert period in 10ns to freq in Hz
+        #dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodCounter'] # KLUGE
         dd['adcSamplingPeriod_sec'] = dd['adcSamplingPeriod']*1e-8
         return dd
 
@@ -392,9 +393,11 @@ class DwaDataParser():
         inHeader = False
         delimIdxs = []  # line numbers of frame delimiters
         for ii, line in enumerate(udpPayload):
-            ### FIXME: KLUGE KLUGE!!!!
-            print("MAJOR KLUGE NEEDS TO BE REMOVED!")
             if line.startswith("8"):
+                ### FIXME: KLUGE KLUGE!!!!
+                print("DwaDataParser.parse(): MAJOR KLUGE NEEDS TO BE REMOVED!")
+                print("                       no info line should start with an 8")
+                print(line)
                 continue
             if dwa.isHeaderLine(line):
                 delimIdxs.append(ii)
