@@ -522,7 +522,7 @@ def dwaValidateConfigParams(config):
 
 def dwaSetDigipots(ss, cfgstr, verbose=0):
     """ cfgstr is an 8-channel string: 8 x 8-bit values, one per digipot
-    e.g. cfgstr = '0001020304050607'
+    e.g. cfgstr = '0706050403020100' 
     where '00' is a hex string to configure digipot 0
     where '01' is a hex string to configure digipot 1
     ...
@@ -542,8 +542,8 @@ def dwaSetDigipots(ss, cfgstr, verbose=0):
     # DD for channel 6 or 7.
 
     # Config string for even digipots
-    cfgEven = cfgstr[12:14]+cfgstr[ 8:10]+cfgstr[4:6]+cfgstr[0:2]
-    cfgOdd  = cfgstr[14:16]+cfgstr[10:12]+cfgstr[6:8]+cfgstr[2:4]
+    cfgEven = cfgstr[2:4]+cfgstr[6:8]+cfgstr[10:12]+cfgstr[14:16]  # "06040200"
+    cfgOdd  = cfgstr[0:2]+cfgstr[4:6]+cfgstr[ 8:10]+cfgstr[12:14]  # "07050301"
     print(f"cfgEven = {cfgEven}")
     print(f"cfgOdd  = {cfgOdd}")
     # Even digipots
