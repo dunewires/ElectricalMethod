@@ -22,8 +22,8 @@ entity dwa_ps_pl_top is
 
     port (
         --DWA
-        led : out std_logic_vector(3 downto 0);
-        pButton : in std_logic_vector(3 downto 0);
+        led     : out std_logic_vector(3 downto 0);
+        pButton : in  std_logic_vector(3 downto 0);
 
         acStimX200_obuf : out std_logic := '0';
 
@@ -49,9 +49,9 @@ entity dwa_ps_pl_top is
         CD_RCK    : out std_logic_vector(3 downto 0) := (others => '0');
         CD_G_b    : out std_logic_vector(3 downto 0) := (others => '0');
 
-        SNUM_SDA : inout  std_logic                    := '0';
-        SNUM_SCL : out std_logic                    := '0';
-        SNUM_A   : out std_logic_vector(2 downto 0) := (others => '0');
+        SNUM_SDA : inout std_logic                    := '0';
+        SNUM_SCL : out   std_logic                    := '0';
+        SNUM_A   : out   std_logic_vector(2 downto 0) := (others => '0');
 
         adcCnv          : out std_logic                    := '0';
         adcSck_p        : out std_logic                    := '0';
@@ -169,20 +169,20 @@ architecture STRUCTURE of dwa_ps_pl_top is
             S_AXI_RREADY  : in  std_logic
         );
     end component dwa_registers_v1_0_S00_AXI;
-component clk_dwa_pl
-port
- (-- Clock in ports
-  -- Clock out ports
-  clk_out1          : out    std_logic;
-  clk_out2          : out    std_logic;
-  clk_out3          : out    std_logic;
-  clk_out4          : out    std_logic;
-  -- Status and control signals
-  reset             : in     std_logic;
-  locked            : out    std_logic;
-  clk_in1           : in     std_logic
- );
-end component;
+    component clk_dwa_pl
+        port
+        (   -- Clock in ports
+            -- Clock out ports
+            clk_out1 : out std_logic;
+            clk_out2 : out std_logic;
+            clk_out3 : out std_logic;
+            clk_out4 : out std_logic;
+            -- Status and control signals
+            reset   : in  std_logic;
+            locked  : out std_logic;
+            clk_in1 : in  std_logic
+        );
+    end component;
 
     -- COMP_TAG_END ------ End COMPONENT Declaration ------------
     -- The following code must appear in the VHDL architecture
@@ -191,28 +191,28 @@ end component;
 
 
 
-    signal M00_AXI_0_awaddr             : STD_LOGIC_VECTOR ( 31 downto 0 );
-    signal M00_AXI_0_awprot             : STD_LOGIC_VECTOR ( 2 downto 0 );
-    signal M00_AXI_0_awvalid            : STD_LOGIC;
-    signal M00_AXI_0_awready            : STD_LOGIC;
-    signal M00_AXI_0_wdata              : STD_LOGIC_VECTOR ( 31 downto 0 );
-    signal M00_AXI_0_wstrb              : STD_LOGIC_VECTOR ( 3 downto 0 );
-    signal M00_AXI_0_wvalid             : STD_LOGIC;
-    signal M00_AXI_0_wready             : STD_LOGIC;
-    signal M00_AXI_0_bresp              : STD_LOGIC_VECTOR ( 1 downto 0 );
-    signal M00_AXI_0_bvalid             : STD_LOGIC;
-    signal M00_AXI_0_bready             : STD_LOGIC;
-    signal M00_AXI_0_araddr             : STD_LOGIC_VECTOR ( 31 downto 0 );
-    signal M00_AXI_0_arprot             : STD_LOGIC_VECTOR ( 2 downto 0 );
-    signal M00_AXI_0_arvalid            : STD_LOGIC;
-    signal M00_AXI_0_arready            : STD_LOGIC;
-    signal M00_AXI_0_rdata              : STD_LOGIC_VECTOR ( 31 downto 0 );
-    signal M00_AXI_0_rresp              : STD_LOGIC_VECTOR ( 1 downto 0 );
-    signal M00_AXI_0_rvalid             : STD_LOGIC;
-    signal M00_AXI_0_rready             : STD_LOGIC;
-    signal peripheral_aresetn_0         : STD_LOGIC_VECTOR ( 0 to 0 );
-    signal S_AXI_ACLK_100               : STD_LOGIC;
-    signal S_AXI_ACLK_10                : STD_LOGIC;
+    signal M00_AXI_0_awaddr                         : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal M00_AXI_0_awprot                         : STD_LOGIC_VECTOR ( 2 downto 0 );
+    signal M00_AXI_0_awvalid                        : STD_LOGIC;
+    signal M00_AXI_0_awready                        : STD_LOGIC;
+    signal M00_AXI_0_wdata                          : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal M00_AXI_0_wstrb                          : STD_LOGIC_VECTOR ( 3 downto 0 );
+    signal M00_AXI_0_wvalid                         : STD_LOGIC;
+    signal M00_AXI_0_wready                         : STD_LOGIC;
+    signal M00_AXI_0_bresp                          : STD_LOGIC_VECTOR ( 1 downto 0 );
+    signal M00_AXI_0_bvalid                         : STD_LOGIC;
+    signal M00_AXI_0_bready                         : STD_LOGIC;
+    signal M00_AXI_0_araddr                         : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal M00_AXI_0_arprot                         : STD_LOGIC_VECTOR ( 2 downto 0 );
+    signal M00_AXI_0_arvalid                        : STD_LOGIC;
+    signal M00_AXI_0_arready                        : STD_LOGIC;
+    signal M00_AXI_0_rdata                          : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal M00_AXI_0_rresp                          : STD_LOGIC_VECTOR ( 1 downto 0 );
+    signal M00_AXI_0_rvalid                         : STD_LOGIC;
+    signal M00_AXI_0_rready                         : STD_LOGIC;
+    signal peripheral_aresetn_0                     : STD_LOGIC_VECTOR ( 0 to 0 );
+    signal S_AXI_ACLK_100                           : STD_LOGIC;
+    signal S_AXI_ACLK_10                            : STD_LOGIC;
     signal plClk_400, plClk_200, plClk_100,plClk_10 : STD_LOGIC;
 
     signal fromDaqReg : fromDaqRegType;
@@ -368,9 +368,9 @@ begin
             dwaClk10 => plClk_10,
 
 
-            led             => led,
-            pButton         => pButton,
-            
+            led     => led,
+            pButton => pButton,
+
             acStimX200_obuf => acStimX200_obuf,
             mainsSquare     => mainsSquare,
 
