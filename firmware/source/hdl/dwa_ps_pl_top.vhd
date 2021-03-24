@@ -169,20 +169,6 @@ architecture STRUCTURE of dwa_ps_pl_top is
             S_AXI_RREADY  : in  std_logic
         );
     end component dwa_registers_v1_0_S00_AXI;
-    component clk_dwa_pl
-        port
-        (   -- Clock in ports
-            -- Clock out ports
-            clk_out1 : out std_logic;
-            clk_out2 : out std_logic;
-            clk_out3 : out std_logic;
-            clk_out4 : out std_logic;
-            -- Status and control signals
-            reset   : in  std_logic;
-            locked  : out std_logic;
-            clk_in1 : in  std_logic
-        );
-    end component;
 
     component clk_dwa_pl
         port
