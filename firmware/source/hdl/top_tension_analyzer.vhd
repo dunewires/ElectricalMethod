@@ -266,8 +266,8 @@ begin
 
   -- convert requested stim frequency to number of 100Mhz clocks
   compute_n_periods : process (dwaClk10)
-    variable acStim_nHPeriod_all : unsigned(67 downto 0 );
-    variable adcCnv_nPeriod_all  : unsigned(67 downto 0 );
+    variable acStim_nHPeriod_all : unsigned(43 downto 0 );
+    variable adcCnv_nPeriod_all  : unsigned(43 downto 0 );
     variable adcCnv_nCnv_all     : unsigned(39 downto 0 );
 
   begin
@@ -286,8 +286,8 @@ begin
       acStimX200_nHPeriod_fxp8 <= (x"3d0900000"/ stimFreqReq);
 
       -- infer into dsp48
-      acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * x"00000000000000000000C8";
-      adcCnv_nPeriod_all  := acStimX200_nHPeriod_fxp8 * x"0000000000000000000032";
+      acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * x"C8";
+      adcCnv_nPeriod_all  := acStimX200_nHPeriod_fxp8 * x"32";
       --  let's start with a fixed conversion from half wave to ADC samples
       -- 100 = 4 samples/period
       -- 400 = 1 samples/period

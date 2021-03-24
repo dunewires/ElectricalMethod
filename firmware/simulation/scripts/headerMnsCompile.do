@@ -56,6 +56,10 @@ vcom -64 -93 -work dds_compiler_v6_0_19  \
 vcom -64 -93 -work xil_defaultlib  \
 "../source/cores/ipMicrozed/dds_compiler_1khz/sim/dds_compiler_1khz.vhd" \
 "../source/cores/ipMicrozed/fifo_autoDatacollection/fifo_autoDatacollection_sim_netlist.vhdl" 
+
+vcom -64 -2008 -work duneDwa  \
+"../source/cores/ipMicrozed/clk_dwa_pl/clk_dwa_pl_sim_netlist.vhdl"
+
  vlog -64 -incr -work xil_defaultlib  \
 "../source/cores/ipMicrozed/bram_sdp_18x8k/sim/bram_sdp_18x8k.v"
 

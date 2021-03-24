@@ -184,12 +184,20 @@ architecture STRUCTURE of dwa_ps_pl_top is
         );
     end component;
 
-    -- COMP_TAG_END ------ End COMPONENT Declaration ------------
-    -- The following code must appear in the VHDL architecture
-    -- body. Substitute your own instance name and net names.
-    ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-
-
+    component clk_dwa_pl
+        port
+        (   -- Clock in ports
+            -- Clock out ports
+            clk_out1 : out std_logic;
+            clk_out2 : out std_logic;
+            clk_out3 : out std_logic;
+            clk_out4 : out std_logic;
+            -- Status and control signals
+            reset   : in  std_logic;
+            locked  : out std_logic;
+            clk_in1 : in  std_logic
+        );
+    end component;
 
     signal M00_AXI_0_awaddr                         : STD_LOGIC_VECTOR ( 31 downto 0 );
     signal M00_AXI_0_awprot                         : STD_LOGIC_VECTOR ( 2 downto 0 );
@@ -353,7 +361,7 @@ begin
             clk_in1 => S_AXI_ACLK_100
         );
 
-    top_tension_analyzer_1 : entity work.top_tension_analyzer
+    top_tension_analyzer_1 : entity duneDwa.top_tension_analyzer
 
         port map (
             fromDaqReg => fromDaqReg,
