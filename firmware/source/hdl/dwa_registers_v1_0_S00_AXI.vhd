@@ -6,7 +6,7 @@ use duneDwa.global_def.all;
 
 entity dwa_registers_v1_0_S00_AXI is
 	generic (
-		dateCode : std_logic_vector(31 downto 0);
+		dateCode : std_logic_vector(47 downto 0);
 		hashCode : std_logic_vector(31 downto 0);
 		-- Users to add parameters here
 
