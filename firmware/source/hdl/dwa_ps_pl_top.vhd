@@ -302,7 +302,7 @@ begin
             toDaqReg   => toDaqReg
         );
 
-    clk_dwa_pl_inst : clk_dwa_pl
+    clk_dwa_pl_inst : component clk_dwa_pl
         port map (
             -- Clock out ports  
             clk_out1 => plClk_400,
@@ -315,7 +315,6 @@ begin
             -- Clock in ports
             clk_in1 => S_AXI_ACLK_100
         );
-
 
     top_tension_analyzer_inst : entity duneDwa.top_tension_analyzer
 
