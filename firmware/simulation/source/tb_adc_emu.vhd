@@ -47,6 +47,7 @@ architecture tb of tb_adc_emu is
   signal adcSrcSyncClk   : std_logic                     := '0';
   signal emuDSR          : std_logic_vector(35 downto 0) := (others => '0');
   signal daqReadCnt      : unsigned(4 downto 0)          := (others => '0');
+  signal plClk_400, plClk_200, plClk_100,plClk_10 : STD_LOGIC;
 
   --signal udpDataRdyDel  : std_logic := '0';
   signal udpDataRdyDel : boolean := false;
@@ -77,12 +78,31 @@ begin
   end process;
 
 
+    clk_dwa_pl_inst : entity duneDwa.clk_dwa_pl
+        port map (
+            -- Clock out ports  
+            clk_out1 => plClk_400,
+            clk_out2 => plClk_200,
+            clk_out3 => plClk_100,
+            clk_out4 => plClk_10,
+            -- Status and control signals                
+            reset  => '0',
+            locked => open,
+            -- Clock in ports
+            clk_in1 => dwaClk100
+        );
+
+
   top_tension_analyzer_1 : entity duneDwa.top_tension_analyzer
     port map (
       fromDaqReg      => fromDaqReg,
       toDaqReg        => toDaqReg,
-      dwaClk100       => dwaClk100,
-      dwaClk10        => dwaClk10,
+
+            dwaClk400 => plClk_400,
+            dwaClk200 => plClk_200,
+            dwaClk100 => plClk_100,
+            dwaClk10 => plClk_10,
+
       led             => led,
       pButton => (others => '0'),
       acStimX200_obuf => acStimX200_obuf,
