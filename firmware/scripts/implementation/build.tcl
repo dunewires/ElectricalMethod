@@ -264,9 +264,9 @@ proc postPlacePhysOpt {} {
     global proj_name
 
     puts "\n##################################################################"
-    puts "#                    Post Place Phys Opt   AlternateReplication   #"
+    puts "#                    Post Place Phys Opt    AggressiveExplore                #"
     puts "##################################################################\n"
-    phys_opt_design -directive AlternateReplication
+    phys_opt_design -directive AggressiveExplore
     report_timing_summary -file $proj_dir/${proj_name}_post_place_physopt_tim2.rpt
  
     set WNS [get_property SLACK [get_timing_paths -max_paths 1 -nworst 1 -setup]]
