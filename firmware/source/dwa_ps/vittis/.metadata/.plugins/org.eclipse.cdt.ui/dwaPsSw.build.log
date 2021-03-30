@@ -1,4 +1,4 @@
-15:25:33 **** Incremental Build of configuration Release for project dwaPsSw ****
+21:21:39 **** Incremental Build of configuration Release for project dwaPsSw ****
 make all 
 make --no-print-directory pre-build
 a9-linaro-pre-build-step
@@ -47,23 +47,23 @@ Invoking: ARM v7 gcc compiler
 arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/main.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/main.d" -MT"src/main.o" -o "src/main.o" "../src/main.c"
 ../src/main.c: In function 'main':
 ../src/main.c:129:2: warning: implicit declaration of function 'sleep' [-Wimplicit-function-declaration]
-  129 |  sleep(3);// give time for the power up and  serial num read
-      |  ^~~~~
-../src/main.c:253:3: warning: implicit declaration of function 'drainDebugFifoUdp' [-Wimplicit-function-declaration]
-  253 |   drainDebugFifoUdp(0x18);
-      |   ^~~~~~~~~~~~~~~~~
 Finished building: ../src/main.c
+  129 |  sleep(3);// give time for the power up and  serial num read
  
+      |  ^~~~~
 Building file: ../src/mmUdpTx.c
+../src/main.c:253:3: warning: implicit declaration of function 'drainDebugFifoUdp' [-Wimplicit-function-declaration]
 Invoking: ARM v7 gcc compiler
+  253 |   drainDebugFifoUdp(0x18);
 arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/mmUdpTx.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -I/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/bspinclude/include -MMD -MP -MF"src/mmUdpTx.d" -MT"src/mmUdpTx.o" -o "src/mmUdpTx.o" "../src/mmUdpTx.c"
+      |   ^~~~~~~~~~~~~~~~~
 ../src/mmUdpTx.c: In function 'send_write_ack':
 ../src/mmUdpTx.c:42:3: warning: implicit declaration of function 'transfer_mmUdpTx_data' [-Wimplicit-function-declaration]
    42 |   transfer_mmUdpTx_data(udpTxbuf, wAckBuffLength, mmDataTxPcb);
       |   ^~~~~~~~~~~~~~~~~~~~~
 ../src/mmUdpTx.c: In function 'drainDebugFifoUdp':
-../src/mmUdpTx.c:102:5: warning: implicit declaration of function 'xil_printf'; did you mean 'viprintf'? [-Wimplicit-function-declaration]
-  102 |     xil_printf("UDP FIFO sent  %x\r\n",fifoAddr);
+../src/mmUdpTx.c:103:5: warning: implicit declaration of function 'xil_printf'; did you mean 'viprintf'? [-Wimplicit-function-declaration]
+  103 |     xil_printf("UDP FIFO sent  %x\r\n",fifoAddr);
       |     ^~~~~~~~~~
       |     viprintf
 ../src/mmUdpTx.c:53:7: warning: unused variable 'rfifo' [-Wunused-variable]
@@ -79,15 +79,15 @@ arm-none-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/mmUdpTx.o" -mcpu=corte
    48 |   u32_t regStatusInitial,regStatusNext;
       |         ^~~~~~~~~~~~~~~~
 ../src/mmUdpTx.c: In function 'start_udp':
-../src/mmUdpTx.c:155:3: warning: implicit declaration of function 'print_ip'; did you mean 'printf'? [-Wimplicit-function-declaration]
-  155 |   print_ip("UDP Data is now sent to IP  : ", &udpDstIpAddr);
+../src/mmUdpTx.c:156:3: warning: implicit declaration of function 'print_ip'; did you mean 'printf'? [-Wimplicit-function-declaration]
+  156 |   print_ip("UDP Data is now sent to IP  : ", &udpDstIpAddr);
       |   ^~~~~~~~
       |   printf
-../src/mmUdpTx.c:162:12: warning: 'return' with a value, in function returning void [-Wreturn-type]
-  162 |     return -1;
+../src/mmUdpTx.c:163:12: warning: 'return' with a value, in function returning void [-Wreturn-type]
+  163 |     return -1;
       |            ^
-../src/mmUdpTx.c:142:6: note: declared here
-  142 | void start_udp(u32_t ipAddrSel){
+../src/mmUdpTx.c:143:6: note: declared here
+  143 | void start_udp(u32_t ipAddrSel){
       |      ^~~~~~~~~
 Finished building: ../src/mmUdpTx.c
  
@@ -119,9 +119,9 @@ Finished building target: dwaPsSw.elf
 Invoking: ARM v7 Print Size
 arm-none-eabi-size dwaPsSw.elf  |tee "dwaPsSw.elf.size"
    text	   data	    bss	    dec	    hex	filename
- 110876	   3048	5363776	5477700	 539544	dwaPsSw.elf
+ 110812	   3048	5363776	5477636	 539504	dwaPsSw.elf
 Finished building: dwaPsSw.elf.size
  
 
-15:25:36 Build Finished (took 2s.593ms)
+21:21:40 Build Finished (took 768ms)
 

@@ -4,7 +4,7 @@
     <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
     <lastBuildOptions xsi:type="sdkproject:SdkOptions"/>
   </configuration>
-  <configuration name="Release" id="xilinx.gnu.armv7.exe.release.1364100112" dirty="true">
+  <configuration name="Release" id="xilinx.gnu.armv7.exe.release.1364100112">
     <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
     <lastBuildOptions xsi:type="sdkproject:SdkOptions"/>
   </configuration>

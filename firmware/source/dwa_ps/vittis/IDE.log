@@ -225,3 +225,14 @@ Caused by: org.eclipse.swt.SWTException: Invalid thread access
 15:25:29 INFO  : Result from executing command 'getProjects': dwaPsHw
 15:25:29 INFO  : Result from executing command 'getPlatforms': dwaPsHw|/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/dwaPsHw.xpfm
 15:25:32 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+21:20:23 INFO  : Launching XSCT server: xsct -n  -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/temp_xsdb_launch_script.tcl
+21:20:26 INFO  : XSCT server has started successfully.
+21:20:26 INFO  : Successfully done setting XSCT server connection channel  
+21:20:26 INFO  : plnx-install-location is set to ''
+21:20:26 INFO  : Successfully done setting workspace for the tool. 
+21:20:27 INFO  : Platform repository initialization has completed.
+21:20:27 INFO  : Successfully done query RDI_DATADIR 
+21:20:27 INFO  : Registering command handlers for Vitis TCF services
+21:21:35 INFO  : Result from executing command 'getProjects': dwaPsHw
+21:21:35 INFO  : Result from executing command 'getPlatforms': dwaPsHw|/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/dwaPsHw.xpfm
+21:21:38 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...

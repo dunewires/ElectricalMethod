@@ -1,6 +1,7 @@
-2021-03-17T15:25:27.43069500255-15:25:27 **** Incremental Build of project dwaPsHw ****
-000-buildplatform.sh 33557 dwaPsHw no_domain_build 
+2021-03-29T21:21:30.07825400255-21:21:30 **** Incremental Build of project dwaPsHw ****
+000-buildplatform.sh 46549 dwaPsHw no_domain_build 
 000-XSDB Server Channel: tcfchan#1
+000-Reading the platform  : "dwaPsHw"
 00255-
-15:25:32 Build Finished (took 4s.946ms)
+21:21:38 Build Finished (took 8s.383ms)
 
