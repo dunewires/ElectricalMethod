@@ -1,8 +1,8 @@
-// Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+// Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
-// Tool Version: Vivado v.2019.2 (lin64) Build 2708876 Wed Nov  6 21:39:14 MST 2019
-// Date        : Wed Mar 17 17:46:27 2021
-// Host        : lt2 running 64-bit CentOS Linux release 7.6.1810 (Core)
+// Tool Version: Vivado v.2020.2 (lin64) Build 3064766 Wed Nov 18 09:12:47 MST 2020
+// Date        : Wed Mar 24 19:02:24 2021
+// Host        : pc0 running 64-bit CentOS Linux release 8.3.2011
 // Command     : write_verilog -force -mode synth_stub
 //               /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ipMicrozed/clk_dwa_pl/clk_dwa_pl_stub.v
 // Design      : clk_dwa_pl
