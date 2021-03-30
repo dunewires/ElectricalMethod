@@ -1,3 +1,25 @@
+2020.2:
+ * Version 6.0 (Rev. 6)
+ * Bug Fix: Internal GUI fixes
+ * Other: CR Fixes
+
+2020.1.1:
+ * Version 6.0 (Rev. 5)
+ * No changes
+
+2020.1:
+ * Version 6.0 (Rev. 5)
+ * Bug Fix: Internal GUI fixes
+ * Other: CR Fixes
+
+2019.2.2:
+ * Version 6.0 (Rev. 4)
+ * No changes
+
+2019.2.1:
+ * Version 6.0 (Rev. 4)
+ * No changes
+
 2019.2:
  * Version 6.0 (Rev. 4)
  * Bug Fix: Internal GUI fixes
@@ -164,7 +186,7 @@
  * Lower case ports for Verilog
  * Added Safe Clock Startup and Clock Sequencing
 
-(c) Copyright 2008 - 2019 Xilinx, Inc. All rights reserved.
+(c) Copyright 2008 - 2020 Xilinx, Inc. All rights reserved.
 
 This file contains confidential and proprietary information
 of Xilinx, Inc. and is protected under U.S. and
