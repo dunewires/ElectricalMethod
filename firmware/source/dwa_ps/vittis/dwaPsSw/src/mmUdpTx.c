@@ -96,7 +96,8 @@ int drainDebugFifoUdp(int fifoAddr) {
 	  {
 	    statusFlags = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (0x0001 << 2));
 	    statusFlags =  ((statusFlags >> (statusBit*2)) & 0x000003);
-	    udpTxbuf[2] = statusFlags;
+      // when used for the DWA, the UDP header is added in the PL
+	    // udpTxbuf[2] = statusFlags; 
 	    transfer_mmUdpTx_data(udpTxbuf, rDFifoTxIndex, mmDataTxPcb);
 		#ifdef VERBOSE
 				xil_printf("UDP FIFO sent  %x\r\n",fifoAddr);
