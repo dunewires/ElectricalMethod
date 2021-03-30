@@ -6,7 +6,7 @@ use duneDwa.global_def.all;
 
 entity dwa_registers_v1_0_S00_AXI is
 	generic (
-		dateCode : std_logic_vector(31 downto 0);
+		dateCode : std_logic_vector(47 downto 0);
 		hashCode : std_logic_vector(31 downto 0);
 		-- Users to add parameters here
 
@@ -889,9 +889,9 @@ begin
 				reg_data_out(0)           <= '1' when toDaqReg.ctrlBusy else '0';
 				reg_data_out(31 downto 1) <= (others => '0');
 			when b"010010" =>
-				reg_data_out <= dateCode(23 downto 0);
+				reg_data_out <= x"00" & dateCode(23 downto 0);
 			when b"010011" =>
-				reg_data_out <= dateCode(47 downto 24);
+				reg_data_out <= x"00" & dateCode(47 downto 24);
 			when b"010100" =>
 				reg_data_out <= hashCode;
 			when b"010111" =>
