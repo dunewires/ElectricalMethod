@@ -122,8 +122,8 @@ architecture STRUCT of top_tension_analyzer is
   signal acStim_trigger     : std_logic             := '0';
   signal acStim_nHPeriod    : unsigned(23 downto 0) := (others => '0');
 
-  signal acStimX200_hPeriodCnt    : unsigned(25 downto 0) := (others => '0');
-  signal acStimX200_nPeriod       : unsigned(26 downto 0) := (others => '0');
+  signal acStimX200_hPeriodCnt    : unsigned(24 downto 0) := (others => '0');
+  signal acStimX200_nPeriod       : unsigned(25 downto 0) := (others => '0');
   signal acStimX200_nHPeriod_fxp8 : unsigned(35 downto 0) := (others => '0'); -- floating point at 8
   signal periodCntStart           : std_logic             := '0';
 
@@ -295,10 +295,11 @@ begin
       -- 25 = 16
       -- find the number of total conversions for each frequency
       adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
-
-      -- 400 MHz clock is used for the x200 bandpass frequency so shift left 2 bits
-      -- the x200 needs the full period count to accommodate an odd nPeriod
-      acStimX200_nPeriod <= acStimX200_nHPeriod_fxp8(31 downto 5);
+      -- 400 Mhz is too fast for a standard x200 Bandpass filter freq counter, so we use 200
+      -- for a x2 resolution can use a hybrid counter with 400 used for the fine count only
+      -- 200 MHz clock is used for the x200 bandpass frequency, so shift left 1 bits
+      -- the x200 needs the full period count to accommodate an odd nPeriod, shift 1 more
+      acStimX200_nPeriod <= acStimX200_nHPeriod_fxp8(31 downto 6);
       acStim_nHPeriod    <= acStim_nHPeriod_all(31 downto 8);
       adcCnv_nPeriod     <= adcCnv_nPeriod_all(31 downto 8);
       adcCnv_nCnv        <= adcCnv_nCnv_all(15 downto 0);
@@ -306,9 +307,9 @@ begin
     end if;
   end process compute_n_periods;
 
-  make_ac_stimX200 : process (dwaClk400)
+  make_ac_stimX200 : process (dwaClk200)
   begin
-    if rising_edge(dwaClk400) then
+    if rising_edge(dwaClk200) then
       -- periodCntStart will handle an odd phase count
       periodCntStart <= not(acStimX200 and acStimX200_nPeriod(0));
       -- need the > to catch when the nPeriod decreases at the wrong time
