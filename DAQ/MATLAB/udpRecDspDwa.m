@@ -22,7 +22,6 @@ while count < timeout * 1/readInterval
     if isempty(udpPacket) == 0
     	disp("bing!");
     	udpData
-		file = [fileName,udpData(2,7:8),fileExt];
         dlmwrite(file,udpData(1:end,:),'-append','delimiter','');
         count = 1;
     end
