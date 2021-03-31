@@ -31,3 +31,5 @@ platform generate -domains standalone_domain,standalone_ps7_cortexa9_0,zynq_fsbl
 platform active {dwaPsHw}
 platform generate -domains 
 platform generate -domains 
+platform clean
+platform generate
