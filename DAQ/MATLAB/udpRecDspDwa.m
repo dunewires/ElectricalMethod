@@ -1,4 +1,4 @@
-function[] = udpRecDsp()
+function[data] = udpRecDsp()
 LocalIPPort = 'LocalIPPort';
 port = 6008;
 maxPacketLength = 1024;
@@ -14,6 +14,7 @@ bufSize = 65536
 
 H = dsp.UDPReceiver(LocalIPPort,port,'MaximumMessageLength',maxPacketLength,'ReceiveBufferSize',bufSize)
 step(H);%not sure why this first step is needed ??
+count = 1;
 
 while count < timeout * 1/readInterval
     udpPacket = dec2hex(step(H));
@@ -21,7 +22,9 @@ while count < timeout * 1/readInterval
     if isempty(udpPacket) == 0
     	disp("bing!");
     	udpData
+		file = [fileName,udpData(2,7:8),fileExt];
         dlmwrite(file,udpData(1:end,:),'-append','delimiter','');
+        count = 1;
     end
     pause(readInterval)
 end
