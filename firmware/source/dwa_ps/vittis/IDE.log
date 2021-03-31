@@ -247,3 +247,14 @@ Caused by: org.eclipse.swt.SWTException: Invalid thread access
 16:12:57 INFO  : Result from executing command 'getProjects': dwaPsHw
 16:12:57 INFO  : Result from executing command 'getPlatforms': dwaPsHw|/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/dwaPsHw.xpfm
 16:13:00 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+17:50:44 INFO  : Launching XSCT server: xsct -n  -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/temp_xsdb_launch_script.tcl
+17:50:46 INFO  : XSCT server has started successfully.
+17:50:46 INFO  : Successfully done setting XSCT server connection channel  
+17:50:46 INFO  : plnx-install-location is set to ''
+17:50:46 INFO  : Successfully done setting workspace for the tool. 
+17:50:47 INFO  : Platform repository initialization has completed.
+17:50:47 INFO  : Successfully done query RDI_DATADIR 
+17:50:48 INFO  : Registering command handlers for Vitis TCF services
+18:29:20 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+18:29:25 ERROR : (XSDB Server)ERROR: [Hsi 55-1571] The design file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa is already opened
+
