@@ -1067,12 +1067,12 @@ class MainWindow(qtw.QMainWindow):
         
 
         if mostRecentPointerTableLookup:
-            logging.warning("mostRecentPointerTableLookup")
-            logging.warning(json.dumps(mostRecentPointerTableLookup,indent=2))
+            # logging.warning("mostRecentPointerTableLookup")
+            # logging.warning(json.dumps(mostRecentPointerTableLookup,indent=2))
             # Get database id for this pointer table
             mostRecentPointerTableDBid = mostRecentPointerTableLookup[0]["_id"]
-            logging.warning("APA Uuid:")
-            logging.warning(pointerTableApaUuid)
+            # logging.warning("APA Uuid:")
+            # logging.warning(pointerTableApaUuid)
             # Get table from database
             pointerTable = sietch.api("/test/"+mostRecentPointerTableDBid)
             # Lookup table found, loop over layers
@@ -1085,24 +1085,24 @@ class MainWindow(qtw.QMainWindow):
                     continue      
 
                 for side in ["A", "B"]:          
-                    logging.warning("wirePointersForLayer")
-                    logging.warning(json.dumps(wirePointersForLayer,indent=2))
+                    # logging.warning("wirePointersForLayer")
+                    # logging.warning(json.dumps(wirePointersForLayer,indent=2))
                     # Separate the A and B sides
                     pointers = wirePointersForLayer[side]
-                    logging.warning("pointers")
-                    logging.warning(json.dumps(pointers,indent=2))
+                    # logging.warning("pointers")
+                    # logging.warning(json.dumps(pointers,indent=2))
                     # Get list of database ids for the individual wire measurements
                     recordIds = [x["testId"] for x in pointers]
-                    logging.warning("recordIds")
-                    logging.warning(recordIds)
+                    # logging.warning("recordIds")
+                    # logging.warning(recordIds)
                     # Get database entries for the individual wire resonance measurements
                     resonanceEntries = sietch.api("/test/getBulk",recordIds) #[allResonanceEntries[x] for x in recordIds]
-                    logging.warning("resonanceEntries")
-                    logging.warning(json.dumps(resonanceEntries,indent=2))
+                    # logging.warning("resonanceEntries")
+                    # logging.warning(json.dumps(resonanceEntries,indent=2))
                     # Extract the list of resonances from the database entries
                     resonances = [entry["data"]["wires"][str(i)] for i,entry in enumerate(resonanceEntries)]
-                    logging.warning("resonances")
-                    logging.warning(resonances)
+                    # logging.warning("resonances")
+                    # logging.warning(resonances)
                     # Compute the tension and save it to the table.
                     # FIXME: currently this is done is a very dumb way with no logic to which resonances get picked (just uses the first resonance).
                     for i, res in enumerate(resonances):
