@@ -345,14 +345,14 @@ class MainWindow(qtw.QMainWindow):
         self.tensionStageComboBox.addItem("Commissioning")
         self.btnLoadTensions.clicked.connect(self.loadTensions)
         self.tensionData = {
-            'XA':[0]*8,
-            'XB':[0]*8,
-            'UA':[0]*8,
-            'UB':[0]*8,
-            'VA':[0]*8,
-            'VB':[0]*8,
-            'GA':[0]*8,
-            'GB':[0]*8,
+            'XA':[0]*960,
+            'XB':[0]*960,
+            'UA':[0]*960,
+            'UB':[0]*960,
+            'VA':[0]*960,
+            'VB':[0]*960,
+            'GA':[0]*960,
+            'GB':[0]*960,
         }
 
         # Configure/label plots
@@ -1049,18 +1049,10 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def loadTensions(self):
-
+        # Load sietch credentials #FIXME still using James's credentials
         sietch = SietchConnect("sietch.creds")
         # Get APA UUID from text box
         pointerTableApaUuid = self.pointerTableApaUuid.text()
-        # Get all wire resonance entries
-        allResonanceEntriesList = sietch.api("/search/test?limit=1000000", {
-                "formId": "wire_resonance_measurement", 
-                "componentUuid": pointerTableApaUuid
-        })
-        allResonanceEntries = {}
-        for entry in allResonanceEntriesList:
-            allResonanceEntries[entry["_id"]] = entry
         # Get most recent pointer table for this layer
         mostRecentPointerTableLookup = ""
         try:
@@ -1093,17 +1085,6 @@ class MainWindow(qtw.QMainWindow):
                     continue      
 
                 for side in ["A", "B"]:          
-                    # if not mostRecentPointerTableLookup:
-                    #     logging.warning("No pointer table found for layer "+layer+".")
-                    #     continue
-                    # logging.warning("mostRecentPointerTableLookup")
-                    # logging.warning(json.dumps(mostRecentPointerTableLookup,indent=2))
-                    # # Get database id for this pointer table
-                    # mostRecentPointerTableDBid = mostRecentPointerTableLookup[0]["_id"]
-                    # logging.warning("APA Uuid:")
-                    # logging.warning(pointerTableApaUuid)
-                    # # Get table from database
-                    # pointer_table = sietch.api("/test/"+mostRecentPointerTableDBid)
                     logging.warning("wirePointersForLayer")
                     logging.warning(json.dumps(wirePointersForLayer,indent=2))
                     # Separate the A and B sides
@@ -1115,7 +1096,7 @@ class MainWindow(qtw.QMainWindow):
                     logging.warning("recordIds")
                     logging.warning(recordIds)
                     # Get database entries for the individual wire resonance measurements
-                    resonanceEntries = [sietch.api("/test/"+x) for x in recordIds]
+                    resonanceEntries = sietch.api("/test/getBulk",recordIds) #[allResonanceEntries[x] for x in recordIds]
                     logging.warning("resonanceEntries")
                     logging.warning(json.dumps(resonanceEntries,indent=2))
                     # Extract the list of resonances from the database entries
@@ -1125,8 +1106,8 @@ class MainWindow(qtw.QMainWindow):
                     # Compute the tension and save it to the table.
                     # FIXME: currently this is done is a very dumb way with no logic to which resonances get picked (just uses the first resonance).
                     for i, res in enumerate(resonances):
-                        logging.warning(res)
-                        self.tensionData[layer+side][i] = 4*1.16e-4*1.15**2*res[0]**2
+                        if len(res)>0:
+                            self.tensionData[layer+side][i] = 4*1.16e-4*1.15**2*res[0]**2
 
                         
                     # FIXME: this should only happen once -- in _makeCurves()
