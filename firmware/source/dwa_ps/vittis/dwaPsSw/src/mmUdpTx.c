@@ -80,16 +80,16 @@ int drainDebugFifoUdp(int fifoAddr) {
     statusFlags = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (0x0017 << 2));
     if (((statusFlags & 0x000001 << statusBit) == 0) & (rDFifoTxIndex < rDFifoBufSize-8))
       // Get more data from FIFO
-      {
-	rDFifoData = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (fifoAddr << 2));
-	//change byte order
-	//xil_printf("%x\n\r", rDFifoData);
-	udpTxbuf[rDFifoTxIndex] = rDFifoB[3];
-	udpTxbuf[rDFifoTxIndex+1] = rDFifoB[2];
-	udpTxbuf[rDFifoTxIndex+2] = rDFifoB[1];
-	udpTxbuf[rDFifoTxIndex+3] = rDFifoB[0];
-	rDFifoTxIndex += 4;
-      } 
+        {
+	         rDFifoData = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (fifoAddr << 2));
+	         //change byte order
+	         //xil_printf("%x\n\r", rDFifoData);
+	         udpTxbuf[rDFifoTxIndex] = rDFifoB[3];
+	         udpTxbuf[rDFifoTxIndex+1] = rDFifoB[2];
+	         udpTxbuf[rDFifoTxIndex+2] = rDFifoB[1];
+	         udpTxbuf[rDFifoTxIndex+3] = rDFifoB[0];
+	         rDFifoTxIndex += 4;
+        } 
     else //send any buffered data
       {
 	if (rDFifoTxIndex > 8)
@@ -113,9 +113,10 @@ int drainDebugFifoUdp(int fifoAddr) {
 int transfer_mmUdpTx_data(u8_t *txBufData, int  txBufLength, struct udp_pcb *pcb)
 {
   err_t err;
-  static u8_t udpTransferNumber = 1; 
-  txBufData[3] = udpTransferNumber;
-  udpTransferNumber++; 
+  //use when you want to attach a UDP pkt counter
+  // static u8_t udpTransferNumber = 1; 
+  // txBufData[3] = udpTransferNumber;
+  // udpTransferNumber++; 
 
   if (!mmDataTxPcb) {
     xil_printf("!connected_pcb\r\n");
