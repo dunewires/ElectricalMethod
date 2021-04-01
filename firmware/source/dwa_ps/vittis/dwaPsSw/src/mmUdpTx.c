@@ -148,7 +148,6 @@ void start_udp(u32_t ipAddrSel){
   u8_t *ipAddrSelB = (u8_t*) &ipAddrSel;
 
   if (mmDataTxPcb) {
-	  xil_printf("UDP Tx Version 2");
 	  xil_printf("Removing UDP PCB\r\n");
     udp_remove(mmDataTxPcb);
   }
