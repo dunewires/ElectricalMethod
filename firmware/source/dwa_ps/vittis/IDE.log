@@ -214,3 +214,61 @@ Caused by: org.eclipse.swt.SWTException: Invalid thread access
 22:40:21 INFO  : Generated template bif file for dwaPsSw_system
 22:44:52 INFO  : Build configuration of 'dwaPsSw' is updated to 'Release'
 22:44:59 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+15:09:20 INFO  : Launching XSCT server: xsct -n  -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/temp_xsdb_launch_script.tcl
+15:09:24 INFO  : XSCT server has started successfully.
+15:09:24 INFO  : plnx-install-location is set to ''
+15:09:26 INFO  : Platform repository initialization has completed.
+15:09:26 INFO  : Registering command handlers for Vitis TCF services
+15:09:30 INFO  : Successfully done setting XSCT server connection channel  
+15:09:30 INFO  : Successfully done query RDI_DATADIR 
+15:09:30 INFO  : Successfully done setting workspace for the tool. 
+15:25:29 INFO  : Result from executing command 'getProjects': dwaPsHw
+15:25:29 INFO  : Result from executing command 'getPlatforms': dwaPsHw|/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/dwaPsHw.xpfm
+15:25:32 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+21:20:23 INFO  : Launching XSCT server: xsct -n  -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/temp_xsdb_launch_script.tcl
+21:20:26 INFO  : XSCT server has started successfully.
+21:20:26 INFO  : Successfully done setting XSCT server connection channel  
+21:20:26 INFO  : plnx-install-location is set to ''
+21:20:26 INFO  : Successfully done setting workspace for the tool. 
+21:20:27 INFO  : Platform repository initialization has completed.
+21:20:27 INFO  : Successfully done query RDI_DATADIR 
+21:20:27 INFO  : Registering command handlers for Vitis TCF services
+21:21:35 INFO  : Result from executing command 'getProjects': dwaPsHw
+21:21:35 INFO  : Result from executing command 'getPlatforms': dwaPsHw|/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/dwaPsHw.xpfm
+21:21:38 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+16:09:26 INFO  : Launching XSCT server: xsct -n  -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/temp_xsdb_launch_script.tcl
+16:09:28 INFO  : XSCT server has started successfully.
+16:09:28 INFO  : Successfully done setting XSCT server connection channel  
+16:09:28 INFO  : plnx-install-location is set to ''
+16:09:28 INFO  : Successfully done setting workspace for the tool. 
+16:09:30 INFO  : Platform repository initialization has completed.
+16:09:31 INFO  : Successfully done query RDI_DATADIR 
+16:09:31 INFO  : Registering command handlers for Vitis TCF services
+16:12:57 INFO  : Result from executing command 'getProjects': dwaPsHw
+16:12:57 INFO  : Result from executing command 'getPlatforms': dwaPsHw|/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/dwaPsHw.xpfm
+16:13:00 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+17:50:44 INFO  : Launching XSCT server: xsct -n  -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/temp_xsdb_launch_script.tcl
+17:50:46 INFO  : XSCT server has started successfully.
+17:50:46 INFO  : Successfully done setting XSCT server connection channel  
+17:50:46 INFO  : plnx-install-location is set to ''
+17:50:46 INFO  : Successfully done setting workspace for the tool. 
+17:50:47 INFO  : Platform repository initialization has completed.
+17:50:47 INFO  : Successfully done query RDI_DATADIR 
+17:50:48 INFO  : Registering command handlers for Vitis TCF services
+18:29:20 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+18:29:25 ERROR : (XSDB Server)ERROR: [Hsi 55-1571] The design file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa is already opened
+
+21:22:44 INFO  : Launching XSCT server: xsct -n  -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/temp_xsdb_launch_script.tcl
+21:22:46 INFO  : XSCT server has started successfully.
+21:22:46 INFO  : plnx-install-location is set to ''
+21:22:46 INFO  : Successfully done setting XSCT server connection channel  
+21:22:46 INFO  : Successfully done setting workspace for the tool. 
+21:22:48 INFO  : Platform repository initialization has completed.
+21:22:48 INFO  : Successfully done query RDI_DATADIR 
+21:22:48 INFO  : Registering command handlers for Vitis TCF services
+21:24:11 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+21:24:16 ERROR : (XSDB Server)ERROR: [Hsi 55-1571] The design file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa is already opened
+
+21:25:28 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+21:25:30 ERROR : (XSDB Server)ERROR: [Hsi 55-1571] The design file /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa is already opened
+

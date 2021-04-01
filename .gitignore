@@ -19,3 +19,4 @@ firmware/simulation/compile.log
 firmware/simulation/compile.sh
 firmware/simulation/modelsim_lib/
 firmware/simulation/vsim.wlf
+/source/dwa_ps/vittis/.metadata/

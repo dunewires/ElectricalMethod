@@ -57,16 +57,20 @@ int drainDebugFifoUdp(int fifoAddr) {
   // eg when AXI register is 18 we will look at the first bit in the status reg
   statusBit = fifoAddr - 0x18;
   //  xil_printf("start drain fifo %x\r\n", statusBit);
-  udpTxbuf[0] = 0xF0;
-  udpTxbuf[1] = 0x00;
-  udpTxbuf[2] = 0x00;
 
-  rDFifoData = fifoAddr;
-  udpTxbuf[4] = rDFifoB[3];
-  udpTxbuf[5] = rDFifoB[2];
-  udpTxbuf[6] = rDFifoB[1];
-  udpTxbuf[7] = rDFifoB[0];
-  rDFifoTxIndex = 8;
+  // when used for the DWA, the UDP header is added in the PL
+  	  //udpTxbuf[0] = 0xF0;
+  	  //udpTxbuf[1] = 0x00;
+  	  //udpTxbuf[2] = 0x00;
+
+  	  //rDFifoData = fifoAddr;
+  	  //udpTxbuf[4] = rDFifoB[3];
+  	  //udpTxbuf[5] = rDFifoB[2];
+  	  //udpTxbuf[6] = rDFifoB[1];
+  	  //udpTxbuf[7] = rDFifoB[0];
+  	  //rDFifoTxIndex = 8;
+  rDFifoTxIndex = 0;
+
   //regStatusInitial = *(u32_t *) (XPAR_M00_AXI_0_BASEADDR + (0x0005 << 2));
   //regStatusNext = *(u32_t *) (XPAR_M00_AXI_0_BASEADDR + (0x0003 << 2));
 
@@ -76,23 +80,24 @@ int drainDebugFifoUdp(int fifoAddr) {
     statusFlags = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (0x0017 << 2));
     if (((statusFlags & 0x000001 << statusBit) == 0) & (rDFifoTxIndex < rDFifoBufSize-8))
       // Get more data from FIFO
-      {
-	rDFifoData = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (fifoAddr << 2));
-	//change byte order
-	//xil_printf("%x\n\r", rDFifoData);
-	udpTxbuf[rDFifoTxIndex] = rDFifoB[3];
-	udpTxbuf[rDFifoTxIndex+1] = rDFifoB[2];
-	udpTxbuf[rDFifoTxIndex+2] = rDFifoB[1];
-	udpTxbuf[rDFifoTxIndex+3] = rDFifoB[0];
-	rDFifoTxIndex += 4;
-      } 
+        {
+	         rDFifoData = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (fifoAddr << 2));
+	         //change byte order
+	         //xil_printf("%x\n\r", rDFifoData);
+	         udpTxbuf[rDFifoTxIndex] = rDFifoB[3];
+	         udpTxbuf[rDFifoTxIndex+1] = rDFifoB[2];
+	         udpTxbuf[rDFifoTxIndex+2] = rDFifoB[1];
+	         udpTxbuf[rDFifoTxIndex+3] = rDFifoB[0];
+	         rDFifoTxIndex += 4;
+        } 
     else //send any buffered data
       {
 	if (rDFifoTxIndex > 8)
 	  {
 	    statusFlags = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (0x0001 << 2));
 	    statusFlags =  ((statusFlags >> (statusBit*2)) & 0x000003);
-	    udpTxbuf[2] = statusFlags;
+      // when used for the DWA, the UDP header is added in the PL
+	    // udpTxbuf[2] = statusFlags; 
 	    transfer_mmUdpTx_data(udpTxbuf, rDFifoTxIndex, mmDataTxPcb);
 		#ifdef VERBOSE
 				xil_printf("UDP FIFO sent  %x\r\n",fifoAddr);
@@ -108,9 +113,10 @@ int drainDebugFifoUdp(int fifoAddr) {
 int transfer_mmUdpTx_data(u8_t *txBufData, int  txBufLength, struct udp_pcb *pcb)
 {
   err_t err;
-  static u8_t udpTransferNumber = 1; 
-  txBufData[3] = udpTransferNumber;
-  udpTransferNumber++; 
+  //use when you want to attach a UDP pkt counter
+  // static u8_t udpTransferNumber = 1; 
+  // txBufData[3] = udpTransferNumber;
+  // udpTransferNumber++; 
 
   if (!mmDataTxPcb) {
     xil_printf("!connected_pcb\r\n");
@@ -142,7 +148,7 @@ void start_udp(u32_t ipAddrSel){
   u8_t *ipAddrSelB = (u8_t*) &ipAddrSel;
 
   if (mmDataTxPcb) {
-    xil_printf("Removing UDP PCB\r\n");
+	  xil_printf("Removing UDP PCB\r\n");
     udp_remove(mmDataTxPcb);
   }
 

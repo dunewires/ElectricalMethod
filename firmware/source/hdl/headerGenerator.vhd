@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Mar  8 20:21:56 2021
+-- Last update : Wed Mar 24 11:53:40 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -96,10 +96,7 @@ architecture rtl of headerGenerator is
 
     ----------------------------
     ---- Setup for Header F
-    -- temp disable new feature
-
-    constant nHeadF      : integer                                         := 43; -- # of header words (incl. 2 delimiters)
-    -- constant nHeadF      : integer                                         := 44; -- # of header words (incl. 2 delimiters)
+    constant nHeadF      : integer                                         := 44; -- # of header words (incl. 2 delimiters)
     constant nHeadFLog   : integer                                         := integer(log2(real(nHeadF +1)));
     signal headFDataList : slv_vector_type(nHeadF-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
@@ -159,9 +156,7 @@ begin
     --RUN Header
     headFDataList <= (
             x"FFFF" & std_logic_vector(to_unsigned(nHeadF-2, 16)), -- header delimiter (start)
-            -- temp disable new feature
-
-            --x"77" & x"00000" & "000" & BOOL2SL(freqScanBusy),
+            x"77" & x"00000" & "000" & BOOL2SL(freqScanBusy),
             x"00" & std_logic_vector(runOdometer),
             x"01" & std_logic_vector(fromDaqReg.serNum),
             x"02" & std_logic_vector(fromDaqReg.dateCode(47 downto 24)),         --24MSb
