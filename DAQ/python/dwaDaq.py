@@ -308,7 +308,7 @@ class MainWindow(qtw.QMainWindow):
         #self.log_tb.append("logging window...")  # FIXME... how to update...?
 
         # KLUGE:
-        self.oldDataFormat = True
+        #self.oldDataFormat = True
         
         # Set defaults...
         self.configFileName.setText("dwaConfigWC.ini")
@@ -1320,12 +1320,16 @@ class MainWindow(qtw.QMainWindow):
                 # If there is a run frame with no '77' key, or if this is a run start frame
                 # then this is a new run, so need to clear plots and create new filenames
                 if ddp.Frame.RUN in self.dwaDataParser.dwaPayload:
+                    self.oldDataFormat = False
                     if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == None:
                         self.oldDataFormat = True
                     print("GOT HERE")
                     if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == RUN_START or \
                        self.oldDataFormat:
                         print("New run detected... creating new filenames")
+                        print("runStatus = ")
+                        print(self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'])
+                        print(f'self.oldDataFormat = {self.oldDataFormat}')
                         logger.info("New run detected... creating new filenames")
                         self._makeOutputFilenames()
                         self._clearAmplitudeData()
