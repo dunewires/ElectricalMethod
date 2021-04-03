@@ -339,6 +339,9 @@ class MainWindow(qtw.QMainWindow):
         self.resFitWidth.returnPressed.connect(self.resFitParameterUpdate)
         self.resFitProminence.returnPressed.connect(self.resFitParameterUpdate)
 
+        # Resonance Tab
+        self.btnSubmitResonances.clicked.connect(self.submitResonances)
+
         # Tension Tab
         self.tensionStageComboBox.addItem("Pre-production")
         self.tensionStageComboBox.addItem("Production")
@@ -1124,6 +1127,34 @@ class MainWindow(qtw.QMainWindow):
         self.tensionTableView.resizeRowsToContents()
 
         #self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
+    @pyqtSlot()
+    def submitResonances(self):
+        # Load sietch credentials #FIXME still using James's credentials
+        sietch = SietchConnect("sietch.creds")
+        for ch in [1, 2, 3, 4]: # Loop over wire numbers in scan
+            resonance_result = {
+                "componentUuid":"b9fe4600-706c-11eb-93b0-6183ed4cabef",
+                "formId": "wire_resonance_measurement",
+                "formName": "Wire Resonance Measurement",
+                "data": {
+                    "versionDaq": "1.1",
+                    "dwaUuid": "1",
+                    "versionFirmware": "1.1",
+                    "site": "Harvard",
+                    "measuredBy": "Chris not really",
+                    "productionStage": "[dropdown]",
+                    "side": "A",
+                    "layer": "V",
+                    "wires": {
+                    },
+                    "channel": {
+                        str(ch): [73.5, 84.6]
+                    },
+                    "saveAsDraft": True,
+                    "submit": True
+                },
+            }
+            dbid = sietch.api('/test',resonance_result)
         
     def _writeAmplitudesToFile(self):
         # write out the A(f) data for this frequency to a file
