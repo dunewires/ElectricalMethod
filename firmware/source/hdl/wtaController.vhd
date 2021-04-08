@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Apr  7 23:24:09 2021
+-- Last update : Wed Apr  7 23:41:43 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -130,7 +130,7 @@ begin
 									ctrlState       <= noisePrep_s;
 								end if;
 							else
-								freqSet   <= freqSet-fromDaqReg.noiseFreqStep;
+								freqSet   <= freqSet+fromDaqReg.noiseFreqStep;
 								ctrlState <= noisePrep_s;
 							end if;
 						end if;
@@ -160,7 +160,7 @@ begin
 								ctrlState    <= freqScanFinish_s;
 								freqScanBusy <= false;
 							else
-								freqSet   <= freqSet+fromDaqReg.stimFreqStep;
+								freqSet   <= freqSet-fromDaqReg.stimFreqStep;
 								ctrlState <= stimPrep_s;
 							end if;
 						end if;
