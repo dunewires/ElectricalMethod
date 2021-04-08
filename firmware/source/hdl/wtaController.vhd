@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Mar 24 11:54:51 2021
+-- Last update : Wed Apr  7 23:24:09 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ begin
 	ctrlState_seq : process (dwaClk100)
 	begin
 		if rising_edge(dwaClk100) then
-			scanDone          <= (freqSet >= fromDaqReg.noiseFreqMax) when noiseReadoutBusy else (freqSet >= fromDaqReg.stimFreqMax);
+			scanDone          <= (freqSet >= fromDaqReg.noiseFreqMax) when noiseReadoutBusy else (freqSet <= fromDaqReg.stimFreqMin);
 			toDaqReg.ctrlBusy <= true;
 			ctrlStart_del     <= fromDaqReg.ctrlStart;
 			adcBusy_del       <= adcBusy;
@@ -121,7 +121,7 @@ begin
 						if adcBusy = '0' and adcBusy_del = '1' then
 							if scanDone then
 								if noiseReadoutCnt = x"8" then --we are done with the noise
-									freqSet          <= fromDaqReg.stimFreqMin;
+									freqSet          <= fromDaqReg.stimFreqMax;
 									noiseReadoutBusy <= false; -- only count 
 									ctrlState        <= stimPrep_s;
 								else -- accumulate more noise samples to average 
@@ -130,7 +130,7 @@ begin
 									ctrlState       <= noisePrep_s;
 								end if;
 							else
-								freqSet   <= freqSet+fromDaqReg.noiseFreqStep;
+								freqSet   <= freqSet-fromDaqReg.noiseFreqStep;
 								ctrlState <= noisePrep_s;
 							end if;
 						end if;
