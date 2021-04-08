@@ -283,7 +283,7 @@ begin
       -- acStim_nHPeriod     <= acStim_nHPeriod_all(acStim_nHPeriod'range);
       -- use the acStim_nHPeriod as the basis for the other freq to maintain exact sync
       -- this will produce a greater error in the actual freq being measured.
-      acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * 200;
+      acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * 3187;
       adcCnv_nPeriod_all  := acStimX200_nHPeriod_fxp8 * 50;
       --  let's start with a fixed conversion from half wave to ADC samples
       -- 100 = 4 samples/period
@@ -292,10 +292,7 @@ begin
       -- 25 = 16
       -- find the number of total canversions for each frequency
       adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
-      -- acStimX200_nHPeriod <= acStimX200_nHPeriod_fxp8(31 downto 8);
-      --temp fix the bandpass freq
-      acStimX200_nHPeriod <= x"00022A";
-
+      acStimX200_nHPeriod <= acStimX200_nHPeriod_fxp8(31 downto 8);
       acStim_nHPeriod <= acStim_nHPeriod_all(31 downto 8);
       adcCnv_nPeriod  <= adcCnv_nPeriod_all(31 downto 8);
       adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
