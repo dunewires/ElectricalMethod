@@ -294,7 +294,7 @@ begin
       adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
       -- acStimX200_nHPeriod <= acStimX200_nHPeriod_fxp8(31 downto 8);
       --temp fix the bandpass freq
-      acStimX200_nHPeriod <= x"000115";
+      acStimX200_nHPeriod <= x"00008a";
 
       acStim_nHPeriod <= acStim_nHPeriod_all(31 downto 8);
       adcCnv_nPeriod  <= adcCnv_nPeriod_all(31 downto 8);
