@@ -13,6 +13,7 @@ entity top_tension_analyzer is
     toDaqReg   : out toDaqRegType;
 
     --regToDwa       : in SLV_VECTOR_TYPE_32(31 downto 0);
+    dwaClk200 : in std_logic;
     dwaClk100 : in std_logic;
     dwaClk10  : in std_logic;
 
@@ -107,8 +108,6 @@ architecture STRUCT of top_tension_analyzer is
 
   signal auto            : std_logic := '0';
   signal acStimX200      : std_logic := '0';
-  signal acStimX200_oddr : std_logic := '0';
-  signal acStim_oddr     : std_logic := '0';
 
   signal adcCnv_nCnv             : unsigned(15 downto 0) := (others => '0');
   signal adcCnv_nPeriod          : unsigned(23 downto 0) := (others => '0');
@@ -119,7 +118,6 @@ architecture STRUCT of top_tension_analyzer is
   signal ctrl_acStim_enable   : std_logic             := '0';
   signal acStim_trigger       : std_logic             := '0';
   signal acStim_nHPeriod      : unsigned(23 downto 0) := (others => '0');
-  signal acStimX200_periodCnt : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriod  : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriod_fxp8  : unsigned(31 downto 0) := (others => '0'); -- floating point at 8
   --initial value non zero
@@ -283,7 +281,7 @@ begin
       -- acStim_nHPeriod     <= acStim_nHPeriod_all(acStim_nHPeriod'range);
       -- use the acStim_nHPeriod as the basis for the other freq to maintain exact sync
       -- this will produce a greater error in the actual freq being measured.
-      acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * 3187;
+      acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * 200;
       adcCnv_nPeriod_all  := acStimX200_nHPeriod_fxp8 * 50;
       --  let's start with a fixed conversion from half wave to ADC samples
       -- 100 = 4 samples/period
@@ -293,12 +291,19 @@ begin
       -- find the number of total canversions for each frequency
       adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
       acStimX200_nHPeriod <= acStimX200_nHPeriod_fxp8(31 downto 8);
-      acStim_nHPeriod <=  "0000" & acStim_nHPeriod_all(31 downto 12);
+      acStim_nHPeriod <= acStim_nHPeriod_all(31 downto 8);
       adcCnv_nPeriod  <= adcCnv_nPeriod_all(31 downto 8);
       adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
 
     end if;
   end process compute_n_periods;
+
+  bandPassClkGen_inst : entity work.bandPassClkGen
+    port map (
+      bPClk_nHPeriod => acStimX200_nHPeriod_fxp8,
+      bPClk              => acStimX200,
+      dwaClk200          => dwaClk200
+    );
 
   make_ac_stimX200 : process (dwaClk100)
   begin

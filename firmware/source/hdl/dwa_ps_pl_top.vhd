@@ -192,7 +192,17 @@ architecture STRUCTURE of dwa_ps_pl_top is
     signal adcSrcSyncClk : std_logic                    := '0';
     signal adcSck        : std_logic                    := '0';
 
+    signal BB_CLK        : std_logic                    := '0';
+
 begin
+
+    IDELAYCTRL_inst : IDELAYCTRL
+        port map (
+            RDY => open,
+            -- 1-bit output: Ready output
+            REFCLK => BB_CLK, -- 1-bit input       :        Reference clock input
+            RST    => '0'
+        ); 
 
     adcSerialInbuf_gen : for adcSerial_indx in 3 downto 0 generate
         IBUFDS_ADCSDIN : IBUFDS
@@ -226,6 +236,18 @@ begin
             O  => adcSrcSyncClk,
             I  => adcSrcSyncClk_p,
             IB => adcSrcSyncClk_n
+        );
+
+    IBUFDS_ADCSSIN : IBUFDS
+        generic map (
+            DIFF_TERM    => true,
+            IBUF_LOW_PWR => false,-- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
+            IOSTANDARD   => "LVDS"
+        )
+        port map (
+            O  => BB_CLK,
+            I  => BB_CLK_P,
+            IB => BB_CLK_N
         );
 
     dwa_ps_bd_i : component dwa_ps_bd
