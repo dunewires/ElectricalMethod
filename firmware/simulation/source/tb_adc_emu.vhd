@@ -25,6 +25,8 @@ architecture tb of tb_adc_emu is
 
   signal fromDaqReg      : fromDaqRegType;
   signal toDaqReg        : toDaqRegType;
+  signal dwaClk400       : std_logic;
+  signal dwaClk200       : std_logic;
   signal dwaClk100       : std_logic;
   signal dwaClk10        : std_logic;
   signal led             : std_logic_vector(3 downto 0);
@@ -81,6 +83,8 @@ begin
     port map (
       fromDaqReg      => fromDaqReg,
       toDaqReg        => toDaqReg,
+      dwaClk400       => dwaClk400,
+      dwaClk200       => dwaClk200,
       dwaClk100       => dwaClk100,
       dwaClk10        => dwaClk10,
       led             => led,

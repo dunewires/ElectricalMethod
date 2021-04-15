@@ -147,6 +147,8 @@ architecture STRUCTURE of dwa_ps_pl_top is
             clk_out1 : out std_logic;
             clk_out2 : out std_logic;
             clk_out3 : out std_logic;
+            clk_out4 : out std_logic;
+
             -- Status and control signals
             reset   : in  std_logic;
             locked  : out std_logic;
@@ -183,7 +185,7 @@ architecture STRUCTURE of dwa_ps_pl_top is
     signal peripheral_aresetn_0         : STD_LOGIC_VECTOR ( 0 to 0 );
     signal S_AXI_ACLK_100               : STD_LOGIC;
     signal S_AXI_ACLK_10                : STD_LOGIC;
-    signal plClk_100,plClk_10,plClk_5_2 : STD_LOGIC;
+    signal plClk_100,plClk_10,plClk_200,plClk_400 : STD_LOGIC;
 
     signal fromDaqReg : fromDaqRegType;
     signal toDaqReg   : toDaqRegType;
@@ -331,18 +333,21 @@ begin
 
         );
 
-    clk_dwa_pl_inst : clk_dwa_pl
+
+    clk_dwa_pl_inst : component clk_dwa_pl
         port map (
             -- Clock out ports  
-            clk_out1 => plClk_100,
-            clk_out2 => plClk_10,
-            clk_out3 => plClk_5_2,
+            clk_out1 => plClk_400,
+            clk_out2 => plClk_200,
+            clk_out3 => plClk_100,
+            clk_out4 => plClk_10,
             -- Status and control signals                
             reset  => '0',
             locked => open,
             -- Clock in ports
             clk_in1 => S_AXI_ACLK_100
         );
+
 
     top_tension_analyzer_1 : entity work.top_tension_analyzer
 
@@ -352,6 +357,8 @@ begin
 
 
             --dwaClk100 => S_AXI_ACLK_100,
+            dwaClk100 => plClk_400,
+            dwaClk100 => plClk_200,
             dwaClk100 => plClk_100,
             --dwaClk10  => S_AXI_ACLK_10,
             dwaClk10 => plClk_10,

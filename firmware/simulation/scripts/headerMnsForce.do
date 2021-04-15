@@ -5,6 +5,8 @@
 #
 ######################################################################
 # Clocks
+force -freeze sim:/tb_adc_emu/dwaClk400 1 0, 0 {1.25 ns} -r 2.5 ns
+force -freeze sim:/tb_adc_emu/dwaClk200 1 0, 0 {2.5 ns} -r 5 ns
 force -freeze sim:/tb_adc_emu/dwaClk100 1 0, 0 {5 ns} -r 10 ns
 force -freeze sim:/tb_adc_emu/dwaClk10 1 0, 0 {50 ns} -r 100 ns
 # Run sim for 1ns so forced signals come shortly after rising clock edge
@@ -62,6 +64,8 @@ force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fr
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fromDaqReg.serNumMemAddrStrb 0 0
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fromDaqReg.serNumMemRead 0 0
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fromDaqReg.serNumMemWrite 0 0
+
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/bPClk_nHPeriod 32'h00000505 0
 
 # set reset and start
 force -freeze sim:/tb_adc_emu/fromDaqReg.reset true 20ns -cancel 30ns

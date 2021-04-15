@@ -180,6 +180,8 @@ architecture STRUCTURE of dwa_ps_pl_top is
     signal M00_AXI_0_rvalid     : STD_LOGIC;
     signal M00_AXI_0_rready     : STD_LOGIC;
     signal peripheral_aresetn_0 : STD_LOGIC_VECTOR ( 0 to 0 );
+    signal S_AXI_ACLK_400       : STD_LOGIC;
+    signal S_AXI_ACLK_200       : STD_LOGIC;
     signal S_AXI_ACLK_100       : STD_LOGIC;
     signal S_AXI_ACLK_10        : STD_LOGIC;
 
@@ -317,6 +319,8 @@ begin
             regFromDwa_strb => regFromDwa_strb,
 
             regToDwa       => regToDwa,
+            S_AXI_ACLK_100 => S_AXI_ACLK_400,
+            S_AXI_ACLK_100 => S_AXI_ACLK_200,
             S_AXI_ACLK_100 => S_AXI_ACLK_100,
             S_AXI_ACLK_10  => S_AXI_ACLK_10,
 

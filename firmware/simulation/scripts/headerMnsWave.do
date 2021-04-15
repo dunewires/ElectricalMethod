@@ -134,14 +134,11 @@ add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/adcCnv_nCnv
 add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/adcCnv
 add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/adcBusy
 add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/adcAutoDc_af
-add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/acStimX200_periodCnt
-add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/acStimX200_oddr
 add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/acStimX200_obuf
 add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/acStimX200_nHPeriodAuto
 add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/acStimX200_nHPeriod
 add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/acStimX200
 add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/acStim_trigger
-add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/acStim_oddr
 add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/acStim_nHPeriod
 add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/acStim_mag
 add wave -noupdate -group rop /tb_adc_emu/top_tension_analyzer_1/acStim_enable
@@ -200,8 +197,6 @@ add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGen
 add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/headCDataList
 add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/headADataList
 add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/fromDaqReg
-add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/firmwareId_hash
-add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/firmwareId_date
 add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/dwaClk100
 add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/adcSamplingPeriod_reg
 add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/adcSamplingPeriod
@@ -212,37 +207,37 @@ add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGen
 add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/adcDataRen
 add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/adcDataRdy
 add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/adcData
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/trigger
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/timerCnt
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/reset
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/noiseReadoutBusy
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/fromDaqReg
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/dwaClk100
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/dataParallelStrb
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/dataParallelSsclkEmu
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/dataParallelSsclkDwa
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/dataParallelSsclk
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/dataParallel
-add wave -noupdate -expand -group adcReadout -color Red /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcStart
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/cnvSyncStrb
-add wave -noupdate -expand -group adcReadout -color Magenta /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv
-add wave -noupdate -expand -group adcReadout -color Cyan /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/cnvPeriodCnt
-add wave -noupdate -expand -group adcReadout -color Cyan /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv_nPeriodRn
-add wave -noupdate -expand -group adcReadout -color Cyan /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/cnvCnt
-add wave -noupdate -expand -group adcReadout -color Cyan /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv_nCnvRn
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/cnvDone
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSrcSyncClkEmu
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSrcSyncClkDwa
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSrcSyncClk
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSckEnableEmu
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSckEnable
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSckEmu
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSck
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcDataSerialEmu
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcDataSerialDwa
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv_nPeriod
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv_nCnv
-add wave -noupdate -expand -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcBusy
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/trigger
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/timerCnt
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/reset
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/noiseReadoutBusy
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/fromDaqReg
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/dwaClk100
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/dataParallelStrb
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/dataParallelSsclkEmu
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/dataParallelSsclkDwa
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/dataParallelSsclk
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/dataParallel
+add wave -noupdate -group adcReadout -color Red /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcStart
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/cnvSyncStrb
+add wave -noupdate -group adcReadout -color Magenta /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv
+add wave -noupdate -group adcReadout -color Cyan /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/cnvPeriodCnt
+add wave -noupdate -group adcReadout -color Cyan /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv_nPeriodRn
+add wave -noupdate -group adcReadout -color Cyan /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/cnvCnt
+add wave -noupdate -group adcReadout -color Cyan /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv_nCnvRn
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/cnvDone
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSrcSyncClkEmu
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSrcSyncClkDwa
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSrcSyncClk
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSckEnableEmu
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSckEnable
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSckEmu
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcSck
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcDataSerialEmu
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcDataSerialDwa
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv_nPeriod
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv_nCnv
+add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcBusy
 add wave -noupdate -group {noise correction} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/toDaqReg
 add wave -noupdate -group {noise correction} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSDataStrb
 add wave -noupdate -group {noise correction} -expand /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSData
@@ -283,8 +278,23 @@ add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/toDaqRe
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/sdi
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/writeReg
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/shiftReg
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/phaseStep
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/phaseOFDone
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/phaseOF
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/odlyTap
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/odlyLd
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/oddrFEdge
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/fineCount
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/dwaClk200
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/clk200Step
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/bPClkPeriodCnt
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/bPClkOddr2
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/bPClkOddr1
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/bPClkOddr
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/bPClk_nHPeriod
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/bPClk
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {33574730245302 fs} 0}
+WaveRestoreCursors {{Cursor 1} {624060000000 fs} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 208
 configure wave -valuecolwidth 210
@@ -300,4 +310,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits fs
 update
-WaveRestoreZoom {0 fs} {101685517918981 fs}
+WaveRestoreZoom {254735157189 fs} {602049283988 fs}

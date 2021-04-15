@@ -13,6 +13,7 @@ entity top_tension_analyzer is
     toDaqReg   : out toDaqRegType;
 
     --regToDwa       : in SLV_VECTOR_TYPE_32(31 downto 0);
+    dwaClk400 : in std_logic;
     dwaClk200 : in std_logic;
     dwaClk100 : in std_logic;
     dwaClk10  : in std_logic;
@@ -305,21 +306,6 @@ begin
       dwaClk200          => dwaClk200
     );
 
-  make_ac_stimX200 : process (dwaClk100)
-  begin
-    if rising_edge(dwaClk100) then
-      -- Default Increment
-      -- need the > to catch when the nPeriod decreases at the wrong time
-      if acStimX200_periodCnt >= acStimX200_nHPeriod then
-        -- dont use the enable here to keep the filter working
-        acStimX200           <= not acStimX200;
-        acStimX200_periodCnt <= (acStimX200_periodCnt'left downto 1 => '0', 0 => '1'); --x"000001";
-      else
-        acStimX200_periodCnt <= acStimX200_periodCnt +1;
-      end if;
-
-    end if;
-  end process make_ac_stimX200;
 
   serialPromInterface_inst : entity work.serialPromInterface
     port map (
