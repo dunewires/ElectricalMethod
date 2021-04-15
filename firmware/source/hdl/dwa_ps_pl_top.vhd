@@ -240,7 +240,7 @@ begin
             IB => adcSrcSyncClk_n
         );
 
-    IBUFDS_ADCSSIN : IBUFDS
+    IBUFDS_BBCLK : IBUFDS
         generic map (
             DIFF_TERM    => true,
             IBUF_LOW_PWR => false,-- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
@@ -357,8 +357,8 @@ begin
 
 
             --dwaClk100 => S_AXI_ACLK_100,
-            dwaClk100 => plClk_400,
-            dwaClk100 => plClk_200,
+            dwaClk400 => plClk_400,
+            dwaClk200 => plClk_200,
             dwaClk100 => plClk_100,
             --dwaClk10  => S_AXI_ACLK_10,
             dwaClk10 => plClk_10,
