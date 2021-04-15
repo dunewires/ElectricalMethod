@@ -303,6 +303,7 @@ begin
     port map (
       bPClk_nHPeriod => acStimX200_nHPeriod_fxp8,
       bPClk              => acStimX200,
+      dwaClk400          => dwaClk400,
       dwaClk200          => dwaClk200
     );
 

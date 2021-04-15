@@ -22,8 +22,8 @@ entity dwa_ps_pl_top is
 
     port (
         --DWA
-        led : out std_logic_vector(3 downto 0);
-        pButton : in std_logic_vector(3 downto 0);
+        led     : out std_logic_vector(3 downto 0);
+        pButton : in  std_logic_vector(3 downto 0);
 
         acStimX200_obuf : out std_logic := '0';
 
@@ -49,9 +49,9 @@ entity dwa_ps_pl_top is
         CD_RCK    : out std_logic_vector(3 downto 0) := (others => '0');
         CD_G_b    : out std_logic_vector(3 downto 0) := (others => '0');
 
-        SNUM_SDA : inout  std_logic                    := '0';
-        SNUM_SCL : out std_logic                    := '0';
-        SNUM_A   : out std_logic_vector(2 downto 0) := (others => '0');
+        SNUM_SDA : inout std_logic                    := '0';
+        SNUM_SCL : out   std_logic                    := '0';
+        SNUM_A   : out   std_logic_vector(2 downto 0) := (others => '0');
 
         adcCnv          : out std_logic                    := '0';
         adcSck_p        : out std_logic                    := '0';
@@ -163,28 +163,28 @@ architecture STRUCTURE of dwa_ps_pl_top is
 
 
 
-    signal M00_AXI_0_awaddr             : STD_LOGIC_VECTOR ( 31 downto 0 );
-    signal M00_AXI_0_awprot             : STD_LOGIC_VECTOR ( 2 downto 0 );
-    signal M00_AXI_0_awvalid            : STD_LOGIC;
-    signal M00_AXI_0_awready            : STD_LOGIC;
-    signal M00_AXI_0_wdata              : STD_LOGIC_VECTOR ( 31 downto 0 );
-    signal M00_AXI_0_wstrb              : STD_LOGIC_VECTOR ( 3 downto 0 );
-    signal M00_AXI_0_wvalid             : STD_LOGIC;
-    signal M00_AXI_0_wready             : STD_LOGIC;
-    signal M00_AXI_0_bresp              : STD_LOGIC_VECTOR ( 1 downto 0 );
-    signal M00_AXI_0_bvalid             : STD_LOGIC;
-    signal M00_AXI_0_bready             : STD_LOGIC;
-    signal M00_AXI_0_araddr             : STD_LOGIC_VECTOR ( 31 downto 0 );
-    signal M00_AXI_0_arprot             : STD_LOGIC_VECTOR ( 2 downto 0 );
-    signal M00_AXI_0_arvalid            : STD_LOGIC;
-    signal M00_AXI_0_arready            : STD_LOGIC;
-    signal M00_AXI_0_rdata              : STD_LOGIC_VECTOR ( 31 downto 0 );
-    signal M00_AXI_0_rresp              : STD_LOGIC_VECTOR ( 1 downto 0 );
-    signal M00_AXI_0_rvalid             : STD_LOGIC;
-    signal M00_AXI_0_rready             : STD_LOGIC;
-    signal peripheral_aresetn_0         : STD_LOGIC_VECTOR ( 0 to 0 );
-    signal S_AXI_ACLK_100               : STD_LOGIC;
-    signal S_AXI_ACLK_10                : STD_LOGIC;
+    signal M00_AXI_0_awaddr                       : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal M00_AXI_0_awprot                       : STD_LOGIC_VECTOR ( 2 downto 0 );
+    signal M00_AXI_0_awvalid                      : STD_LOGIC;
+    signal M00_AXI_0_awready                      : STD_LOGIC;
+    signal M00_AXI_0_wdata                        : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal M00_AXI_0_wstrb                        : STD_LOGIC_VECTOR ( 3 downto 0 );
+    signal M00_AXI_0_wvalid                       : STD_LOGIC;
+    signal M00_AXI_0_wready                       : STD_LOGIC;
+    signal M00_AXI_0_bresp                        : STD_LOGIC_VECTOR ( 1 downto 0 );
+    signal M00_AXI_0_bvalid                       : STD_LOGIC;
+    signal M00_AXI_0_bready                       : STD_LOGIC;
+    signal M00_AXI_0_araddr                       : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal M00_AXI_0_arprot                       : STD_LOGIC_VECTOR ( 2 downto 0 );
+    signal M00_AXI_0_arvalid                      : STD_LOGIC;
+    signal M00_AXI_0_arready                      : STD_LOGIC;
+    signal M00_AXI_0_rdata                        : STD_LOGIC_VECTOR ( 31 downto 0 );
+    signal M00_AXI_0_rresp                        : STD_LOGIC_VECTOR ( 1 downto 0 );
+    signal M00_AXI_0_rvalid                       : STD_LOGIC;
+    signal M00_AXI_0_rready                       : STD_LOGIC;
+    signal peripheral_aresetn_0                   : STD_LOGIC_VECTOR ( 0 to 0 );
+    signal S_AXI_ACLK_100                         : STD_LOGIC;
+    signal S_AXI_ACLK_10                          : STD_LOGIC;
     signal plClk_100,plClk_10,plClk_200,plClk_400 : STD_LOGIC;
 
     signal fromDaqReg : fromDaqRegType;
@@ -194,7 +194,7 @@ architecture STRUCTURE of dwa_ps_pl_top is
     signal adcSrcSyncClk : std_logic                    := '0';
     signal adcSck        : std_logic                    := '0';
 
-    signal BB_CLK        : std_logic                    := '0';
+    signal BB_CLK : std_logic := '0';
 
 begin
 
@@ -202,9 +202,10 @@ begin
         port map (
             RDY => open,
             -- 1-bit output: Ready output
-            REFCLK => BB_CLK, -- 1-bit input       :        Reference clock input
+            --REFCLK => BB_CLK, -- 1-bit input       :        Reference clock input
+            REFCLK => plClk_200, -- 1-bit input       :        Reference clock input
             RST    => '0'
-        ); 
+        );
 
     adcSerialInbuf_gen : for adcSerial_indx in 3 downto 0 generate
         IBUFDS_ADCSDIN : IBUFDS
@@ -364,9 +365,9 @@ begin
             dwaClk10 => plClk_10,
 
 
-            led             => led,
-            pButton         => pButton,
-            
+            led     => led,
+            pButton => pButton,
+
             acStimX200_obuf => acStimX200_obuf,
             mainsSquare     => mainsSquare,
 
