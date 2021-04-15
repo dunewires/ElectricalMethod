@@ -8,6 +8,7 @@
 
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/packages/global_def.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/wtaController.vhd
+read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/bandPassClkGen.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/adc_dds_io.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/adcReadout.vhd
 read_vhdl -vhdl2008 -library duneDwa $proj_sources_dir/hdl/mainsNoiseCorrection.vhd
