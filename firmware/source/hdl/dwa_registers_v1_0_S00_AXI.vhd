@@ -831,10 +831,10 @@ begin
 		variable loc_addr : std_logic_vector(OPT_MEM_ADDR_BITS downto 0);
 	begin
 		-- Address decoding for reading registers
-		loc_addr              := axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
-		fromDaqReg.udpDataRen <= false;
-		udpDataStatStrb       <= '0';
-		fromDaqReg.serNumMemRead     <= '0';
+		loc_addr                 := axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
+		fromDaqReg.udpDataRen    <= false;
+		udpDataStatStrb          <= '0';
+		fromDaqReg.serNumMemRead <= '0';
 		--regFromDwa_strb                                 <= (others => '0');
 		--regFromDwa_strb(to_integer(unsigned(loc_addr))) <= axi_rvalid;
 
@@ -941,13 +941,13 @@ begin
 			when b"100000" =>
 				reg_data_out <= x"0000" & toDaqReg.relayWireBot(0);
 			when b"110000" => -- sn reg 48
-				--reg_data_out <= x"0397da03";-- & std_logic_vector(toDaqReg.serNum);
+				              --reg_data_out <= x"0397da03";-- & std_logic_vector(toDaqReg.serNum);
 				reg_data_out <= x"00" & std_logic_vector(toDaqReg.serNum);
 			when b"110001" => --sn addres reg 49
-				reg_data_out                 <= b"0000000000000000000" & std_logic_vector(toDaqReg.serNumMemAddress);
-			when b"110010" =>--sn data reg 50
-				reg_data_out <= std_logic_vector(toDaqReg.serNumMemData);
-				fromDaqReg.serNumMemRead     <= slv_reg_rden; --tell dwa data was read
+				reg_data_out <= b"0000000000000000000" & std_logic_vector(toDaqReg.serNumMemAddress);
+			when b"110010" => --sn data reg 50
+				reg_data_out             <= std_logic_vector(toDaqReg.serNumMemData);
+				fromDaqReg.serNumMemRead <= slv_reg_rden; --tell dwa data was read
 
 			when others =>
 				reg_data_out <= (others => '0');
@@ -987,6 +987,8 @@ begin
 	fromDaqReg.auto              <= slv_reg1(0)= '1';
 	fromDaqReg.mnsEna            <= slv_reg1(1)= '1';
 	fromDaqReg.relayAutoBreakEna <= slv_reg1(2);
+	fromDaqReg.useAcStimTrig     <= slv_reg1(3);
+
 	-- udpDataDone when PS has read the status at the end of the data payload
 	fromDaqReg.udpDataDone        <= not udpReadBusy and udpReadBusy_del; --trailing edge
 	fromDaqReg.stimFreqReq        <= unsigned(slv_reg3(23 downto 0));
@@ -1009,9 +1011,9 @@ begin
 	fromDaqReg.senseWireGain(1)   <= slv_reg15(15 downto 8);
 	fromDaqReg.senseWireGain(0)   <= slv_reg15(7 downto 0);
 
-	fromDaqReg.dateCode   <= dateCode;
+	fromDaqReg.dateCode <= dateCode;
 	-- read dateCode from registers 0x12 and 0x13
-	fromDaqReg.hashCode   <= hashCode;
+	fromDaqReg.hashCode <= hashCode;
 	-- read hashCode from registers 0x14
 	--temp hard code
 	fromDaqReg.noiseFreqMin    <= unsigned(slv_reg25(23 downto 0));
@@ -1036,7 +1038,7 @@ begin
 
 	fromDaqReg.serNumMemAddress <= unsigned(slv_reg49(12 downto 0));
 	fromDaqReg.serNumMemData    <= unsigned(slv_reg50);
-	fromDaqReg.serNum  <= toDaqReg.serNum;
+	fromDaqReg.serNum           <= toDaqReg.serNum;
 
 	-- User logic ends
 

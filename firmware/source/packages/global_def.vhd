@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Mar  8 20:24:46 2021
+-- Last update : Thu Apr 15 21:35:29 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -111,6 +111,7 @@ package global_def is
         relayWireBot      : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
         relayUpdate       : boolean;
         relayAutoBreakEna : std_logic;
+        useAcStimTrig     : std_logic;
     end record; -- fromDaqRegType
 
 end global_def;
