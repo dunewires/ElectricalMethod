@@ -138,7 +138,7 @@ architecture STRUCT of top_tension_analyzer is
   signal adcBusy : std_logic := '0';
 
   signal mainsSquare_del1, mainsSquare_del2 : std_logic := '0';
-  signal mainsTrig                          : std_logic := '0';
+  signal mainsTrig ,adcReadoutTrig                         : std_logic := '0';
 
   signal mainsTrig_filter : unsigned(17 downto 0);
 
@@ -424,7 +424,7 @@ begin
 
       dwaClk100 => dwaClk100
     );
-
+adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
   -- on adcStart get all of the samples at the current frequency
   adcReadout_inst : entity duneDwa.adcReadout
     port map (
@@ -435,8 +435,7 @@ begin
       noiseReadoutBusy => noiseReadoutBusy,
 
       adcStart => adcStart,
-      --trigger  => acStim_trigger,
-      trigger => mainsTrig,
+      trigger => adcReadoutTrig,
       adcBusy => adcBusy,
 
       adcCnv => adcCnv,
