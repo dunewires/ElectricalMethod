@@ -435,7 +435,7 @@ adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
       noiseReadoutBusy => noiseReadoutBusy,
 
       adcStart => adcStart,
-      trigger => adcReadoutTrig,
+      trigger => '1',
       adcBusy => adcBusy,
 
       adcCnv => adcCnv,
