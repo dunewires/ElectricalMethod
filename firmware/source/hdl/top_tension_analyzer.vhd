@@ -432,6 +432,7 @@ begin
 
       dwaClk100 => dwaClk100
     );
+
 adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
   -- on adcStart get all of the samples at the current frequency
   adcReadout_inst : entity duneDwa.adcReadout
@@ -443,7 +444,7 @@ adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
       noiseReadoutBusy => noiseReadoutBusy,
 
       adcStart => adcStart,
-      trigger => '1',
+      trigger => mainsTrig,-- temp disable untested adcReadoutTrig,
       adcBusy => adcBusy,
 
       adcCnv => adcCnv,
