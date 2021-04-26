@@ -15,8 +15,10 @@ puts "program_flash -f  $boot_bin   -offset 0 -flash_type qspi-x4-single -fsbl  
 exec program_flash -f $boot_bin  -offset 0 -flash_type qspi-x4-single -fsbl $fsbl_elf  -cable type xilinx_tcf url $hardware_loc 
 open_hw_manager
 connect_hw_server -url 127.0.0.1:3124 -allow_non_jtag
-current_hw_target [get_hw_targets */xilinx_tcf/Xilinx/00001c726cd801]
-set_property PARAM.FREQUENCY 6000000 [get_hw_targets */xilinx_tcf/Xilinx/00001c726cd801]
+current_hw_target [get_hw_targets */xilinx_tcf/Digilent/210249A0D0C2]
+#current_hw_target [get_hw_targets */xilinx_tcf/Xilinx/00001c726cd801]
+set_property PARAM.FREQUENCY 6000000 [get_hw_targets */xilinx_tcf/Digilent/210249A0D0C2]
+#set_property PARAM.FREQUENCY 6000000 [get_hw_targets */xilinx_tcf/Xilinx/00001c726cd801]
 open_hw_target
 current_hw_device [get_hw_devices xc7z020_1]
 boot_hw_device  [lindex [get_hw_devices xc7z020_1] 0]
