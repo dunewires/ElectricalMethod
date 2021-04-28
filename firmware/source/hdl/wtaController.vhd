@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Apr 28 18:36:58 2021
+-- Last update : Wed Apr 28 18:43:40 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -61,7 +61,7 @@ architecture rtl of wtaController is
 	signal ctrlState        : ctrlState_type        := idle_s;
 	signal ctrlStart_del    : boolean               := false;
 	signal scanDone         : boolean               := false;
-	signal scanAbort        : std_logic             := '0';
+	signal scanAbort        : boolean               := false;
 	signal timerCnt         : unsigned(31 downto 0) := (others => '0');
 	signal noiseReadoutCnt  : unsigned(3 downto 0)  := (others => '0');
 	signal adcBusy_del      : std_logic             := '0';
