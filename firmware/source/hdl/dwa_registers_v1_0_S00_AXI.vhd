@@ -159,6 +159,7 @@ architecture arch_imp of dwa_registers_v1_0_S00_AXI is
 	signal slv_reg41       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg42       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg43       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg44       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg49       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg50       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg_rden    : std_logic;
@@ -315,6 +316,7 @@ begin
 				slv_reg41 <= (others => '0');
 				slv_reg42 <= (others => '0');
 				slv_reg43 <= (others => '0');
+				slv_reg44 <= (others => '0');
 				slv_reg49 <= x"00000800";
 				slv_reg50 <= x"BADDBEEF";
 			else
@@ -674,6 +676,15 @@ begin
 								end if;
 							end loop;
 
+						when b"101100" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg44(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+
 						when b"110001" => --reg 49 is sn address register
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
@@ -738,6 +749,7 @@ begin
 							slv_reg41 <= slv_reg41;
 							slv_reg42 <= slv_reg42;
 							slv_reg43 <= slv_reg43;
+							slv_reg44 <= slv_reg44;
 							slv_reg49 <= slv_reg49;
 							slv_reg50 <= slv_reg50;
 					end case;
@@ -940,6 +952,8 @@ begin
 				reg_data_out <= x"0000" & toDaqReg.relayWireBot(1);
 			when b"100000" =>
 				reg_data_out <= x"0000" & toDaqReg.relayWireBot(0);
+			when b"101100" =>
+				reg_data_out <= slv_reg44;
 			when b"110000" => -- sn reg 48
 				              --reg_data_out <= x"0397da03";-- & std_logic_vector(toDaqReg.serNum);
 				reg_data_out <= x"00" & std_logic_vector(toDaqReg.serNum);
@@ -983,6 +997,7 @@ begin
 	fromDaqReg.reset       <= slv_reg0(0)= '1';
 	fromDaqReg.ctrlStart   <= slv_reg0(1)= '1';
 	fromDaqReg.relayUpdate <= slv_reg0(2)= '1';
+	fromDaqReg.scanAbort   <= slv_reg0(3);
 
 	fromDaqReg.auto              <= slv_reg1(0)= '1';
 	fromDaqReg.mnsEna            <= slv_reg1(1)= '1';
@@ -996,6 +1011,7 @@ begin
 	fromDaqReg.stimFreqMax        <= unsigned(slv_reg5(23 downto 0));
 	fromDaqReg.stimFreqStep       <= unsigned(slv_reg6(23 downto 0));
 	fromDaqReg.stimTime           <= unsigned(slv_reg7(23 downto 0));
+	fromDaqReg.stimTimeInitial    <= unsigned(slv_reg44(23 downto 0));
 	fromDaqReg.stimMag            <= unsigned(slv_reg8(11 downto 0));
 	fromDaqReg.cyclesPerFreq      <= unsigned(slv_reg10(23 downto 0));
 	fromDaqReg.adcSamplesPerCycle <= unsigned(slv_reg11(15 downto 0));

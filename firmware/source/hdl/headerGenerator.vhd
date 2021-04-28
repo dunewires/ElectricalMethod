@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Mar 24 11:53:40 2021
+-- Last update : Wed Apr 28 16:48:06 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ entity headerGenerator is
         sendStatusHdr : in boolean;
 
         pktBuildBusy : out boolean;
-        freqScanBusy : in boolean;
+        freqScanBusy : in  boolean;
 
         stimPeriodActive  : in unsigned(23 downto 0); -- current period (10ns)
         stimPeriodCounter : in unsigned(23 downto 0); -- track how many freqs
@@ -128,8 +128,8 @@ architecture rtl of headerGenerator is
     signal udpCnt_next : unsigned(15 downto 0) := (others => '0');
     signal udpPktCnt   : unsigned(15 downto 0) := (others => '0');
 
-signal stimPeriodActive_reg :unsigned(23 downto 0) := (others => '0');
-signal adcSamplingPeriod_reg :unsigned(23 downto 0) := (others => '0');
+    signal stimPeriodActive_reg  : unsigned(23 downto 0) := (others => '0');
+    signal adcSamplingPeriod_reg : unsigned(23 downto 0) := (others => '0');
 
 begin
 
@@ -163,7 +163,7 @@ begin
             x"03" & std_logic_vector(fromDaqReg.dateCode(23 downto 0)),          --24LSb
             x"04" & x"00" & std_logic_vector(fromDaqReg.hashCode(31 downto 16)), --16MSb
             x"05" & x"00" & std_logic_vector(fromDaqReg.hashCode(15 downto 0)),  --16LSb
-                                                                             --x"20" & std_logic_vector(fromDaqReg.dwaCtrl),
+                                                                                 --x"20" & std_logic_vector(fromDaqReg.dwaCtrl),
             x"21" & std_logic_vector(fromDaqReg.fixedPeriod),
             -- fixme: should be period...
             x"22" & std_logic_vector(fromDaqReg.stimFreqMin),
@@ -241,9 +241,13 @@ begin
     begin
         if rising_edge(dwaClk100) then
             if fromDaqReg.reset then
-            -- handle the fromDaqReg.reset signal
-            -- FIXME: what else goes here?
-            --udpDataRdy_next <= false;
+                state_reg <= idle_s;
+                --headCnt_reg    <= (others   =>  '0');
+                udpDataRdy_reg <= false;
+                udpCnt_reg     <= (others => '0');
+                adcIdx         <= 7;
+                rqstType       <= RQST_NULL;
+
             else
                 state_reg      <= state_next;
                 headCnt_reg    <= headCnt_next;
@@ -251,7 +255,7 @@ begin
                 udpCnt_reg     <= udpCnt_next;
                 adcIdx         <= adcIdx_next;
                 rqstType       <= rqstType_next;
-                pktBuildBusy  <=  state_reg /= idle_s;
+                pktBuildBusy   <= state_reg /= idle_s;
 
             end if;
         end if;
