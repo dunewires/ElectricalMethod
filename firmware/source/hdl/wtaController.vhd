@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Apr 28 16:49:36 2021
+-- Last update : Wed Apr 28 18:36:58 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -49,9 +49,8 @@ entity wtaController is
 
 		adcAutoDc_af : in std_logic_vector(7 downto 0) := (others => '0');
 
-		adcStart  : out boolean   := false;
-		adcBusy   : in  std_logic := '0';
-		scanAbort : in  std_logic := '0';
+		adcStart : out boolean   := false;
+		adcBusy  : in  std_logic := '0';
 
 		dwaClk100 : in std_logic := '0'
 	);
@@ -62,6 +61,7 @@ architecture rtl of wtaController is
 	signal ctrlState        : ctrlState_type        := idle_s;
 	signal ctrlStart_del    : boolean               := false;
 	signal scanDone         : boolean               := false;
+	signal scanAbort        : std_logic             := '0';
 	signal timerCnt         : unsigned(31 downto 0) := (others => '0');
 	signal noiseReadoutCnt  : unsigned(3 downto 0)  := (others => '0');
 	signal adcBusy_del      : std_logic             := '0';
@@ -95,7 +95,7 @@ begin
 						toDaqReg.ctrlBusy <= false;
 						noiseReadoutCnt   <= x"1";
 						noiseReadoutBusy  <= false;
-						freqScanBusy     <= false;
+						freqScanBusy      <= false;
 						timerCnt          <= x"00000000";
 						--turn off stimulus 
 						acStim_enable <= '0';
@@ -110,10 +110,10 @@ begin
 
 					when noisePrep_s =>
 						if scanAbort then --abort readout and send end of run header
-							noiseScanBusy <= false;
-							freqScanBusy  <= false;
-							timerCnt      <= x"00000000";
-							ctrlState    <= freqScanFinish_s;
+							noiseReadoutBusy <= false;
+							freqScanBusy     <= false;
+							timerCnt         <= x"00000000";
+							ctrlState        <= freqScanFinish_s;
 						else
 							--wait a bit for the divison to update and BPF to respond to the new setting
 							if timerCnt(31 downto 8) <= fromDaqReg.noiseBPFSetTime then
@@ -155,9 +155,9 @@ begin
 
 					when stimPrep_s =>    --wait a bit for the divison to update and check FIFOs are not almost full
 						if scanAbort then --abort readout and send end of run header
-								freqScanBusy <= false;
-								timerCnt     <= x"00000000";
-								ctrlState    <= freqScanFinish_s;
+							freqScanBusy <= false;
+							timerCnt     <= x"00000000";
+							ctrlState    <= freqScanFinish_s;
 						else
 							if timerCnt <= x"00000020" then                     --give at least 32 clocks for division to happen
 								timerCnt <= timerCnt +1;                        -- only count 
@@ -196,7 +196,7 @@ begin
 						if timerCnt >= x"00000008" then
 							if not pktBuildBusy then
 								sendRunHdr <= true; --send run header at end of test.
-								timerCnt  <= x"00000000";
+								timerCnt   <= x"00000000";
 								ctrlState  <= pktBuildFinish_s;
 							end if;
 						else
