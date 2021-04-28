@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Apr 27 16:58:01 2021
+-- Last update : Wed Apr 28 18:43:12 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ package global_def is
     type fromDaqRegType is record
         ctrlStart : boolean;
         reset     : boolean;
-        scanAbort     : boolean;
+        scanAbort : boolean;
 
         auto        : boolean;
         mnsEna      : boolean;

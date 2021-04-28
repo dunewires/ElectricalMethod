@@ -997,7 +997,7 @@ begin
 	fromDaqReg.reset       <= slv_reg0(0)= '1';
 	fromDaqReg.ctrlStart   <= slv_reg0(1)= '1';
 	fromDaqReg.relayUpdate <= slv_reg0(2)= '1';
-	fromDaqReg.scanAbort   <= slv_reg0(3);
+	fromDaqReg.scanAbort   <= slv_reg0(3)= '1';
 
 	fromDaqReg.auto              <= slv_reg1(0)= '1';
 	fromDaqReg.mnsEna            <= slv_reg1(1)= '1';
