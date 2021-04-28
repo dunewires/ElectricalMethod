@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Apr 15 21:35:29 2021
+-- Last update : Tue Apr 27 16:58:01 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -55,6 +55,7 @@ package global_def is
     type fromDaqRegType is record
         ctrlStart : boolean;
         reset     : boolean;
+        scanAbort     : boolean;
 
         auto        : boolean;
         mnsEna      : boolean;
@@ -99,6 +100,8 @@ package global_def is
         --- After switching to a new frequency, how long to wait before
         --- acquiring data (24bits, units=1.28 microseconds)
         stimTime : unsigned(23 downto 0);
+        -- extra time to wait after initially enabling the stimulus frequency at the start of a run
+        stimTimeInitial : unsigned(23 downto 0);
         --- Channel mask indicating which sense channels are active (8bit)
         activeChannels : std_logic_vector(7 downto 0);
         --- Mask indicating which relays are active

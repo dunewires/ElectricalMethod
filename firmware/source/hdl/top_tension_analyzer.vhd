@@ -436,7 +436,8 @@ adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
       noiseReadoutBusy => noiseReadoutBusy,
 
       adcStart => adcStart,
-      trigger => mainsTrig,-- temp disable untested adcReadoutTrig,
+      trigger => adcReadoutTrig,-- temp disable untested adcReadoutTrig,
+      --trigger => mainsTrig,-- temp disable untested adcReadoutTrig,
       adcBusy => adcBusy,
 
       adcCnv => adcCnv,
@@ -543,6 +544,8 @@ adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
       probe2(31 downto 15) => (others => '0'),
       probe2(14 downto 0)  => std_logic_vector(senseWireMNSData(3)(14 downto 0)),
       probe3(31 downto 6)  => (others => '0'),
+      probe3(5)            => adcReadoutTrig,
+      probe3(5)            => acStim_trigger,
       probe3(5)            => senseWireDataStrb,
       probe3(4)            => mainsTrig,
       probe3(3)            => senseWireMNSDataStrb,
