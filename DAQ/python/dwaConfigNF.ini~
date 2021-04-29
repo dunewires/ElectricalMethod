@@ -4,16 +4,16 @@
 auto               = 00000001  # 0 is fixed frequency
 #
 stimFreqReq        = 00000C80  # [1/16 Hz] Fixed frequency:
-stimFreqMin        = 00003840  # [1/16 Hz]
-stimFreqMax        = 00003940  # [1/16 Hz]
-stimFreqStep       = 00000001  # [1/16 Hz]
+stimFreqMin        = 00003740  # [1/16 Hz]
+stimFreqMax        = 00003A40  # [1/16 Hz]
+stimFreqStep       = 00000008  # [1/16 Hz]
 stimTime           = 00010000 # units? (maybe 10us)
 #stimTime           = 00100000  # units? (maybe 10us)
 stimMag            = 00000C00  # 12-bit DAC:
-# 
+#
 cyclesPerFreq      = 00000008  # 
 adcSamplesPerCycle = 00000008  # 
-digipot            = 8888888888888888
+digipot            = 2222222222222222
 #
 relayMask          = 00000000  # relay 32 is 0x1:
 coilDrive          = 00000000 

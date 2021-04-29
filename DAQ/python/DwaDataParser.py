@@ -49,8 +49,7 @@ class DwaDataParser():
         self.frameKeys[Frame.UDP]["11"] = "Register_ID"    #  8bit
         #
         # Run Frame Entries
-        self.frameKeys[Frame.RUN]["77"] = "runStatus" # 24bit
-        #
+        self.frameKeys[Frame.RUN]["77"] = "runStatus"    # 24bit
         self.frameKeys[Frame.RUN]["00"] = "runOdometer"    # ??bit
         self.frameKeys[Frame.RUN]["01"] = "fpgaSerialNumber" # ??bit
         self.frameKeys[Frame.RUN]["02"] = "firmwareIdDate_24MSb" # 24-bit
@@ -101,9 +100,9 @@ class DwaDataParser():
         self.frameKeys[Frame.FREQ]["11"] = "Register_ID_Freq"  #  8bit
         self.frameKeys[Frame.FREQ]["40"] = "stimPeriodCounter" # 24bit (currently-used stimulus period)
         self.frameKeys[Frame.FREQ]["41"] = "adcSamplesPerFreq" # 24bit
-        self.frameKeys[Frame.FREQ]["42"] = "stimPeriodActive"  # 24bit
+        self.frameKeys[Frame.FREQ]["42"] = "stimPeriodActive"  # 24bit NOT USED
         self.frameKeys[Frame.FREQ]["43"] = "adcSamplingPeriod" # 24bit
-        # 
+        #
         # ADC Data Frame entries
         # N/A
         #
@@ -354,13 +353,10 @@ class DwaDataParser():
         return dd
 
     def _postProcessFreqFrame(self, dd):
-        print("stimPeriodCounter = {}".format(dd['stimPeriodCounter']))
-        print("stimPeriodActive  = {}".format(dd['stimPeriodActive']))
         dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodActive'] # convert period in 10ns to freq in Hz
+        #dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodCounter'] # KLUGE
         dd['adcSamplingPeriod_sec'] = dd['adcSamplingPeriod']*1e-8
-
         return dd
-    
 
     def _postProcessAdcDataFrame(self, dd):
         # Convert the ADC samples from a hex string
@@ -397,9 +393,11 @@ class DwaDataParser():
         inHeader = False
         delimIdxs = []  # line numbers of frame delimiters
         for ii, line in enumerate(udpPayload):
-            ### FIXME: KLUGE KLUGE!!!!
-            print("MAJOR KLUGE NEEDS TO BE REMOVED!")
             if line.startswith("8"):
+                ### FIXME: KLUGE KLUGE!!!!
+                print("DwaDataParser.parse(): MAJOR KLUGE NEEDS TO BE REMOVED!")
+                print("                       no info line should start with an 8")
+                print(line)
                 continue
             if dwa.isHeaderLine(line):
                 delimIdxs.append(ii)
