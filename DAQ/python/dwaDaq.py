@@ -1,4 +1,6 @@
 # FIXME/TODO:
+# * add "abort" button. After clicking Start button --> button becomes "Abort Scan".
+# * Really need DwaMicrozed class now (configurable IP address for uzed...)
 # * Resonance tab
 #   - raw A(f) data, processed A(f) data.
 #   - ability to add/remove/drag f0 lines
