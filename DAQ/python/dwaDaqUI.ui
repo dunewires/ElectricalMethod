@@ -126,7 +126,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -754,6 +754,13 @@
                    </item>
                   </layout>
                  </item>
+                 <item>
+                  <widget class="QPushButton" name="btnSubmitResonances">
+                   <property name="text">
+                    <string>Submit Resonances to DB</string>
+                   </property>
+                  </widget>
+                 </item>
                 </layout>
                </widget>
               </item>
@@ -914,7 +921,7 @@
      <x>0</x>
      <y>0</y>
      <width>1313</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -953,7 +960,7 @@
   <customwidget>
    <class>PlotWidget</class>
    <extends>QGraphicsView</extends>
-   <header location="global">pyqtgraph</header>
+   <header>pyqtgraph</header>
    <container>1</container>
   </customwidget>
   <customwidget>
