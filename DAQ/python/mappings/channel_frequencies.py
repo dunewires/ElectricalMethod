@@ -169,7 +169,7 @@ def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
     
     return channel_freqs
 
-def all_APA_frequencies():
+def all_apa_frequencies():
     """Return a dictionary of layers containing dictionaries of channels containing dictionaries of wires each containing a list of frequencies, encompassing all frequencies in an APA."""
 
     all_freqs = {'layer_X': {}, 'layer_V': {}, 'layer_U': {}, 'layer_G': {}}
