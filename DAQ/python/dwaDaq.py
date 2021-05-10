@@ -64,6 +64,8 @@ import DwaConfigFile as dcf
 
 from SietchConnect import SietchConnect
 
+import ChannelMapping
+
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
 #    """ handle logging events -- display them in a text box in the gui"""
@@ -342,6 +344,16 @@ class MainWindow(qtw.QMainWindow):
         # Resonance Tab
         self.btnSubmitResonances.clicked.connect(self.submitResonances)
 
+        # Config Tab
+        self.btnConfigureScans.clicked.connect(self.configureScans)
+        self.configStageComboBox.addItem("Pre-production")
+        self.configStageComboBox.addItem("Production")
+        self.configStageComboBox.addItem("Commissioning")
+        self.configLayerComboBox.addItem("G")
+        self.configLayerComboBox.addItem("U")
+        self.configLayerComboBox.addItem("V")
+        self.configLayerComboBox.addItem("X")
+
         # Tension Tab
         self.tensionStageComboBox.addItem("Pre-production")
         self.tensionStageComboBox.addItem("Production")
@@ -545,6 +557,37 @@ class MainWindow(qtw.QMainWindow):
         self.logger.addHandler(ch)
 
         self.logger.info(f'Log created {self.logFilename}')
+
+    def configureScans(self):
+        measuredBy = self.measuredByLineEdit.text()
+        configStage = self.configStageComboBox.currentText()
+        configApaUuid = self.configApaUuid.text()
+        configLayer = self.configLayerComboBox.currentText()
+        configHeadboard = self.configHeadboardSpinBox.value()
+        channelGroups = []
+        scanListText = ""
+        for i in range(5):
+            startChan = (configHeadboard-1)*40 + i*8 + 1
+            channels = range(startChan, startChan+8)
+            strChannels = [str(j) for j in channels]
+            scanListText = scanListText + str(i+1)+". "+ ", ".join(strChannels) + "\n"
+            #channelGroups.append(range(i*8+1, (i+1)*8+1))
+            for ch in channels:
+                freqs = ChannelMapping.channel_frequencies_per_wire(configLayer, ch)
+                logging.info(f'channel {ch}')
+                logging.info(freqs)
+
+            resonances = ChannelMapping.get_resonances_for_channels(configLayer, channels)
+            logging.info("Resonances")
+            logging.info(resonances)
+        
+        logging.info("Configuring scans")
+        logging.info(measuredBy)
+        logging.info(configStage)
+        logging.info(configHeadboard)
+        logging.info(configHeadboard*2)
+        logging.info(channelGroups)
+        self.configScanListTextEdit.setPlainText(scanListText)
 
         
     def configurePlots(self):

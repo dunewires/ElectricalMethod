@@ -169,6 +169,23 @@ def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
     
     return channel_freqs
 
+
+def get_resonances_for_channels(wire_layer: str, channel_numbers: list):
+    resonances = {}
+    for chan in channel_numbers:
+        chan_resonances = channel_frequencies_per_wire(wire_layer, chan)
+        for wire in chan_resonances.keys():
+            resonances[wire] = chan_resonances[wire]
+    return resonances
+
+def get_resonance_ranges(wire_layer: str, channel_numbers: list):
+    if wire_layer == "X" or wire_layer =="G":
+        return [[80,90]]
+    
+    # U and V layer logic
+    
+
+
 def all_APA_frequencies():
     """Return a dictionary of layers containing dictionaries of channels containing dictionaries of wires each containing a list of frequencies, encompassing all frequencies in an APA."""
 
