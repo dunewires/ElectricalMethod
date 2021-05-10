@@ -435,13 +435,19 @@ def force_symlink(file1, file2):
 
 def dwaReset(verbose=0):
     #fromDaqReg.reset          <= slv_reg0(0)= '1';
-    # presumably this is handled by dwaReset()?
-
     s = tcpOpen(verbose=verbose)
     dwaRegWrite(s, '00000000', '00000001', verbose=verbose)
     time.sleep(0.2)
     tcpClose(s)
 
+def dwaAbort(verbose=0):
+    s = tcpOpen(verbose=verbose)
+    dwaRegWrite(s, '00000000', '00000008', verbose=verbose)
+    time.sleep(0.2)
+    tcpClose(s)
+
+
+    
 ### DEFUNCT -- use DwaConfigFile.py class and DwaConfigFile.getConfigDict() instead!   
 def dwaGetConfigParameters(configFile):
     """Parse and return DWA configuration parameters from a file
@@ -591,12 +597,15 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
     #fromDaqReg.stimFreqStep <= unsigned(slv_reg6(23 downto 0));
     dwaRegWrite(s, '00000006', config["stimFreqStep"], verbose=verbose)
     time.sleep(sleepSec)
-    print("Setting stimTime and Mag")
+    print("Setting stimTime, stimMag, and stimTimeInit")
     #fromDaqReg.stimRampTime   <= unsigned(slv_reg7(23 downto 0));
     dwaRegWrite(s, '00000007', config["stimTime"], verbose=verbose)
     time.sleep(sleepSec)
     #fromDaqReg.stimMag        <= unsigned(slv_reg8(23 downto 0));
     dwaRegWrite(s, '00000008', config["stimMag"], verbose=verbose)
+    time.sleep(sleepSec)
+    # ?? stimTimeInit
+    dwaRegWrite(s, '0000002C', config["stimMagInit"], verbose=verbose)
     time.sleep(sleepSec)
     # 
     #fromDaqReg.nAdcStimPeriod <= unsigned(slv_reg10(23 downto 0));

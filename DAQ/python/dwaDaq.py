@@ -1,11 +1,11 @@
 # FIXME/TODO:
+# * resonance lines could use "span" keyword to draw only the part of the plot that is in the peak
+#   e.g. from "baseline" to peak, as well as peak width, as in final example of:
+#   https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
 # * add "abort" button. After clicking Start button --> button becomes "Abort Scan".
 # * Really need DwaMicrozed class now (configurable IP address for uzed...)
-# * Resonance tab
-#   - raw A(f) data, processed A(f) data.
-#   - ability to add/remove/drag f0 lines
-#   - ability to enter frequencies by hand and have lines respond
-#   - ability to tweak find_peak parameters in real time
+# * The new register to set an additional stimulus time for the first sample in the run,  stimTimeInitial,
+#   is a 24 bit register with the same units as the stimulus time, 2.56us, and is at address 0x2C. 
 # * Logging: use RotatingFileHandler for log file, and don't create a new log file each time... ???
 # * UDP header will eventually contain status bits as well (currently not used)
 # * look for dropped UDP packets by monitoring the UDP counter
@@ -13,6 +13,9 @@
 # * if there is a dropped UDP packet, how can we tell what register it was from?
 # * Mapping from register/ADC number to APA wire number...
 # * database logging (seitch)
+# * Redundant saving of amplitude data?!?
+#                self._writeAmplitudesToFile()
+#                self.saveAmplitudeData()
 # * From Sebastien: 4/17/2020
 #   Another idea that came from people doing the measurement for
 #   protodune was to get a summary of the recent previous wire tension
@@ -287,6 +290,8 @@ class MainWindow(qtw.QMainWindow):
         ################# START LAYOUT ##################
         # Load the UI (built in Qt Designer)
         uic.loadUi('dwaDaqUI.ui', self)
+        self.btnScanCtrl.setStyleSheet("background-color : green")  # button is green when scan is inactive, red when active
+
         # adapt the tabs...
         # see https://stackoverflow.com/questions/51404102/pyqt5-tabwidget-vertical-tab-horizontal-text-alignment-left
         #self.tabWidget.setTabBar(TabBar(self.tabWidget))
@@ -328,7 +333,7 @@ class MainWindow(qtw.QMainWindow):
         self._setTabTooltips()
         
         # Connect slots/signals
-        self.btnStart.clicked.connect(self.startRunThread)
+        self.btnScanCtrl.clicked.connect(self.startRunThread)
         self.btnSaveAmpl.clicked.connect(self.saveAmplitudeData)
         #self.btnQuit.clicked.connect(self.close)
         self.configFileName.returnPressed.connect(self.configFileNameEnter)
@@ -469,14 +474,7 @@ class MainWindow(qtw.QMainWindow):
         # Info about current run
         self.stimFreqMin = 0
         self.stimFreqMax = 0
-        
         self.state = State.IDLE
-        # KLUGE: start
-        # must count how many channels reported and what freq we are on
-        self.stimPeriodCurrent = None
-        self.nChansReceived = 0
-        self.stimPeriodMax = None
-        # KLUGE: end
 
         # Set A(f) peak detection parameters
         self.resFitParams = {}
@@ -490,6 +488,12 @@ class MainWindow(qtw.QMainWindow):
         print(f"str(self.resFitParams['find_peaks']['width']) = {str(self.resFitParams['find_peaks']['width'])}")
         self.resFitWidth.setText(str(self.resFitParams['find_peaks']['width']))
         self.resFitProminence.setText(str(self.resFitParams['find_peaks']['prominence']))
+
+        # KLUGE for now...
+        self.resFitParamsOut = {}
+        for reg in self.registers:
+            chan = reg.value
+            self.resFitParamsOut[chan] = {'peaks':[], 'properties':{}}
         
         # Start listening for UDP data in a Worker thread
         self.udpListen()
@@ -499,11 +503,13 @@ class MainWindow(qtw.QMainWindow):
     
     def _initResonanceFitLines(self):
         self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
-                            'proc':{}  # raw and processed A(f) plots
+                            'proc':{},  # raw and processed A(f) plots
+                            'procDebug':{} # for debugging
                             }  
         for reg in self.registers:
             self.resFitLines['raw'][reg] = []
             self.resFitLines['proc'][reg] = []
+            self.resFitLines['procDebug'][reg] = []
             
     def _setTabTooltips(self):
         self.tabWidgetStages.setTabToolTip(MainView.STIMULUS, Shortcut.STIMULUS.value)
@@ -818,14 +824,28 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def startRunThread(self):
-        # Pass the function to execute
-        worker = Worker(self.startRun)  # could pass args/kwargs too..
-        #worker.signals.result.connect(self.printOutput)
-        #worker.signals.finished.connect(self.threadComplete)
 
-        # execute
-        self.threadPool.start(worker)
+        if self.state == State.IDLE:
+            print("User has requested a new scan")
+            # Change the button to "Abort Scan" (and change color, too)
+            self.btnScanCtrl.setStyleSheet("background-color : red")
+            self.btnScanCtrl.setText("Abort Scan")
+            self.state = State.SCAN
+            
+            # Pass the function to execute
+            worker = Worker(self.startRun)  # could pass args/kwargs too..
+            #worker.signals.result.connect(self.printOutput)
+            #worker.signals.finished.connect(self.threadComplete)
 
+            # execute
+            self.threadPool.start(worker)
+
+        elif self.state == State.SCAN:
+            # Change the button to "Abort Scan" (and change color, too)
+            print("User has requested a soft abort of this run...")
+            print("... this is not yet tested")
+            dwa.dwaAbort()
+            
     def startRun(self):
         #self.outputText.appendPlainText("CLICKED START")
         #self.outputText.update()
@@ -895,6 +915,7 @@ class MainWindow(qtw.QMainWindow):
         print(f'self.resFitWidth.text() = {self.resFitWidth.text()}')
         entryStr = self.resFitWidth.text().strip()
         toks = [x.strip() for x in entryStr.split(",")]
+        print(f'peak width toks = {toks}')
         self.resFitParams['find_peaks']['width'] = [None, None]
         for ii, tok in enumerate(toks):
             try:
@@ -905,11 +926,17 @@ class MainWindow(qtw.QMainWindow):
         # prominence parameter
         print(f'self.resFitProminence.text() = {self.resFitProminence.text()}')
         entryStr = self.resFitProminence.text().strip()
+        # Get rid of any parentheses
+        entryStr = entryStr.replace("(","")
+        entryStr = entryStr.replace(")","")
         toks = [x.strip() for x in entryStr.split(",")]
+        print(f'prominence toks = {toks}')
         self.resFitParams['find_peaks']['prominence'] = [None, None]
         for ii, tok in enumerate(toks):
+            if tok.upper() == 'NONE':
+                continue
             try:
-                self.resFitParams['find_peaks']['prominence'][ii] = int(tok)
+                self.resFitParams['find_peaks']['prominence'][ii] = float(tok)
             except:
                 print(f"invalid entry resFit prominence: {tok} in {entryStr}")
 
@@ -939,6 +966,31 @@ class MainWindow(qtw.QMainWindow):
             self.resonantFreqs[reg.value] = [ float(tok) for tok in toks ]
         self._updateResonantFreqDisplay(chan=None)
 
+    @pyqtSlot()
+    def _f0LineClicked(self):
+        print("f0Line clicked")
+        print(f"pyqtgraph version {pg.__version__}")
+        #print(ev)
+        #print(f"line = {line}")
+        #print(f"ev   = {ev}")
+        #if ev.button() == qtc.Qt.RightButton:
+        #    print('right button!')
+            #if self.raiseContextMenu(ev):
+            #    ev.accept()
+        #else:
+        #    print("not right button...")
+
+    #def raiseContextMenu(self, ev):
+    #    menu = self.getContextMenus()
+    #    
+    #    # Let the scene add on to the end of our context menu
+    #    # (this is optional)
+    #    menu = self.scene().addParentContextMenus(self, menu, ev)
+    #    
+    #    pos = ev.screenPos()
+    #    menu.popup(QtCore.QPoint(pos.x(), pos.y()))
+    #    return True
+        
     @pyqtSlot()
     def _f0LineMoved(self):
         print("f0Line moved")
@@ -1172,7 +1224,8 @@ class MainWindow(qtw.QMainWindow):
 
     def doResonanceAnalysis(self):
         self._loadAmpData()
-        self.postScanAnalysis()
+        self.resFitParameterUpdate() # this also runs the fit (postScanAnalysis)
+        #self.postScanAnalysis()
         
     def _loadAmpData(self):
         ampFilename = self.ampDataFilename.text()
@@ -1228,7 +1281,7 @@ class MainWindow(qtw.QMainWindow):
                 self.freqMin_val.setText(self.dwaConfigFile.config['stimFreqMin_Hz'])
                 self.freqMax_val.setText(self.dwaConfigFile.config['stimFreqMax_Hz'])
                 self.freqStep_val.setText(self.dwaConfigFile.config['stimFreqStep_Hz'])
-                self.stimTime_val.setText(self.dwaConfigFile.config['stimTime'])
+                self.stimTime_val.setText(self.dwaConfigFile.config['stimTime_s'])
                 self.cycPerFreq_val.setText(self.dwaConfigFile.config['cyclesPerFreq_dec'])
                 self.sampPerCyc_val.setText(self.dwaConfigFile.config['adcSamplesPerCycle_dec'])
                 self.clientIP_val.setText(self.dwaConfigFile.config['client_IP'])
@@ -1271,6 +1324,8 @@ class MainWindow(qtw.QMainWindow):
                 self.resonanceProcessedPlots[reg].removeItem(infLine)
             for infLine in self.resFitLines['raw'][reg]:
                 self.resonanceRawPlots[reg].removeItem(infLine)
+            for line in self.resFitLines['procDebug'][reg]:
+                self.resonanceProcessedPlots[reg].removeItem(line)
 
         self._initResonanceFitLines()
 
@@ -1403,29 +1458,45 @@ class MainWindow(qtw.QMainWindow):
         if ddp.Frame.RUN in udpDict:   # Assumes this is start of a new scan
             self.outputText.appendPlainText("\nFOUND RUN HEADER")
             self.outputText.appendPlainText(str(udpDict))
-            # FIXME: TEMPORARY...
-            self.logger.info("\n\n\n\nFOUND RUN HEADER")
-            # update the frequency information (min, max, step)
-            # FIXME: move this to a subroutine...
-            self.stimFreqMin  = udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']
-            self.stimFreqMax  = udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']
-            self.stimFreqStep = udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']
-            self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.2f}")
-            self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.2f}")
-            self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
 
+
+            # if start of run, set up GUI scan parameters
+            if udpDict[ddp.Frame.RUN]['runStatus'] == RUN_START:
+                # FIXME: TEMPORARY...
+                self.logger.info("\n\n\n\nFOUND RUN HEADER")
+                # update the frequency information (min, max, step)
+                # FIXME: move this to a subroutine...
+                self.stimFreqMin  = udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']
+                self.stimFreqMax  = udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']
+                self.stimFreqStep = udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']
+                self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.2f}")
+                self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.2f}")
+                self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
+                
+            elif udpDict[ddp.Frame.RUN]['runStatus'] == RUN_END:
+                print("\n\n\n\n\n\n\n SCAN IS DONE!!!")
+                self.btnScanCtrl.setStyleSheet("background-color : green")
+                self.btnScanCtrl.setText("Start Scan")
+                self.state = State.IDLE
+                self._writeAmplitudesToFile()
+                self.saveAmplitudeData()
+                self.postScanAnalysis()
+                
+            else:
+                 print("ERROR: unknown value of runStatus:")   
+                 print(udpDict[ddp.Frame.RUN])
+                 print(udpDict[ddp.Frame.RUN]['runStatus'])
+            
+            
         # Look for frequency header
         if ddp.Frame.FREQ in udpDict:  
             self.logger.info("FOUND FREQUENCY HEADER")
             self.logger.info(udpDict)
             self.globalFreqActive_val.setText(f"{udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']:.2f}")
             # is this the first payload for this frequency?
-            if udpDict[ddp.Frame.FREQ][STIM_PERIOD_CURRENT] != self.stimPeriodCurrent:
-                self.nChansReceived = 0
-                self.stimPeriodCurrent = udpDict[ddp.Frame.FREQ][STIM_PERIOD_CURRENT]
+            #if udpDict[ddp.Frame.FREQ][STIM_PERIOD_CURRENT] != self.stimPeriodCurrent:
+            #    self.stimPeriodCurrent = udpDict[ddp.Frame.FREQ][STIM_PERIOD_CURRENT]
 
-            self.nChansReceived += 1
-                
         # Check to see if this is an ADC data transfer:
         if ddp.Frame.ADC_DATA in udpDict:
             self.outputText.appendPlainText("\nFOUND ADC DATA\n")
@@ -1471,22 +1542,6 @@ class MainWindow(qtw.QMainWindow):
             if regId == self.chanViewMainAmpl:
                 self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
 
-        # KLUGE: if the scan is done, then find resonant frequencies
-        if self.nChansReceived == 8:
-            print(f"\n\n\n ALL DATA IN FOR THIS FREQ [{self.stimPeriodCurrent} = {udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']}]\n\n\n")
-
-            # FIXME: put in to trigger resonant freq. fitting/search
-            # for recorded data from sebastien...
-            # should eventually just look for the "end of scan" signal from uzed
-            #scanComplete = self.stimPeriodCurrent == 5423600
-            #scanComplete = udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz'] >= 17.5
-            scanComplete = udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz'] >= self.stimFreqMax
-
-            if scanComplete:
-                print("\n\n\n\n\n\n\n SCAN IS DONE!!!")
-                self._writeAmplitudesToFile()
-                self.saveAmplitudeData()
-                self.postScanAnalysis()
 
 
     def postScanAnalysis(self):
@@ -1499,6 +1554,7 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers:
             #print(f'reg       = {reg}')
             #print(f'reg.value = {reg.value}')
+            chan = reg.value
             if len(self.ampData[reg]['freq']) == 0:  # maybe a register has no data?
                 continue
             #peakIds, _ = find_peaks(np.cumsum(self.ampData[reg]['ampl']))
@@ -1529,10 +1585,12 @@ class MainWindow(qtw.QMainWindow):
             self.curves['resProcFit'][reg].setData(self.ampData[reg]['freq'], dataToFit)
             
             # FIXME: set width based on frequency, not hard-coded number of samples!
-            peakIds, _ = find_peaks(dataToFit,
-                                    prominence=self.resFitParams['find_peaks']['prominence'],
-                                    width=self.resFitParams['find_peaks']['width']
-                                    )
+            peakIds, properties = find_peaks(dataToFit,
+                                             prominence=self.resFitParams['find_peaks']['prominence'],
+                                             width=self.resFitParams['find_peaks']['width']
+                                             )
+            self.resFitParamsOut[chan]['peaks'] = peakIds
+            self.resFitParamsOut[chan]['properties'] = properties
             # FIXME: could add interpolation for better precision
 
             # update the label:
@@ -1551,27 +1609,52 @@ class MainWindow(qtw.QMainWindow):
         """
 
         # Remove any existing InfiniteLines from A(f) plots and reset dict
-        for reg in self.registers:
-            for infLine in self.resFitLines['proc'][reg]:
-                self.resonanceProcessedPlots[reg].removeItem(infLine)
-            for infLine in self.resFitLines['raw'][reg]:
-                self.resonanceRawPlots[reg].removeItem(infLine)
-        self._initResonanceFitLines()
+        self._clearResonanceFits()
                 
         # FIXME: move pen definition to __init__ (self.f0pen)
         f0Pen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
 
+        debug = True
+        
         for reg in self.registers:
             chan = reg.value
-            print("in update: ", self.resonantFreqs[chan])
+            print(f'in update: {chan}: {self.resonantFreqs[chan]}')
             labelStr = ', '.join([f'{ff:.2f}' for ff in self.resonantFreqs[chan]])
             getattr(self, f'le_resfreq_val_{reg}').setText(labelStr)
             
+            fitx, fity = self.curves['resProcFit'][chan].getData()
+
             # Create/display new InfiniteLine instance for each resonant freq
-            for ff in self.resonantFreqs[chan]:
+            for ii, ff in enumerate(self.resonantFreqs[chan]):
+                # Plot vertical line from peak down to "baseline"
+                # And horizontal line showing width of fitted peak
+                # as in last example here:
+                # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
+                #try:
+                #    ymax = fity[self.resFitParamsOut[chan]['peaks'][ii]]
+                #    ymin = ymax - self.resFitParamsOut[chan]['properties']['prominences'][ii]
+                #    print(f'ymin, ymax = {ymin}, {ymax}')
+                #except:
+                #    print("\n\n\nERROR!!!!!!!!!\n\n\n")
+
+                if (debug):
+                    print(f"Chan, Freq = {chan}, {ii}, {ff}")
+                    ymax = fity[self.resFitParamsOut[chan]['peaks'][ii]]
+                    ymin = ymax - self.resFitParamsOut[chan]['properties']['prominences'][ii]
+                    xmin = fitx[int(np.floor(self.resFitParamsOut[chan]['properties']['left_ips'][ii]))]
+                    xmax = fitx[int(np.ceil(self.resFitParamsOut[chan]['properties']['right_ips'][ii]))] 
+                    ywidth = self.resFitParamsOut[chan]['properties']['width_heights'][ii]
+                    print(f'ymin, ymax = {ymin}, {ymax}')
+                    print("")
+                    self.resFitLines['procDebug'][reg].append( self.resonanceProcessedPlots[reg].plot(x=[ff,ff], y=[ymin,ymax]))
+                    self.resFitLines['procDebug'][reg].append( self.resonanceProcessedPlots[reg].plot(x=[xmin, xmax], y=[ywidth,ywidth]))
+
+                
                 self.resFitLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
+                self.resFitLines['proc'][reg][-1].sigClicked.connect(self._f0LineClicked)
                 self.resFitLines['proc'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
                 self.resFitLines['raw'][reg].append( self.resonanceRawPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
+                self.resFitLines['raw'][reg][-1].sigClicked.connect(self._f0LineClicked)
                 self.resFitLines['raw'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
 
                 
