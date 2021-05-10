@@ -38,7 +38,7 @@ class DwaConfigFile():
         self.validOptions = {}
         self.validOptions["FPGA"] = ["auto",
                                      "stimFreqReq", "stimFreqMin", "stimFreqMax", "stimFreqStep",
-                                     "stimTime", "stimMag",
+                                     "stimTime", "stimMag", "stimTimeInitial",
                                      "cyclesPerFreq", "adcSamplesPerCycle",
                                      # "relayMask", "coilDrive",  # v2 only (defunct)
                                      "digipot",
@@ -97,6 +97,8 @@ class DwaConfigFile():
         self.defaults["noiseAdcSamplesPerFreq"] = "00000100"  # [unitless] (256 samples) limited to 256
         self.defaults["noiseSamplingPeriod"]    = "0000CB73"  # [10ns]   32 samp/cycle @ 60 Hz
         self.defaults["noiseSettlingTime"]      = "00001000"  # [2.56us]  "00001000" ~ 10ms
+        #
+        self.defaults["stimTimeInit"]   = "00060000"  # [2.56us]  "00060000" ~ 1.01 seconds
         #
         self.defaults["relayWireTop"]  = "0000000000000000" # 64-bit  top3top2top1top0
         self.defaults["relayWireBot"]  = "0000000000000000" # 64-bit  bot3bot2bot1bot0
@@ -186,13 +188,19 @@ class DwaConfigFile():
             freq_Hz = float(int(self.config[fk], base)) / 16.
             self.config[f"{fk}_Hz"] = f"{freq_Hz:.4f}"
 
-
         hexToDecKeys = ['cyclesPerFreq', 'adcSamplesPerCycle']
+        base = 16
         for hd in hexToDecKeys:
             val = int(self.config[hd], base)
             self.config[f"{hd}_dec"] = f"{val:d}"
 
-
+        # stimTime (hex counts of 2.56us steps to seconds)
+        stimTimes = ['stimTime', 'stimTimeInitial']
+        base = 16
+        for st in stimTimes:
+            st_sec = int(self.config[st], base)*2.56e-6  # convert to seconds
+            self.config[f'{st}_s'] = f"{st_sec:.3f}"
+            
         # Split out the v3 relay register values, 16bits each
         # Bus relays (2 boards, 32bits each board)
         self.config["relayBusTop1"] = self.config["relayBusTop"][:4]
