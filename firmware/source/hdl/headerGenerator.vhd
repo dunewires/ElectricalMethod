@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Apr 28 16:48:06 2021
+-- Last update : Wed May 12 19:35:21 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -46,9 +46,8 @@ entity headerGenerator is
         -----------------------
         -- PL
         --udpDataRen         : in boolean;
-        sendRunHdr    : in boolean;
-        sendAdcData   : in boolean;
-        sendStatusHdr : in boolean;
+        sendRunHdr  : in boolean;
+        sendAdcData : in boolean;
 
         pktBuildBusy : out boolean;
         freqScanBusy : in  boolean;
@@ -108,7 +107,7 @@ architecture rtl of headerGenerator is
 
     ----------------------------
     ---- Setup for Header E
-    constant nHeadE      : integer                                         := 3; -- # of header words (incl. 2 delimiters)
+    constant nHeadE      : integer                                         := 5; -- # of header words (incl. 2 delimiters)
     constant nHeadElog   : integer                                         := integer(log2(real(nHeadE +1)));
     signal headEDataList : slv_vector_type(nHeadE-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
@@ -120,6 +119,14 @@ architecture rtl of headerGenerator is
 
     signal udpDataRdy_reg  : boolean := false;
     signal udpDataRdy_next : boolean := false;
+
+    signal watchdogReset    : boolean               := false;
+    signal watchdogSleep    : boolean               := false;
+    signal watchdogTimerCnt : unsigned(31 downto 0) := (others => '0');
+
+    signal sendStatus     : boolean               := false;
+    signal statusBusy     : boolean               := false;
+    signal statusTimerCnt : unsigned(31 downto 0) := (others => '0');
 
     signal adcRegNum         : unsigned(3 downto 0)  := (others => '0');
     signal adcSamplesPerFreq : unsigned(39 downto 0) := (others => '0');
@@ -222,6 +229,8 @@ begin
     headEDataList <= ( -- Status frame
             x"EEEE" & std_logic_vector(to_unsigned(nHeadE-2, 16)),
             x"61" & x"0000" & x"55",
+            x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
+            x"62" & std_logic_vector(fromDaqReg.errors),
             x"EEEEEEEE"
     );
 
@@ -240,7 +249,7 @@ begin
     state_seq : process (dwaClk100)
     begin
         if rising_edge(dwaClk100) then
-            if fromDaqReg.reset then
+            if fromDaqReg.reset or watchdogReset then
                 state_reg <= idle_s;
                 --headCnt_reg    <= (others   =>  '0');
                 udpDataRdy_reg <= false;
@@ -273,9 +282,12 @@ begin
         udpCnt_next     <= udpCnt_reg;
         adcIdx_next     <= adcIdx;
         adcDataRen      <= (others => '0');
+        statusBusy      <= false;
+        watchdogSleep   <= false;
         case (state_reg) is
 
             when idle_s =>
+                watchdogSleep   <= true;
                 udpDataRdy_next <= false;
                 if sendRunHdr then
                     udpDataRdy_next <= true;
@@ -291,7 +303,7 @@ begin
                     rqstType_next   <= RQST_ADC;
                     --registerId      <= std_logic_vector(to_unsigned(adcIdx, registerId'length));
 
-                elsif sendStatusHdr then
+                elsif sendStatus then
                     udpDataRdy_next <= true;
                     state_next      <= genAFrame_s;
                     headCnt_next    <= to_unsigned(nHeadA-1, headCnt_next'length);
@@ -335,7 +347,7 @@ begin
             when genEFrame_s =>
                 -- clock out the E header
                 toDaqReg.udpDataWord <= headEDataList(to_integer(headCnt_reg));
-
+                statusBusy           <= true;
                 if fromDaqReg.udpDataRen then
                     if headCnt_reg > 0 then
                         headCnt_next <= headCnt_reg - 1;
@@ -414,6 +426,38 @@ begin
                 state_next <= idle_s;
 
         end case;
+    end process;
+    statusTiming : process (dwaClk100) -- latch the packet data validated by the sendData strobe
+    begin
+        if rising_edge(dwaClk100) then
+            if statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod then
+                sendStatus     <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off
+                statusTimerCnt <= x"00000001";
+            else
+                statusTimerCnt <= statusTimerCnt+1;
+                sendStatus     <= sendStatus and not statusBusy; --clear request
+            end if;
+
+        end if;
+    end process;
+
+    watchdogTiming : process (dwaClk100) -- latch the packet data validated by the sendData strobe
+    begin
+        if rising_edge(dwaClk100) then
+            -- default
+            watchdogReset <= false; --clear request
+
+            if watchdogSleep then
+                watchdogTimerCnt <= x"00000001";
+
+            elsif watchdogTimerCnt(31 downto 8) >= fromDaqReg.pktGenWatchdogPeriod then
+                watchdogTimerCnt <= x"00000001";
+                watchdogReset    <= true;
+
+            else
+                watchdogTimerCnt <= watchdogTimerCnt+1;
+            end if;
+        end if;
     end process;
 
     stateDbg <= to_unsigned(state_type'POS(state_reg),stateDbg'length);
