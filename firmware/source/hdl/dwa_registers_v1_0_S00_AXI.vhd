@@ -1089,8 +1089,8 @@ begin
 
 	fromDaqReg.ctrlStateDbg         <= toDaqReg.ctrlStateDbg; --sourced from DWA
 	fromDaqReg.errors               <= toDaqReg.errors ;      --sourced from DWA
-	fromDaqReg.statusPeriod         <= slv_reg53(23 downto 0);
-	fromDaqReg.pktGenWatchdogPeriod <= slv_reg54(23 downto 0);
+	fromDaqReg.statusPeriod         <= unsigned(slv_reg53(23 downto 0));
+	fromDaqReg.pktGenWatchdogPeriod <= unsigned(slv_reg54(23 downto 0));
 
 	fromDaqReg.serNumMemAddress <= unsigned(slv_reg49(12 downto 0));
 	fromDaqReg.serNumMemData    <= unsigned(slv_reg50);
