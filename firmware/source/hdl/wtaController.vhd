@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Apr 28 18:43:40 2021
+-- Last update : Wed May 12 19:31:51 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -215,4 +215,7 @@ begin
 			end if;
 		end if;
 	end process ctrlState_seq;
+
+	    toDaqReg.ctrlStateDbg <= to_unsigned(ctrlState_type'POS(ctrlState),toDaqReg.ctrlStateDbg'length);
+
 end architecture rtl;

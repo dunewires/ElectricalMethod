@@ -162,6 +162,8 @@ architecture arch_imp of dwa_registers_v1_0_S00_AXI is
 	signal slv_reg44       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg49       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg50       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg53       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg54       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg_rden    : std_logic;
 	signal slv_reg_wren    : std_logic;
 	signal reg_data_out    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
@@ -319,6 +321,8 @@ begin
 				slv_reg44 <= (others => '0');
 				slv_reg49 <= x"00000800";
 				slv_reg50 <= x"BADDBEEF";
+				slv_reg53 <= x"0005F5E1"; --1 SEC
+				slv_reg54 <= x"00B2D05E"; -- 30 SEC
 			else
 				loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 				if (slv_reg_wren = '1') then
@@ -704,6 +708,26 @@ begin
 								end if;
 							end loop;
 							fromDaqReg.serNumMemWrite <= '1'; -- signal dwa this register was updated
+
+						when b"110101" => -- reg 53 is statusPeriod
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg53(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+							fromDaqReg.serNumMemWrite <= '1'; -- signal dwa this register was updated
+
+						when b"110110" => -- reg 54 is pktGenWatchdogPeriod
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg54(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+							fromDaqReg.serNumMemWrite <= '1'; -- signal dwa this register was updated
 						when others =>
 							slv_reg0  <= slv_reg0;
 							slv_reg1  <= slv_reg1;
@@ -752,6 +776,8 @@ begin
 							slv_reg44 <= slv_reg44;
 							slv_reg49 <= slv_reg49;
 							slv_reg50 <= slv_reg50;
+							slv_reg53 <= slv_reg53;
+							slv_reg54 <= slv_reg54;
 					end case;
 				end if;
 			end if;
@@ -963,6 +989,15 @@ begin
 				reg_data_out             <= std_logic_vector(toDaqReg.serNumMemData);
 				fromDaqReg.serNumMemRead <= slv_reg_rden; --tell dwa data was read
 
+			when b"110011" => --controller state reg 51
+				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.ctrlStateDbg);
+			when b"110100" => --serror bits reg 52
+				reg_data_out <= x"00" & std_logic_vector(toDaqReg.errors);
+			when b"110101" => --reg 53
+				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.statusPeriod);
+			when b"110110" => --reg 54
+				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.pktGenWatchdogPeriod);
+
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;
@@ -1051,6 +1086,11 @@ begin
 	fromDaqReg.relayWireBot(2) <= slv_reg34(15 downto 0);
 	fromDaqReg.relayWireBot(1) <= slv_reg33(15 downto 0);
 	fromDaqReg.relayWireBot(0) <= slv_reg32(15 downto 0);
+
+	fromDaqReg.ctrlStateDbg         <= toDaqReg.ctrlStateDbg; --sourced from DWA
+	fromDaqReg.errors               <= toDaqReg.errors ;      --sourced from DWA
+	fromDaqReg.statusPeriod         <= slv_reg53(23 downto 0);
+	fromDaqReg.pktGenWatchdogPeriod <= slv_reg54(23 downto 0);
 
 	fromDaqReg.serNumMemAddress <= unsigned(slv_reg49(12 downto 0));
 	fromDaqReg.serNumMemData    <= unsigned(slv_reg50);

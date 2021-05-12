@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Apr 28 18:43:12 2021
+-- Last update : Wed May 12 19:04:55 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -50,6 +50,8 @@ package global_def is
         serNumMemAddress : unsigned(12 downto 0);
         serNumMemData    : unsigned(31 downto 0);
 
+        ctrlStateDbg : unsigned(3 downto 0);
+        errors : unsigned(23 downto 0);
     end record; -- toDaqRegType
 
     type fromDaqRegType is record
@@ -102,6 +104,11 @@ package global_def is
         stimTime : unsigned(23 downto 0);
         -- extra time to wait after initially enabling the stimulus frequency at the start of a run
         stimTimeInitial : unsigned(23 downto 0);
+
+        ctrlStateDbg : unsigned(3 downto 0);
+        errors : unsigned(23 downto 0);
+        statusPeriod : unsigned(23 downto 0);
+        pktGenWatchdogPeriod : unsigned(23 downto 0);
         --- Channel mask indicating which sense channels are active (8bit)
         activeChannels : std_logic_vector(7 downto 0);
         --- Mask indicating which relays are active

@@ -522,7 +522,6 @@ adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
       --udpDataRen         => false, --fromDaq
       sendRunHdr    => sendRunHdr,
       sendAdcData   => sendAdcData,
-      sendStatusHdr => false,
 
       pktBuildBusy => pktBuildBusy,
       freqScanBusy => freqScanBusy,
