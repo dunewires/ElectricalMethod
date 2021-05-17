@@ -1,4 +1,3 @@
-#%%
 import channel_map
 
 def configure_relays(wire_layer: str, apa_channels: list):
@@ -87,7 +86,7 @@ def configure_relays(wire_layer: str, apa_channels: list):
         bus_relays.extend(bus_signal_relays)
         bus_relays.extend(bus_bias_relays)
 
-    # Check compatibility of every bus relay among its consecutive group of four bus relays
+    # Check compatibility of every bus relay among its consecutive group of four bus relays: either using a single bus channel for both bias and signal or having opposite polarity HV DC on neighbouring channels
     for bus_relays in bus_relays_bottom_and_top:
         groups_of_four = []
         for group_index in range(32//4):
@@ -98,7 +97,7 @@ def configure_relays(wire_layer: str, apa_channels: list):
             for relay1 in group:
                 for relay2 in group:
                     if abs(relay1-relay2) not in {0, 2}:
-                        raise_incompatible_channels('conflicting bus bias relays.')
+                        raise_incompatible_channels('conflicting bus usage.')
 
     # Compute configuration values corresponding to active relays
     concatenated_wire_relays_bottom_and_top = []
@@ -124,8 +123,3 @@ def configure_relays(wire_layer: str, apa_channels: list):
     }
 
     return wire_config
-
-config_string = ''
-for key, value in configure_relays('X',[1,3,5,7,9,11,13,15]).items():
-    config_string += key + ' = ' + value + '\n'
-print(config_string)
