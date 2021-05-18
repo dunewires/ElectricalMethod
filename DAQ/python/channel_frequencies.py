@@ -128,10 +128,8 @@ for index in range(1151):
 
 
 
-def length_to_frequency(length):
-    # TODO parameterize tension and density
-
-    return (6.5/4/1.6e-4/(length/1000)**2)**0.5
+def length_to_frequency(length, tension=6.5, density=1.6e-4):
+    return (tension/4/density/(length/1000)**2)**0.5
 
 def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
     """Wire segment: part of wire between combs or ends."""

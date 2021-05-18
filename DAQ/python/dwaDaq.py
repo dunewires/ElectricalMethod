@@ -578,14 +578,19 @@ class MainWindow(qtw.QMainWindow):
             startChan = (configHeadboard-1)*40 + i*8 + 1
             channels = range(startChan, startChan+8)
             strChannels = [str(j) for j in channels]
-            scanListText = scanListText + str(i+1)+". "+ ", ".join(strChannels) + "\n"
+            scanListText = scanListText + str(i+1)+". " #+ ", ".join(strChannels) + "\n"
             #channelGroups.append(range(i*8+1, (i+1)*8+1))
             for ch in channels:
                 freqs = ChannelMapping.channel_frequencies_per_wire(configLayer, ch)
-                logging.info(f'channel {ch}')
-                logging.info(freqs)
+                for wireStr in freqs.keys():
+                    wireNum = int(wireStr)
+                    wireFreqs = freqs[wireStr]
+                    wireFreqsStr = [str(j) for j in wireFreqs]
+                    scanListText = scanListText + " " + wireStr + "(" + ", ".join(wireFreqsStr) + ")"
+            scanListText = scanListText + "\n"
 
             resonances = ChannelMapping.get_resonances_for_channels(configLayer, channels)
+
             logging.info("Resonances")
             logging.info(resonances)
         

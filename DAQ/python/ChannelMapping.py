@@ -52,7 +52,10 @@ def apa_channel_to_wire_relay_channel(wire_layer: str, apa_channel: int):
 
     wire_relay_channel = starting_channel[wire_layer] + direction_of_increase[wire_layer]*channel_offset
 
-<<<<<<< HEAD:DAQ/python/ChannelMapping.py
+    if wire_layer == 'G' and apa_channel == 1:
+        wire_relay_channel = 113
+
+    return wire_relay_channel
 
 def get_resonances_for_channels(wire_layer: str, channel_numbers: list):
     resonances = {}
@@ -69,16 +72,193 @@ def get_resonance_ranges(wire_layer: str, channel_numbers: list):
     # U and V layer logic
     
 
-
-def all_APA_frequencies():
+def all_apa_frequencies():
     """Return a dictionary of layers containing dictionaries of channels containing dictionaries of wires each containing a list of frequencies, encompassing all frequencies in an APA."""
-=======
-    if wire_layer == 'G' and apa_channel == 1:
-        wire_relay_channel = 113
->>>>>>> c7b87c5b1f24dadb94e6f91c77ecbc3a113430dd:DAQ/python/mappings/channel_map.py
 
-    return wire_relay_channel
+    all_freqs = {'layer_X': {}, 'layer_V': {}, 'layer_U': {}, 'layer_G': {}}
+    
+    for channel_number in range(481):
+        if channel_number < 480:
+            all_freqs['layer_X'][f'channel_{channel_number+1}'] = channel_frequencies_per_wire('X',channel_number+1)
+        if channel_number < 400:
+            all_freqs['layer_V'][f'channel_{channel_number+1}'] = channel_frequencies_per_wire('V',channel_number+1)
+            all_freqs['layer_U'][f'channel_{channel_number+1}'] = channel_frequencies_per_wire('U',channel_number+1)
+        all_freqs['layer_G'][f'channel_{channel_number+1}'] = channel_frequencies_per_wire('G',channel_number+1)
+
+    return all_freqs
 
 def wire_relay_channel_to_dwa_channel(wire_relay_channel: int):
     '''Return the DWA channel from 0 to 7 associated to the given wire relay.'''
     return ((wire_relay_channel - 1) % 16) // 2
+
+class PhysicalWire():
+    """A physical wire that is soldered at both ends."""
+    def __init__(self, x_start, y_start, x_end, y_end):
+        self.x_start = x_start
+        self.y_start = y_start
+        self.x_end = x_end
+        self.y_end = y_end
+
+    def length(self):
+        return ((self.x_start-self.x_end)**2+(self.y_start-self.y_end)**2)**0.5
+
+    def lengths(self):
+        lengths = []
+        nodes = [0, 1163, 2347, 3531, 4715, 5997.32]
+        crossing_indices = []
+        for index,value in enumerate(nodes):
+            if(self.x_end < value and value < self.x_start):
+                crossing_indices.append(index)
+                
+        if len(crossing_indices) == 0:
+            lengths.append(self.length())
+        else:
+            lengths.append(self.length()*(nodes[crossing_indices[0]]-self.x_end)/(self.x_start-self.x_end))    
+            for index,value in enumerate(crossing_indices):
+                if(index != len(crossing_indices)-1):
+                    lengths.append(self.length()*(nodes[value+1]-nodes[value])/(self.x_start-self.x_end))
+            lengths.append(self.length()*(self.x_start-nodes[crossing_indices[-1]])/(self.x_start-self.x_end))
+        return lengths
+
+def physical_wire_position(wire_layer: str, wire_number: int, position_type: str):
+    """Given a wire layer letter ("X", "V", "U" or "G"), physical wire number and position type ("start" or "end"), return the corresponding physical wire's position tuple in millimeters along the (length, width) axes of the APA."""
+
+    X_WIRE_NUMBER_MAX = 480
+    VU_WIRE_NUMBER_MAX = 1151
+    G_WIRE_NUMBER_MAX = 481
+
+    wire_layer = wire_layer.upper()
+    position_type = position_type.lower()
+    
+    if wire_layer not in ('X','V','U','G'):
+        raise ValueError('Wrong wire layer identifier value: only "X", "U", "V" or "G" can be used.')
+    
+    if wire_layer in ('X'):
+        if not 1 <= wire_number <= X_WIRE_NUMBER_MAX:
+            raise ValueError(f'Wrong X physical wire number value: only 1 to {X_WIRE_NUMBER_MAX} can be used.')
+    elif wire_layer in ('V','U'):
+        if not 1 <= wire_number <= VU_WIRE_NUMBER_MAX:
+            raise ValueError('Wrong V or U physical wire number value: only 1 to {UV_WIRE_NUMBER_MAX} can be used.')
+    elif wire_layer in ('G'):
+        if not 1 <= wire_number <= G_WIRE_NUMBER_MAX:
+            raise ValueError('Wrong G physical wire number value: only 1 to {G_WIRE_NUMBER_MAX} can be used.')
+
+    if position_type not in ('start','end'):
+        raise ValueError('Wrong position type value: only "start" or "end" can be used.')
+
+    x_near_offset = 0
+    x_near_pitch = 0
+    y_near_offset = 0
+    y_near_pitch = 0
+    x_far_offset = 0
+    x_far_pitch = 0
+    y_far_offset = 0
+    y_far_pitch = 0
+    wire_number_edge_transition = 0
+    
+    if wire_layer == 'X':
+        y_far_offset = -2300/X_WIRE_NUMBER_MAX/2
+        y_far_pitch = 2300/X_WIRE_NUMBER_MAX
+        if position_type == 'start':
+            x_far_offset = 5987.62
+
+    if wire_layer == 'V':
+        if position_type == 'start':
+            wire_number_edge_transition = 751
+            x_near_offset = -24
+            x_near_pitch = 8
+            x_far_offset = 5987.6
+            y_far_pitch = 5.75
+        if position_type == 'end':
+            wire_number_edge_transition = 402
+            y_near_offset = -16.25
+            y_near_pitch = 5.75
+            x_far_pitch = 8
+            y_far_offset = 2300
+
+    if wire_layer == 'U':
+        if position_type == 'start':
+            wire_number_edge_transition = 751
+            x_near_offset = -19.1
+            x_near_pitch = 8
+            y_near_offset = 2306.7
+            x_far_offset = 5991
+            y_far_offset = 2306.7
+            y_far_pitch = -5.75
+        if position_type == 'end':
+            wire_number_edge_transition = 403
+            y_near_offset = 2322.95
+            y_near_pitch = -5.75
+            x_far_offset = -6.5
+            x_far_pitch = 8
+
+    if wire_layer == 'G':
+        y_far_offset = -2300/X_WIRE_NUMBER_MAX
+        y_far_pitch = 2300/X_WIRE_NUMBER_MAX
+        if position_type == 'start':
+            x_far_offset = 5997.32
+
+    if wire_number <= wire_number_edge_transition:
+        x_pos = x_near_offset + wire_number*x_near_pitch
+        y_pos = y_near_offset + wire_number*y_near_pitch
+    else:
+        x_pos = x_far_offset + (wire_number-wire_number_edge_transition)*x_far_pitch
+        y_pos = y_far_offset + (wire_number-wire_number_edge_transition)*y_far_pitch
+
+    return (x_pos, y_pos)
+
+l_physical_wire_X = []
+l_physical_wire_V = []
+l_physical_wire_U = []
+l_physical_wire_G = []
+for index in range(1151):
+    if index < 480:
+        l_physical_wire_X.append(PhysicalWire(*physical_wire_position('X',index+1,'start'),*physical_wire_position('X',index+1,'end')))
+    l_physical_wire_V.append(PhysicalWire(*physical_wire_position('V',index+1,'start'),*physical_wire_position('V',index+1,'end')))
+    l_physical_wire_U.append(PhysicalWire(*physical_wire_position('U',index+1,'start'),*physical_wire_position('U',index+1,'end')))
+    if index < 481:
+        l_physical_wire_G.append(PhysicalWire(*physical_wire_position('G',index+1,'start'),*physical_wire_position('G',index+1,'end')))
+
+def length_to_frequency(length):
+    # TODO parameterize tension and density
+
+    return round((6.5/4/1.6e-4/(length/1000)**2)**0.5, 2)
+
+def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
+    """Wire segment: part of wire between combs or ends."""
+    # TODO: raise exception if input is wrong
+
+    channel_freqs = {}
+
+    if wire_layer == 'X':
+        wire_freqs = []
+        for length in l_physical_wire_X[channel_number-1].lengths():
+            wire_freqs.append(length_to_frequency(length))
+        channel_freqs[f'{channel_number}'] = wire_freqs
+
+    if wire_layer == 'V':
+        for index,wire in enumerate(l_physical_wire_V):
+            if index%400 == channel_number-1:
+                wire_freqs = []
+                for length in wire.lengths():
+                    wire_freqs.append(length_to_frequency(length))
+                channel_freqs[f'{index+1}'] = wire_freqs
+
+    if wire_layer == 'U':
+        for index,wire in enumerate(l_physical_wire_U):
+            if index%400 == channel_number-1:
+                wire_freqs = []
+                for length in wire.lengths():
+                    wire_freqs.append(length_to_frequency(length))
+                channel_freqs[f'{index+1}'] = wire_freqs
+    
+    if wire_layer == 'G':
+        wire_freqs = []
+        for length in l_physical_wire_G[channel_number-1].lengths():
+            wire_freqs.append(length_to_frequency(length))
+        channel_freqs[f'{channel_number}'] = wire_freqs
+    
+    return channel_freqs
+
+
+
