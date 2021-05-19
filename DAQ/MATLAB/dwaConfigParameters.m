@@ -1,18 +1,13 @@
-
-% dwaCtrl  => (relayMakeBeforeBreak mainsMinus_enable auto)%2
-dwaCtrl = "00000001"
-udpDataDone = "00000000";
-stimFreqReq = "00000000";
-stimFreqMin = "00001FE0";
-stimFreqMax = "00001FF0";
-stimFreqStep = "00000001";
-stimTime = "00001000";
-stimMag = "00000010";
-cyclesPerFreq = "00000008";
-adcSamplesPerCycle = "00000008";
-clientIp = "806764FA";%PC0
-relayMask = "00000000";
-coilDrive = "00000000";
-senseWireGainA = "00000000";
-senseWireGainB = "00000000";
-
+freqReq_vio = "00008000"; %0
+% dwaCtrl  => (auto mainsMinus_enable m_axis_tready)%2
+dwaCtrl = "00000005";2
+ctrl_freqMin = "00000100";%4
+ctrl_freqMax = "00000200";%5
+ctrl_freqStep = "00000010";%6
+ctrl_stimTime = "00001000";%7
+ctrl_adc_nSamples = "00000010";%8
+adcAutoDc_chSel = "00000007";%10
+adcHScale = "0000001d";%11
+%12 bit stim DAC amplitude
+stimMag = "00000010";%12
+relays_enable = "00000000";%14
