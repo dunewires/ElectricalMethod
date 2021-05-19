@@ -321,7 +321,7 @@ begin
 				slv_reg44 <= (others => '0');
 				slv_reg49 <= x"00000800";
 				slv_reg50 <= x"BADDBEEF";
-				slv_reg53 <= x"0005F5E1"; --1 SEC
+				slv_reg53 <= x"00000000"; -- 00000000 = power up off, 0005F5E1 = 1 sec
 				slv_reg54 <= x"00B2D05E"; -- 30 SEC
 			else
 				loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
