@@ -86,3 +86,15 @@ timestamp=[2021-03-31 21:24:13], mode=BUILD, duration=0:00:00.202, duration_ms=2
 timestamp=[2021-03-31 21:24:20], mode=BUILD, duration=0:00:06.991, duration_ms=6991, data={name=dwaPsSw_system, configuration=Release, clean_build=false}
 timestamp=[2021-03-31 21:25:28], mode=BUILD, duration=0:00:00.220, duration_ms=220, data={name=dwaPsSw, configuration=Release, clean_build=false}
 timestamp=[2021-03-31 21:25:34], mode=BUILD, duration=0:00:05.587, duration_ms=5587, data={name=dwaPsSw_system, configuration=Release, clean_build=false}
+timestamp=[2021-05-12 22:16:02], mode=WORKBENCH_START, duration=0:00:16.068, duration_ms=16068, data={}
+timestamp=[2021-05-12 22:16:03], mode=PLATFORM_REPOSITORY_INIT, duration=0:00:00.151, duration_ms=151, data={}
+timestamp=[2021-05-12 22:16:05], mode=WORKBENCH_UI_INIT, duration=0:00:02.729, duration_ms=2729, data={editors_count=5, platform_editors_count=1, projects_count=4, platform_projects_count=1, active_platform_editor=false, projects=RemoteSystemsTempFiles,dwaPsHw,dwaPsSw,dwaPsSw_system}
+timestamp=[2021-05-19 16:50:22], mode=WORKBENCH_START, duration=0:00:09.760, duration_ms=9760, data={}
+timestamp=[2021-05-19 16:50:22], mode=PLATFORM_REPOSITORY_INIT, duration=0:00:00.014, duration_ms=14, data={}
+timestamp=[2021-05-19 16:50:24], mode=WORKBENCH_UI_INIT, duration=0:00:02.444, duration_ms=2444, data={editors_count=5, platform_editors_count=1, projects_count=4, platform_projects_count=1, active_platform_editor=false, projects=RemoteSystemsTempFiles,dwaPsHw,dwaPsSw,dwaPsSw_system}
+timestamp=[2021-05-19 17:04:35], mode=WORKBENCH_START, duration=0:00:08.766, duration_ms=8766, data={}
+timestamp=[2021-05-19 17:04:36], mode=PLATFORM_REPOSITORY_INIT, duration=0:00:00.014, duration_ms=14, data={}
+timestamp=[2021-05-19 17:04:38], mode=WORKBENCH_UI_INIT, duration=0:00:03.011, duration_ms=3011, data={editors_count=5, platform_editors_count=1, projects_count=4, platform_projects_count=1, active_platform_editor=false, projects=RemoteSystemsTempFiles,dwaPsHw,dwaPsSw,dwaPsSw_system}
+timestamp=[2021-05-19 17:16:49], mode=WORKBENCH_START, duration=0:00:09.339, duration_ms=9339, data={}
+timestamp=[2021-05-19 17:16:49], mode=PLATFORM_REPOSITORY_INIT, duration=0:00:00.018, duration_ms=18, data={}
+timestamp=[2021-05-19 17:16:51], mode=WORKBENCH_UI_INIT, duration=0:00:02.369, duration_ms=2369, data={editors_count=5, platform_editors_count=1, projects_count=4, platform_projects_count=1, active_platform_editor=false, projects=RemoteSystemsTempFiles,dwaPsHw,dwaPsSw,dwaPsSw_system}
