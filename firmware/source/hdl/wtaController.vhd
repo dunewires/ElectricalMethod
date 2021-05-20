@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed May 19 21:16:00 2021
+-- Last update : Wed May 19 21:54:58 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -101,13 +101,18 @@ begin
 						acStim_enable <= '0';
 
 						if fromDaqReg.ctrlStart and not ctrlStart_del then
-							sendRunHdr       <= true; --send run header at start of test.
-							noiseReadoutBusy <= true; -- only count 
-							freqScanBusy     <= true;
-							freqSet          <= fromDaqReg.noiseFreqMin;
+							sendRunHdr   <= true; --send run header at start of test.
+							freqScanBusy <= true;
 							-- if we are triggering on the stimulus, the noise subtraction won't work
 							-- !! change this to mains noise disable and fix in MNS instance. 
-							ctrlState        <= stimEnable_s when fromDaqReg.useAcStimTrig else noisePrep_s;
+							if fromDaqReg.useAcStimTrig then
+								freqSet   <= fromDaqReg.stimFreqMin;
+								ctrlState <= stimEnable_s;
+							else
+								noiseReadoutBusy <= true; -- only count 
+								freqSet          <= fromDaqReg.noiseFreqMin;
+								ctrlState        <= noisePrep_s;
+							end if;
 						end if;
 
 					when noisePrep_s =>
@@ -218,6 +223,6 @@ begin
 		end if;
 	end process ctrlState_seq;
 
-	    toDaqReg.ctrlStateDbg <= to_unsigned(ctrlState_type'POS(ctrlState),toDaqReg.ctrlStateDbg'length);
+	toDaqReg.ctrlStateDbg <= to_unsigned(ctrlState_type'POS(ctrlState),toDaqReg.ctrlStateDbg'length);
 
 end architecture rtl;
