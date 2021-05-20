@@ -575,6 +575,7 @@ adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
     );
 
   toDaqReg.ctrlBusy         <= toDaqReg_wtaController.ctrlBusy;
+  toDaqReg.ctrlStateDbg         <= toDaqReg_wtaController.ctrlStateDbg;
   toDaqReg.udpDataWord      <= toDaqReg_headerGenerator.udpDataWord;
   toDaqReg.udpDataRdy       <= toDaqReg_headerGenerator.udpDataRdy;
   toDaqReg.senseWireGain    <= toDaqReg_dpotInterface.senseWireGain;

@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed May 12 19:31:51 2021
+-- Last update : Wed May 19 21:16:00 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -105,7 +105,9 @@ begin
 							noiseReadoutBusy <= true; -- only count 
 							freqScanBusy     <= true;
 							freqSet          <= fromDaqReg.noiseFreqMin;
-							ctrlState        <= noisePrep_s;
+							-- if we are triggering on the stimulus, the noise subtraction won't work
+							-- !! change this to mains noise disable and fix in MNS instance. 
+							ctrlState        <= stimEnable_s when fromDaqReg.useAcStimTrig else noisePrep_s;
 						end if;
 
 					when noisePrep_s =>
@@ -115,7 +117,7 @@ begin
 							timerCnt         <= x"00000000";
 							ctrlState        <= freqScanFinish_s;
 						else
-							--wait a bit for the divison to update and BPF to respond to the new setting
+							--wait a bit for the division to update and BPF to respond to the new setting
 							if timerCnt(31 downto 8) <= fromDaqReg.noiseBPFSetTime then
 								timerCnt <= timerCnt +1;  -- only count 
 							                              -- check FIFOs are not almost full
