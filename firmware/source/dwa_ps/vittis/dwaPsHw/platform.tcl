@@ -33,3 +33,4 @@ platform generate -domains
 platform generate -domains 
 platform clean
 platform generate
+platform generate
