@@ -597,7 +597,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
     #fromDaqReg.stimFreqStep <= unsigned(slv_reg6(23 downto 0));
     dwaRegWrite(s, '00000006', config["stimFreqStep"], verbose=verbose)
     time.sleep(sleepSec)
-    print("Setting stimTime, stimMag, and stimTimeInit")
+    print("Setting stimTime, stimMag, and stimTimeInitial")
     #fromDaqReg.stimRampTime   <= unsigned(slv_reg7(23 downto 0));
     dwaRegWrite(s, '00000007', config["stimTime"], verbose=verbose)
     time.sleep(sleepSec)
@@ -605,7 +605,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
     dwaRegWrite(s, '00000008', config["stimMag"], verbose=verbose)
     time.sleep(sleepSec)
     # ?? stimTimeInit
-    dwaRegWrite(s, '0000002C', config["stimMagInit"], verbose=verbose)
+    dwaRegWrite(s, '0000002C', config["stimTimeInitial"], verbose=verbose)
     time.sleep(sleepSec)
     # 
     #fromDaqReg.nAdcStimPeriod <= unsigned(slv_reg10(23 downto 0));

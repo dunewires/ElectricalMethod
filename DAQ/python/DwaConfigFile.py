@@ -98,7 +98,7 @@ class DwaConfigFile():
         self.defaults["noiseSamplingPeriod"]    = "0000CB73"  # [10ns]   32 samp/cycle @ 60 Hz
         self.defaults["noiseSettlingTime"]      = "00001000"  # [2.56us]  "00001000" ~ 10ms
         #
-        self.defaults["stimTimeInit"]   = "00060000"  # [2.56us]  "00060000" ~ 1.01 seconds
+        self.defaults["stimTimeInitial"]   = "00060000"  # [2.56us]  "00060000" ~ 1.01 seconds
         #
         self.defaults["relayWireTop"]  = "0000000000000000" # 64-bit  top3top2top1top0
         self.defaults["relayWireBot"]  = "0000000000000000" # 64-bit  bot3bot2bot1bot0
