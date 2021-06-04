@@ -106,7 +106,10 @@ class DwaDataParser():
         # ADC Data Frame entries
         # N/A
         #
-
+        self.frameKeys[Frame.STATUS]["61"] = "unknown"
+        self.frameKeys[Frame.STATUS]["62"] = "controllerState"
+        self.frameKeys[Frame.STATUS]["63"] = "statusErrorBits"
+        
         ##################################
         # TO ADD (Frame.RUN)
         #2C000000  # ctrl_stimTime (24-bits, units=??) (coarser than 10ns)
@@ -193,6 +196,11 @@ class DwaDataParser():
             #"activeChannels"
             # 
             #"UNHANDLED_LINES": self._parseUnknownInfoLine  # do this if a key is not recognized...
+            #
+            # STATUS frame keys
+            "unknown":self._parseInfoLineAsInt,
+            "controllerState":self._parseInfoLineAsInt,
+            "statusErrorBits":self._parseInfoLineAsBits,
         }
 
         self._frameParserSelector = {
@@ -208,7 +216,7 @@ class DwaDataParser():
             Frame.FREQ: self._postProcessFreqFrame,
             Frame.ADC_DATA: self._postProcessAdcDataFrame,
             Frame.RUN: self._postProcessRunFrame,
-            #Frame.STATUS: self._postProcessStatusFrame,
+            Frame.STATUS: self._postProcessStatusFrame,
         }
         
     def _initGenericDict(self, frameType):
@@ -255,6 +263,11 @@ class DwaDataParser():
     #    nChars = nBits // 4
     #    return int(infoLine[-nChars:], hexBase)
 
+    def _parseInfoLineAsBits(self, infoLine):
+        val = int(infoLine[2:],hexBase)
+        errorBitString = f'{val:0>24b}'
+        return errorBitString
+    
     def _parseUnknownInfoLine(self, infoLine):
         # Fallback parser (for an unidentified key)
         return infoLine
@@ -318,6 +331,10 @@ class DwaDataParser():
     def _parseFreqFrame(self, infoLines):
         return self._parseGenericFrame(infoLines, Frame.FREQ)
 
+    def _parseStatusFrame(self, infoLines):
+        print("\n\n\n STATUS FRAME FOUND!!!!!!")
+        return self._parseGenericFrame(infoLines, Frame.STATUS)
+
     def _parseAdcDataFrame(self, infoLines):
         # ADC Frame differs from other frames
         # in that the entries are not key/val pairs
@@ -328,9 +345,6 @@ class DwaDataParser():
         frameDict['adcSamples_raw'] = list(chain.from_iterable( (line[:4], line[-4:]) for line in infoLines))
         #print("frameDict = {}".format(frameDict))
         return frameDict
-    
-    def _parseStatusFrame(self, infoLines):
-        pass
 
     ##################################################
     # Post-processing routines
@@ -371,12 +385,10 @@ class DwaDataParser():
         #           for hexStr in dd[key]]
 
         #dd['register'] = Registers
-
-        
         return dd
 
-    #def _postProcessStatusFrame(self, dd):
-    #    return dd
+    def _postProcessStatusFrame(self, dd):
+        return dd
 
 
     def parse(self,  udpPayload):

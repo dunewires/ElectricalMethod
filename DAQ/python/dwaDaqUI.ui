@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1313</width>
-    <height>819</height>
+    <height>831</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -918,6 +918,38 @@
        </item>
       </layout>
      </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_9">
+      <item>
+       <widget class="QLabel" name="statusErrors_label">
+        <property name="text">
+         <string>errorBits</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="statusErrors_val">
+        <property name="text">
+         <string>N/A</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="controllerState_label">
+        <property name="text">
+         <string>Controller State</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="controllerState_val">
+        <property name="text">
+         <string>N/A</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>

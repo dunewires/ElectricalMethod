@@ -1,4 +1,6 @@
 # FIXME/TODO:
+# * Update human parsing of frequency (fixed point now...)
+# * Status frame parsing/displaying...
 # * resonance lines could use "span" keyword to draw only the part of the plot that is in the peak
 #   e.g. from "baseline" to peak, as well as peak width, as in final example of:
 #   https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
@@ -464,6 +466,8 @@ class MainWindow(qtw.QMainWindow):
             self.registerOfVal[reg.value] = reg
             
         self.fnOfReg = {}  # file names for output (empty for now)
+        self._makeOutputFilenames()
+
         self.ampData = {}  # hold amplitude vs. freq data for a scan
         self.resonantFreqs = {}
         for reg in self.registers:
@@ -1426,6 +1430,8 @@ class MainWindow(qtw.QMainWindow):
                 
                 # write data to file by register
                 reg = self.dwaDataParser.dwaPayload[ddp.Frame.UDP]['Register_ID_hexStr']
+                print(f"reg = {reg}")
+                print(f"self.fnOfReg: {self.fnOfReg}")
                 logger.info(f"self.fnOfReg: {self.fnOfReg}")
                 with open(self.fnOfReg[reg], 'a') as regFH:
                     for item in dataStrings:
@@ -1542,7 +1548,14 @@ class MainWindow(qtw.QMainWindow):
             if regId == self.chanViewMainAmpl:
                 self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
 
-
+        # Look for STATUS frame
+        if ddp.Frame.STATUS in udpDict:
+            self.outputText.appendPlainText("\nFOUND STATUS FRAME")
+            self.outputText.appendPlainText(str(udpDict[ddp.Frame.STATUS]))
+            print("\n\n\n FOUND STATUS FRAME")
+            print(udpDict[ddp.Frame.STATUS])
+            self.controllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerState']}")
+            self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")
 
     def postScanAnalysis(self):
         # get A(f) data for each channel

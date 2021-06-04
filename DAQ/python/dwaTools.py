@@ -579,6 +579,11 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
     sleepSec = 0.2
     time.sleep(sleepSec)
 
+
+    print("Setting STATUS frame period")
+    dwaRegWrite(s, '00000035', config["statusPeriod"], verbose=verbose)
+    time.sleep(sleepSec)
+    
     #fromDaqReg.auto           <= slv_reg1(0)= '1';
     # is this saying sweep vs. fixed freq?
     dwaRegWrite(s, '00000001', config["auto"], verbose=verbose)
@@ -719,7 +724,6 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
     dwaSetDigipots(s, config["digipot"], verbose=verbose)
     time.sleep(sleepSec)
 
-    
     tcpClose(s, verbose=verbose)
 
 def dwaStart(verbose=0):

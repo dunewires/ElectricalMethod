@@ -45,7 +45,8 @@ class DwaConfigFile():
                                      "client_IP",
                                      "noiseFreqMin", "noiseFreqMax", "noiseFreqStep",
                                      "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq",
-                                     "relayWireTop", "relayWireBot", "relayBusTop", "relayBusBot"]
+                                     "relayWireTop", "relayWireBot", "relayBusTop", "relayBusBot",
+                                     "statusPeriod"]
 
     def parse(self):
         """Parse the DWA configuration parameters from a file
@@ -104,7 +105,7 @@ class DwaConfigFile():
         self.defaults["relayWireBot"]  = "0000000000000000" # 64-bit  bot3bot2bot1bot0
         self.defaults["relayBusTop"]   = "00000000"         # 32-bit  top1top0
         self.defaults["relayBusBot"]   = "00000000"         # 32-bit  bot1bot0
-
+        self.defaults["statusPeriod"]  = "0007A120"         # 24-bit units of [2.56us]
         
     def validate(self):
         """ validate the values read from a config file
@@ -218,6 +219,10 @@ class DwaConfigFile():
         self.config["relayWireBot1"] = self.config["relayWireBot"][8:12]
         self.config["relayWireBot0"] = self.config["relayWireBot"][12:]
 
+        # (hex counts of 2.56us steps to seconds)
+        base = 16
+        statusPeriod_sec = int(self.config['statusPeriod'], base)*2.56e-6  # convert to seconds
+        self.config[f'statusPeriod_s'] = f"{statusPeriod_sec:.2f}"
         
     def getConfigDict(self):
         return self.config
