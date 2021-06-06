@@ -98,9 +98,9 @@ class DwaDataParser():
         #
         # Frequency Frame entries
         self.frameKeys[Frame.FREQ]["11"] = "Register_ID_Freq"  #  8bit
-        self.frameKeys[Frame.FREQ]["40"] = "stimPeriodCounter" # 24bit (currently-used stimulus period)
+        self.frameKeys[Frame.FREQ]["40"] = "stimPeriodCounter" # 24bit 
         self.frameKeys[Frame.FREQ]["41"] = "adcSamplesPerFreq" # 24bit
-        self.frameKeys[Frame.FREQ]["42"] = "stimPeriodActive"  # 24bit NOT USED
+        self.frameKeys[Frame.FREQ]["42"] = "stimPeriodActive"  # 24bit (currently-used stimulus period)
         self.frameKeys[Frame.FREQ]["43"] = "adcSamplingPeriod" # 24bit
         #
         # ADC Data Frame entries
@@ -405,6 +405,7 @@ class DwaDataParser():
         inHeader = False
         delimIdxs = []  # line numbers of frame delimiters
         for ii, line in enumerate(udpPayload):
+            print(line)
             if line.startswith("8"):
                 ### FIXME: KLUGE KLUGE!!!!
                 print("DwaDataParser.parse(): MAJOR KLUGE NEEDS TO BE REMOVED!")

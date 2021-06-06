@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1313</width>
-    <height>831</height>
+    <height>1023</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -126,7 +126,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>4</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -572,7 +572,7 @@
               <item>
                <widget class="QTabWidget" name="tabResonanceGraphs">
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="tabResonanceRawData">
                  <attribute name="title">
@@ -911,6 +911,53 @@
            </item>
            <item>
             <widget class="QPlainTextEdit" name="logTextBox"/>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabEventViewer">
+          <attribute name="title">
+           <string>Event Viewer</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_16">
+           <item>
+            <layout class="QFormLayout" name="formLayout_7">
+             <item row="0" column="0">
+              <widget class="QLabel" name="evtVwr_runName_label">
+               <property name="text">
+                <string>Run name:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="evtVwr_runName_val">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QTabWidget" name="evtVwrTabs">
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="evtVwrTab1">
+              <attribute name="title">
+               <string>Timeseries</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_15">
+               <item>
+                <widget class="GraphicsLayoutWidget" name="evtVwrPlotsGLW"/>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_3">
+              <attribute name="title">
+               <string>Tab</string>
+              </attribute>
+             </widget>
+            </widget>
            </item>
           </layout>
          </widget>
