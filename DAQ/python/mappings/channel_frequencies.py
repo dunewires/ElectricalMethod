@@ -1,5 +1,6 @@
 class PhysicalWire():
     """A physical wire that is soldered at both ends."""
+    
     def __init__(self, x_start, y_start, x_end, y_end):
         self.x_start = x_start
         self.y_start = y_start
@@ -27,6 +28,14 @@ class PhysicalWire():
             lengths.append(self.length()*(self.x_start-nodes[crossing_indices[-1]])/(self.x_start-self.x_end))
         return lengths
 
+
+def check_valid_wire_layer(wire_layer: str):
+    wire_layer = wire_layer.upper()
+    if wire_layer not in {'X', 'V', 'U', 'G'}:
+        raise ValueError('Invalid wire layer identifier value: only "X", "U", "V" or "G" can be used.')
+    return wire_layer
+
+
 def physical_wire_position(wire_layer: str, wire_number: int, position_type: str):
     """Given a wire layer letter ("X", "V", "U" or "G"), physical wire number and position type ("start" or "end"), return the corresponding physical wire's position tuple in millimeters along the (length, width) axes of the APA."""
 
@@ -34,24 +43,24 @@ def physical_wire_position(wire_layer: str, wire_number: int, position_type: str
     VU_WIRE_NUMBER_MAX = 1151
     G_WIRE_NUMBER_MAX = 481
 
-    wire_layer = wire_layer.upper()
+    wire_layer = check_valid_wire_layer(wire_layer)
     position_type = position_type.lower()
     
-    if wire_layer not in ('X','V','U','G'):
-        raise ValueError('Wrong wire layer identifier value: only "X", "U", "V" or "G" can be used.')
+    if wire_layer not in {'X', 'V', 'U', 'G'}:
+        raise ValueError('Invalid wire layer identifier value: only "X", "U", "V" or "G" can be used.')
     
-    if wire_layer in ('X'):
+    if wire_layer in {'X'}:
         if not 1 <= wire_number <= X_WIRE_NUMBER_MAX:
-            raise ValueError(f'Wrong X physical wire number value: only 1 to {X_WIRE_NUMBER_MAX} can be used.')
-    elif wire_layer in ('V','U'):
+            raise ValueError(f'Invalid X physical wire number value: only 1 to {X_WIRE_NUMBER_MAX} can be used.')
+    elif wire_layer in {'V', 'U'}:
         if not 1 <= wire_number <= VU_WIRE_NUMBER_MAX:
-            raise ValueError('Wrong V or U physical wire number value: only 1 to {UV_WIRE_NUMBER_MAX} can be used.')
-    elif wire_layer in ('G'):
+            raise ValueError('Invalid V or U physical wire number value: only 1 to {UV_WIRE_NUMBER_MAX} can be used.')
+    elif wire_layer in {'G'}:
         if not 1 <= wire_number <= G_WIRE_NUMBER_MAX:
-            raise ValueError('Wrong G physical wire number value: only 1 to {G_WIRE_NUMBER_MAX} can be used.')
+            raise ValueError('Invalid G physical wire number value: only 1 to {G_WIRE_NUMBER_MAX} can be used.')
 
-    if position_type not in ('start','end'):
-        raise ValueError('Wrong position type value: only "start" or "end" can be used.')
+    if position_type not in {'start','end'}:
+        raise ValueError('Invalid position type value: only "start" or "end" can be used.')
 
     x_near_offset = 0
     x_near_pitch = 0
@@ -127,13 +136,14 @@ for index in range(1151):
         l_physical_wire_G.append(PhysicalWire(*physical_wire_position('G',index+1,'start'),*physical_wire_position('G',index+1,'end')))
 
 
-
 def length_to_frequency(length, tension=6.5, density=1.6e-4):
     return (tension/4/density/(length/1000)**2)**0.5
 
+
 def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
     """Wire segment: part of wire between combs or ends."""
-    # TODO: raise exception if input is wrong
+    
+    wire_layer = check_valid_wire_layer(wire_layer)
 
     channel_freqs = {}
 
@@ -166,6 +176,7 @@ def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
         channel_freqs[f'wire_{len(channel_freqs)+1}'] = wire_freqs
     
     return channel_freqs
+
 
 def all_apa_frequencies():
     """Return a dictionary of layers containing dictionaries of channels containing dictionaries of wires each containing a list of frequencies, encompassing all frequencies in an APA."""

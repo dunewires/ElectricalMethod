@@ -1,13 +1,24 @@
+from channel_frequencies import check_valid_wire_layer
+
+
 def wire_to_apa_channel(wire_layer: str, wire_number: int):
     '''Return the APA channel associated to the given wire layer and wire number.'''
-    if wire_layer in {'X','G'}:
+
+    wire_layer = check_valid_wire_layer(wire_layer)
+
+    if wire_layer in {'X', 'G'}:
         apa_channel = wire_number
-    if wire_layer in {'V','U'}:
+    if wire_layer in {'V', 'U'}:
         apa_channel = (wire_number - 1) % 400 + 1
+
     return apa_channel
+
 
 def apa_channel_to_board_channel(wire_layer: str, apa_channel: int):
     '''Return the board channel associated to the given wire layer and APA channel. Board channel goes from 1 to 48 for X, from 1 to 40 for V and U and from 1 to 48 for G except for the first G board which goes from 1 to 49.'''
+    
+    wire_layer = check_valid_wire_layer(wire_layer)
+
     if wire_layer == 'X':
         board_channel = (apa_channel - 1) % 48 + 1
     if wire_layer in {'V', 'U'}:
@@ -18,10 +29,15 @@ def apa_channel_to_board_channel(wire_layer: str, apa_channel: int):
             board_channel = (apa_channel - 1) % 48 + 1
         else:
             board_channel = (apa_channel - 1) % 49 + 1
+            
     return board_channel
+
 
 def apa_channel_to_board_number(wire_layer: str, apa_channel: int):
     '''Return the board number associated to the given wire layer and APA channel.'''
+
+    wire_layer = check_valid_wire_layer(wire_layer)
+
     if wire_layer == 'X':
         board_number = (apa_channel - 1) // 48 + 1
     if wire_layer in {'V', 'U'}:
@@ -32,11 +48,15 @@ def apa_channel_to_board_number(wire_layer: str, apa_channel: int):
             board_number = (apa_channel - 1) // 48 + 2
         else:
             board_number = 1
+
     return board_number
+
 
 def apa_channel_to_wire_relay(wire_layer: str, apa_channel: int):
     '''Return the relay wire associated to the given wire layer and APA channel. Wire relays for the bottom relay board are numbered from 1 to 64 and from 65 to 128 for the top relay board.'''
-
+    
+    wire_layer = check_valid_wire_layer(wire_layer)
+    
     board_channel = apa_channel_to_board_channel(wire_layer, apa_channel)
 
     # There is an offset and gap due to wire layers alternating in groups of 8 wire relay.
@@ -55,6 +75,7 @@ def apa_channel_to_wire_relay(wire_layer: str, apa_channel: int):
         wire_relay = 113
 
     return wire_relay
+
 
 def wire_relay_to_dwa_channel(wire_relay: int):
     '''Return the DWA channel from 0 to 7 associated to the given wire relay.'''
