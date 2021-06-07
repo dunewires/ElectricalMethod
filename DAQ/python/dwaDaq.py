@@ -1,4 +1,5 @@
 # FIXME/TODO:
+# * add dwaDaqConfig.ini
 # * Update human parsing of frequency (fixed point now...)
 # * Status frame parsing/displaying...
 # * Should status frame UDP data be logged to file????? (currently it is...)
