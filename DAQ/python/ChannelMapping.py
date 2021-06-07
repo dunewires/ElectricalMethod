@@ -57,19 +57,80 @@ def apa_channel_to_wire_relay_channel(wire_layer: str, apa_channel: int):
 
     return wire_relay_channel
 
-def get_resonances_for_channels(wire_layer: str, channel_numbers: list):
-    resonances = {}
-    for chan in channel_numbers:
-        chan_resonances = channel_frequencies_per_wire(wire_layer, chan)
-        for wire in chan_resonances.keys():
-            resonances[wire] = chan_resonances[wire]
-    return resonances
+def get_frequencies_for_channels(wire_layer: str, channel_numbers: list):
+    # windowRadius: Scan this fraction above and below resonance
+    #if wire_layer == "G" or wire_layer =="X":
+    #    return [round(85*(1-windowRadius),2), round(85*(1+windowRadius),2)]
+    # U and V
+    allwires = {}
+    for ch in channel_numbers:
+        allwires.update(channel_frequencies_per_wire(wire_layer, ch))
+    return allwires
 
-def get_resonance_ranges(wire_layer: str, channel_numbers: list):
-    if wire_layer == "X" or wire_layer =="G":
-        return [[80,90]]
+def closest_index_to(arr, val):
+    closestVal = 9e9
+    closestInd = 0
+    for i,e in enumerate(arr):
+        if abs(e-val)<closestVal:
+            closestVal = abs(e-val)
+            closestInd = i
+    return closestInd
+
+def all_range_data(channelRangeData, windowRadius = 0.15):
+    allRangeData = []
+    for w in channelRangeData:
+        i = closest_index_to(channelRangeData[w],70)
+        f = channelRangeData[w][i]
+        fRange = [round(f*(1-windowRadius),2), round(f*(1+windowRadius),2)]
+        allRangeData.append({"wires": [w], "range": fRange})
+    return allRangeData
+
+def combine_range_data(rangeDataA, rangeDataB):
+    wiresA = rangeDataA["wires"]
+    wiresB = rangeDataB["wires"]
+    rangeA = rangeDataA["range"]
+    rangeB = rangeDataB["range"]
+    if (rangeA[1] > rangeB[0] and rangeA[0] < rangeB[1]) or (rangeB[1] > rangeA[0] and rangeB[0] < rangeA[1]):
+        return [{"wires": wiresA + wiresB,
+                "range": [min(rangeA[0], rangeB[0]), max(rangeA[1], rangeB[1])]
+                }]
+    else: return [rangeDataA, rangeDataB]
+        
+
+def reduce_range_data(allRangeData):
+    if len(allRangeData)<1: return []
+    reducedRangeData = [allRangeData[0]]
+    for i, rangeDataA in enumerate(allRangeData):
+        if i == 0: continue
+        # Loop over rangeData in reducedRangeData to try to find a range it combines with
+        overlap_index = -1
+        for j, rangeDataB in enumerate(reducedRangeData):
+            combined = combine_range_data(rangeDataA, rangeDataB)
+            if len(combined) == 1: 
+                overlap_index = j
+        if overlap_index >= 0: # overlap found, combine them
+            reducedRangeData[overlap_index] = combine_range_data(rangeDataA, reducedRangeData[overlap_index])[0]
+        else: # no overlap found, add it
+            reducedRangeData.append(rangeDataA)
+        
+    print(reducedRangeData)
+    return reducedRangeData
     
-    # U and V layer logic
+def cull_range_data(reducedRangeData, thresh = 1000.):
+    # Eliminate frequency ranges from reducedRangeData that cannot be achieved
+    culledRangeData = []
+    for rangeData in reducedRangeData:
+        if rangeData["range"][1] <= thresh:
+            rangeData["wires"] = sorted(rangeData["wires"])
+            culledRangeData.append(rangeData)
+    return culledRangeData
+        
+def get_range_data_for_channels(wire_layer: str, channel_numbers: list, windowRadius = 0.15):
+    channelFreqData = get_frequencies_for_channels(wire_layer, channel_numbers)
+    allRangeData = all_range_data(channelFreqData, windowRadius)
+    reducedRangeData = reduce_range_data(allRangeData)
+    culledRangeData = cull_range_data(reducedRangeData)
+    return culledRangeData
     
 
 def all_apa_frequencies():

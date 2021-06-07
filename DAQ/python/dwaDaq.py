@@ -491,7 +491,7 @@ class MainWindow(qtw.QMainWindow):
         # Set A(f) peak detection parameters
         self.resFitParams = {}
         self.resFitParams['preprocess'] = {'detrend':True}  # detrend: subtract a line from A(f) before processing?
-        self.resFitParams['find_peaks'] = {'bkgPoly':2, 'width':5, 'prominence':(5.0,None)}
+        self.resFitParams['find_peaks'] = {'bkgPoly':2, 'width':1, 'prominence':(0.8,None)}
         # FIXME: replace this with a Model/View approach
         self.resFitPreDetrend.blockSignals(True)
         self.resFitPreDetrend.setChecked(self.resFitParams['preprocess']['detrend'])
@@ -566,36 +566,117 @@ class MainWindow(qtw.QMainWindow):
 
         self.logger.info(f'Log created {self.logFilename}')
 
+    #def configureScans(self):
+        #measuredBy = self.measuredByLineEdit.text()
+        # configStage = self.configStageComboBox.currentText()
+        # configApaUuid = self.configApaUuid.text()
+        # configLayer = self.configLayerComboBox.currentText()
+        # configHeadboard = self.configHeadboardSpinBox.value()
+        # channelGroups = []
+        # scanListText = ""
+        # scanNum = 1
+        # for i in range(5):
+        #     startChan = (configHeadboard-1)*40 + i*8 + 1
+        #     channels = range(startChan, startChan+8)
+        #     rangeData = ChannelMapping.get_range_data_for_channels(configLayer, channels)
+        #     for obj in rangeData:
+        #         scanListText = scanListText + srt(scanNum) + ". " + ", ".join(obj["wires"]) + "("+obj["range"][0]+", "+ obj["range"][1] + ")\n"
+        #         scanNum = scanNum + 1
+
+        #     logging.info("Resonances")
+        #     logging.info(resonances)
+        
+        # logging.info("Configuring scans")
+        # logging.info(measuredBy)
+        # logging.info(configStage)
+        # logging.info(configHeadboard)
+        # logging.info(configHeadboard*2)
+        # logging.info(channelGroups)
+        # self.configScanListTextEdit.setPlainText(scanListText)
+    def hexString(self, val):
+        return str(hex(int(val))).upper()[2:].zfill(8)
+
     def configureScans(self):
-        measuredBy = self.measuredByLineEdit.text()
+        self.measuredBy = self.measuredByLineEdit.text()
         configStage = self.configStageComboBox.currentText()
         configApaUuid = self.configApaUuid.text()
         configLayer = self.configLayerComboBox.currentText()
         configHeadboard = self.configHeadboardSpinBox.value()
+
+        advFps = self.advFpsLineEdit.text() # Freq per second
+        advFss = self.advFssLineEdit.text() # Freq step size
+        advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
+        advInitDelay = self.advInitDelayLineEdit.text() # Init delay
+        advAmplitude = self.advAmplitudeLineEdit.text() # Amplitude
+
+        # TODO: Make sure inputs can be safely converted to floats
+        # TODO: Grab default values if undefined
+        if advFps: advFps = float(advFps)
+        else: advFps = 0.
+        if advFss: advFss = float(advFss)
+        else: advFss = 0.
+        if advStimTime: advStimTime = float(advStimTime)
+        else: advStimTime = 0.
+        if advInitDelay: advInitDelay = float(advInitDelayLineEdit)
+        else: advInitDelayLineEdit = 0.
+        if advAmplitude: advAmplitude = float(advAmplitude)
+        else: advAmplitude = 0.
+
         channelGroups = []
         scanListText = ""
+        scanNum = 1
         for i in range(5):
             startChan = (configHeadboard-1)*40 + i*8 + 1
             channels = range(startChan, startChan+8)
             strChannels = [str(j) for j in channels]
-            scanListText = scanListText + str(i+1)+". " #+ ", ".join(strChannels) + "\n"
-            #channelGroups.append(range(i*8+1, (i+1)*8+1))
-            for ch in channels:
-                freqs = ChannelMapping.channel_frequencies_per_wire(configLayer, ch)
-                for wireStr in freqs.keys():
-                    wireNum = int(wireStr)
-                    wireFreqs = freqs[wireStr]
-                    wireFreqsStr = [str(j) for j in wireFreqs]
-                    scanListText = scanListText + " " + wireStr + "(" + ", ".join(wireFreqsStr) + ")"
-            scanListText = scanListText + "\n"
 
-            resonances = ChannelMapping.get_resonances_for_channels(configLayer, channels)
+            range_data = ChannelMapping.get_range_data_for_channels(configLayer, channels)
 
-            logging.info("Resonances")
-            logging.info(resonances)
+            for rd in range_data:
+                logging.info("rd")
+                logging.info(rd)
+                wires = rd["wires"]
+                freqMin = float(rd["range"][0])
+                freqMax = float(rd["range"][1])
+                logging.info("freqMin")
+                logging.info(freqMin*16)
+                wires.sort(key = int)
+                scanListText = scanListText + str(scanNum) + "." + ", ".join(wires) + " (" + str(freqMin) + ", " + str(freqMax) + ")\n"
+                with open('dwaConfig_'+str(scanNum)+'.ini', 'w') as configfile:
+                    configfile.write("[FPGA]\n")
+                    configfile.write("auto               = 00000001  # 0 is fixed frequency\n")
+                    configfile.write("stimFreqReq        = 00000C80  # [1/16 Hz] Fixed frequency:\n")
+                    configfile.write("stimFreqMin        = "+self.hexString(freqMin*16)+"  # [1/16 Hz]\n")
+                    configfile.write("stimFreqMax        = "+self.hexString(freqMax*16)+"  # [1/16 Hz]\n")
+                    configfile.write("stimFreqStep       = "+self.hexString(advFss*16)+"  # [1/16 Hz]\n")
+                    configfile.write("stimTime           = "+self.hexString(advStimTime*1e5)+" # units? (maybe 10us)\n")
+                    configfile.write("stimMag            = "+self.hexString(advAmplitude)+"  # 12-bit DAC:\n")
+                    configfile.write("cyclesPerFreq      = 00000002  # \n")
+                    configfile.write("adcSamplesPerCycle = 00000010  # \n")
+                    configfile.write("digipot            = 2222222222222222\n")
+                    configfile.write("relayMask          = 00000000  # relay 32 is 0x1:\n")
+                    configfile.write("coilDrive          = 00000000 \n")
+                    configfile.write("stimTimeInitial    = 00100000\n")
+                    configfile.write("client_IP = 8cf77b61 # James's home (DHCP...): 108.49.52.252\n")
+                    configfile.write("relayWireTop = 0000000000000000 # 64-bit  top3top2top1top0\n")
+                    configfile.write("relayWireBot = 00FF0000FF000080 # 64-bit  bot3bot2bot1bot0\n")
+                    configfile.write("relayBusTop  = 00000000         # 32-bit  top1top0\n")
+                    configfile.write("relayBusBot  = AAAAAAAA         # 32-bit  bot1bot0\n")
+                    configfile.write("noiseFreqMin           = 00000340  # [1/16Hz]  55 Hz\n")
+                    configfile.write("noiseFreqMax           = 00000340  # [1/16Hz]  65 Hz\n")
+                    configfile.write("noiseFreqStep          = 00000010  # [1/16Hz]   1 Hz\n")
+                    configfile.write("noiseSettlingTime      = 00001000  # [2.56 us]  00001000 ~ 10ms\n")
+                    configfile.write("noiseAdcSamplesPerFreq = 00000100  # [unitless] (256 samples) limited to 256\n")
+                    configfile.write("noiseSamplingPeriod    = 0000CB73  # [10ns]   32 samp/cycle @ 60 Hz\n")
+                
+                scanNum = scanNum + 1
+        
+        self.configNextScanComboBox.clear()
+        for i in range(1, scanNum):
+            self.configNextScanComboBox.addItem(str(i))
         
         logging.info("Configuring scans")
-        logging.info(measuredBy)
+        logging.info(self.measuredBy)
         logging.info(configStage)
         logging.info(configHeadboard)
         logging.info(configHeadboard*2)
@@ -901,6 +982,14 @@ class MainWindow(qtw.QMainWindow):
         # startRun() is in a thread...  need to get logger?
         logger = logging.getLogger(__name__)
         self.configFile = self.configFileName.text()
+        # If configFile is blank, use the generated one
+        if not self.configFile:
+            if self.configNextScanComboBox.currentText():
+                self.configFile = "dwaConfig_"+self.configNextScanComboBox.currentText()+".ini"
+            else:
+                # If no generated one was found, use the default one
+                self.configFile = "dwaConfig.ini"
+        logger.info(self.configFile)
         logger.info(f"config file = {self.configFile}")
         #
         ## FIXME: the textbox doesn't update right away...
@@ -1212,7 +1301,7 @@ class MainWindow(qtw.QMainWindow):
                     # FIXME: currently this is done is a very dumb way with no logic to which resonances get picked (just uses the first resonance).
                     for i, res in enumerate(resonances):
                         if len(res)>0:
-                            self.tensionData[layer+side][i] = 4*1.16e-4*1.15**2*res[0]**2
+                            self.tensionData[layer+side][i] = 4*1.16e-4*1.15**2*res[0]**2/3.2
 
                         
                     # FIXME: this should only happen once -- in _makeCurves()
@@ -1243,7 +1332,7 @@ class MainWindow(qtw.QMainWindow):
                     "dwaUuid": "1",
                     "versionFirmware": "1.1",
                     "site": "Harvard",
-                    "measuredBy": "Chris not really",
+                    "measuredBy": self.measuredBy,
                     "productionStage": "[dropdown]",
                     "side": "A",
                     "layer": "V",
@@ -1699,11 +1788,11 @@ class MainWindow(qtw.QMainWindow):
 
                 
                 self.resFitLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
-                self.resFitLines['proc'][reg][-1].sigClicked.connect(self._f0LineClicked)
-                self.resFitLines['proc'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
+                #self.resFitLines['proc'][reg][-1].sigClicked.connect(self._f0LineClicked)
+                #self.resFitLines['proc'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
                 self.resFitLines['raw'][reg].append( self.resonanceRawPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
-                self.resFitLines['raw'][reg][-1].sigClicked.connect(self._f0LineClicked)
-                self.resFitLines['raw'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
+                #self.resFitLines['raw'][reg][-1].sigClicked.connect(self._f0LineClicked)
+                #self.resFitLines['raw'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
 
                 
     def cleanUp(self):
