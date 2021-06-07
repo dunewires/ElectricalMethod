@@ -760,11 +760,12 @@ class MainWindow(qtw.QMainWindow):
         evtVwrPlotPenVolt = pg.mkPen(color=(0,0,0), style=qtc.Qt.DotLine, width=1)
         evtVwrPlotPenAmpl = pg.mkPen(color=(0,0,0), style=qtc.Qt.DotLine, width=1)
         for loc in range(8):
-            self.curves['evtVwr']['V(t)'][loc] = self.evtVwrPlots[loc].plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k',
+            self.curvesFit['evtVwr']['V(t)'][loc] = self.evtVwrPlots[loc].plot([0],[0], pen=amplAllPlotPens[loc])
+            self.curves['evtVwr']['V(t)'][loc] = self.evtVwrPlots[loc].plot([0],[0], symbol='o', symbolSize=3, symbolBrush='k',
                                                                             symbolPen='k', pen=None)#, pen=evtVwrPlotPenVolt)
-            self.curvesFit['evtVwr']['V(t)'][loc] = self.evtVwrPlots[loc].plot([0],[0], pen=evtVwrPlotPenVolt)
-        #self.evtVwrPlots[7].setXLabel("Time [s]")
-        #self.evtVwrPlots[8].setXLabel("Frequency [Hz]")
+        self.evtVwrPlots[6].setLabel("bottom", "Time [s]")
+        self.evtVwrPlots[7].setLabel("bottom", "Time [s]")
+        self.evtVwrPlots[8].setLabel("bottom", "Frequency [Hz]")
         # In the 9th plot, put all A(f) data
         for chan in range(8):
             self.curves['evtVwr']['A(f)'][chan] = self.evtVwrPlots[-1].plot([0], [0], pen=amplAllPlotPens[chan])
@@ -896,7 +897,7 @@ class MainWindow(qtw.QMainWindow):
     def evtVwrUpdatePlots(self, plotAmpl=False):
         #print("updating plots...")
         for ichan in range(8):
-            plotTitle = (f"V(t) Chan {ichan} Freq: {self.evtData['freqCurrent']:.3f} Hz")
+            plotTitle = (f"V(t) Chan {ichan} Freq: {self.evtData['freqCurrent']:.3f} Hz  Ampl: {self.evtData['A(f)'][ichan][self.evtData['freqIdx']]:.2f}")
             self.evtVwrPlots[ichan].setTitle(plotTitle)
             #self.curves['evtVwr']['A(f)'][ichan].setData(self.evtData['freq'], self.evtData['A(f)'][ichan])
             self.curves['evtVwr']['V(t)'][ichan].setData(self.evtData['V(t)_time'][ichan][self.evtData['freqIdx']],
@@ -1094,14 +1095,14 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def _evtVwrF0LineMoved(self):
-        print("evtVwr f0 Line moved")
+        #print("evtVwr f0 Line moved")
         fDragged = self.curves['evtVwr']['A(f)']['marker'].value()
         # Get the current frequency
         # get index into freq that is closest to fDragged
         try:
             diffs = np.abs(np.array(self.evtData['freq'])-fDragged)
             idx = np.where(diffs == np.min(diffs))[0][0]
-            print(idx)
+            #print(idx)
         except:
             print("Event Data not loaded yet")
             self.curves['evtVwr']['A(f)']['marker'].setValue(0)
