@@ -74,8 +74,8 @@ architecture STRUCT of top_tension_analyzer is
       rd_rst_busy : OUT STD_LOGIC
     );
   END COMPONENT;
+  
   COMPONENT ila_4x32
-
     PORT (
       clk : IN STD_LOGIC;
 
@@ -107,21 +107,21 @@ architecture STRUCT of top_tension_analyzer is
     );
   END COMPONENT;
 
-  signal auto            : std_logic := '0';
-  signal acStimX200      : std_logic := '0';
+  signal auto       : std_logic := '0';
+  signal acStimX200 : std_logic := '0';
 
   signal adcCnv_nCnv             : unsigned(15 downto 0) := (others => '0');
   signal adcCnv_nPeriod          : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriodAuto : unsigned(23 downto 0) := (others => '0');
 
-  signal acStim_mag           : unsigned(11 downto 0) := (others => '0');
-  signal acStim_enable        : std_logic             := '0';
-  signal ctrl_acStim_enable   : std_logic             := '0';
-  signal acStim_trigger       : std_logic             := '0';
-  signal acStim_nHPeriod      : unsigned(23 downto 0) := (others => '0');
-  signal acStimX200_nHPeriod  : unsigned(23 downto 0) := (others => '0');
-  signal acStimX200_nHPeriod_fxp8  : unsigned(31 downto 0) := (others => '0'); -- floating point at 8
-  --initial value non zero
+  signal acStim_mag               : unsigned(11 downto 0) := (others => '0');
+  signal acStim_enable            : std_logic             := '0';
+  signal ctrl_acStim_enable       : std_logic             := '0';
+  signal acStim_trigger           : std_logic             := '0';
+  signal acStim_nHPeriod          : unsigned(23 downto 0) := (others => '0');
+  signal acStimX200_nHPeriod      : unsigned(23 downto 0) := (others => '0');
+  signal acStimX200_nHPeriod_fxp8 : unsigned(31 downto 0) := (others => '0'); -- floating point at 8
+                                                                              --initial value non zero
   signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
   signal ctrlFreqSet : unsigned(23 downto 0) := (others => '1');
 
@@ -138,7 +138,7 @@ architecture STRUCT of top_tension_analyzer is
   signal adcBusy : std_logic := '0';
 
   signal mainsSquare_del1, mainsSquare_del2 : std_logic := '0';
-  signal mainsTrig ,adcReadoutTrig                         : std_logic := '0';
+  signal mainsTrig ,adcReadoutTrig          : std_logic := '0';
 
   signal mainsTrig_filter : unsigned(17 downto 0);
 
@@ -152,9 +152,8 @@ architecture STRUCT of top_tension_analyzer is
 
   signal dpotMag : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0) := (others => (others => '0'));
 
-  signal sendRunHdr  : boolean               := false;
-  signal sendAdcData : boolean               := false;
-  signal hGStateDbg  : unsigned(15 downto 0) := (others => '0');
+  signal sendRunHdr  : boolean := false;
+  signal sendAdcData : boolean := false;
 
   signal noiseReadoutBusy  : boolean := false;
   signal noiseResetBusy    : boolean := false;
@@ -167,10 +166,10 @@ architecture STRUCT of top_tension_analyzer is
 
   signal flashCount : unsigned(23 downto 0);
 
-  signal pktBuildBusy: boolean := false;
-signal freqScanBusy: boolean := false;
+  signal pktBuildBusy : boolean := false;
+  signal freqScanBusy : boolean := false;
 
-  signal 
+  signal
   toDaqReg_headerGenerator,
   toDaqReg_dpotInterface,
   toDaqReg_wtaController,
@@ -290,11 +289,11 @@ begin
       -- 50 = 8
       -- 25 = 16
       -- find the number of total canversions for each frequency
-      adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
+      adcCnv_nCnv_all     := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
       acStimX200_nHPeriod <= acStimX200_nHPeriod_fxp8(31 downto 8);
-      acStim_nHPeriod <= acStim_nHPeriod_all(31 downto 8);
-      adcCnv_nPeriod  <= adcCnv_nPeriod_all(31 downto 8);
-      adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
+      acStim_nHPeriod     <= acStim_nHPeriod_all(31 downto 8);
+      adcCnv_nPeriod      <= adcCnv_nPeriod_all(31 downto 8);
+      adcCnv_nCnv         <= adcCnv_nCnv_all(15 downto 0);
 
     end if;
   end process compute_n_periods;
@@ -302,9 +301,9 @@ begin
   bandPassClkGen_inst : entity work.bandPassClkGen
     port map (
       bPClk_nHPeriod => acStimX200_nHPeriod_fxp8,
-      bPClk              => acStimX200,
-      dwaClk400          => dwaClk400,
-      dwaClk200          => dwaClk200
+      bPClk          => acStimX200,
+      dwaClk400      => dwaClk400,
+      dwaClk200      => dwaClk200
     );
 
 
@@ -425,7 +424,7 @@ begin
       dwaClk100 => dwaClk100
     );
 
-adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
+  adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
   -- on adcStart get all of the samples at the current frequency
   adcReadout_inst : entity duneDwa.adcReadout
     port map (
@@ -436,8 +435,8 @@ adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
       noiseReadoutBusy => noiseReadoutBusy,
 
       adcStart => adcStart,
-      trigger => adcReadoutTrig,-- temp disable untested adcReadoutTrig,
-      --trigger => mainsTrig,-- temp disable untested adcReadoutTrig,
+      trigger  => adcReadoutTrig, -- temp disable untested adcReadoutTrig,
+                                  --trigger => mainsTrig,-- temp disable untested adcReadoutTrig,
       adcBusy => adcBusy,
 
       adcCnv => adcCnv,
@@ -512,8 +511,8 @@ adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
       runOdometer => (others => '0'),
 
       --udpDataRen         => false, --fromDaq
-      sendRunHdr    => sendRunHdr,
-      sendAdcData   => sendAdcData,
+      sendRunHdr  => sendRunHdr,
+      sendAdcData => sendAdcData,
 
       pktBuildBusy => pktBuildBusy,
       freqScanBusy => freqScanBusy,
@@ -529,7 +528,6 @@ adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
 
       --udpRequestComplete => open,
 
-      stateDbg  => hGStateDbg,
       dwaClk100 => dwaClk100
     );
 
@@ -575,9 +573,10 @@ adcReadoutTrig <= acStim_trigger when fromDaqReg.useAcStimTrig else mainsTrig;
     );
 
   toDaqReg.ctrlBusy         <= toDaqReg_wtaController.ctrlBusy;
-  toDaqReg.ctrlStateDbg         <= toDaqReg_wtaController.ctrlStateDbg;
+  toDaqReg.ctrlStateDbg     <= toDaqReg_wtaController.ctrlStateDbg;
   toDaqReg.udpDataWord      <= toDaqReg_headerGenerator.udpDataWord;
   toDaqReg.udpDataRdy       <= toDaqReg_headerGenerator.udpDataRdy;
+  toDaqReg.pktGenStateDbg   <= toDaqReg_headerGenerator.pktGenStateDbg;
   toDaqReg.senseWireGain    <= toDaqReg_dpotInterface.senseWireGain;
   toDaqReg.relayBusTop      <= toDaqReg_wireRelayInterface.relayBusTop;
   toDaqReg.relayWireTop     <= toDaqReg_wireRelayInterface.relayWireTop;

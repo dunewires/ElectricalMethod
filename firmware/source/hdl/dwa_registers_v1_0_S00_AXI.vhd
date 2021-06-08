@@ -997,7 +997,8 @@ begin
 				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.statusPeriod);
 			when b"110110" => --reg 54
 				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.pktGenWatchdogPeriod);
-
+			when b"110111" => --controller state reg 55
+				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pktGenStateDbg);
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;

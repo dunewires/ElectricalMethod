@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed May 12 19:35:21 2021
+-- Last update : Tue Jun  8 17:38:48 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -63,7 +63,6 @@ entity headerGenerator is
         adcDataRen : out std_logic_vector(7 downto 0) := (others => '0');
         adcData    : in  slv_vector_type(7 downto 0)(31 downto 0);
 
-        stateDbg  : out unsigned(15 downto 0);
         dwaClk100 : in  std_logic -- := '0'
     );
 
@@ -107,7 +106,7 @@ architecture rtl of headerGenerator is
 
     ----------------------------
     ---- Setup for Header E
-    constant nHeadE      : integer                                         := 5; -- # of header words (incl. 2 delimiters)
+    constant nHeadE      : integer                                         := 4; -- # of header words (incl. 2 delimiters)
     constant nHeadElog   : integer                                         := integer(log2(real(nHeadE +1)));
     signal headEDataList : slv_vector_type(nHeadE-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
@@ -228,9 +227,9 @@ begin
     --STATUS Header
     headEDataList <= ( -- Status frame
             x"EEEE" & std_logic_vector(to_unsigned(nHeadE-2, 16)),
-            x"61" & x"0000" & x"55",
+            --x"61" & x"0000" & x"55",
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
-            x"62" & std_logic_vector(fromDaqReg.errors),
+            x"63" & std_logic_vector(fromDaqReg.errors),
             x"EEEEEEEE"
     );
 
@@ -460,6 +459,6 @@ begin
         end if;
     end process;
 
-    stateDbg <= to_unsigned(state_type'POS(state_reg),stateDbg'length);
+    toDaqReg.pktGenStateDbg <= to_unsigned(state_type'POS(state_reg),toDaqReg.pktGenStateDbg'length);
 end architecture rtl;
 
