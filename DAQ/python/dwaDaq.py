@@ -1,5 +1,5 @@
 # FIXME/TODO:
-# * add dwaDaqConfig.ini
+# * should we really log the status frames to file?
 # * Update human parsing of frequency (fixed point now...)
 # * Status frame parsing/displaying...
 # * Should status frame UDP data be logged to file????? (currently it is...)
@@ -8,10 +8,11 @@
 #   e.g. from "baseline" to peak, as well as peak width, as in final example of:
 #   https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
 # * add "abort" button. After clicking Start button --> button becomes "Abort Scan".
-# * Really need DwaMicrozed class now (configurable IP address for uzed...)
 # * The new register to set an additional stimulus time for the first sample in the run,  stimTimeInitial,
 #   is a 24 bit register with the same units as the stimulus time, 2.56us, and is at address 0x2C. 
+# * Logging: is generally a mess. many log entries are printed to screen in duplicate...
 # * Logging: use RotatingFileHandler for log file, and don't create a new log file each time... ???
+# * Use rotatingfilehandler for the udpStream.txt, too!
 # * UDP header will eventually contain status bits as well (currently not used)
 # * look for dropped UDP packets by monitoring the UDP counter
 #   (careful with wraps of the counter)
@@ -87,6 +88,7 @@ from SietchConnect import SietchConnect
 
 
 STIM_PERIOD_CURRENT = 'stimPeriodCounter' # KLUGE to account for firmware mistake
+DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 
 RUN_START = 1
 RUN_END = 0
@@ -419,11 +421,7 @@ class MainWindow(qtw.QMainWindow):
 
         # Collect/parse DAQ-related configuration parameters
         # FIXME --- need to read/parse .ini file...
-        self.daqConfig = {}
-        self.daqConfig['DWA_IP'] = '149.130.136.211'
-        #self.daqConfig['statusPeriod'] = '0007A120'  # string or Hex????
-        self.daqConfig['statusPeriod'] = '00000000'  # string or Hex????
-        self.daqConfig['verbose'] = 1
+        self._loadDaqConfig()
 
         # Set up connection to Microzed
         self.uz = duz.DwaMicrozed(ip=self.daqConfig['DWA_IP'])
@@ -545,7 +543,6 @@ class MainWindow(qtw.QMainWindow):
         
     # end of __init__ for class MainWindow
 
-    
     def _initResonanceFitLines(self):
         self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
                             'proc':{},  # raw and processed A(f) plots
@@ -976,8 +973,6 @@ class MainWindow(qtw.QMainWindow):
 
         print("\n\n =================== startRun()\n\n")
         
-        verbose = 1
-        
         print(f"self.configFile = {self.configFile}")
         # verify that config file can be opened
         try:
@@ -994,7 +989,7 @@ class MainWindow(qtw.QMainWindow):
             
         try:
             logger.info('======= dwaConfig() ===========')
-            self.uz.config(self.dwaConfigFile.config)
+            self.uz.config(self.dwaConfigFile.config['FPGA'])
         except:
             logger.error("DWA run configuration failed")
             
@@ -1507,7 +1502,7 @@ class MainWindow(qtw.QMainWindow):
         # FIXME: should this all go in the try: above?
         if validConfigFilename:
             # read/parse config file
-            self.dwaConfigFile = dcf.DwaConfigFile(configFileToOpen)
+            self.dwaConfigFile = dcf.DwaConfigFile(configFileToOpen, sections=['FPGA'])
             textToDisplay = self.dwaConfigFile.getRawText()
             if self.omitComments_cb.isChecked():
                 self.logger.info("cutting out commented lines from config file")
@@ -1523,14 +1518,21 @@ class MainWindow(qtw.QMainWindow):
                 self.configFileContents.setPlainText(textToDisplay)
 
                 # update various config file fields in the GUI
-                self.freqMin_val.setText(self.dwaConfigFile.config['stimFreqMin_Hz'])
-                self.freqMax_val.setText(self.dwaConfigFile.config['stimFreqMax_Hz'])
-                self.freqStep_val.setText(self.dwaConfigFile.config['stimFreqStep_Hz'])
-                self.stimTime_val.setText(self.dwaConfigFile.config['stimTime_s'])
-                self.cycPerFreq_val.setText(self.dwaConfigFile.config['cyclesPerFreq_dec'])
-                self.sampPerCyc_val.setText(self.dwaConfigFile.config['adcSamplesPerCycle_dec'])
-                self.clientIP_val.setText(self.dwaConfigFile.config['client_IP'])
+                self.freqMin_val.setText(self.dwaConfigFile.config['FPGA']['stimFreqMin_Hz'])
+                self.freqMax_val.setText(self.dwaConfigFile.config['FPGA']['stimFreqMax_Hz'])
+                self.freqStep_val.setText(self.dwaConfigFile.config['FPGA']['stimFreqStep_Hz'])
+                self.stimTime_val.setText(self.dwaConfigFile.config['FPGA']['stimTime_s'])
+                self.cycPerFreq_val.setText(self.dwaConfigFile.config['FPGA']['cyclesPerFreq_dec'])
+                self.sampPerCyc_val.setText(self.dwaConfigFile.config['FPGA']['adcSamplesPerCycle_dec'])
+                self.clientIP_val.setText(self.dwaConfigFile.config['FPGA']['client_IP'])
             
+    def _loadDaqConfig(self):
+        self.daqConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
+        self.daqConfig = self.daqConfigFile.getConfigDict(section='DAQ')
+        #self.daqConfig['DWA_IP'] = '149.130.136.211'
+        #self.daqConfig['statusPeriod'] = '0007A120'  # string or Hex????
+        #self.daqConfig['statusPeriod'] = '00000000'  # string or Hex????
+        #self.daqConfig['verbose'] = 1
             
     def _makeWordList(self, udpDataStr):
         '''
