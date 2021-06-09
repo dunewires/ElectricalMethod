@@ -18,7 +18,7 @@ class DwaMicrozed():
         self.ip = ip
         self.port = PORT
         self.sock = None
-        self.sleepPostWrite = 0.2  # seconds
+        self.sleepPostWrite = 0.05  # seconds
         self.sleepPostOpen = 0.2   # seconds
         self.closeTcpWhenDone = False
         
