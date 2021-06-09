@@ -64,13 +64,12 @@ from PyQt5 import QtGui as qtg
 from PyQt5 import QtCore as qtc
 from PyQt5.QtCore import pyqtSlot
 
-#from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
 
-#import dwaGui  ## for GUI made in Qt Creator
 import dwaTools as dwa
 import DwaDataParser as ddp
 import DwaConfigFile as dcf
+import DwaMicrozed as duz
 
 from SietchConnect import SietchConnect
 
@@ -417,8 +416,21 @@ class MainWindow(qtw.QMainWindow):
 
         # signals for callback actions
         self.signals = WorkerSignals()
-        
 
+        # Collect/parse DAQ-related configuration parameters
+        # FIXME --- need to read/parse .ini file...
+        self.daqConfig = {}
+        self.daqConfig['DWA_IP'] = '149.130.136.211'
+        #self.daqConfig['statusPeriod'] = '0007A120'  # string or Hex????
+        self.daqConfig['statusPeriod'] = '00000000'  # string or Hex????
+        self.daqConfig['verbose'] = 1
+
+        # Set up connection to Microzed
+        self.uz = duz.DwaMicrozed(ip=self.daqConfig['DWA_IP'])
+        self.uz.setVerbose(self.daqConfig['verbose'])
+
+        # Set up STATUS frame cadence
+        self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
         
         ############ Resize and launch GUI in bottom right corner of screen
         # tested on mac & linux (unclear about windows)
@@ -976,24 +988,26 @@ class MainWindow(qtw.QMainWindow):
 
         try:
             logger.info('======= dwaReset() ===========')
-            dwa.dwaReset(verbose=verbose)
+            self.uz.reset()
+        except:
+            logger.error("DWA reset failed")
             
+        try:
             logger.info('======= dwaConfig() ===========')
-            #dwa.dwaConfig(verbose=verbose, configFile="dwaConfigWCLab.ini")
-            dwa.dwaConfig(verbose=verbose, configFile=self.configFile,
-                          doMainsSubtraction=True, v3Relays=True)
-            #dwa.dwaConfig(verbose=verbose, configFile="dwaConfigSingleFreq.ini")
-
+            self.uz.config(self.dwaConfigFile.config)
+        except:
+            logger.error("DWA run configuration failed")
             
+        try:
             logger.info('======= dwaStart() ===========')
-            dwa.dwaStart(verbose=verbose)
+            self.uz.start()
             logger.info('======= DONE WITH dwaStart() ===========')
             
             #logger.info('\n\n======= dwaStat() ===========')
-            #dwa.dwaStat(verbose=verbose)
+            #self.uz.stat()
 
         except:
-            logger.error("DWA run configuration failed")
+            logger.error("DWA run start failed")
             
 
     #@pyqtSlot()
