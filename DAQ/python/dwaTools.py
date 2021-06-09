@@ -433,6 +433,7 @@ def force_symlink(file1, file2):
             os.remove(file2)
             os.symlink(file1, file2)
 
+# DEFUNCT (see DwaMicrozed.py)
 def dwaReset(verbose=0):
     #fromDaqReg.reset          <= slv_reg0(0)= '1';
     s = tcpOpen(verbose=verbose)
@@ -440,6 +441,7 @@ def dwaReset(verbose=0):
     time.sleep(0.2)
     tcpClose(s)
 
+# DEFUNCT (see DwaMicrozed.py)
 def dwaAbort(verbose=0):
     s = tcpOpen(verbose=verbose)
     dwaRegWrite(s, '00000000', '00000008', verbose=verbose)
@@ -502,6 +504,7 @@ def dwaGetConfigParameters(configFile):
         
       
 
+# DEFUNCT (see DwaConfigFile.py)
 def dwaValidateConfigParams(config):
     """ validate the values read from a config file
     """
@@ -526,6 +529,7 @@ def dwaValidateConfigParams(config):
         sys.exit()
 
 
+# DEFUNCT (see DwaMicrozed.py)
 def dwaSetDigipots(ss, cfgstr, verbose=0):
     """ cfgstr is an 8-channel string: 8 x 8-bit values, one per digipot
     e.g. cfgstr = '0706050403020100' 
@@ -557,6 +561,7 @@ def dwaSetDigipots(ss, cfgstr, verbose=0):
     # Odd digipots
     dwaRegWrite(ss, '00000010', cfgOdd, verbose=verbose)
     
+# DEFUNCT (see DwaMicrozed.py)
 def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v3Relays=False):
     """
     Args:
@@ -726,6 +731,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
 
     tcpClose(s, verbose=verbose)
 
+# DEFUNCT (see DwaMicrozed.py)
 def dwaStart(verbose=0):
 
     sleepSec = 0.2
@@ -740,6 +746,7 @@ def dwaStart(verbose=0):
 
     tcpClose(s, verbose=verbose)
 
+# DEFUNCT (see DwaMicrozed.py)
 def dwaStat(verbose=0):
 
     sleepSec = 0.2
@@ -765,12 +772,14 @@ def dwaStat(verbose=0):
     tcpClose(s)
 
 
+# DEFUNCT (see DwaMicrozed.py)
 def tcpClose(ss, verbose=0):
     # https://docs.python.org/3/library/socket.html#socket.socket.shutdown
     # how = socket.SHUT_RD or socket.SHUT_WR or socket.SHUT_RDWR
     # ss.shutdown(how)  
     ss.close()
 
+# DEFUNCT (see DwaMicrozed.py)
 def tcpOpen(verbose=1):
     # FIXME: move HOST to a config file
     # IP Address of microzed board
@@ -799,11 +808,13 @@ def tcpOpen(verbose=1):
     return s
 
 
+# DEFUNCT (see DwaMicrozed.py)
 def dwaRegWriteTest(address, value, verbose=0):
     s = tcpOpen()
     dwaRegWrite(s, address, value, verbose=verbose)
     tcpClose(s)
 
+# DEFUNCT (see DwaMicrozed.py)
 def dwaRegReadTest(address, verbose=0):
     s = tcpOpen()
     dwaRegRead(s, address, verbose=verbose)
@@ -850,6 +861,7 @@ def hexStrToIpAddressStr(hexStr):
     ipStr = '{}.{}.{}.{}'.format(*ipVals)
     return ipStr
     
+# DEFUNCT (see DwaMicrozed.py)
 def dwaSetUdpAddress(ss, address, verbose=0):
     # IP address where the UDP data will be sent (e.g. IP address of the DAQ computer)
 
@@ -862,6 +874,7 @@ def dwaSetUdpAddress(ss, address, verbose=0):
     dwaRegComm(ss, payload_header='abcd1234', payload_type='FE170003',
                address=address, verbose=0)
 
+# DEFUNCT (see DwaMicrozed.py)
 def dwaRegComm(ss, payload_header='abcd1234', payload_type=None, 
                address=None, value=None, verbose=0):
 
@@ -912,11 +925,13 @@ def dwaRegComm(ss, payload_header='abcd1234', payload_type=None,
         return val
     
 
+# DEFUNCT (see DwaMicrozed.py)
 def dwaRegRead(ss, address, verbose=0):
     return dwaRegComm(ss, payload_header='abcd1234', payload_type='FE170001',
                       address=address, verbose=0)
 
 
+# DEFUNCT (see DwaMicrozed.py)
 def dwaRegRead2(ss, address, verbose=0):
     try :
         # Send binary data via socket
@@ -952,6 +967,7 @@ def dwaRegRead2(ss, address, verbose=0):
 
 
 
+# DEFUNCT (see DwaMicrozed.py)
 def dwaRecvTimeout(ss,timeout=2, verbose=0):
     # FIXME: there is not actually a timeout!!!!
 
@@ -990,6 +1006,7 @@ def dwaRecvTimeout(ss,timeout=2, verbose=0):
     return(unpacked_data)
 
 
+# DEFUNCT (see DwaMicrozed.py)
 def dwaRegWrite(s, address, value, verbose=0):
     # s         socket (assumed open already)
     # address   Register address to write to 8 element hex string (e.g. '00000000')
