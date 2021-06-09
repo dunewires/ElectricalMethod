@@ -956,7 +956,7 @@ class MainWindow(qtw.QMainWindow):
             # Change the button to "Abort Scan" (and change color, too)
             print("User has requested a soft abort of this run...")
             print("... this is not yet tested")
-            dwa.dwaAbort()
+            self.uz.abort()
             
     def startRun(self):
         #self.outputText.appendPlainText("CLICKED START")
