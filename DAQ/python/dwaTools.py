@@ -762,8 +762,7 @@ def tcpOpen(verbose=1):
     # FIXME: move HOST to a config file
     # IP Address of microzed board
     ####HOST = '149.130.136.243'     # Wellesley Lab (MAC: 84:2b:2b:97:da:01)
-    HOST = '140.247.132.147' # NW Lab
-    #HOST = '140.247.132.37' # NW Lab
+    HOST = '140.247.132.147'
     #HOST = '140.247.123.186'     # J156Lab
     #HOST = '149.130.136.211' # Wellesley DWA (MAC 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x03)
     PORT = 7
