@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Apr  8 16:50:15 2021
--- Last update : Thu Apr 15 11:44:22 2021
+-- Last update : Tue Jun  8 21:56:39 2021
 -- Platform    : DWA
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -38,7 +38,9 @@ end bandPassClkGen;
 
 architecture STRUCT of bandPassClkGen is
 	-- With the odelay and DDR we have 32 X 2 = 64 phases.
-	alias phaseStep : unsigned(5 downto 0) is bPClk_nHPeriod(6 downto 1);
+	-- There is an extra bit of  precision for the accumulator
+	-- This will give a more accurate frequency with the jitter determined by the tap delay
+	alias phaseStep : unsigned(6 downto 0) is bPClk_nHPeriod(6 downto 0);
 	-- the portion after the point is done
 	alias clk200Step                       : unsigned(30 downto 7) is bPClk_nHPeriod(30 downto 7);
 	signal bPClk200,bPClk200Ph180,bPClk400 : std_logic             := '0';
@@ -46,8 +48,8 @@ architecture STRUCT of bandPassClkGen is
 	signal odlyLd                          : std_logic             := '0';
 	signal odlyTap                         : unsigned(4 downto 0)  := (others => '0');
 	signal bPClkPeriodCnt                  : unsigned(23 downto 0) := (others => '0');
-	signal fineCount                       : unsigned(6 downto 0)  := (others => '0');
-	alias phaseOF                          : std_logic is fineCount(6);
+	signal fineCount                       : unsigned(7 downto 0)  := (others => '0');
+	alias phaseOF                          : std_logic is fineCount(7);
 	signal phaseOFDone                     : std_logic := '0';
 
 begin
@@ -58,7 +60,6 @@ begin
 		generic map (
 			CINVCTRL_SEL          => "FALSE",    -- Enable dynamic clock inversion (FALSE, TRUE)
 			DELAY_SRC             => "DATAIN",   -- Delay input (IDATAIN, DATAIN)
-			HIGH_PERFORMANCE_MODE => "FALSE",    -- Reduced jitter ("TRUE"), Reduced power ("FALSE")
 			IDELAY_TYPE           => "VAR_LOAD", -- FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
 			IDELAY_VALUE          => 0,          -- Input delay tap setting (0-31)
 			PIPE_SEL              => "FALSE",    -- Select pipelined mode, FALSE, TRUE
@@ -111,8 +112,8 @@ begin
 			-- update the fine delay settings in between transitions of the bPClk signal
 			if bPClkPeriodCnt = x"0000005" then
 				fineCount     <= fineCount + phaseStep;
-				odlyTap       <= fineCount(4 downto 0);
-				phaseShift180 <= fineCount(5);
+				odlyTap       <= fineCount(5 downto 1);
+				phaseShift180 <= fineCount(6);
 				odlyLd        <= '1';
 			end if;
 
