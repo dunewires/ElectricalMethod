@@ -74,7 +74,7 @@ architecture STRUCT of top_tension_analyzer is
       rd_rst_busy : OUT STD_LOGIC
     );
   END COMPONENT;
-  
+
   COMPONENT ila_4x32
     PORT (
       clk : IN STD_LOGIC;
@@ -164,8 +164,6 @@ architecture STRUCT of top_tension_analyzer is
   signal dwaClk2          : std_logic                    := '0';
   signal vioUpdate        : std_logic                    := '0';
 
-  signal flashCount : unsigned(23 downto 0);
-
   signal pktBuildBusy : boolean := false;
   signal freqScanBusy : boolean := false;
 
@@ -181,12 +179,10 @@ begin
   lightsAndButtons : process (dwaClk10)
   begin
     if rising_edge(dwaClk10) then
-      flashCount <= flashCount + 1;
-      -- flash lights in reverse order
-      led(0) <= not pButton(3) and flashCount(flashCount'left - 0);
-      led(1) <= not pButton(2) and flashCount(flashCount'left - 1);
-      led(2) <= not pButton(1) and flashCount(flashCount'left - 2);
-      led(3) <= not pButton(0) and flashCount(flashCount'left - 3);
+      led(0) <= '0';-- 0 is off ?
+      led(1) <= '0';-- 0 is off ?
+      led(2) <= '0';-- 0 is off ?
+      led(3) <= '0';-- 0 is off ?
     end if;
   end process;
 
@@ -268,19 +264,14 @@ begin
     if rising_edge(dwaClk10) then
       if fromDaqReg.auto then
         stimFreqReq <= ctrlFreqSet;
-        --acStim_enable <= '0';--ctrl_acStim_enable;
         acStim_enable <= ctrl_acStim_enable;
       else
         stimFreqReq   <= fromDaqReg.stimFreqReq;
         acStim_enable <= '1';
       end if;
 
-      acStimX200_nHPeriod_fxp8 <= (x"3d090000"/ stimFreqReq);
-      -- trim off 8 MSbs because we don't need to go below ~10Hz
-      -- acStim_nHPeriod_all := (x"5F5E1000"/unsigned(stimFreqReq));
-      -- acStim_nHPeriod     <= acStim_nHPeriod_all(acStim_nHPeriod'range);
-      -- use the acStim_nHPeriod as the basis for the other freq to maintain exact sync
-      -- this will produce a greater error in the actual freq being measured.
+      acStimX200_nHPeriod_fxp8 <= (x"3d0900000"/ stimFreqReq);
+
       acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * 200;
       adcCnv_nPeriod_all  := acStimX200_nHPeriod_fxp8 * 50;
       --  let's start with a fixed conversion from half wave to ADC samples
@@ -531,46 +522,46 @@ begin
       dwaClk100 => dwaClk100
     );
 
-  ila_4x32_inst : ila_4x32
-    PORT MAP (
-      clk                  => dwaClk100,
-      probe0(31 downto 16) => (others => '0'),
-      probe0(15 downto 0)  => std_logic_vector(adcData(3)(15 downto 0)),
-      probe1(31 downto 16) => (others => '0'),
-      probe1(15 downto 0)  => std_logic_vector(senseWireData(3)(15 downto 0)),
-      probe2(31 downto 15) => (others => '0'),
-      probe2(14 downto 0)  => std_logic_vector(senseWireMNSData(3)(14 downto 0)),
-      probe3(31 downto 8)  => (others => '0'),
-      probe3(7)            => adcReadoutTrig,
-      probe3(6)            => acStim_trigger,
-      probe3(5)            => senseWireDataStrb,
-      probe3(4)            => mainsTrig,
-      probe3(3)            => senseWireMNSDataStrb,
-      probe3(2)            => bool2sl(adcStart),
-      probe3(1)            => bool2sl(noiseReadoutBusy),
-      probe3(0)            => bool2sl(noiseResetBusy)
-    );
-
-  vio_ctrl_inst : vio_ctrl
-    PORT MAP (
-      clk                     => dwaClk100,
-      probe_in0               => (others => '0'),
-      probe_in1               => (others => '0'),
-      probe_in2               => (others => '0'),
-      probe_out0              => open,
-      probe_out1              => open,
-      probe_out2(0)           => vioUpdate,
-      probe_out3              => open,
-      probe_out4              => open,
-      probe_out5              => open,
-      probe_out6              => open,
-      probe_out7              => open,
-      probe_out8              => open,
-      probe_out9              => open,
-      probe_out10             => open,
-      probe_out11(4 downto 2) => msimDumy,
-      probe_out11(1 downto 0) => noiseCorrDataSel
-    );
+  --  ila_4x32_inst : ila_4x32
+  --    PORT MAP (
+  --      clk                  => dwaClk100,
+  --      probe0(31 downto 16) => (others => '0'),
+  --      probe0(15 downto 0)  => std_logic_vector(adcData(3)(15 downto 0)),
+  --      probe1(31 downto 16) => (others => '0'),
+  --      probe1(15 downto 0)  => std_logic_vector(senseWireData(3)(15 downto 0)),
+  --      probe2(31 downto 15) => (others => '0'),
+  --      probe2(14 downto 0)  => std_logic_vector(senseWireMNSData(3)(14 downto 0)),
+  --      probe3(31 downto 8)  => (others => '0'),
+  --      probe3(7)            => adcReadoutTrig,
+  --      probe3(6)            => acStim_trigger,
+  --      probe3(5)            => senseWireDataStrb,
+  --      probe3(4)            => mainsTrig,
+  --      probe3(3)            => senseWireMNSDataStrb,
+  --      probe3(2)            => bool2sl(adcStart),
+  --      probe3(1)            => bool2sl(noiseReadoutBusy),
+  --      probe3(0)            => bool2sl(noiseResetBusy)
+  --    );
+  --
+  --  vio_ctrl_inst : vio_ctrl
+  --    PORT MAP (
+  --      clk                     => dwaClk100,
+  --      probe_in0               => (others => '0'),
+  --      probe_in1               => (others => '0'),
+  --      probe_in2               => (others => '0'),
+  --      probe_out0              => open,
+  --      probe_out1              => open,
+  --      probe_out2(0)           => vioUpdate,
+  --      probe_out3              => open,
+  --      probe_out4              => open,
+  --      probe_out5              => open,
+  --      probe_out6              => open,
+  --      probe_out7              => open,
+  --      probe_out8              => open,
+  --      probe_out9              => open,
+  --      probe_out10             => open,
+  --      probe_out11(4 downto 2) => msimDumy,
+  --      probe_out11(1 downto 0) => noiseCorrDataSel
+  --    );
 
   toDaqReg.ctrlBusy         <= toDaqReg_wtaController.ctrlBusy;
   toDaqReg.ctrlStateDbg     <= toDaqReg_wtaController.ctrlStateDbg;
