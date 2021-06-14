@@ -368,7 +368,6 @@ class DwaDataParser():
 
     def _postProcessFreqFrame(self, dd):
         dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodActive'] # convert period in 10ns to freq in Hz
-        #dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodCounter'] # KLUGE
         dd['adcSamplingPeriod_sec'] = dd['adcSamplingPeriod']*1e-8
         return dd
 

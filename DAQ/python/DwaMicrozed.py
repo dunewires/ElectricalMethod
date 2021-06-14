@@ -168,7 +168,7 @@ class DwaMicrozed():
     
     def setStatusFramePeriod(self, statusPeriod):
         if self.verbose > 0:
-            print("Setting STATUS frame period")
+            print(f"Setting STATUS frame period to {statusPeriod}")
 
         self._tcpOpen()
         self._regWrite('00000035', statusPeriod)

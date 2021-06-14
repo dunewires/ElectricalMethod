@@ -13,11 +13,9 @@
 # * Logging: is generally a mess. many log entries are printed to screen in duplicate...
 # * Logging: use RotatingFileHandler for log file, and don't create a new log file each time... ???
 # * Use rotatingfilehandler for the udpStream.txt, too!
-# * UDP header will eventually contain status bits as well (currently not used)
 # * look for dropped UDP packets by monitoring the UDP counter
-#   (careful with wraps of the counter)
+#   (careful with wraps of the counter, and with STATUS frames)
 # * if there is a dropped UDP packet, how can we tell what register it was from?
-# * Mapping from register/ADC number to APA wire number...
 # * database logging (seitch)
 # * Redundant saving of amplitude data?!?
 #                self._writeAmplitudesToFile()
@@ -74,6 +72,16 @@ import DwaMicrozed as duz
 
 from SietchConnect import SietchConnect
 
+DWA_CONFIG_FILE = "dwaConfigWC.ini"
+DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
+AMP_DATA_FILE   = "ampData/slowScan.json"
+EVT_VWR_TIMESTAMP = "20210526T222903"
+DAQ_UI_FILE = 'dwaDaqUI.ui'
+
+# FIXME: these should go in DwaDataParser.py
+RUN_START = 1
+RUN_END = 0
+
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
 #    """ handle logging events -- display them in a text box in the gui"""
@@ -85,13 +93,6 @@ from SietchConnect import SietchConnect
 #        msg = self.format(record)
 #        self.logTextBox.appendPlainText(msg)
 #        #XStream.stdout().write("{}\n".format(record))
-
-
-STIM_PERIOD_CURRENT = 'stimPeriodCounter' # KLUGE to account for firmware mistake
-DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
-
-RUN_START = 1
-RUN_END = 0
 
 class State(IntEnum):
     IDLE = 0
@@ -128,10 +129,6 @@ class Shortcut(Enum):
     EVT_PREV10 = qtc.Qt.Key_Down
     EVT_FIRST = "A"
     EVT_LAST = "E"
-    #EVT_NEXT = "N"
-    #EVT_PREV = "B"
-    #EVT_NEXT10 = "H"
-    #EVT_PREV10 = "G"
     
 class WorkerSignals(qtc.QObject):
     '''
@@ -231,33 +228,33 @@ class Worker(qtc.QRunnable):
 # new additions
 # From:
 # https://stackoverflow.com/questions/51404102/pyqt5-tabwidget-vertical-tab-horizontal-text-alignment-left
-class TabBar(qtw.QTabBar):
-    def tabSizeHint(self, index):
-        s = qtw.QTabBar.tabSizeHint(self, index)
-        s.transpose()
-        return s
-
-    def paintEvent(self, event):
-        painter = qtw.QStylePainter(self)
-        opt = qtw.QStyleOptionTab()
-
-        for i in range(self.count()):
-            self.initStyleOption(opt, i)
-            painter.drawControl(qtw.QStyle.CE_TabBarTabShape, opt)
-            painter.save()
-
-            s = opt.rect.size()
-            s.transpose()
-            r = qtc.QRect(qtc.QPoint(), s)
-            r.moveCenter(opt.rect.center())
-            opt.rect = r
-
-            c = self.tabRect(i).center()
-            painter.translate(c)
-            painter.rotate(90)
-            painter.translate(-c)
-            painter.drawControl(qtw.QStyle.CE_TabBarTabLabel, opt)
-            painter.restore()
+#class TabBar(qtw.QTabBar):
+#    def tabSizeHint(self, index):
+#        s = qtw.QTabBar.tabSizeHint(self, index)
+#        s.transpose()
+#        return s
+#
+#    def paintEvent(self, event):
+#        painter = qtw.QStylePainter(self)
+#        opt = qtw.QStyleOptionTab()
+#
+#        for i in range(self.count()):
+#            self.initStyleOption(opt, i)
+#            painter.drawControl(qtw.QStyle.CE_TabBarTabShape, opt)
+#            painter.save()
+#
+#            s = opt.rect.size()
+#            s.transpose()
+#            r = qtc.QRect(qtc.QPoint(), s)
+#            r.moveCenter(opt.rect.center())
+#            opt.rect = r
+#
+#            c = self.tabRect(i).center()
+#            painter.translate(c)
+#            painter.rotate(90)
+#            painter.translate(-c)
+#            painter.drawControl(qtw.QStyle.CE_TabBarTabLabel, opt)
+#            painter.restore()
 
 class TensionTableModel(qtc.QAbstractTableModel):
     # See: https://www.learnpyqt.com/tutorials/qtableview-modelviews-numpy-pandas/
@@ -303,7 +300,7 @@ class MainWindow(qtw.QMainWindow):
         #################################################
         ################# START LAYOUT ##################
         # Load the UI (built in Qt Designer)
-        uic.loadUi('dwaDaqUI.ui', self)
+        uic.loadUi(DAQ_UI_FILE, self)
         self.btnScanCtrl.setStyleSheet("background-color : green")  # button is green when scan is inactive, red when active
 
         # adapt the tabs...
@@ -332,13 +329,13 @@ class MainWindow(qtw.QMainWindow):
         #self.oldDataFormat = True
         
         # Set defaults...
-        self.configFileName.setText("dwaConfigWC.ini")
+        self.configFileName.setText(DWA_CONFIG_FILE)
         self.configFileContents.setReadOnly(True)
         #self.ampDataFilename.setText("ampData/DWANUM_HEADBOARDNUM_LAYER_20210219T002321.json")
-        self.ampDataFilename.setText("ampData/slowScan.json")
+        self.ampDataFilename.setText(AMP_DATA_FILE)
 
         # Event viewer tab stuff
-        self.evtVwr_runName_val.setText("20210526T222903")#20210604T170730")
+        self.evtVwr_runName_val.setText(EVT_VWR_TIMESTAMP)
         self.evtVwr_runName_val.returnPressed.connect(self.loadEventData)
         self.evtVwrPlotsGLW.setBackground('w')
         self.evtVwrPlots = []
@@ -377,7 +374,10 @@ class MainWindow(qtw.QMainWindow):
         self.resFitBkgPoly.returnPressed.connect(self.resFitParameterUpdate)
         self.resFitWidth.returnPressed.connect(self.resFitParameterUpdate)
         self.resFitProminence.returnPressed.connect(self.resFitParameterUpdate)
+        #
+        self.statusFramePeriod_val.returnPressed.connect(self.setStatusFramePeriod)
 
+        
         # Resonance Tab
         self.btnSubmitResonances.clicked.connect(self.submitResonances)
 
@@ -886,6 +886,21 @@ class MainWindow(qtw.QMainWindow):
         self.scEvtVwrFirst = qtw.QShortcut(qtg.QKeySequence(Shortcut.EVT_FIRST.value), self)
         self.scEvtVwrFirst.activated.connect(partial(self.evtVwrChange, -100000000))
 
+        
+    @pyqtSlot()
+    def setStatusFramePeriod(self):
+        # Set up STATUS frame cadence
+        try:
+            statusFramePeriod_sec = float(self.statusFramePeriod_val.text())
+            print(f'statusFramePeriod_sec = {statusFramePeriod_sec}')
+        except:
+            print("invalid value for status frame period (must be float)")
+            return
+
+        self.daqConfig['statusPeriodSec'] = statusFramePeriod_sec
+        self.daqConfig['statusPeriod'] = f"{int(float(self.daqConfig['statusPeriodSec']) / 2.56e-6):08X}"
+        self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
+        
     @pyqtSlot()
     def evtVwrChange(self, step=None):
         #print(f"step by {step}")
@@ -1533,7 +1548,9 @@ class MainWindow(qtw.QMainWindow):
         #self.daqConfig['statusPeriod'] = '0007A120'  # string or Hex????
         #self.daqConfig['statusPeriod'] = '00000000'  # string or Hex????
         #self.daqConfig['verbose'] = 1
-            
+        # Populate fields in the GUI
+        self.statusFramePeriod_val.setText(f"{self.daqConfig['statusPeriodSec']}")
+
     def _makeWordList(self, udpDataStr):
         '''
         Converts a UDP transmission (single string) into a python list
@@ -1742,9 +1759,6 @@ class MainWindow(qtw.QMainWindow):
             self.logger.info("FOUND FREQUENCY HEADER")
             self.logger.info(udpDict)
             self.globalFreqActive_val.setText(f"{udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']:.2f}")
-            # is this the first payload for this frequency?
-            #if udpDict[ddp.Frame.FREQ][STIM_PERIOD_CURRENT] != self.stimPeriodCurrent:
-            #    self.stimPeriodCurrent = udpDict[ddp.Frame.FREQ][STIM_PERIOD_CURRENT]
 
         # Check to see if this is an ADC data transfer:
         if ddp.Frame.ADC_DATA in udpDict:
@@ -1793,9 +1807,9 @@ class MainWindow(qtw.QMainWindow):
 
         # Look for STATUS frame
         if ddp.Frame.STATUS in udpDict:
-            self.outputText.appendPlainText("\nFOUND STATUS FRAME")
+            self.outputText.appendPlainText("\nFOUND STATUS FRAME:")
             self.outputText.appendPlainText(str(udpDict[ddp.Frame.STATUS]))
-            print("\n\n\n FOUND STATUS FRAME")
+            print(f"\n\n\n FOUND STATUS FRAME {datetime.datetime.now()}")
             print(udpDict[ddp.Frame.STATUS])
             self.controllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerState']}")
             self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")

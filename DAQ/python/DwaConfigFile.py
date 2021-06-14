@@ -1,7 +1,7 @@
 import configparser
 import string
-import logging
-logger = logging.getLogger(__name__)
+#import logging
+#logger = logging.getLogger(__name__)
 
 SECTIONS = ["FPGA","DAQ"]
 
@@ -243,7 +243,7 @@ class DwaConfigFile():
 
         if 'DAQ' in self.sections:
             # convert seconds into a hex string in units of 2.56 microseconds
-            self.config['DAQ']['statusPeriodSec'] = int(self.config['DAQ']['statusPeriodSec'])
+            self.config['DAQ']['statusPeriodSec'] = float(self.config['DAQ']['statusPeriodSec'])  # convert string to float
             self.config['DAQ']['statusPeriod'] = f"{int(self.config['DAQ']['statusPeriodSec'] / 2.56e-6):08X}"
             #statusPeriod_sec = int(self.config['DAQ']['statusPeriodSec'], base)*2.56e-6  # convert to seconds
             self.config['DAQ']['verbose'] = int(self.config['DAQ']['verbose'])
