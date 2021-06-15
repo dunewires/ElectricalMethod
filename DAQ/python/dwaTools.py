@@ -579,6 +579,11 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
     sleepSec = 0.2
     time.sleep(sleepSec)
 
+
+    print("Setting STATUS frame period")
+    dwaRegWrite(s, '00000035', config["statusPeriod"], verbose=verbose)
+    time.sleep(sleepSec)
+    
     #fromDaqReg.auto           <= slv_reg1(0)= '1';
     # is this saying sweep vs. fixed freq?
     dwaRegWrite(s, '00000001', config["auto"], verbose=verbose)
@@ -597,7 +602,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
     #fromDaqReg.stimFreqStep <= unsigned(slv_reg6(23 downto 0));
     dwaRegWrite(s, '00000006', config["stimFreqStep"], verbose=verbose)
     time.sleep(sleepSec)
-    print("Setting stimTime, stimMag, and stimTimeInit")
+    print("Setting stimTime, stimMag, and stimTimeInitial")
     #fromDaqReg.stimRampTime   <= unsigned(slv_reg7(23 downto 0));
     dwaRegWrite(s, '00000007', config["stimTime"], verbose=verbose)
     time.sleep(sleepSec)
@@ -605,7 +610,7 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
     dwaRegWrite(s, '00000008', config["stimMag"], verbose=verbose)
     time.sleep(sleepSec)
     # ?? stimTimeInit
-    dwaRegWrite(s, '0000002C', config["stimMagInit"], verbose=verbose)
+    dwaRegWrite(s, '0000002C', config["stimTimeInitial"], verbose=verbose)
     time.sleep(sleepSec)
     # 
     #fromDaqReg.nAdcStimPeriod <= unsigned(slv_reg10(23 downto 0));
@@ -719,7 +724,6 @@ def dwaConfig(verbose=0, configFile='dwaConfig.ini', doMainsSubtraction=False, v
     dwaSetDigipots(s, config["digipot"], verbose=verbose)
     time.sleep(sleepSec)
 
-    
     tcpClose(s, verbose=verbose)
 
 def dwaStart(verbose=0):

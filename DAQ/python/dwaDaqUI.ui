@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1261</width>
-    <height>769</height>
+    <width>1313</width>
+    <height>1023</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -474,53 +474,43 @@
                </property>
                <layout class="QFormLayout" name="formLayout_7">
                 <item row="0" column="0">
-                 <widget class="QLabel" name="label_5">
-                  <property name="text">
-                   <string>Frequencies per second</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QLineEdit" name="advFpsLineEdit"/>
-                </item>
-                <item row="1" column="0">
                  <widget class="QLabel" name="label_12">
                   <property name="text">
                    <string>Frequency step size</string>
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="1">
+                <item row="0" column="1">
                  <widget class="QLineEdit" name="advFssLineEdit"/>
                 </item>
-                <item row="2" column="0">
+                <item row="1" column="0">
                  <widget class="QLabel" name="label_13">
                   <property name="text">
                    <string>Stimulation time (s)</string>
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="1">
+                <item row="1" column="1">
                  <widget class="QLineEdit" name="advStimTimeLineEdit"/>
                 </item>
-                <item row="4" column="0">
+                <item row="3" column="0">
                  <widget class="QLabel" name="label_14">
                   <property name="text">
                    <string>Initialization delay(s)</string>
                   </property>
                  </widget>
                 </item>
-                <item row="4" column="1">
+                <item row="3" column="1">
                  <widget class="QLineEdit" name="advInitDelayLineEdit"/>
                 </item>
-                <item row="5" column="0">
+                <item row="4" column="0">
                  <widget class="QLabel" name="label_15">
                   <property name="text">
                    <string>Amplitude</string>
                   </property>
                  </widget>
                 </item>
-                <item row="5" column="1">
+                <item row="4" column="1">
                  <widget class="QLineEdit" name="advAmplitudeLineEdit"/>
                 </item>
                </layout>
@@ -753,7 +743,7 @@
               <item>
                <widget class="QTabWidget" name="tabResonanceGraphs">
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="tabResonanceRawData">
                  <attribute name="title">
@@ -1101,10 +1091,89 @@
            </item>
           </layout>
          </widget>
+         <widget class="QWidget" name="tabEventViewer">
+          <attribute name="title">
+           <string>Event Viewer</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_16">
+           <item>
+            <layout class="QFormLayout" name="formLayout_7">
+             <item row="0" column="0">
+              <widget class="QLabel" name="evtVwr_runName_label">
+               <property name="text">
+                <string>Run name:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="evtVwr_runName_val">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QTabWidget" name="evtVwrTabs">
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="evtVwrTab1">
+              <attribute name="title">
+               <string>Timeseries</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_15">
+               <item>
+                <widget class="GraphicsLayoutWidget" name="evtVwrPlotsGLW"/>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_3">
+              <attribute name="title">
+               <string>Tab</string>
+              </attribute>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
      </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_9">
+      <item>
+       <widget class="QLabel" name="statusErrors_label">
+        <property name="text">
+         <string>errorBits</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="statusErrors_val">
+        <property name="text">
+         <string>N/A</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="controllerState_label">
+        <property name="text">
+         <string>Controller State</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="controllerState_val">
+        <property name="text">
+         <string>N/A</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -1114,7 +1183,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1261</width>
+     <width>1313</width>
      <height>21</height>
     </rect>
    </property>
