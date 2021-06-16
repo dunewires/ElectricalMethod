@@ -520,12 +520,10 @@ begin
       clk                  => dwaClk10,
       probe0(31 downto 24) => (others => '0'),
       probe0(23 downto 0)  => std_logic_vector(acStim_nHPeriod),
-      probe1(31 downto 24) => (others => '0'),
-      probe1(23 downto 0)  => std_logic_vector(acStimX200_nHPeriod_fxp8),
+      probe1  => std_logic_vector(acStimX200_nHPeriod_fxp8),
       probe2(31 downto 24) => (others => '0'),
       probe2(23 downto 0)  => std_logic_vector(adcCnv_nPeriod),
-      probe3(31 downto 24) => (others => '0'),
-      probe3(23 downto 0)  => std_logic_vector(acStimX200_nHPeriod_fxp8)
+      probe3  => std_logic_vector(acStimX200_nHPeriod_fxp8)
     );
   --
   --  vio_ctrl_inst : vio_ctrl
