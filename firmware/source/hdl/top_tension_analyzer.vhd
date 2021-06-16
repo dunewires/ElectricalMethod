@@ -255,7 +255,7 @@ begin
   -- convert requested stim frequency to number of 100Mhz clocks
   -- move this to the processor!
   compute_n_periods : process (dwaClk10)
-    variable acStim_nHPeriod_fxp8 : unsigned(39 downto 0 );
+    variable acStim_nHPeriod_fxp8 : unsigned(43 downto 0 );
     variable adcCnv_nCnv_all     : unsigned(39 downto 0 );
 
   begin 
@@ -268,7 +268,7 @@ begin
         acStim_enable <= '1';
       end if;
 
-      acStim_nHPeriod_fxp8 := (x"2FAF080000"/ stimFreqReq);
+      acStim_nHPeriod_fxp8 := (x"2FAF0800000"/ stimFreqReq);
       -- only take the integer part and use as a basis for remaining calculations
       acStim_nHPeriod          <= acStim_nHPeriod_fxp8(31 downto 8);
       acStimX200_nHPeriod_fxp8 <= acStim_nHPeriod_fxp8(31 downto 0) / x"C8";
