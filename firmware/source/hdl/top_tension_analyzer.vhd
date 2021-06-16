@@ -119,7 +119,7 @@ architecture STRUCT of top_tension_analyzer is
   signal ctrl_acStim_enable       : std_logic             := '0';
   signal acStim_trigger           : std_logic             := '0';
   signal acStim_nHPeriod          : unsigned(23 downto 0) := (others => '0');
-  signal acStimX200_nHPeriod_fxp8 : unsigned(31 downto 0) := (others => '0'); -- floating point at 8
+  signal acStimX200_nHPeriod_fxp8 : unsigned(23 downto 0) := (others => '0'); -- floating point at 8
                                                                               --initial value non zero
   signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
   signal ctrlFreqSet : unsigned(23 downto 0) := (others => '1');

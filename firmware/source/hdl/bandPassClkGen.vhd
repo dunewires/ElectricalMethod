@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Apr  8 16:50:15 2021
--- Last update : Tue Jun  8 21:56:39 2021
+-- Last update : Wed Jun 16 16:54:12 2021
 -- Platform    : DWA
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ use duneDwa.global_def.all;
 
 entity bandPassClkGen is
 	port (
-		bPClk_nHPeriod : in unsigned(31 downto 0) := (others => '0');
+		bPClk_nHPeriod : in unsigned(23 downto 0) := (others => '0');
 
 		bPClk : out std_logic;
 		--regToDwa       : in SLV_VECTOR_TYPE_32(31 downto 0);
@@ -42,12 +42,12 @@ architecture STRUCT of bandPassClkGen is
 	-- This will give a more accurate frequency with the jitter determined by the tap delay
 	alias phaseStep : unsigned(6 downto 0) is bPClk_nHPeriod(6 downto 0);
 	-- the portion after the point is done
-	alias clk200Step                       : unsigned(30 downto 7) is bPClk_nHPeriod(30 downto 7);
+	alias clk200Step                       : unsigned(16 downto 0) is bPClk_nHPeriod(23 downto 7);
 	signal bPClk200,bPClk200Ph180,bPClk400 : std_logic             := '0';
 	signal phaseShift180                   : std_logic             := '0';
 	signal odlyLd                          : std_logic             := '0';
 	signal odlyTap                         : unsigned(4 downto 0)  := (others => '0');
-	signal bPClkPeriodCnt                  : unsigned(23 downto 0) := (others => '0');
+	signal bPClkPeriodCnt                  : unsigned(16 downto 0) := (others => '0');
 	signal fineCount                       : unsigned(7 downto 0)  := (others => '0');
 	alias phaseOF                          : std_logic is fineCount(7);
 	signal phaseOFDone                     : std_logic := '0';
@@ -110,7 +110,7 @@ begin
 				bPClkPeriodCnt <= bPClkPeriodCnt +1;
 			end if;
 			-- update the fine delay settings in between transitions of the bPClk signal
-			if bPClkPeriodCnt = x"0000005" then
+			if bPClkPeriodCnt = '0' & x"0005" then
 				fineCount     <= fineCount + phaseStep;
 				odlyTap       <= fineCount(5 downto 1);
 				phaseShift180 <= fineCount(6);
