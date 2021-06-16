@@ -119,7 +119,6 @@ architecture STRUCT of top_tension_analyzer is
   signal ctrl_acStim_enable       : std_logic             := '0';
   signal acStim_trigger           : std_logic             := '0';
   signal acStim_nHPeriod          : unsigned(23 downto 0) := (others => '0');
-  signal acStimX200_nHPeriod      : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriod_fxp8 : unsigned(31 downto 0) := (others => '0'); -- floating point at 8
                                                                               --initial value non zero
   signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
@@ -256,8 +255,7 @@ begin
   -- convert requested stim frequency to number of 100Mhz clocks
   -- move this to the processor!
   compute_n_periods : process (dwaClk10)
-    variable acStim_nHPeriod_all : unsigned(63 downto 0 );
-    variable adcCnv_nPeriod_all  : unsigned(63 downto 0 );
+    variable acStim_nHPeriod_all : unsigned(53 downto 0 );
     variable adcCnv_nCnv_all     : unsigned(39 downto 0 );
 
   begin
@@ -269,23 +267,17 @@ begin
         stimFreqReq   <= fromDaqReg.stimFreqReq;
         acStim_enable <= '1';
       end if;
+      
+      acStim_nHPeriod_all := (x"2FAF080"/ stimFreqReq);
+      acStim_nHPeriod     <= acStim_nHPeriod_all(23 downto 0);
+      acStimX200_nHPeriod_fxp8  <= acStim_nHPeriod / x"C8";
 
-      acStimX200_nHPeriod_fxp8 <= (x"3d0900000"/ stimFreqReq);
-
-      acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * 200;
-      adcCnv_nPeriod_all  := acStimX200_nHPeriod_fxp8 * 50;
-      --  let's start with a fixed conversion from half wave to ADC samples
-      -- 100 = 4 samples/period
-      -- 400 = 1 samples/period
-      -- 50 = 8
-      -- 25 = 16
+      --  let's start with a fixed conversion 
+      -- temp shift left ~8 samples per cycle
+      adcCnv_nPeriod      <= "000" & acStim_nHPeriod(23 downto 3);
       -- find the number of total canversions for each frequency
       adcCnv_nCnv_all     := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
-      acStimX200_nHPeriod <= acStimX200_nHPeriod_fxp8(31 downto 8);
-      acStim_nHPeriod     <= acStim_nHPeriod_all(31 downto 8);
-      adcCnv_nPeriod      <= adcCnv_nPeriod_all(31 downto 8);
       adcCnv_nCnv         <= adcCnv_nCnv_all(15 downto 0);
-
     end if;
   end process compute_n_periods;
 
