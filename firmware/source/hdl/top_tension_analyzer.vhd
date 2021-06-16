@@ -178,10 +178,10 @@ begin
   lightsAndButtons : process (dwaClk10)
   begin
     if rising_edge(dwaClk10) then
-      led(0) <= '0';-- 0 is off ?
-      led(1) <= '0';-- 0 is off ?
-      led(2) <= '0';-- 0 is off ?
-      led(3) <= '0';-- 0 is off ?
+      led(0) <= '0'; -- 0 is off ?
+      led(1) <= '0'; -- 0 is off ?
+      led(2) <= '0'; -- 0 is off ?
+      led(3) <= '0'; -- 0 is off ?
     end if;
   end process;
 
@@ -258,10 +258,10 @@ begin
     variable acStim_nHPeriod_all : unsigned(31 downto 0 );
     variable adcCnv_nCnv_all     : unsigned(39 downto 0 );
 
-  begin
+  begin 
     if rising_edge(dwaClk10) then
       if fromDaqReg.auto then
-        stimFreqReq <= ctrlFreqSet;
+        stimFreqReq   <= ctrlFreqSet;
         acStim_enable <= ctrl_acStim_enable;
       else
         stimFreqReq   <= fromDaqReg.stimFreqReq;
@@ -270,15 +270,15 @@ begin
 
       acStim_nHPeriod_all := (x"2FAF0800"/ stimFreqReq);
       -- only take the integer part and use a basis for remaining calculations
-      acStim_nHPeriod     <= acStim_nHPeriod_all(27 downto 4);
-      acStimX200_nHPeriod_fxp8  <= acStim_nHPeriod / x"C8";
+      acStim_nHPeriod          <= acStim_nHPeriod_all(23 downto 0);
+      acStimX200_nHPeriod_fxp8 <= acStim_nHPeriod / x"C8";
 
       --  let's start with a fixed conversion 
       -- temp shift left ~8 samples per cycle
-      adcCnv_nPeriod      <= "000" & acStim_nHPeriod(23 downto 3);
+      adcCnv_nPeriod <= "00" & acStim_nHPeriod(23 downto 2);
       -- find the number of total canversions for each frequency
-      adcCnv_nCnv_all     := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
-      adcCnv_nCnv         <= adcCnv_nCnv_all(15 downto 0);
+      adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
+      adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
     end if;
   end process compute_n_periods;
 
@@ -515,25 +515,18 @@ begin
       dwaClk100 => dwaClk100
     );
 
-  --  ila_4x32_inst : ila_4x32
-  --    PORT MAP (
-  --      clk                  => dwaClk100,
-  --      probe0(31 downto 16) => (others => '0'),
-  --      probe0(15 downto 0)  => std_logic_vector(adcData(3)(15 downto 0)),
-  --      probe1(31 downto 16) => (others => '0'),
-  --      probe1(15 downto 0)  => std_logic_vector(senseWireData(3)(15 downto 0)),
-  --      probe2(31 downto 15) => (others => '0'),
-  --      probe2(14 downto 0)  => std_logic_vector(senseWireMNSData(3)(14 downto 0)),
-  --      probe3(31 downto 8)  => (others => '0'),
-  --      probe3(7)            => adcReadoutTrig,
-  --      probe3(6)            => acStim_trigger,
-  --      probe3(5)            => senseWireDataStrb,
-  --      probe3(4)            => mainsTrig,
-  --      probe3(3)            => senseWireMNSDataStrb,
-  --      probe3(2)            => bool2sl(adcStart),
-  --      probe3(1)            => bool2sl(noiseReadoutBusy),
-  --      probe3(0)            => bool2sl(noiseResetBusy)
-  --    );
+  ila_4x32_inst : ila_4x32
+    PORT MAP (
+      clk                  => dwaClk10,
+      probe0(31 downto 24) => (others => '0'),
+      probe0(23 downto 0)  => std_logic_vector(acStim_nHPeriod),
+      probe1(31 downto 24) => (others => '0'),
+      probe1(23 downto 0)  => std_logic_vector(acStimX200_nHPeriod_fxp8),
+      probe2(31 downto 24) => (others => '0'),
+      probe2(23 downto 0)  => std_logic_vector(adcCnv_nPeriod),
+      probe3(31 downto 24) => (others => '0'),
+      probe3(23 downto 0)  => std_logic_vector(acStimX200_nHPeriod_fxp8)
+    );
   --
   --  vio_ctrl_inst : vio_ctrl
   --    PORT MAP (
