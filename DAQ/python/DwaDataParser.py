@@ -27,7 +27,33 @@ class Registers(IntEnum):
     RUN = 0xFF
     STATUS = 0xFE
 
+class ControllerState(IntEnum):
+    IDLE = 0
+    NOISE_PREP = 1
+    NOISE_READ = 2
+    STIM_EN = 3
+    STIM_PREP = 4
+    STIM_RUN = 5
+    STIM_READ = 6
+    FREQ_END = 7
+    END_WAIT = 8
 
+    # From Nathan Felt 2021 June 2
+    # 0  idle Waiting for the start of a test
+    # 1  noisePrep Prepare to sample noise for mains noise subtraction
+    # 2  noiseReadout Sample noise for mains noise subtraction
+    # 3  stimEnable Enable stimulus frequency and wait for initial 
+    #    stimulus time
+    # 4  stimPrep Wait for stimulus frequency to update and check that 
+    #    the ADC data buffer is empty
+    # 5  stimRun Wait for the specified stimulus time
+    # 6  stimReadout Get the stimulated sense wire ADC samples
+    # 7  freqScanFinish At the end of the frequency sweep, 
+    #    wait for the last UDP data to be sent
+    # 8  pktBuildFinish_s Wait for the end of run header to be sent 
+    #    before we go to the idle state and wait for another scan
+
+    
 class DwaDataParser():
 
     def __init__(self):
@@ -106,7 +132,7 @@ class DwaDataParser():
         # ADC Data Frame entries
         # N/A
         #
-        self.frameKeys[Frame.STATUS]["61"] = "unknown"
+        #self.frameKeys[Frame.STATUS]["61"] = "unknown"
         self.frameKeys[Frame.STATUS]["62"] = "controllerState"
         self.frameKeys[Frame.STATUS]["63"] = "statusErrorBits"
         
@@ -387,6 +413,17 @@ class DwaDataParser():
         return dd
 
     def _postProcessStatusFrame(self, dd):
+        try:
+            print(dd['controllerState'])
+            print(ControllerState(int(dd['controllerState'])))
+            stateStr = str(ControllerState(int(dd['controllerState'])))
+            toks = stateStr.split('.')[-1]
+            print(f"toks = {toks}")
+            stateStr = stateStr.split('.')[-1]
+            dd['controllerStateStr'] = stateStr
+        except:
+            print(f"error: unrecognized controller state: {dd['controllerState']}")
+            dd['controllerStateStr'] = 'UNKNOWN'
         return dd
 
 

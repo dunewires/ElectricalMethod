@@ -1,4 +1,9 @@
 # FIXME/TODO:
+# * "Connect" button that loads the DAQ config file
+#   and DAQ Config Filename in "Advanced"
+# * New directory for config files config/
+# * Can't close window without killing process on linux...
+# * Put the client_IP in the DAQ config file
 # * should we really log the status frames to file?
 # * Update human parsing of frequency (fixed point now...)
 # * Status frame parsing/displaying...
@@ -7,7 +12,7 @@
 # * resonance lines could use "span" keyword to draw only the part of the plot that is in the peak
 #   e.g. from "baseline" to peak, as well as peak width, as in final example of:
 #   https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
-# * add "abort" button. After clicking Start button --> button becomes "Abort Scan".
+# * fix the "abort" button. After clicking Start button --> button becomes "Abort Scan".
 # * The new register to set an additional stimulus time for the first sample in the run,  stimTimeInitial,
 #   is a 24 bit register with the same units as the stimulus time, 2.56us, and is at address 0x2C. 
 # * Logging: is generally a mess. many log entries are printed to screen in duplicate...
@@ -72,11 +77,13 @@ import DwaMicrozed as duz
 
 from SietchConnect import SietchConnect
 
-DWA_CONFIG_FILE = "dwaConfigWC.ini"
+DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 AMP_DATA_FILE   = "ampData/slowScan.json"
 EVT_VWR_TIMESTAMP = "20210526T222903"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
+OUTPUT_DIR_UDP_DATA = './udpData/'
+OUTPUT_DIR_AMP_DATA = './ampData/'        
 
 # FIXME: these should go in DwaDataParser.py
 RUN_START = 1
@@ -297,11 +304,10 @@ class MainWindow(qtw.QMainWindow):
         # inclues wires & run & status registers
         self.registers_all = [item for item in ddp.Registers]  
 
-        #################################################
-        ################# START LAYOUT ##################
         # Load the UI (built in Qt Designer)
         uic.loadUi(DAQ_UI_FILE, self)
-        self.btnScanCtrl.setStyleSheet("background-color : green")  # button is green when scan is inactive, red when active
+        self.configFileContents.setReadOnly(True)
+        self.btnScanCtrl.setEnabled(False)
 
         # adapt the tabs...
         # see https://stackoverflow.com/questions/51404102/pyqt5-tabwidget-vertical-tab-horizontal-text-alignment-left
@@ -322,35 +328,13 @@ class MainWindow(qtw.QMainWindow):
         
         self.logFilename_val.setText(self.logFilename)  # must come after loadUi() call
         self.logFilenameLog_val.setText(self.logFilename)  
-
         #self.log_tb.append("logging window...")  # FIXME... how to update...?
 
-        # KLUGE:
-        #self.oldDataFormat = True
-        
-        # Set defaults...
         self.configFileName.setText(DWA_CONFIG_FILE)
-        self.configFileContents.setReadOnly(True)
-        #self.ampDataFilename.setText("ampData/DWANUM_HEADBOARDNUM_LAYER_20210219T002321.json")
         self.ampDataFilename.setText(AMP_DATA_FILE)
 
         # Event viewer tab stuff
-        self.evtVwr_runName_val.setText(EVT_VWR_TIMESTAMP)
-        self.evtVwr_runName_val.returnPressed.connect(self.loadEventData)
-        self.evtVwrPlotsGLW.setBackground('w')
-        self.evtVwrPlots = []
-        chanNum = 0
-        for irow in range(3):
-            for icol in range(3):
-                if chanNum < 8:
-                    self.evtVwrPlots.append(self.evtVwrPlotsGLW.addPlot())
-                    plotTitle = f'V(t) Chan {chanNum}'
-                    self.evtVwrPlots[-1].setTitle(plotTitle)
-                else:
-                    # A(f) data for all channels
-                    self.evtVwrPlots.append(self.evtVwrPlotsGLW.addPlot())                    
-                chanNum += 1
-            self.evtVwrPlotsGLW.nextRow()
+        self._configureEventViewer()
         
         # Make handles for widgets in the UI
         #self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
@@ -362,45 +346,13 @@ class MainWindow(qtw.QMainWindow):
         self._setTabTooltips()
         
         # Connect slots/signals
-        self.btnScanCtrl.clicked.connect(self.startRunThread)
-        self.btnSaveAmpl.clicked.connect(self.saveAmplitudeData)
-        #self.btnQuit.clicked.connect(self.close)
-        self.configFileName.returnPressed.connect(self.configFileNameEnter)
-        self.ampDataFilename.returnPressed.connect(self.ampDataFilenameEnter)
-        self.pb_ampDataLoad.clicked.connect(self.ampDataFilenameEnter)
-        for reg in self.registers:
-            getattr(self, f'le_resfreq_val_{reg}').returnPressed.connect(self._resFreqUserInputText)
-        self.resFitPreDetrend.stateChanged.connect(self.resFitParameterUpdate)
-        self.resFitBkgPoly.returnPressed.connect(self.resFitParameterUpdate)
-        self.resFitWidth.returnPressed.connect(self.resFitParameterUpdate)
-        self.resFitProminence.returnPressed.connect(self.resFitParameterUpdate)
-        #
-        self.statusFramePeriod_val.returnPressed.connect(self.setStatusFramePeriod)
-
+        self._connectSignalsSlots()
         
-        # Resonance Tab
-        self.btnSubmitResonances.clicked.connect(self.submitResonances)
-
         # Tension Tab
-        self.tensionStageComboBox.addItem("Pre-production")
-        self.tensionStageComboBox.addItem("Production")
-        self.tensionStageComboBox.addItem("Commissioning")
-        self.btnLoadTensions.clicked.connect(self.loadTensions)
-        self.tensionData = {
-            'XA':[0]*960,
-            'XB':[0]*960,
-            'UA':[0]*960,
-            'UB':[0]*960,
-            'VA':[0]*960,
-            'VB':[0]*960,
-            'GA':[0]*960,
-            'GB':[0]*960,
-        }
+        self._configureTensions()
 
         # Configure/label plots
-        self.chanViewMain = 0  # which channel to show large for V(t) data
-        self.chanViewMainAmpl = 0  # which channel to show large for A(f) data
-        self.configurePlots()
+        self._configurePlots()
         
         # make dummy data to display
         self._makeDummyData()
@@ -416,97 +368,36 @@ class MainWindow(qtw.QMainWindow):
         # Establish keyboard shortcuts and associated signals/slots
         self._keyboardShortcuts()
 
-        # signals for callback actions
-        self.signals = WorkerSignals()
-
-        # Collect/parse DAQ-related configuration parameters
-        # FIXME --- need to read/parse .ini file...
-        self._loadDaqConfig()
-
-        # Set up connection to Microzed
-        self.uz = duz.DwaMicrozed(ip=self.daqConfig['DWA_IP'])
-        self.uz.setVerbose(self.daqConfig['verbose'])
-
-        # Set up STATUS frame cadence
-        self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
-        
-        ############ Resize and launch GUI in bottom right corner of screen
-        # tested on mac & linux (unclear about windows)
-        # https://stackoverflow.com/questions/39046059/pyqt-location-of-the-window
-        self.resize(1400,800)
-        screen = qtg.QDesktopWidget().screenGeometry()
-        wgeom = self.geometry()
-        x = screen.width() - wgeom.width()
-        y = screen.height() - wgeom.height()
-        self.move(x, y)
-        self.show()
-        ####################### END LAYOUT ###############
-        ##################################################
-
-
-        ###########################################
-        # Set up multithreading
-        self.threadPool = qtc.QThreadPool()
-        self.threadPool.setMaxThreadCount(32)
-        logging.info("Multithreading with maximum %d threads" %
-              self.threadPool.maxThreadCount())
-        print("Multithreading with maximum %d threads" %
-              self.threadPool.maxThreadCount())
+        self._configureGUI()
+        self._configureMultithreading()
 
         ###########################################
         # Create instance of data parser to handle incoming data
         self.dwaDataParser = ddp.DwaDataParser()
         # Create placeholder for a config file parser
         self.dwaConfigFile = None
-        
-        ###########################################
-        # Ensure there is a directory to save UDP data
-        self.udpDataDir = './udpData/'
-        try:
-            logging.info("Checking for UDP Data directory...")
-            os.makedirs(self.udpDataDir)
-            logging.info("  Directory did not exist... made {}".format(self.udpDataDir))
-        except FileExistsError:
-            # directory already exists
-            logging.warning("  Directory already exists: [{}]".format(self.udpDataDir))        
-        
-        ###########################################
-        # Ensure there is a directory to save amplitude data
-        self.ampDataDir = './ampData/'
-        try:
-            logging.info("Checking for Amplitude Data directory...")
-            os.makedirs(self.ampDataDir)
-            logging.info("  Directory did not exist... made {}".format(self.ampDataDir))
-        except FileExistsError:
-            # directory already exists
-            logging.warning("  Directory already exists: [{}]".format(self.ampDataDir))
 
-        ###########################################
-        # Configure the UDP connection
-        UDP_IP = ''     # '' is a symbolic name meaning all available interfaces
-        UDP_PORT = 6008 # port (set to match the hard-coded value on the FPGA)
-        self.udpServerAddressPort = (UDP_IP, UDP_PORT)
-        # See this for UDP buffer size limits
-        # https://stackoverflow.com/questions/16460261/linux-udp-max-size-of-receive-buffer
-        self.udpBufferSize = 1024*4 # max data to be received at once (bytes?)
-        self.udpEnc = 'utf-8'  # encoding
-        self.udpTimeoutSec = 20
+        self._configureOutputs()
 
-        # Set up UDP connection
-        logging.info("making socket")
-        self.sock = socket.socket(family=socket.AF_INET,  # internet
-                                  type=socket.SOCK_DGRAM) # UDP
-        self.sock.bind( self.udpServerAddressPort ) # this is required
-        #self.sock.settimeout(self.udpTimeoutSec)    # if no new data comes from server, quit
-        #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: this is not necessary
-        
         self.registerOfVal = {}
         for reg in ddp.Registers:
             self.registerOfVal[reg.value] = reg
-            
-        self.fnOfReg = {}  # file names for output (empty for now)
-        self._makeOutputFilenames()
 
+        self._configureAmps()
+
+        
+        # Info about current run
+        self.stimFreqMin = 0
+        self.stimFreqMax = 0
+        self.state = State.IDLE
+
+
+        # Socket for UDP connection to FPGA    
+        self.sock = None
+            
+    # end of __init__ for class MainWindow
+
+    def _configureAmps(self):
         self.ampData = {}  # hold amplitude vs. freq data for a scan
         self.resonantFreqs = {}
         for reg in self.registers:
@@ -514,11 +405,6 @@ class MainWindow(qtw.QMainWindow):
             self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
         self._initResonanceFitLines()
         
-        # Info about current run
-        self.stimFreqMin = 0
-        self.stimFreqMax = 0
-        self.state = State.IDLE
-
         # Set A(f) peak detection parameters
         self.resFitParams = {}
         self.resFitParams['preprocess'] = {'detrend':True}  # detrend: subtract a line from A(f) before processing?
@@ -537,12 +423,161 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers:
             chan = reg.value
             self.resFitParamsOut[chan] = {'peaks':[], 'properties':{}}
+
+    def _configureOutputs(self):
+
+        ###########################################
+        # Ensure there is a directory to save UDP data
+        self.udpDataDir = OUTPUT_DIR_UDP_DATA
+        try:
+            logging.info("Checking for UDP Data directory...")
+            os.makedirs(self.udpDataDir)
+            logging.info("  Directory did not exist... made {}".format(self.udpDataDir))
+        except FileExistsError:
+            # directory already exists
+            logging.warning("  Directory already exists: [{}]".format(self.udpDataDir))        
+        
+        ###########################################
+        # Ensure there is a directory to save amplitude data
+        self.ampDataDir = OUTPUT_DIR_AMP_DATA
+        try:
+            logging.info("Checking for Amplitude Data directory...")
+            os.makedirs(self.ampDataDir)
+            logging.info("  Directory did not exist... made {}".format(self.ampDataDir))
+        except FileExistsError:
+            # directory already exists
+            logging.warning("  Directory already exists: [{}]".format(self.ampDataDir))
+
+        self.fnOfReg = {}  # file names for output (empty for now)
+        self._makeOutputFilenames()
+        
+
+            
+    def _configureMultithreading(self):
+        # signals for callback actions
+        self.signals = WorkerSignals()
+      
+        ###########################################
+        # Set up multithreading
+        self.threadPool = qtc.QThreadPool()
+        self.threadPool.setMaxThreadCount(32)
+        logging.info("Multithreading with maximum %d threads" %
+              self.threadPool.maxThreadCount())
+        print("Multithreading with maximum %d threads" %
+              self.threadPool.maxThreadCount())
+
+    def _configureGUI(self):
+        ############ Resize and launch GUI in bottom right corner of screen
+        # tested on mac & linux (unclear about windows)
+        # https://stackoverflow.com/questions/39046059/pyqt-location-of-the-window
+        self.resize(1400,800)
+        screen = qtg.QDesktopWidget().screenGeometry()
+        wgeom = self.geometry()
+        x = screen.width() - wgeom.width()
+        y = screen.height() - wgeom.height()
+        self.move(x, y)
+        self.show()
+
+    def _configureTensions(self):
+        self.tensionStageComboBox.addItem("Pre-production")
+        self.tensionStageComboBox.addItem("Production")
+        self.tensionStageComboBox.addItem("Commissioning")
+        self.tensionData = {
+            'XA':[0]*960,
+            'XB':[0]*960,
+            'UA':[0]*960,
+            'UB':[0]*960,
+            'VA':[0]*960,
+            'VB':[0]*960,
+            'GA':[0]*960,
+            'GB':[0]*960,
+        }
+        
+    def _connectSignalsSlots(self):
+        self.btnDwaConnect.clicked.connect(self.dwaConnect)
+        self.btnScanCtrl.clicked.connect(self.startRunThread)
+        #self.btnSaveAmpl.clicked.connect(self.saveAmplitudeData)
+        #self.btnQuit.clicked.connect(self.close)
+        self.configFileName.returnPressed.connect(self.configFileNameEnter)
+        self.ampDataFilename.returnPressed.connect(self.ampDataFilenameEnter)
+        self.pb_ampDataLoad.clicked.connect(self.ampDataFilenameEnter)
+        for reg in self.registers:
+            getattr(self, f'le_resfreq_val_{reg}').returnPressed.connect(self._resFreqUserInputText)
+        self.resFitPreDetrend.stateChanged.connect(self.resFitParameterUpdate)
+        self.resFitBkgPoly.returnPressed.connect(self.resFitParameterUpdate)
+        self.resFitWidth.returnPressed.connect(self.resFitParameterUpdate)
+        self.resFitProminence.returnPressed.connect(self.resFitParameterUpdate)
+        #
+        #self.statusFramePeriod_val.returnPressed.connect(self.setStatusFramePeriod)
+        # Resonance Tab
+        self.btnSubmitResonances.clicked.connect(self.submitResonances)
+        # Tensions tab
+        self.btnLoadTensions.clicked.connect(self.loadTensions)
+
+        
+    def _configureEventViewer(self):
+        self.evtVwr_runName_val.setText(EVT_VWR_TIMESTAMP)
+        self.evtVwr_runName_val.returnPressed.connect(self.loadEventData)
+        self.evtVwrPlotsGLW.setBackground('w')
+        self.evtVwrPlots = []
+        chanNum = 0
+        for irow in range(3):
+            for icol in range(3):
+                if chanNum < 8:
+                    self.evtVwrPlots.append(self.evtVwrPlotsGLW.addPlot())
+                    plotTitle = f'V(t) Chan {chanNum}'
+                    self.evtVwrPlots[-1].setTitle(plotTitle)
+                else:
+                    # A(f) data for all channels
+                    self.evtVwrPlots.append(self.evtVwrPlotsGLW.addPlot())                    
+                chanNum += 1
+            self.evtVwrPlotsGLW.nextRow()
+
+    @pyqtSlot()
+    def dwaConnect(self):
+        # Collect/parse DAQ-related configuration parameters
+        # FIXME --- need to read/parse .ini file...
+        self._loadDaqConfig()
+
+        # Set up connection to Microzed
+        self.uz = duz.DwaMicrozed(ip=self.daqConfig['DWA_IP'])
+        self.uz.setVerbose(self.daqConfig['verbose'])
+
+        # Set up STATUS frame cadence
+        self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
+
+        ###########################################
+        # Configure the UDP connection
+        UDP_IP = ''     # '' is a symbolic name meaning all available interfaces
+        UDP_PORT = 6008 # port (set to match the hard-coded value on the FPGA)
+        self.udpServerAddressPort = (UDP_IP, UDP_PORT)
+        # See this for UDP buffer size limits
+        # https://stackoverflow.com/questions/16460261/linux-udp-max-size-of-receive-buffer
+        self.udpBufferSize = 1024*4 # max data to be received at once (bytes?)
+        self.udpEnc = 'utf-8'  # encoding
+        self.udpTimeoutSec = 20
+
+        # Set up UDP connection
+        if self.sock is not None:
+            print("closing socket")
+            self.sock.close()
+            self.sock = None
+            
+        logging.info("making socket")
+        self.sock = socket.socket(family=socket.AF_INET,  # internet
+                                  type=socket.SOCK_DGRAM) # UDP
+        self.sock.bind( self.udpServerAddressPort ) # this is required
+        #self.sock.settimeout(self.udpTimeoutSec)    # if no new data comes from server, quit
+        #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: this is not necessary
         
         # Start listening for UDP data in a Worker thread
         self.udpListen()
-        
-    # end of __init__ for class MainWindow
 
+        self.btnDwaConnect.setText("Re-connect")
+        self.btnScanCtrl.setStyleSheet("background-color : green")  # button is green when scan is inactive, red when active
+        self.btnScanCtrl.setEnabled(True)
+        
+        
     def _initResonanceFitLines(self):
         self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
                             'proc':{},  # raw and processed A(f) plots
@@ -597,7 +632,9 @@ class MainWindow(qtw.QMainWindow):
         self.logger.info(f'Log created {self.logFilename}')
 
         
-    def configurePlots(self):
+    def _configurePlots(self):
+        self.chanViewMain = 0  # which channel to show large for V(t) data
+        self.chanViewMainAmpl = 0  # which channel to show large for A(f) data
         # FIXME: clean this up...
         getattr(self, f'pw_chan_main').setBackground('w')
         getattr(self, f'pw_chan_main').setTitle(self.chanViewMain)
@@ -887,19 +924,19 @@ class MainWindow(qtw.QMainWindow):
         self.scEvtVwrFirst.activated.connect(partial(self.evtVwrChange, -100000000))
 
         
-    @pyqtSlot()
-    def setStatusFramePeriod(self):
-        # Set up STATUS frame cadence
-        try:
-            statusFramePeriod_sec = float(self.statusFramePeriod_val.text())
-            print(f'statusFramePeriod_sec = {statusFramePeriod_sec}')
-        except:
-            print("invalid value for status frame period (must be float)")
-            return
-
-        self.daqConfig['statusPeriodSec'] = statusFramePeriod_sec
-        self.daqConfig['statusPeriod'] = f"{int(float(self.daqConfig['statusPeriodSec']) / 2.56e-6):08X}"
-        self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
+    #@pyqtSlot()
+    #def setStatusFramePeriod(self):
+    #    # Set up STATUS frame cadence
+    #    try:
+    #        statusFramePeriod_sec = float(self.statusFramePeriod_val.text())
+    #        print(f'statusFramePeriod_sec = {statusFramePeriod_sec}')
+    #    except:
+    #        print("invalid value for status frame period (must be float)")
+    #        return
+    #
+    #    self.daqConfig['statusPeriodSec'] = statusFramePeriod_sec
+    #    self.daqConfig['statusPeriod'] = f"{int(float(self.daqConfig['statusPeriodSec']) / 2.56e-6):08X}"
+    #    self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
         
     @pyqtSlot()
     def evtVwrChange(self, step=None):
@@ -1549,7 +1586,7 @@ class MainWindow(qtw.QMainWindow):
         #self.daqConfig['statusPeriod'] = '00000000'  # string or Hex????
         #self.daqConfig['verbose'] = 1
         # Populate fields in the GUI
-        self.statusFramePeriod_val.setText(f"{self.daqConfig['statusPeriodSec']}")
+        #self.statusFramePeriod_val.setText(f"{self.daqConfig['statusPeriodSec']}")
 
     def _makeWordList(self, udpDataStr):
         '''
@@ -1811,7 +1848,7 @@ class MainWindow(qtw.QMainWindow):
             self.outputText.appendPlainText(str(udpDict[ddp.Frame.STATUS]))
             print(f"\n\n\n FOUND STATUS FRAME {datetime.datetime.now()}")
             print(udpDict[ddp.Frame.STATUS])
-            self.controllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerState']}")
+            self.dwaControllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerStateStr']}")
             self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")
 
     def postScanAnalysis(self):
