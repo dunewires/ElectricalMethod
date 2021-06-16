@@ -119,7 +119,7 @@ architecture STRUCT of top_tension_analyzer is
   signal ctrl_acStim_enable       : std_logic             := '0';
   signal acStim_trigger           : std_logic             := '0';
   signal acStim_nHPeriod          : unsigned(23 downto 0) := (others => '0');
-  signal acStimX200_nHPeriod_fxp8 : unsigned(23 downto 0) := (others => '0'); -- floating point at 8
+  signal acStimX200_nHPeriod_fxp8 : unsigned(31 downto 0) := (others => '0'); -- floating point at 8
                                                                               --initial value non zero
   signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
   signal ctrlFreqSet : unsigned(23 downto 0) := (others => '1');
@@ -255,7 +255,7 @@ begin
   -- convert requested stim frequency to number of 100Mhz clocks
   -- move this to the processor!
   compute_n_periods : process (dwaClk10)
-    variable acStim_nHPeriod_all : unsigned(31 downto 0 );
+    variable acStim_nHPeriod_fxp8 : unsigned(39 downto 0 );
     variable adcCnv_nCnv_all     : unsigned(39 downto 0 );
 
   begin 
@@ -268,10 +268,10 @@ begin
         acStim_enable <= '1';
       end if;
 
-      acStim_nHPeriod_all := (x"2FAF0800"/ stimFreqReq);
-      -- only take the integer part and use a basis for remaining calculations
-      acStim_nHPeriod          <= acStim_nHPeriod_all(23 downto 0);
-      acStimX200_nHPeriod_fxp8 <= acStim_nHPeriod / x"C8";
+      acStim_nHPeriod_fxp8 := (x"2FAF080000"/ stimFreqReq);
+      -- only take the integer part and use as a basis for remaining calculations
+      acStim_nHPeriod          <= acStim_nHPeriod_fxp8(31 downto 8);
+      acStimX200_nHPeriod_fxp8 <= acStim_nHPeriod_fxp8(31 downto 0) / x"C8";
 
       --  let's start with a fixed conversion 
       -- temp shift left ~8 samples per cycle

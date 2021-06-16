@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Apr  8 16:50:15 2021
--- Last update : Wed Jun 16 16:54:12 2021
+-- Last update : Wed Jun 16 18:48:07 2021
 -- Platform    : DWA
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ use duneDwa.global_def.all;
 
 entity bandPassClkGen is
 	port (
-		bPClk_nHPeriod : in unsigned(23 downto 0) := (others => '0');
+		bPClk_nHPeriod : in unsigned(31 downto 0) := (others => '0');
 
 		bPClk : out std_logic;
 		--regToDwa       : in SLV_VECTOR_TYPE_32(31 downto 0);
