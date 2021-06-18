@@ -1,4 +1,10 @@
 # FIXME/TODO:
+# * Event Viewer: plot data accurately -- all freq data on a per-channel basis. Not just freqs that are present for all channels!
+# * add a "listen" mode -- no need to connect to a DWA to listen for udp packets (e.g. when replaying data)
+# * Update plot title V(t) to show frequency of scan
+# * Update plot title to list file root YYYYMMDDTHHMMSS
+# * Print GUI software version in title bar
+# * When starting a new run, clear all plots (prior to sending TCP/IP data?)
 # * "Connect" button that loads the DAQ config file
 #   and DAQ Config Filename in "Advanced"
 # * New directory for config files config/
@@ -80,10 +86,12 @@ from SietchConnect import SietchConnect
 DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 AMP_DATA_FILE   = "ampData/slowScan.json"
-EVT_VWR_TIMESTAMP = "20210526T222903"
+#EVT_VWR_TIMESTAMP = "20210526T222903"
+EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
 OUTPUT_DIR_UDP_DATA = './udpData/'
 OUTPUT_DIR_AMP_DATA = './ampData/'        
+CLOCK_PERIOD_SEC = 1e8
 
 # FIXME: these should go in DwaDataParser.py
 RUN_START = 1
@@ -335,6 +343,7 @@ class MainWindow(qtw.QMainWindow):
 
         # Event viewer tab stuff
         self._configureEventViewer()
+        self.evtData = None
         
         # Make handles for widgets in the UI
         #self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
@@ -384,17 +393,20 @@ class MainWindow(qtw.QMainWindow):
             self.registerOfVal[reg.value] = reg
 
         self._configureAmps()
-
         
         # Info about current run
         self.stimFreqMin = 0
         self.stimFreqMax = 0
         self.state = State.IDLE
 
-
         # Socket for UDP connection to FPGA    
         self.sock = None
-            
+
+        # Start listening for UDP data (different from TCP/IP connection to uzed)
+        self.verbose = 1
+        self.udpConnect()
+
+        
     # end of __init__ for class MainWindow
 
     def _configureAmps(self):
@@ -533,19 +545,7 @@ class MainWindow(qtw.QMainWindow):
                 chanNum += 1
             self.evtVwrPlotsGLW.nextRow()
 
-    @pyqtSlot()
-    def dwaConnect(self):
-        # Collect/parse DAQ-related configuration parameters
-        # FIXME --- need to read/parse .ini file...
-        self._loadDaqConfig()
-
-        # Set up connection to Microzed
-        self.uz = duz.DwaMicrozed(ip=self.daqConfig['DWA_IP'])
-        self.uz.setVerbose(self.daqConfig['verbose'])
-
-        # Set up STATUS frame cadence
-        self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
-
+    def udpConnect(self):
         ###########################################
         # Configure the UDP connection
         UDP_IP = ''     # '' is a symbolic name meaning all available interfaces
@@ -572,6 +572,19 @@ class MainWindow(qtw.QMainWindow):
         
         # Start listening for UDP data in a Worker thread
         self.udpListen()
+
+    @pyqtSlot()
+    def dwaConnect(self):
+        # Collect/parse DAQ-related configuration parameters
+        # FIXME --- need to read/parse .ini file...
+        self._loadDaqConfig()
+
+        # Set up connection to Microzed
+        self.uz = duz.DwaMicrozed(ip=self.daqConfig['DWA_IP'])
+        self.uz.setVerbose(self.daqConfig['verbose'])
+        self.verbose = int(self.daqConfig['verbose'])
+        # Set up STATUS frame cadence
+        self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
 
         self.btnDwaConnect.setText("Re-connect")
         self.btnScanCtrl.setStyleSheet("background-color : green")  # button is green when scan is inactive, red when active
@@ -609,7 +622,8 @@ class MainWindow(qtw.QMainWindow):
             print("  Directory already exists: [{}]".format(self.logDir))
         # Initiate the logging system
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
+        #self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.CRITICAL)
         
         self.logFilename = os.path.join(self.logDir,    # e.g. ./logs/20200329T120531.log
                                         datetime.datetime.now().strftime("%Y%m%dT%H%M%S.log") )
@@ -619,15 +633,17 @@ class MainWindow(qtw.QMainWindow):
 
         # log output to file (doesn't work in other threads, only in main...)
         fh = logging.FileHandler(self.logFilename)
-        fh.setLevel(logging.INFO)
+        #fh.setLevel(logging.INFO)
+        fh.setLevel(logging.CRITICAL)
         fh.setFormatter(loggingFormatter)
         self.logger.addHandler(fh)
         
         # log output to terminal
         ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
+        #ch.setLevel(logging.DEBUG)
+        ch.setLevel(logging.CRITICAL)
         ch.setFormatter(loggingFormatter)
-        self.logger.addHandler(ch)
+        #self.logger.addHandler(ch)
 
         self.logger.info(f'Log created {self.logFilename}')
 
@@ -815,7 +831,7 @@ class MainWindow(qtw.QMainWindow):
         self.evtVwrPlots[8].setLabel("bottom", "Frequency [Hz]")
         # In the 9th plot, put all A(f) data
         for chan in range(8):
-            self.curves['evtVwr']['A(f)'][chan] = self.evtVwrPlots[-1].plot([0], [0], pen=amplAllPlotPens[chan])
+            self.curves['evtVwr']['A(f)'][chan] = self.evtVwrPlots[-1].plot([0], [0], pen=amplAllPlotPens[chan], symbol='o', symbolSize=2, symbolBrush=amplAllPlotPens[chan].color(), symbolPen=amplAllPlotPens[chan].color())
         # Add a vertical line showing the current frequency
         f0Pen = pg.mkPen(color='#000000', width=2, style=qtc.Qt.DashLine)
         self.curves['evtVwr']['A(f)']['marker'] = self.evtVwrPlots[-1].addLine(x=0, movable=True, pen=f0Pen)
@@ -940,40 +956,45 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot()
     def evtVwrChange(self, step=None):
-        #print(f"step by {step}")
-        try: 
-            nfreq = len(self.evtData['freq'])
-        except:
+        print('\n\n\n')
+        print(f"step by {step}")
+
+        if self.evtData is None:
             print("No EVENT VIEWER data yet available")
             return
-
+        
+        nfreq = len(self.evtData['freqUnion'])
         idx = self.evtData['freqIdx'] + step
         if idx < 0:
             idx = 0
         if idx >= nfreq:
             idx = nfreq-1
         self.evtData['freqIdx'] = idx
-        self.evtData['freqCurrent'] = self.evtData['freq'][self.evtData['freqIdx']] 
+        self.evtData['freqCurrent'] = self.evtData['freqUnion'][self.evtData['freqIdx']] 
+        print('\n\n\n')
         self.evtVwrUpdatePlots()
         
     def evtVwrUpdatePlots(self, plotAmpl=False):
         #print("updating plots...")
+        ifrq = self.evtData['freqIdx']
         for ichan in range(8):
-            plotTitle = (f"V(t) Chan {ichan} Freq: {self.evtData['freqCurrent']:.3f} Hz  Ampl: {self.evtData['A(f)'][ichan][self.evtData['freqIdx']]:.2f}")
+            plotTitle = (f"V(t) Chan {ichan} Freq: {self.evtData['freqCurrent']:.3f} Hz  Ampl: {self.evtData['A(f)'][ichan][ifrq]:.2f}")
             self.evtVwrPlots[ichan].setTitle(plotTitle)
-            #self.curves['evtVwr']['A(f)'][ichan].setData(self.evtData['freq'], self.evtData['A(f)'][ichan])
-            self.curves['evtVwr']['V(t)'][ichan].setData(self.evtData['V(t)_time'][ichan][self.evtData['freqIdx']],
-                                                         self.evtData['V(t)'][ichan][self.evtData['freqIdx']])
-            self.curvesFit['evtVwr']['V(t)'][ichan].setData(self.evtData['V(t)_fit_time'][ichan][self.evtData['freqIdx']],
-                                                            self.evtData['V(t)_fit'][ichan][self.evtData['freqIdx']])
-            # update the amplitude plots in the 9th window
-            # Kluge -- no need to redraw this... just redraw
-            self.curves['evtVwr']['A(f)']['marker'].setValue(self.evtData['freqCurrent'])
-            if plotAmpl:
-                print(f"chan {ichan}: ")
-                print(self.evtData['freq'])
-                print(self.evtData['A(f)'][ichan])
-                self.curves['evtVwr']['A(f)'][ichan].setData(self.evtData['freq'], self.evtData['A(f)'][ichan])
+            if self.evtData['V(t)'][ichan][ifrq] is not None:
+                self.curves['evtVwr']['V(t)'][ichan].setData(self.evtData['V(t)_time'][ichan][ifrq],
+                                                             self.evtData['V(t)'][ichan][ifrq])
+                self.curvesFit['evtVwr']['V(t)'][ichan].setData(self.evtData['V(t)_fit_time'][ichan][ifrq],
+                                                                self.evtData['V(t)_fit'][ichan][ifrq])
+            else:
+                self.curves['evtVwr']['V(t)'][ichan].setData([0],[0])
+                self.curvesFit['evtVwr']['V(t)'][ichan].setData([0],[0])
+            
+        # update the amplitude plots in the 9th window
+        self.curves['evtVwr']['A(f)']['marker'].setValue(self.evtData['freqUnion'][ifrq])
+        # Kluge -- no need to redraw this... just redraw
+        if plotAmpl:
+            for ichan in range(8):
+                self.curves['evtVwr']['A(f)'][ichan].setData(self.evtData['freqUnion'], self.evtData['A(f)'][ichan])
 
                 
     def udpListen(self):
@@ -1031,30 +1052,30 @@ class MainWindow(qtw.QMainWindow):
             with open(self.configFile) as fh:
                 pass
         except:
-            logger.error("Could not open config file -- cannot proceed")
+            self.logger.error("Could not open config file -- cannot proceed")
 
         try:
-            logger.info('======= dwaReset() ===========')
+            self.logger.info('======= dwaReset() ===========')
             self.uz.reset()
         except:
-            logger.error("DWA reset failed")
+            self.logger.error("DWA reset failed")
             
         try:
-            logger.info('======= dwaConfig() ===========')
+            self.logger.info('======= dwaConfig() ===========')
             self.uz.config(self.dwaConfigFile.config['FPGA'])
         except:
-            logger.error("DWA run configuration failed")
+            self.logger.error("DWA run configuration failed")
             
         try:
-            logger.info('======= dwaStart() ===========')
+            self.logger.info('======= dwaStart() ===========')
             self.uz.start()
-            logger.info('======= DONE WITH dwaStart() ===========')
+            self.logger.info('======= DONE WITH dwaStart() ===========')
             
             #logger.info('\n\n======= dwaStat() ===========')
             #self.uz.stat()
 
         except:
-            logger.error("DWA run start failed")
+            self.logger.error("DWA run start failed")
             
 
     #@pyqtSlot()
@@ -1157,23 +1178,25 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def _evtVwrF0LineMoved(self):
-        #print("evtVwr f0 Line moved")
+        print("\n\n\nevtVwr f0 Line moved")
         fDragged = self.curves['evtVwr']['A(f)']['marker'].value()
         # Get the current frequency
         # get index into freq that is closest to fDragged
-        try:
-            diffs = np.abs(np.array(self.evtData['freq'])-fDragged)
-            idx = np.where(diffs == np.min(diffs))[0][0]
-            #print(idx)
-        except:
+
+        if self.evtData is None:
             print("Event Data not loaded yet")
             self.curves['evtVwr']['A(f)']['marker'].setValue(0)
             return
+
+        # Find closest frequency
+        diffs = np.abs(np.array(self.evtData['freqUnion'])-fDragged)
+        dfMin = np.min(diffs)
+        idx = np.where(diffs == dfMin)[0][0]            
         # Update values
-        f0 = self.evtData['freq'][idx]
+        f0 = self.evtData['freqUnion'][idx]
         self.evtData['freqIdx'] = idx
         self.evtData['freqCurrent'] = f0
-        # Update plots
+        ## Update plots
         self.evtVwrUpdatePlots(plotAmpl=False)
         
     @pyqtSlot()
@@ -1433,64 +1456,116 @@ class MainWindow(qtw.QMainWindow):
                                   for ii in range(len(udpDelimIdxs)-1) ]
                 udpData[chan].append(lines[udpDelimIdxs[-1]:])
 
-        self.evtData = {'freq':[], 'V(t)':{}, 'V(t)_time':{}, 'A(f)':{}, 'V(t)_fit':{}, 'V(t)_fit_time':{},
-                        'freqCurrent':None, 'freqIdx':None}
-        for ii in range(8):
-            self.evtData['V(t)'][ii] = []   # list of lists for each channel
-            self.evtData['V(t)_time'][ii] = []   # list of lists for each channel
-            self.evtData['A(f)'][ii] = []   # list for each channel
-            self.evtData['V(t)_fit'][ii] = []   # list of lists for each channel
-            self.evtData['V(t)_fit_time'][ii] = []   # list of lists for each channel
+        # In principle, all channels should have data at all frequencies. But in practice
+        # some data could be lost. So need to have a list of frequencies for each channel
+        # and keep track of current frequency for each channel separately
+        self.evtData = { 'freq':{}, 'periodInt':{},
+                         'V(t)':{}, 'V(t)_time':{}, 'A(f)':{}, 'V(t)_fit':{}, 'V(t)_fit_time':{},
+                         'freqCurrent':0, 'freqIdx':0,
+                        }
+        tmpData = { 'freq':{},
+                    'V(t)':{},
+                    'stimPeriod_int':{},
+                    'dt':{}
+                   }
+        
+        for ii in range(nChan):
+            tmpData['dt'][ii] = []              # list for each channel
+            tmpData['freq'][ii] = []            # list for each channel
+            tmpData['V(t)'][ii] = []            # list of lists for each channel
+            tmpData['stimPeriod_int'][ii] = []  # list for each channel
+            #
+            # Y-axis data
+            self.evtData['V(t)'][ii] = []          # list of lists for each channel
+            self.evtData['V(t)_fit'][ii] = []      # list of lists for each channel
+            self.evtData['A(f)'][ii] = []          # list for each channel
+            #
+            # X-axis data
+            self.evtData['freq'] = []              # single list (valid for all channels)
+            self.evtData['V(t)_time'][ii] = []     # list for each frequency
+            self.evtData['V(t)_fit_time'][ii] = [] # list for each frequency
 
+        # First pass through the data -- gather V(t) and frequency information
+        udpCounterList = []
         self.evtDataParser = ddp.DwaDataParser()
-        for ichan in range(8):
+        for ichan in range(nChan):
             nfreqs = len(udpData[ichan])
             for ifreq in range(nfreqs):
                 self.evtDataParser.parse(udpData[ichan][ifreq])
-                dt = self.evtDataParser.dwaPayload[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
-
-                # extract the V(t) data for each channel
-                self.evtData['V(t)'][ichan].append(self.evtDataParser.dwaPayload[ddp.Frame.ADC_DATA]['adcSamples'])
-                self.evtData['V(t)_time'][ichan].append( np.arange(len(self.evtData['V(t)'][ichan][-1])) * dt )
+                udpCounterList.append(self.evtDataParser.dwaPayload[ddp.Frame.UDP]['UDP_Counter'])
                 
-                # Fit the V(t) data
-                tt = np.arange(len(self.evtDataParser.dwaPayload[ddp.Frame.ADC_DATA]['adcSamples']))*dt
-                (B, C, D, freq_Hz) = dwa.processWaveform(self.evtDataParser.dwaPayload)
-                self.evtData['A(f)'][ichan].append(np.sqrt(B**2+C**2))
-                #                                         
-                nptsInFit=500
-                tfit = np.linspace(tt[0], tt[-1], nptsInFit)
-                yfit = B*np.sin(2*np.pi*freq_Hz*tfit) + C*np.cos(2*np.pi*freq_Hz*tfit) + D
-                #
+                # extract the V(t) and stim period data for each channel
+                tmpData['V(t)'][ichan].append(self.evtDataParser.dwaPayload[ddp.Frame.ADC_DATA]['adcSamples'])
+                tmpData['stimPeriod_int'][ichan].append(self.evtDataParser.dwaPayload[ddp.Frame.FREQ]['stimPeriodActive'])
+                tmpData['freq'][ichan].append(self.evtDataParser.dwaPayload[ddp.Frame.FREQ]['stimFreqActive_Hz'])
+                tmpData['dt'][ichan].append(self.evtDataParser.dwaPayload[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8)
+                
+        # Come up with a master list of frequencies (if data is dropped, then not all channels will have all frequencies)
+        self.evtData['stimPeriodUnion'] = np.array(list(set().union(tmpData['stimPeriod_int'][0],
+                                                                    tmpData['stimPeriod_int'][1],
+                                                                    tmpData['stimPeriod_int'][2],
+                                                                    tmpData['stimPeriod_int'][3],
+                                                                    tmpData['stimPeriod_int'][4],
+                                                                    tmpData['stimPeriod_int'][5],
+                                                                    tmpData['stimPeriod_int'][6],
+                                                                    tmpData['stimPeriod_int'][7]
+                                                                    )
+                                                        )
+                                                   )
+        self.evtData['stimPeriodUnion'].sort()
+        self.evtData['stimPeriodUnion'] = self.evtData['stimPeriodUnion'][::-1]  # reverse the sort
+        #print(self.evtData['periodUnion'])
+        self.evtData['freqUnion'] = CLOCK_PERIOD_SEC/self.evtData['stimPeriodUnion']
+        #print(self.evtData['freqUnion'])
+        
+        # Second pass through the data -- align individual channel data with the master frequency list
+        # indexed in a consistent way across channel (all channels share a single frequency array)
+        # Missing data is represented by None instead of a list of data
+        nptsInFit=500
+        for ifrq, period in enumerate(self.evtData['stimPeriodUnion']):
+            for ichan in range(nChan):
+                if period in tmpData['stimPeriod_int'][ichan]:
+                    idx = tmpData['stimPeriod_int'][ichan].index(period)
+                    dt = tmpData['dt'][ichan][idx]
+                    vt = tmpData['V(t)'][ichan][idx]
+                    tt = np.arange(len(vt))*dt
+                    # Fit the V(t) data
+                    (B, C, D, freq_Hz) = dwa.fitSinusoidToTimeseries(vt, dt, tmpData['freq'][ichan][idx])
+                    amp = np.sqrt(B**2+C**2)
+                    tfit = np.linspace(tt[0], tt[-1], nptsInFit)
+                    yfit = B*np.sin(2*np.pi*freq_Hz*tfit) + C*np.cos(2*np.pi*freq_Hz*tfit) + D
+                else:  # data from this frequency is absent for this channel
+                    vt = None
+                    tt = None
+                    amp = np.nan
+                    tfit = None
+                    yfit = None
+                    
+                self.evtData['V(t)'][ichan].append(vt)
+                self.evtData['V(t)_time'][ichan].append(tt)
+                self.evtData['A(f)'][ichan].append(amp)
                 self.evtData['V(t)_fit_time'][ichan].append(tfit)
                 self.evtData['V(t)_fit'][ichan].append(yfit)
 
-                # extract the frequencies (same for all channels)
-                if ichan == 0:
-                    self.evtData['freq'].append(freq_Hz)
-
-
-        # KLUGE: FIXME: somehow some channels have more V(t) data than others
-        nmin = 1e10
-        for ichan in range(8):
-            nf = len(self.evtData['A(f)'][ichan])
-            if nf < nmin:
-                nmin = nf
-        self.evtData['freq'] = self.evtData['freq'][0:nmin-1]
-        for ichan in range(8):
-            self.evtData['A(f)'][ichan] = self.evtData['A(f)'][ichan][:nmin-1]
-        # END KLUGE
-            
         # Update the A(f) and V(t) plots
-        self.evtData['freqIdx'] = 0
-        self.evtData['freqCurrent'] = self.evtData['freq'][self.evtData['freqIdx']] 
+        for ichan in range(nChan):
+            self.evtData['freqIdx'] = 0
+            self.evtData['freqCurrent'] = self.evtData['freqUnion'][self.evtData['freqIdx']] 
         self.evtVwrUpdatePlots(plotAmpl=True)
             
-        print("Payload -------------------")
+        #print("Payload -------------------")
         #print(self.evtDataParser.dwaPayload)
         #print(self.evtData['freq'])
         #print(self.evtData)
+        self._findMissingUdpCounters(udpCounterList)
 
+    def _findMissingUdpCounters(self, udpCtrs):
+        udpCtrs.sort()
+        missingVals = [x for x in range(0,udpCtrs[-1]+1) if x not in udpCtrs]
+        print(f"Missing UDP packets: {missingVals}")
+        print(f"(may also be missing a packet with value larger than {udpCtrs[-1]})")
+
+        
         
     def _getAllLines(self, fname):
         f = open(fname, "r")
@@ -1677,11 +1752,13 @@ class MainWindow(qtw.QMainWindow):
         while True:
             try:
                 data, addr = self.sock.recvfrom(self.udpBufferSize)
-                logger.info("")
-                logger.info("bing! data received")
+                if self.verbose > 0:
+                    logger.info("")
+                    logger.info("bing! data received")
                 #logger.info(data)                
                 udpDataStr = binascii.hexlify(data).decode(self.udpEnc).upper()
-                logger.info(udpDataStr)
+                if self.verbose > 0:
+                    logger.info(udpDataStr)
                 
                 # Break up string into a list of 8-character chunks
                 dataStrings = self._makeWordList(udpDataStr)
@@ -1693,17 +1770,20 @@ class MainWindow(qtw.QMainWindow):
                 # Currently it's a kluge to handle the case where DWA transmission
                 # contains the old-style (and now non-standard) header lines...
                 while not dataStrings[0].startswith("AAAA"):
-                    logger.info(f"popping udp word: {dataStrings[0]}")
+                    if self.verbose > 0:
+                        logger.info(f"popping udp word: {dataStrings[0]}")
                     dataStrings.pop(0)
 
-                print("post popping")
-                print(dataStrings)
+                if self.verbose > 0:
+                    print("post popping")
+                    print(dataStrings)
                     
                 # Parse UDP transmission
                 self.dwaDataParser.parse(dataStrings)
                 if 'FFFFFFFF' in dataStrings:
-                    logger.info('\n\n')
-                    logger.info(f'self.dwaDataParser.dwaPayload = {self.dwaDataParser.dwaPayload}')
+                    if self.verbose > 0:
+                        logger.info('\n\n')
+                        logger.info(f'self.dwaDataParser.dwaPayload = {self.dwaDataParser.dwaPayload}')
 
                 # FIXME: this should go into processUdpPayload() !!!
                 # If there is a run frame with no '77' key, or if this is a run start frame
@@ -1712,24 +1792,27 @@ class MainWindow(qtw.QMainWindow):
                     self.oldDataFormat = False
                     if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == None:
                         self.oldDataFormat = True
-                    print("GOT HERE")
                     if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == RUN_START or \
                        self.oldDataFormat:
                         print("New run detected... creating new filenames")
                         print("runStatus = ")
                         print(self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'])
                         print(f'self.oldDataFormat = {self.oldDataFormat}')
-                        logger.info("New run detected... creating new filenames")
+                        if self.verbose > 0:
+                            logger.info("New run detected... creating new filenames")
                         self._makeOutputFilenames()
                         self._clearAmplitudeData()
                         self._clearResonanceFits()
-                        logger.info(self.fnOfReg)
+                        if self.verbose > 0:
+                            logger.info(self.fnOfReg)
                 
                 # write data to file by register
                 reg = self.dwaDataParser.dwaPayload[ddp.Frame.UDP]['Register_ID_hexStr']
-                print(f"reg = {reg}")
-                print(f"self.fnOfReg: {self.fnOfReg}")
-                logger.info(f"self.fnOfReg: {self.fnOfReg}")
+                if self.verbose > 0:
+                    print(f"reg = {reg}")
+                    print(f"self.fnOfReg: {self.fnOfReg}")
+                    if self.verbose > 0:
+                        logger.info(f"self.fnOfReg: {self.fnOfReg}")
                 with open(self.fnOfReg[reg], 'a') as regFH:
                     for item in dataStrings:
                         regFH.write(f'{item}\n')
@@ -1738,7 +1821,8 @@ class MainWindow(qtw.QMainWindow):
                 newdata_callback.emit(self.dwaDataParser.dwaPayload)
                     
             except socket.timeout:
-                logger.info("  UDP Timeout")
+                if self.verbose > 0:
+                    logger.info("  UDP Timeout")
                 self.sock.close()
                 break
             else:
@@ -1872,7 +1956,8 @@ class MainWindow(qtw.QMainWindow):
             # subtract a line first?
             if self.resFitParams['preprocess']['detrend']:
                 # remove linear fit
-                print("detrending")
+                if self.verbose > 0:
+                    print("detrending")
                 dataToFit -= dwa.baseline(self.ampData[reg]['freq'], dataToFit, polyDeg=1)
                 # FIXME: REMOVE!!!!
                 #print(f"\n\n reg = {reg}")
@@ -1972,8 +2057,9 @@ class MainWindow(qtw.QMainWindow):
         
 def main():
     app = qtw.QApplication(sys.argv)
-    window = MainWindow()
-    app.aboutToQuit.connect(window.cleanUp)
+    win = MainWindow()
+    win.setWindowTitle("DWA: DUNE Wire Analyzer v. X.X.X")
+    app.aboutToQuit.connect(win.cleanUp)
     app.exec_()
     #sys.exit(app.exec_())  # diff btw this and prev. line???
 
