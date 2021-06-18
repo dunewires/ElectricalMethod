@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1313</width>
-    <height>769</height>
+    <height>1065</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,14 +20,59 @@
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QWidget" name="controls" native="true">
-         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0,10">
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,0,0,10">
           <item>
-           <widget class="QLabel" name="label_21">
+           <widget class="QPushButton" name="btnDwaConnect">
+            <property name="text">
+             <string>Connect</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_2">
+            <property name="lineWidth">
+             <number>2</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_5">
             <property name="text">
              <string>DWA Status</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignHCenter|Qt::AlignTop</set>
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QFormLayout" name="formLayout_13">
+            <item row="0" column="0">
+             <widget class="QLabel" name="dwaControllerState_label">
+              <property name="text">
+               <string>State</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="dwaControllerState_val">
+              <property name="text">
+               <string>N/A</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line">
+            <property name="lineWidth">
+             <number>2</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -52,7 +97,7 @@
             <item row="0" column="0" colspan="2">
              <widget class="QLabel" name="globalFreqHeading">
               <property name="text">
-               <string>Frequencies [Hz]</string>
+               <string>Scan freqs [Hz]</string>
               </property>
              </widget>
             </item>
@@ -149,16 +194,9 @@
                <item>
                 <layout class="QVBoxLayout" name="verticalLayout_13">
                  <item>
-                  <widget class="QPushButton" name="btnStart">
+                  <widget class="QPushButton" name="btnScanCtrl">
                    <property name="text">
-                    <string>Start</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="btnSaveAmpl">
-                   <property name="text">
-                    <string>Save</string>
+                    <string>Start Scan</string>
                    </property>
                   </widget>
                  </item>
@@ -215,7 +253,7 @@
                    <item row="3" column="0">
                     <widget class="QLabel" name="stimTime_label">
                      <property name="text">
-                      <string>Stim Time [?]</string>
+                      <string>Stim Time [s]</string>
                      </property>
                     </widget>
                    </item>
@@ -572,7 +610,7 @@
               <item>
                <widget class="QTabWidget" name="tabResonanceGraphs">
                 <property name="currentIndex">
-                 <number>0</number>
+                 <number>1</number>
                 </property>
                 <widget class="QWidget" name="tabResonanceRawData">
                  <attribute name="title">
@@ -711,46 +749,53 @@
                   </widget>
                  </item>
                  <item>
+                  <widget class="QCheckBox" name="resFitPreDetrend">
+                   <property name="text">
+                    <string>Linear detrend raw A(f)</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_12">
+                   <property name="text">
+                    <string>Peak-finding of integrated signal</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <layout class="QFormLayout" name="formLayout_5">
                    <property name="horizontalSpacing">
                     <number>6</number>
                    </property>
-                   <item row="2" column="0">
+                   <item row="1" column="0">
                     <widget class="QLabel" name="label_8">
                      <property name="text">
                       <string>Baseline poly</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="2" column="1">
+                   <item row="1" column="1">
                     <widget class="QLineEdit" name="resFitBkgPoly"/>
                    </item>
-                   <item row="3" column="0">
+                   <item row="2" column="0">
                     <widget class="QLabel" name="label_10">
                      <property name="text">
                       <string>Width</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="3" column="1">
+                   <item row="2" column="1">
                     <widget class="QLineEdit" name="resFitWidth"/>
                    </item>
-                   <item row="4" column="1">
-                    <widget class="QLineEdit" name="resFitProminence"/>
-                   </item>
-                   <item row="4" column="0">
+                   <item row="3" column="0">
                     <widget class="QLabel" name="label_11">
                      <property name="text">
                       <string>Prominence</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="1" column="1">
-                    <widget class="QCheckBox" name="resFitPreDetrend">
-                     <property name="text">
-                      <string>Detrend A(f)</string>
-                     </property>
-                    </widget>
+                   <item row="3" column="1">
+                    <widget class="QLineEdit" name="resFitProminence"/>
                    </item>
                   </layout>
                  </item>
@@ -907,10 +952,75 @@
            </item>
           </layout>
          </widget>
+         <widget class="QWidget" name="tabEventViewer">
+          <attribute name="title">
+           <string>Event Viewer</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_16">
+           <item>
+            <layout class="QFormLayout" name="formLayout_7">
+             <item row="0" column="0">
+              <widget class="QLabel" name="evtVwr_runName_label">
+               <property name="text">
+                <string>Run name:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="evtVwr_runName_val">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QTabWidget" name="evtVwrTabs">
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="evtVwrTab1">
+              <attribute name="title">
+               <string>Timeseries</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_15">
+               <item>
+                <widget class="GraphicsLayoutWidget" name="evtVwrPlotsGLW"/>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_3">
+              <attribute name="title">
+               <string>Tab</string>
+              </attribute>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
      </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_9">
+      <item>
+       <widget class="QLabel" name="statusErrors_label">
+        <property name="text">
+         <string>errorBits</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="statusErrors_val">
+        <property name="text">
+         <string>N/A</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -921,7 +1031,7 @@
      <x>0</x>
      <y>0</y>
      <width>1313</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
