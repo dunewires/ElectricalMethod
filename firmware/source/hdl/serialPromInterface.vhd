@@ -110,8 +110,8 @@ begin
 				if not snDone then -- sn read
 					               --toDaqReg.serNum <= unsigned(shiftRegIn(23 downto 0));
 					               -- fake old MAC address
-					--toDaqReg.serNum <= x"97da03"; --use for default
-					toDaqReg.serNum <= x"97da00"; --use for NW
+					toDaqReg.serNum <= x"97da03"; --use for default
+					--toDaqReg.serNum <= x"97da00"; --use for NW
 					deviceAddr      <= "1010000"; --after we are here once switch device address to memory;
 					snDone          <= '1';       -- do it once
 				else

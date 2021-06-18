@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Jun  8 17:38:48 2021
+-- Last update : Fri Jun 18 15:05:03 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -35,6 +35,7 @@ entity headerGenerator is
         fromDaqReg : in  fromDaqRegType;
         toDaqReg   : out toDaqRegType;
 
+        pButton : in  std_logic_vector(3 downto 0);
 
         ---------------------------
         -- this will come from PS
@@ -106,7 +107,7 @@ architecture rtl of headerGenerator is
 
     ----------------------------
     ---- Setup for Header E
-    constant nHeadE      : integer                                         := 4; -- # of header words (incl. 2 delimiters)
+    constant nHeadE      : integer                                         := 5; -- # of header words (incl. 2 delimiters)
     constant nHeadElog   : integer                                         := integer(log2(real(nHeadE +1)));
     signal headEDataList : slv_vector_type(nHeadE-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
@@ -230,6 +231,7 @@ begin
             --x"61" & x"0000" & x"55",
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
             x"63" & std_logic_vector(fromDaqReg.errors),
+            x"64" & x"000000" & pButton,
             x"EEEEEEEE"
     );
 

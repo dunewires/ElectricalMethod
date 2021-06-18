@@ -508,6 +508,8 @@ begin
       fromDaqReg => fromDaqReg,
       toDaqReg   => toDaqReg_headerGenerator, -- Keep this one for sim
 
+      pButton  => pButton,
+
       runOdometer => (others => '0'),
 
       --udpDataRen         => false, --fromDaq
