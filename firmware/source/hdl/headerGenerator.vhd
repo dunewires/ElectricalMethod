@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Fri Jun 18 15:05:03 2021
+-- Last update : Fri Jun 18 15:16:52 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -231,7 +231,7 @@ begin
             --x"61" & x"0000" & x"55",
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
             x"63" & std_logic_vector(fromDaqReg.errors),
-            x"64" & x"000000" & pButton,
+            x"64" & x"00000" & pButton,
             x"EEEEEEEE"
     );
 
