@@ -1811,8 +1811,7 @@ class MainWindow(qtw.QMainWindow):
                 if self.verbose > 0:
                     print(f"reg = {reg}")
                     print(f"self.fnOfReg: {self.fnOfReg}")
-                    if self.verbose > 0:
-                        logger.info(f"self.fnOfReg: {self.fnOfReg}")
+                    logger.info(f"self.fnOfReg: {self.fnOfReg}")
                 with open(self.fnOfReg[reg], 'a') as regFH:
                     for item in dataStrings:
                         regFH.write(f'{item}\n')
@@ -1934,6 +1933,7 @@ class MainWindow(qtw.QMainWindow):
             print(udpDict[ddp.Frame.STATUS])
             self.dwaControllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerStateStr']}")
             self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")
+            self.buttonStatus_val.setText(f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
 
     def postScanAnalysis(self):
         # get A(f) data for each channel
