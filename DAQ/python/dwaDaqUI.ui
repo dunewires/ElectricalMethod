@@ -1020,6 +1020,20 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QLabel" name="buttonStatus_label">
+        <property name="text">
+         <string>buttonStatus</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="buttonStatus_val">
+        <property name="text">
+         <string>N/A</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
