@@ -6,7 +6,7 @@ use duneDwa.global_def.all;
 
 entity dwa_registers_v1_0_S00_AXI is
 	generic (
-		dateCode : std_logic_vector(31 downto 0);
+		dateCode : std_logic_vector(47 downto 0);
 		hashCode : std_logic_vector(31 downto 0);
 		-- Users to add parameters here
 
@@ -16,7 +16,7 @@ entity dwa_registers_v1_0_S00_AXI is
 		-- Width of S_AXI data bus
 		C_S_AXI_DATA_WIDTH : integer := 32;
 		-- Width of S_AXI address bus
-		C_S_AXI_ADDR_WIDTH : integer := 7
+		C_S_AXI_ADDR_WIDTH : integer := 8
 	);
 	port (
 		-- Users to add ports here
@@ -87,7 +87,6 @@ entity dwa_registers_v1_0_S00_AXI is
 
 		toDaqReg   : in  toDaqRegType;
 		fromDaqReg : out fromDaqRegType
-
 	);
 end dwa_registers_v1_0_S00_AXI;
 
@@ -111,7 +110,7 @@ architecture arch_imp of dwa_registers_v1_0_S00_AXI is
 	-- ADDR_LSB = 2 for 32 bits (n downto 2)
 	-- ADDR_LSB = 3 for 64 bits (n downto 3)
 	constant ADDR_LSB          : integer := (C_S_AXI_DATA_WIDTH/32)+ 1;
-	constant OPT_MEM_ADDR_BITS : integer := 4;
+	constant OPT_MEM_ADDR_BITS : integer := 5;
 	------------------------------------------------
 	---- Signals for user logic register space example
 	--------------------------------------------------
@@ -148,6 +147,23 @@ architecture arch_imp of dwa_registers_v1_0_S00_AXI is
 	signal slv_reg29       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg30       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg31       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg32       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg33       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg34       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg35       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg36       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg37       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg38       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg39       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg40       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg41       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg42       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg43       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg44       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg49       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg50       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg53       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg54       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg_rden    : std_logic;
 	signal slv_reg_wren    : std_logic;
 	signal reg_data_out    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
@@ -251,11 +267,15 @@ begin
 		variable loc_addr : std_logic_vector(OPT_MEM_ADDR_BITS downto 0);
 	begin
 		if rising_edge(S_AXI_ACLK) then
+			--default
+			fromDaqReg.serNumMemWrite    <= '0';
+			fromDaqReg.serNumMemAddrStrb <= '0';
 			-- reg0 moved here so it is not sticky 
 			-- used for any pulsed signals e.g. reset & start
 			slv_reg0 <= (others => '0');
 			if S_AXI_ARESETN = '0' then
-				slv_reg1  <= (others => '0');
+				-- set default register values
+				slv_reg1  <= x"00000003"; --MNS enabled, auto enabled
 				slv_reg2  <= (others => '0');
 				slv_reg3  <= (others => '0');
 				slv_reg4  <= (others => '0');
@@ -279,18 +299,35 @@ begin
 				slv_reg22 <= (others => '0');
 				slv_reg23 <= (others => '0');
 				slv_reg24 <= (others => '0');
-				slv_reg25 <= (others => '0');
-				slv_reg26 <= (others => '0');
-				slv_reg27 <= (others => '0');
-				slv_reg28 <= (others => '0');
-				slv_reg29 <= (others => '0');
-				slv_reg30 <= (others => '0');
+				slv_reg25 <= x"00000370"; --		noiseFreqMin   
+				slv_reg26 <= x"00000410"; --		noiseFreqMax 
+				slv_reg27 <= x"00000010"; --		noiseFreqStep  1 Hz
+				slv_reg28 <= x"0000CB73"; --		noiseSampPer   32 samp / cycle @ 60 Hz
+				slv_reg29 <= x"00000100"; --		noiseNCnv       256 total samples
+				slv_reg30 <= x"00001000";       -- ~10ms?
 				slv_reg31 <= (others => '0');
+				slv_reg32 <= (others => '0');
+				slv_reg33 <= (others => '0');
+				slv_reg34 <= (others => '0');
+				slv_reg35 <= (others => '0');
+				slv_reg36 <= (others => '0');
+				slv_reg37 <= (others => '0');
+				slv_reg38 <= (others => '0');
+				slv_reg39 <= (others => '0');
+				slv_reg40 <= (others => '0');
+				slv_reg41 <= (others => '0');
+				slv_reg42 <= (others => '0');
+				slv_reg43 <= (others => '0');
+				slv_reg44 <= (others => '0');
+				slv_reg49 <= x"00000800";
+				slv_reg50 <= x"BADDBEEF";
+				slv_reg53 <= x"00000000"; -- 00000000 = power up off, 0005F5E1 = 1 sec
+				slv_reg54 <= x"00B2D05E"; -- 30 SEC
 			else
 				loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 				if (slv_reg_wren = '1') then
 					case loc_addr is
-						when b"00000" =>
+						when b"000000" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -298,7 +335,7 @@ begin
 									slv_reg0(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"00001" =>
+						when b"000001" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -306,7 +343,7 @@ begin
 									slv_reg1(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"00010" =>
+						when b"000010" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -314,7 +351,7 @@ begin
 									slv_reg2(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"00011" =>
+						when b"000011" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -322,7 +359,7 @@ begin
 									slv_reg3(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"00100" =>
+						when b"000100" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -330,7 +367,7 @@ begin
 									slv_reg4(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"00101" =>
+						when b"000101" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -338,7 +375,7 @@ begin
 									slv_reg5(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"00110" =>
+						when b"000110" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -346,7 +383,7 @@ begin
 									slv_reg6(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"00111" =>
+						when b"000111" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -354,7 +391,7 @@ begin
 									slv_reg7(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"01000" =>
+						when b"001000" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -362,7 +399,7 @@ begin
 									slv_reg8(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"01001" =>
+						when b"001001" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -370,7 +407,7 @@ begin
 									slv_reg9(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"01010" =>
+						when b"001010" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -378,7 +415,7 @@ begin
 									slv_reg10(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"01011" =>
+						when b"001011" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -386,7 +423,7 @@ begin
 									slv_reg11(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"01100" =>
+						when b"001100" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -394,7 +431,7 @@ begin
 									slv_reg12(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"01101" =>
+						when b"001101" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -402,7 +439,7 @@ begin
 									slv_reg13(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"01110" =>
+						when b"001110" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -410,7 +447,7 @@ begin
 									slv_reg14(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"01111" =>
+						when b"001111" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -418,7 +455,7 @@ begin
 									slv_reg15(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"10000" =>
+						when b"010000" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -426,7 +463,7 @@ begin
 									slv_reg16(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"10001" =>
+						when b"010001" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -434,7 +471,7 @@ begin
 									slv_reg17(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"10010" =>
+						when b"010010" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -442,7 +479,7 @@ begin
 									slv_reg18(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"10011" =>
+						when b"010011" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -450,7 +487,7 @@ begin
 									slv_reg19(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"10100" =>
+						when b"010100" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -458,7 +495,7 @@ begin
 									slv_reg20(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"10101" =>
+						when b"010101" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -466,7 +503,7 @@ begin
 									slv_reg21(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"10110" =>
+						when b"010110" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -474,7 +511,7 @@ begin
 									slv_reg22(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"10111" =>
+						when b"010111" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -482,7 +519,7 @@ begin
 									slv_reg23(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"11000" =>
+						when b"011000" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -490,7 +527,7 @@ begin
 									slv_reg24(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"11001" =>
+						when b"011001" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -498,7 +535,7 @@ begin
 									slv_reg25(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"11010" =>
+						when b"011010" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -506,7 +543,7 @@ begin
 									slv_reg26(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"11011" =>
+						when b"011011" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -514,7 +551,7 @@ begin
 									slv_reg27(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"11100" =>
+						when b"011100" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -522,7 +559,7 @@ begin
 									slv_reg28(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"11101" =>
+						when b"011101" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -530,7 +567,7 @@ begin
 									slv_reg29(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"11110" =>
+						when b"011110" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -538,7 +575,7 @@ begin
 									slv_reg30(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-						when b"11111" =>
+						when b"011111" =>
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -546,6 +583,151 @@ begin
 									slv_reg31(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
+						when b"100000" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg32(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+						when b"100001" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg33(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+						when b"100010" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg34(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+						when b"100011" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg35(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+						when b"100100" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg36(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+						when b"100101" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg37(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+						when b"100110" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg38(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+						when b"100111" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg39(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+						when b"101000" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg40(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+						when b"101001" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg41(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+						when b"101010" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg42(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+						when b"101011" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg43(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+
+						when b"101100" =>
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg44(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+
+						when b"110001" => --reg 49 is sn address register
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg49(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+							fromDaqReg.serNumMemAddrStrb <= '1'; -- signal dwa this register was updated
+
+						when b"110010" => -- reg 50 is sn data register
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg50(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+							fromDaqReg.serNumMemWrite <= '1'; -- signal dwa this register was updated
+
+						when b"110101" => -- reg 53 is statusPeriod
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg53(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+							fromDaqReg.serNumMemWrite <= '1'; -- signal dwa this register was updated
+
+						when b"110110" => -- reg 54 is pktGenWatchdogPeriod
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg54(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+							fromDaqReg.serNumMemWrite <= '1'; -- signal dwa this register was updated
 						when others =>
 							slv_reg0  <= slv_reg0;
 							slv_reg1  <= slv_reg1;
@@ -579,6 +761,23 @@ begin
 							slv_reg29 <= slv_reg29;
 							slv_reg30 <= slv_reg30;
 							slv_reg31 <= slv_reg31;
+							slv_reg32 <= slv_reg32;
+							slv_reg33 <= slv_reg33;
+							slv_reg34 <= slv_reg34;
+							slv_reg35 <= slv_reg35;
+							slv_reg36 <= slv_reg36;
+							slv_reg37 <= slv_reg37;
+							slv_reg38 <= slv_reg38;
+							slv_reg39 <= slv_reg39;
+							slv_reg40 <= slv_reg40;
+							slv_reg41 <= slv_reg41;
+							slv_reg42 <= slv_reg42;
+							slv_reg43 <= slv_reg43;
+							slv_reg44 <= slv_reg44;
+							slv_reg49 <= slv_reg49;
+							slv_reg50 <= slv_reg50;
+							slv_reg53 <= slv_reg53;
+							slv_reg54 <= slv_reg54;
 					end case;
 				end if;
 			end if;
@@ -670,75 +869,136 @@ begin
 		variable loc_addr : std_logic_vector(OPT_MEM_ADDR_BITS downto 0);
 	begin
 		-- Address decoding for reading registers
-		loc_addr              := axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
-		fromDaqReg.udpDataRen <= false;
-		udpDataStatStrb       <= '0';
-
+		loc_addr                 := axi_araddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
+		fromDaqReg.udpDataRen    <= false;
+		udpDataStatStrb          <= '0';
+		fromDaqReg.serNumMemRead <= '0';
 		--regFromDwa_strb                                 <= (others => '0');
 		--regFromDwa_strb(to_integer(unsigned(loc_addr))) <= axi_rvalid;
 
 		case loc_addr is
-			when b"00000" =>
+			when b"000000" =>
 				reg_data_out <= slv_reg0;
-			when b"00001" =>
+			when b"000001" =>
 				reg_data_out <= slv_reg1;
-			when b"00010" =>
+			when b"000010" =>
 				reg_data_out <= slv_reg2;
-			when b"00011" =>
+			when b"000011" =>
 				reg_data_out <= slv_reg3;
-			when b"00100" =>
+			when b"000100" =>
 				reg_data_out <= slv_reg4;
-			when b"00101" =>
+			when b"000101" =>
 				reg_data_out <= slv_reg5;
-			when b"00110" =>
+			when b"000110" =>
 				reg_data_out <= slv_reg6;
-			when b"00111" =>
+			when b"000111" =>
 				reg_data_out <= slv_reg7;
-			when b"01000" =>
+			when b"001000" =>
 				reg_data_out <= slv_reg8;
-			when b"01001" =>
+			when b"001001" =>
 				reg_data_out <= slv_reg9;
-			when b"01010" =>
+			when b"001010" =>
 				reg_data_out <= slv_reg10;
-			when b"01011" =>
+			when b"001011" =>
 				reg_data_out <= slv_reg11;
-			when b"01100" =>
+			when b"001100" =>
 				reg_data_out <= slv_reg12;
-			when b"01101" =>
+			when b"001101" =>
 				reg_data_out <= slv_reg13;
-			when b"01110" =>
-				reg_data_out <= slv_reg14;
-			when b"01111" =>
-				reg_data_out <= 
-				toDaqReg.senseWireGain(3) &
-				toDaqReg.senseWireGain(2) &
-				toDaqReg.senseWireGain(1) &
-				toDaqReg.senseWireGain(0) 
-				 ;
-			when b"10000" =>
-				reg_data_out <= 
-				toDaqReg.senseWireGain(7) &
-				toDaqReg.senseWireGain(6) &
-				toDaqReg.senseWireGain(5) &
-				toDaqReg.senseWireGain(4) 
-				 ;
-	
+			when b"001110" =>
+				reg_data_out <= toDaqReg.coilDrive;
+			when b"001111" =>
+				reg_data_out <=
+					toDaqReg.senseWireGain(3) &
+					toDaqReg.senseWireGain(2) &
+					toDaqReg.senseWireGain(1) &
+					toDaqReg.senseWireGain(0)
+				;
+			when b"010000" =>
+				reg_data_out <=
+					toDaqReg.senseWireGain(7) &
+					toDaqReg.senseWireGain(6) &
+					toDaqReg.senseWireGain(5) &
+					toDaqReg.senseWireGain(4)
+				;
+
 			-- Registers 16 to 31 have been changed to be driven by the DWA (read only)
-			when b"10001" =>
+			when b"010001" =>
 				reg_data_out(0)           <= '1' when toDaqReg.ctrlBusy else '0';
 				reg_data_out(31 downto 1) <= (others => '0');
-			when b"10011" =>
-				reg_data_out <= dateCode;
-			when b"10100" =>
+			when b"010010" =>
+				reg_data_out <= x"00" & dateCode(23 downto 0);
+			when b"010011" =>
+				reg_data_out <= x"00" & dateCode(47 downto 24);
+			when b"010100" =>
 				reg_data_out <= hashCode;
-			when b"10111" =>
+			when b"010111" =>
 				-- PS is expecting a FIFO Empty Flag
 				reg_data_out    <= (31 downto 1 => '1', 0 => bool2Sl(not(toDaqReg.udpDataRdy)));
 				udpDataStatStrb <= slv_reg_rden; --when read udpDataRdy
-			when b"11000" =>
+			when b"011000" =>
 				reg_data_out <= toDaqReg.udpDataWord;
 				-- When udp word is read, send comb slv_reg_rden to DWA PL
 				fromDaqReg.udpDataRen <= slv_reg_rden = '1';
+			when b"011001" =>
+				reg_data_out <= slv_reg25;
+			when b"011010" =>
+				reg_data_out <= slv_reg26;
+			when b"011011" =>
+				reg_data_out <= slv_reg27;
+			when b"011100" =>
+				reg_data_out <= slv_reg28;
+			when b"011101" =>
+				reg_data_out <= slv_reg29;
+			when b"011110" =>
+				reg_data_out <= slv_reg30;
+			when b"011111" =>
+				reg_data_out <= slv_reg31;
+			when b"101011" =>
+				reg_data_out <= x"0000" & toDaqReg.relayBusTop(1);
+			when b"101010" =>
+				reg_data_out <= x"0000" & toDaqReg.relayBusTop(0);
+			when b"101001" =>
+				reg_data_out <= x"0000" & toDaqReg.relayWireTop(3);
+			when b"101000" =>
+				reg_data_out <= x"0000" & toDaqReg.relayWireTop(2);
+			when b"100111" =>
+				reg_data_out <= x"0000" & toDaqReg.relayWireTop(1);
+			when b"100110" =>
+				reg_data_out <= x"0000" & toDaqReg.relayWireTop(0);
+			when b"100101" =>
+				reg_data_out <= x"0000" & toDaqReg.relayBusBot(1);
+			when b"100100" =>
+				reg_data_out <= x"0000" & toDaqReg.relayBusBot(0);
+			when b"100011" =>
+				reg_data_out <= x"0000" & toDaqReg.relayWireBot(3);
+			when b"100010" =>
+				reg_data_out <= x"0000" & toDaqReg.relayWireBot(2);
+			when b"100001" =>
+				reg_data_out <= x"0000" & toDaqReg.relayWireBot(1);
+			when b"100000" =>
+				reg_data_out <= x"0000" & toDaqReg.relayWireBot(0);
+			when b"101100" =>
+				reg_data_out <= slv_reg44;
+			when b"110000" => -- sn reg 48
+				              --reg_data_out <= x"0397da03";-- & std_logic_vector(toDaqReg.serNum);
+				reg_data_out <= x"00" & std_logic_vector(toDaqReg.serNum);
+			when b"110001" => --sn addres reg 49
+				reg_data_out <= b"0000000000000000000" & std_logic_vector(toDaqReg.serNumMemAddress);
+			when b"110010" => --sn data reg 50
+				reg_data_out             <= std_logic_vector(toDaqReg.serNumMemData);
+				fromDaqReg.serNumMemRead <= slv_reg_rden; --tell dwa data was read
+
+			when b"110011" => --controller state reg 51
+				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.ctrlStateDbg);
+			when b"110100" => --serror bits reg 52
+				reg_data_out <= x"00" & std_logic_vector(toDaqReg.errors);
+			when b"110101" => --reg 53
+				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.statusPeriod);
+			when b"110110" => --reg 54
+				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.pktGenWatchdogPeriod);
+			when b"110111" => --controller state reg 55
+				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pktGenStateDbg);
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;
@@ -770,9 +1030,16 @@ begin
 
 	-- Add user logic here
 	-- DWA just gets a copy of the register
-	fromDaqReg.reset     <= slv_reg0(0)= '1';
-	fromDaqReg.ctrlStart <= slv_reg0(1)= '1';
-	fromDaqReg.auto      <= slv_reg1(0)= '1';
+	fromDaqReg.reset       <= slv_reg0(0)= '1';
+	fromDaqReg.ctrlStart   <= slv_reg0(1)= '1';
+	fromDaqReg.relayUpdate <= slv_reg0(2)= '1';
+	fromDaqReg.scanAbort   <= slv_reg0(3)= '1';
+
+	fromDaqReg.auto              <= slv_reg1(0)= '1';
+	fromDaqReg.mnsEna            <= slv_reg1(1)= '1';
+	fromDaqReg.relayAutoBreakEna <= slv_reg1(2);
+	fromDaqReg.useAcStimTrig     <= slv_reg1(3);
+
 	-- udpDataDone when PS has read the status at the end of the data payload
 	fromDaqReg.udpDataDone        <= not udpReadBusy and udpReadBusy_del; --trailing edge
 	fromDaqReg.stimFreqReq        <= unsigned(slv_reg3(23 downto 0));
@@ -780,20 +1047,55 @@ begin
 	fromDaqReg.stimFreqMax        <= unsigned(slv_reg5(23 downto 0));
 	fromDaqReg.stimFreqStep       <= unsigned(slv_reg6(23 downto 0));
 	fromDaqReg.stimTime           <= unsigned(slv_reg7(23 downto 0));
+	fromDaqReg.stimTimeInitial    <= unsigned(slv_reg44(23 downto 0));
 	fromDaqReg.stimMag            <= unsigned(slv_reg8(11 downto 0));
 	fromDaqReg.cyclesPerFreq      <= unsigned(slv_reg10(23 downto 0));
 	fromDaqReg.adcSamplesPerCycle <= unsigned(slv_reg11(15 downto 0));
 	fromDaqReg.clientIp           <= unsigned(slv_reg12);
 	fromDaqReg.relayMask          <= slv_reg13;
 	fromDaqReg.coilDrive          <= slv_reg14;
-	fromDaqReg.senseWireGain(7)          <= slv_reg16(31 downto 24);
-	fromDaqReg.senseWireGain(6)          <= slv_reg16(23 downto 16);
-	fromDaqReg.senseWireGain(5)          <= slv_reg16(15 downto 8);
-	fromDaqReg.senseWireGain(4)          <= slv_reg16(7 downto 0);
-	fromDaqReg.senseWireGain(3)          <= slv_reg15(31 downto 24);
-	fromDaqReg.senseWireGain(2)          <= slv_reg15(23 downto 16);
-	fromDaqReg.senseWireGain(1)          <= slv_reg15(15 downto 8);
-	fromDaqReg.senseWireGain(0)          <= slv_reg15(7 downto 0);
+	fromDaqReg.senseWireGain(7)   <= slv_reg16(31 downto 24);
+	fromDaqReg.senseWireGain(6)   <= slv_reg16(23 downto 16);
+	fromDaqReg.senseWireGain(5)   <= slv_reg16(15 downto 8);
+	fromDaqReg.senseWireGain(4)   <= slv_reg16(7 downto 0);
+	fromDaqReg.senseWireGain(3)   <= slv_reg15(31 downto 24);
+	fromDaqReg.senseWireGain(2)   <= slv_reg15(23 downto 16);
+	fromDaqReg.senseWireGain(1)   <= slv_reg15(15 downto 8);
+	fromDaqReg.senseWireGain(0)   <= slv_reg15(7 downto 0);
+
+	fromDaqReg.dateCode <= dateCode;
+	-- read dateCode from registers 0x12 and 0x13
+	fromDaqReg.hashCode <= hashCode;
+	-- read hashCode from registers 0x14
+	--temp hard code
+	fromDaqReg.noiseFreqMin    <= unsigned(slv_reg25(23 downto 0));
+	fromDaqReg.noiseFreqMax    <= unsigned(slv_reg26(23 downto 0));
+	fromDaqReg.noiseFreqStep   <= unsigned(slv_reg27(23 downto 0));
+	fromDaqReg.noiseSampPer    <= unsigned(slv_reg28(23 downto 0));
+	fromDaqReg.noiseNCnv       <= unsigned(slv_reg29(23 downto 0));
+	fromDaqReg.noiseBPFSetTime <= unsigned(slv_reg30(23 downto 0));
+
+	fromDaqReg.relayBusTop(1)  <= slv_reg43(15 downto 0);
+	fromDaqReg.relayBusTop(0)  <= slv_reg42(15 downto 0);
+	fromDaqReg.relayWireTop(3) <= slv_reg41(15 downto 0);
+	fromDaqReg.relayWireTop(2) <= slv_reg40(15 downto 0);
+	fromDaqReg.relayWireTop(1) <= slv_reg39(15 downto 0);
+	fromDaqReg.relayWireTop(0) <= slv_reg38(15 downto 0);
+	fromDaqReg.relayBusBot(1)  <= slv_reg37(15 downto 0);
+	fromDaqReg.relayBusBot(0)  <= slv_reg36(15 downto 0);
+	fromDaqReg.relayWireBot(3) <= slv_reg35(15 downto 0);
+	fromDaqReg.relayWireBot(2) <= slv_reg34(15 downto 0);
+	fromDaqReg.relayWireBot(1) <= slv_reg33(15 downto 0);
+	fromDaqReg.relayWireBot(0) <= slv_reg32(15 downto 0);
+
+	fromDaqReg.ctrlStateDbg         <= toDaqReg.ctrlStateDbg; --sourced from DWA
+	fromDaqReg.errors               <= toDaqReg.errors ;      --sourced from DWA
+	fromDaqReg.statusPeriod         <= unsigned(slv_reg53(23 downto 0));
+	fromDaqReg.pktGenWatchdogPeriod <= unsigned(slv_reg54(23 downto 0));
+
+	fromDaqReg.serNumMemAddress <= unsigned(slv_reg49(12 downto 0));
+	fromDaqReg.serNumMemData    <= unsigned(slv_reg50);
+	fromDaqReg.serNum           <= toDaqReg.serNum;
 
 	-- User logic ends
 

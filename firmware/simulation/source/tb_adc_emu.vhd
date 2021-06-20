@@ -25,6 +25,8 @@ architecture tb of tb_adc_emu is
 
   signal fromDaqReg      : fromDaqRegType;
   signal toDaqReg        : toDaqRegType;
+  signal dwaClk400       : std_logic;
+  signal dwaClk200       : std_logic;
   signal dwaClk100       : std_logic;
   signal dwaClk10        : std_logic;
   signal led             : std_logic_vector(3 downto 0);
@@ -41,7 +43,6 @@ architecture tb of tb_adc_emu is
   signal dpotCs_b        : std_logic := '0';
   signal dpotSck         : std_logic := '0';
   signal dpotShdn_b      : std_logic := '0';
-  signal CoilDrive       : std_logic_vector(31 downto 0);
   signal adcCnv          : std_logic                     := '0';
   signal adcSck          : std_logic                     := '0';
   signal adcDataSerial   : std_logic_vector(3 downto 0)  := (others => '0');
@@ -82,9 +83,12 @@ begin
     port map (
       fromDaqReg      => fromDaqReg,
       toDaqReg        => toDaqReg,
+      dwaClk400       => dwaClk400,
+      dwaClk200       => dwaClk200,
       dwaClk100       => dwaClk100,
       dwaClk10        => dwaClk10,
       led             => led,
+      pButton => (others => '0'),
       acStimX200_obuf => acStimX200_obuf,
       mainsSquare     => mainsSquare,
       DAC_SDI         => DAC_SDI,
@@ -98,7 +102,6 @@ begin
       dpotCs_b        => dpotCs_b,
       dpotSck         => dpotSck,
       dpotShdn_b      => dpotShdn_b,
-      CoilDrive       => CoilDrive,
       adcCnv          => adcCnv,
       adcSck          => adcSck,
       adcDataSerial   => adcDataSerial,

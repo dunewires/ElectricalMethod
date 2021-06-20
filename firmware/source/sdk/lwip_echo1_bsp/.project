@@ -3,6 +3,7 @@
 	<name>lwip_echo1_bsp</name>
 	<comment>Created by SDK v2018.3</comment>
 	<projects>
+		<project>dwa_ps_bd_wrapper_hw_platform_0</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
