@@ -742,6 +742,11 @@ class MainWindow(qtw.QMainWindow):
         logging.info(self.configHeadboard)
         logging.info(self.configHeadboard*2)
 
+
+        logging.info(channelGroups)
+        self.configScanListTextEdit.setPlainText(scanListText)
+
+
         
     def configurePlots(self):
         # FIXME: clean this up...

@@ -105,6 +105,7 @@ def channel_groupings(wire_layer: str, headboard_number: int):
             [34,36,38,40] \
         ], dtype=object) + (headboard_number - 1)*40
 
+
     if wire_layer == "X":
         return np.array([ \
             [ 1, 3, 5, 7, 9,11,13,15], \
@@ -113,7 +114,7 @@ def channel_groupings(wire_layer: str, headboard_number: int):
             [18,20,22,24,26,28,30,32], \
             [33,35,37,39,41,43,45,47], \
             [34,36,38,40,42,44,46,48] \
-        ]) + (headboard_number - 1)*48
+        ], dtype=object) + (headboard_number - 1)*48
 
     if wire_layer == "G" and headboard_number == 1:
         return np.array([ \
@@ -123,7 +124,7 @@ def channel_groupings(wire_layer: str, headboard_number: int):
             [18,20,22,24,26,28,30,32], \
             [33,35,37,39,41,43,45,47], \
             [34,36,38,40,42,44,46,48], [49] \
-        ])
+        ], dtype=object)
 
     if wire_layer == "G" and headboard_number > 1:
         return np.array([ \
@@ -133,5 +134,5 @@ def channel_groupings(wire_layer: str, headboard_number: int):
             [18,20,22,24,26,28,30,32], \
             [33,35,37,39,41,43,45,47], \
             [34,36,38,40,42,44,46,48] \
-        ]) + 49 + (headboard_number - 2)*48    
+        ], dtype=object) + 49 + (headboard_number - 2)*48    
     
