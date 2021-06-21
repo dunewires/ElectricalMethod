@@ -97,12 +97,12 @@ def channel_groupings(wire_layer: str, headboard_number: int):
 
     if wire_layer == "U" or wire_layer == "V":
         return np.array([ \
-            [ 1, 3, 5, 7, 9,11,13,15], \
-            [ 2, 4, 6, 8,10,12,14,16], \
-            [17,19,21,23,25,27,29,31], \
-            [18,20,22,24,26,28,30,32], \
-            [33,35,37,39], \
-            [34,36,38,40] \
+            np.array([ 1, 3, 5, 7, 9,11,13,15]), \
+            np.array([ 2, 4, 6, 8,10,12,14,16]), \
+            np.array([17,19,21,23,25,27,29,31]), \
+            np.array([18,20,22,24,26,28,30,32]), \
+            np.array([33,35,37,39]), \
+            np.array([34,36,38,40]) \
         ], dtype=object) + (headboard_number - 1)*40
 
 

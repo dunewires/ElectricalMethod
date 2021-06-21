@@ -19,3 +19,6 @@ firmware/simulation/compile.log
 firmware/simulation/compile.sh
 firmware/simulation/modelsim_lib/
 firmware/simulation/vsim.wlf
+DAQ/python/logs/*
+DAQ/python/__pycache__/*
+DAQ/python/mappings/__pycache__/*

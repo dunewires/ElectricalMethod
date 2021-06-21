@@ -86,14 +86,14 @@ def configure_wait_times(stim_time_initial=2, stim_time=0.1):
             'stimTime': format(int(stim_time * unit_factor), '06X')}
 
 
-def configure_gains(stim_freq_max, *,
+def configure_gains(stim_freq_max: int, *,
                     stim_mag=None, digipot=None):
     '''Return a dictionary of configuration values for the gains of the stimulus amplitude and read-out signals given the scan maximum frequency in hertz. Configuration values can also be provided directly, bypassing the determination based on the scan maximum frequency.'''
 
     digipot_config_single = 0xFF
 
     if stim_freq_max > 200:
-        digipot_config_single -= (stim_freq_max-200)//4
+        digipot_config_single -= int((stim_freq_max-200)//4)
     
     digipot_config = digipot_config_single
     for index in range(7):
