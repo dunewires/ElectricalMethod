@@ -697,7 +697,7 @@ class MainWindow(qtw.QMainWindow):
                 customConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
                 customConfig.update(config_generator.configure_relays(self.configLayer,channels))
                 customConfig.update(config_generator.configure_noise_subtraction(freqMin, freqMax))
-
+                
                 logging.info("customConfig")
                 logging.info(customConfig)
 
@@ -738,11 +738,9 @@ class MainWindow(qtw.QMainWindow):
         
         logging.info("Configuring scans")
         logging.info(self.measuredBy)
-        logging.info(configStage)
-        logging.info(configHeadboard)
-        logging.info(configHeadboard*2)
-        logging.info(channelGroups)
-        self.configScanListTextEdit.setPlainText(scanListText)
+        logging.info(self.configStage)
+        logging.info(self.configHeadboard)
+        logging.info(self.configHeadboard*2)
 
         
     def configurePlots(self):
