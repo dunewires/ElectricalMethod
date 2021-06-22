@@ -292,3 +292,11 @@ def configure_default():
     configs.update(configure_relays(wire_layer='X', apa_channels=[]))
     configs.update(configure_noise_subtraction(stim_freq_min=99, stim_freq_max=100))
     return configs
+
+def write_config(generated_config, outfilename):
+    with open("config/"+outfilename, 'w') as outconfigfile:
+        for header in generated_config.keys():
+            outconfigfile.write("["+header+"]\n")
+            subconfig = generated_config[header]
+            for key in subconfig.keys():
+                outconfigfile.write(key + " = " + subconfig[key] + "\n")
