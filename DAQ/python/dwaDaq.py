@@ -680,28 +680,33 @@ class MainWindow(qtw.QMainWindow):
                 # XYZ
 
                 #defaultConfig = dcf.DwaConfigFile("dwaConfig.ini")
-                customConfig = config_generator.configure_default()
-                customConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss))
-                customConfig.update(config_generator.configure_relays(self.configLayer,channels))
+                
 
-                customConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
-                customConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
-                customConfig.update(config_generator.configure_fixed_frequency())
-                customConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss))
+                fpgaConfig = config_generator.configure_default()
+                fpgaConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss))
+                fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
+
+                fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
+                fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
+                fpgaConfig.update(config_generator.configure_fixed_frequency())
+                fpgaConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss))
                 logging.info("advInitDelay")
                 logging.info(advInitDelay)
                 logging.info("advStimTime")
                 logging.info(advStimTime)
-                customConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
-                customConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=0xBB8, digipot=0x7766554433221100)) # TODO: Should stim_mag and digipot be configurable?
-                customConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
-                customConfig.update(config_generator.configure_relays(self.configLayer,channels))
-                customConfig.update(config_generator.configure_noise_subtraction(freqMin, freqMax))
+                fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
+                fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=0xBB8, digipot=0x7766554433221100)) # TODO: Should stim_mag and digipot be configurable?
+                fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
+                fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
+                fpgaConfig.update(config_generator.configure_noise_subtraction(freqMin, freqMax))
                 
-                logging.info("customConfig")
-                logging.info(customConfig)
+                logging.info("fpgaConfig")
+                logging.info(fpgaConfig)
 
+                guiConfig = {"side": "A"}
 
+                combinedConfig = {"FPGA": fpgaConfig, "GUI": guiConfig}
+                config_generator.write_config(combinedConfig, 'dwaConfig_'+str(scanNum)+'.ini')
 
                 # with open('dwaConfig_'+str(scanNum)+'.ini', 'w') as configfile:
                 #     configfile.write("[FPGA]\n")
