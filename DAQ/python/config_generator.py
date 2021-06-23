@@ -299,4 +299,4 @@ def write_config(generated_config, outfilename):
             outconfigfile.write("["+header+"]\n")
             subconfig = generated_config[header]
             for key in subconfig.keys():
-                outconfigfile.write(key + " = " + subconfig[key] + "\n")
+                outconfigfile.write(key + " = " + str(subconfig[key]) + "\n")

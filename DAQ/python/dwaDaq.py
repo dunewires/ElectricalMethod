@@ -639,6 +639,7 @@ class MainWindow(qtw.QMainWindow):
         self.configApaUuid = self.configApaUuid.text()
         self.configLayer = self.configLayerComboBox.currentText()
         self.configHeadboard = self.configHeadboardSpinBox.value()
+        self.SideComboBox = self.SideComboBox.currentText()
 
         advFss = self.advFssLineEdit.text() # Freq step size
         advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
@@ -703,7 +704,8 @@ class MainWindow(qtw.QMainWindow):
                 logging.info("fpgaConfig")
                 logging.info(fpgaConfig)
 
-                guiConfig = {"side": "A"}
+                guiConfig = {"wires": wires, "measuredBy": self.measuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+                "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.SideComboBox}
 
                 combinedConfig = {"FPGA": fpgaConfig, "GUI": guiConfig}
                 config_generator.write_config(combinedConfig, 'dwaConfig_'+str(scanNum)+'.ini')
