@@ -47,6 +47,7 @@ class DwaConfigFile():
                                      "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq",
                                      "relayWireTop", "relayWireBot", "relayBusTop", "relayBusBot",
                                      "statusPeriod"]
+        self.validOptions["GUI"] = ["wires", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side"]
 
     def parse(self):
         """Parse the DWA configuration parameters from a file
@@ -74,6 +75,16 @@ class DwaConfigFile():
                 self.config[option] = cp.get(SECTION, option, fallback=None)
             except:
                 print("EXCEPTION: not sure why/how...")
+
+        SECTION = "GUI"
+
+        for option in self.validOptions[SECTION]:
+            try:
+                self.config[option] = cp.get(SECTION, option, fallback=None)
+            except:
+                print("EXCEPTION: not sure why/how...")
+
+
 
         # which options were ignored?
         options = cp.options(SECTION)

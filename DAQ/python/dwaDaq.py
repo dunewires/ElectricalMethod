@@ -1120,6 +1120,9 @@ class MainWindow(qtw.QMainWindow):
         #self.outputText.appendPlainText("CLICKED START")
         #self.outputText.update()
 
+        import os.path #getting the right directory
+        os.chdir('config/')
+
         # startRun() is in a thread...  need to get logger?
         logger = logging.getLogger(__name__)
         self.configFile = self.configFileName.text()
@@ -1135,7 +1138,7 @@ class MainWindow(qtw.QMainWindow):
         #
         ## FIXME: the textbox doesn't update right away...
         ## need to force an update somehow....
-        self._loadConfigFile(updateGui=False)
+        self._loadConfigFile(updateGui=True)
 
         print("\n\n =================== startRun()\n\n")
         
