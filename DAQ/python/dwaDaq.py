@@ -1655,7 +1655,12 @@ class MainWindow(qtw.QMainWindow):
         # try to read the requested file
         # if found, display contents
         # if not found, display error message
-        configFileToOpen = self.configFileName.text()
+        
+        if not self.configFileName.text():
+            configFileToOpen = "dwaConfig_"+self.configNextScanComboBox.currentText()+".ini"
+        else:
+            configFileToOpen = self.configFileName.text()
+        
         validConfigFilename = False
         try:
             with open(configFileToOpen) as fh:
