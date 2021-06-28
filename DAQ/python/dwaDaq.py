@@ -649,10 +649,10 @@ class MainWindow(qtw.QMainWindow):
         # TODO: Make sure inputs can be safely converted to floats
         # TODO: Grab default values if undefined
         if advFss: advFss = float(advFss)
-        else: advFss = 0.
+        else: advFss = 0
         if advStimTime: advStimTime = float(advStimTime)
-        else: advStimTime = 0.
-        if advInitDelay: advInitDelay = float(advInitDelayLineEdit)
+        else: advStimTime = 0
+        if advInitDelay: advInitDelay = float(advInitDelay)
         else: advInitDelay = 0.
         if advAmplitude: advAmplitude = float(advAmplitude)
         else: advAmplitude = 0.
@@ -704,7 +704,7 @@ class MainWindow(qtw.QMainWindow):
                 logging.info("fpgaConfig")
                 logging.info(fpgaConfig)
 
-                guiConfig = {"wires": wires, "measuredBy": self.measuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+                guiConfig = {"channels": channels, "wires": wires, "measuredBy": self.measuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
                 "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.SideComboBox}
 
                 combinedConfig = {"FPGA": fpgaConfig, "GUI": guiConfig}
@@ -1138,7 +1138,7 @@ class MainWindow(qtw.QMainWindow):
         #
         ## FIXME: the textbox doesn't update right away...
         ## need to force an update somehow....
-        self._loadConfigFile(updateGui=True)
+        self._loadConfigFile(updateGui=False)
 
         print("\n\n =================== startRun()\n\n")
         
@@ -1661,6 +1661,7 @@ class MainWindow(qtw.QMainWindow):
         else:
             configFileToOpen = self.configFileName.text()
         
+
         validConfigFilename = False
         try:
             with open(configFileToOpen) as fh:
