@@ -47,7 +47,7 @@ class DwaConfigFile():
                                      "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq",
                                      "relayWireTop", "relayWireBot", "relayBusTop", "relayBusBot",
                                      "statusPeriod"]
-        self.validOptions["GUI"] = ["wires", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side"]
+        self.validOptions["GUI"] = ["wires", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side", "channels"]
 
     def parse(self):
         """Parse the DWA configuration parameters from a file
