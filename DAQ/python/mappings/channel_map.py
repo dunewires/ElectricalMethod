@@ -1,6 +1,6 @@
+
 from channel_frequencies import check_valid_wire_layer
 import numpy as np
-
 
 def wire_to_apa_channel(wire_layer: str, wire_number: int):
     '''Return the APA channel associated to the given wire layer and wire number.'''

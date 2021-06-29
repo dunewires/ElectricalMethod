@@ -7,6 +7,7 @@ from enum import IntEnum
 #import numpy as np
 
 hexBase = 16
+VERBOSE = 0
 
 class Frame(IntEnum):
     UDP = 0xA
@@ -27,13 +28,40 @@ class Registers(IntEnum):
     RUN = 0xFF
     STATUS = 0xFE
 
+class ControllerState(IntEnum):
+    IDLE = 0
+    NOISE_PREP = 1
+    NOISE_READ = 2
+    STIM_EN = 3
+    STIM_PREP = 4
+    STIM_RUN = 5
+    STIM_READ = 6
+    FREQ_END = 7
+    END_WAIT = 8
 
+    # From Nathan Felt 2021 June 2
+    # 0  idle Waiting for the start of a test
+    # 1  noisePrep Prepare to sample noise for mains noise subtraction
+    # 2  noiseReadout Sample noise for mains noise subtraction
+    # 3  stimEnable Enable stimulus frequency and wait for initial 
+    #    stimulus time
+    # 4  stimPrep Wait for stimulus frequency to update and check that 
+    #    the ADC data buffer is empty
+    # 5  stimRun Wait for the specified stimulus time
+    # 6  stimReadout Get the stimulated sense wire ADC samples
+    # 7  freqScanFinish At the end of the frequency sweep, 
+    #    wait for the last UDP data to be sent
+    # 8  pktBuildFinish_s Wait for the end of run header to be sent 
+    #    before we go to the idle state and wait for another scan
+
+    
 class DwaDataParser():
 
     def __init__(self):
         self._makeFrameKeys()
         self._initVars()  # FIXME: rename...
-        print(Frame)
+        if VERBOSE > 0:
+            print(Frame)
         
     def _makeFrameKeys(self):
         # create a dict of keys (dict of dict)
@@ -109,6 +137,7 @@ class DwaDataParser():
         self.frameKeys[Frame.STATUS]["61"] = "unknown"
         self.frameKeys[Frame.STATUS]["62"] = "controllerState"
         self.frameKeys[Frame.STATUS]["63"] = "statusErrorBits"
+        self.frameKeys[Frame.STATUS]["64"] = "buttonStatus"
         
         ##################################
         # TO ADD (Frame.RUN)
@@ -201,6 +230,7 @@ class DwaDataParser():
             "unknown":self._parseInfoLineAsInt,
             "controllerState":self._parseInfoLineAsInt,
             "statusErrorBits":self._parseInfoLineAsBits,
+            "buttonStatus":self._parseInfoLineAsBits,
         }
 
         self._frameParserSelector = {
@@ -285,7 +315,8 @@ class DwaDataParser():
     
     def _getKey(self, infoLine, frameType):
         key = infoLine[0:2]    # this key may be re-used in a different frame type, can't assume it's unique...
-        print("key = [{}]".format(key))
+        if VERBOSE > 0:
+            print("key = [{}]".format(key))
         try:
             uniqueKey = self.frameKeys[frameType][key]
         except KeyError:
@@ -293,7 +324,8 @@ class DwaDataParser():
             print("  key [{}] is not defined in frameType [0x{:X} = Frame.{}]".format(key, frameType, Frame(frameType).name))
             uniqueKey = '{}.{}'.format( Frame(frameType).name, key )
             print("  returning uniqueKey={}".format(uniqueKey))
-        print("uniqueKey = [{}]".format(uniqueKey))
+        if VERBOSE > 0:
+            print("uniqueKey = [{}]".format(uniqueKey))
         return key, uniqueKey
 
     def _parseGenericFrame(self, infoLines, frameType):
@@ -306,15 +338,19 @@ class DwaDataParser():
         # specified number in the frame delimiter line
 
         frameDict = self._initFrameDictSelector[frameType]()
-        print("frameDict = {}".format(frameDict))
+        if VERBOSE > 0:
+            print("frameDict = {}".format(frameDict))
 
         for line in infoLines:
-            print("line, frameType = {}, {}".format(line, frameType))
+            if VERBOSE > 0:
+                print("line, frameType = {}, {}".format(line, frameType))
             key, uniqueKey = self._getKey(line, frameType)
-            print("key, uniqueKey = {}, {}".format(key, uniqueKey))
+            if VERBOSE > 0:
+                print("key, uniqueKey = {}, {}".format(key, uniqueKey))
             parserFxn = self._infoLineParserSelector.get(uniqueKey, self._parseUnknownInfoLine)
             val = parserFxn(line)
-            print('parserFxn = {}', parserFxn)
+            if VERBOSE > 0:
+                print('parserFxn = {}', parserFxn)
             if val is not line: # for unknown key, val==line
                 frameDict[uniqueKey] = val
             else:
@@ -368,7 +404,6 @@ class DwaDataParser():
 
     def _postProcessFreqFrame(self, dd):
         dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodActive'] # convert period in 10ns to freq in Hz
-        #dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodCounter'] # KLUGE
         dd['adcSamplingPeriod_sec'] = dd['adcSamplingPeriod']*1e-8
         return dd
 
@@ -388,6 +423,19 @@ class DwaDataParser():
         return dd
 
     def _postProcessStatusFrame(self, dd):
+        try:
+            #print(dd['controllerState'])
+            #print(ControllerState(int(dd['controllerState'])))
+            stateStr = str(ControllerState(int(dd['controllerState'])))
+            toks = stateStr.split('.')[-1]
+            #print(f"toks = {toks}")
+            stateStr = stateStr.split('.')[-1]
+            dd['controllerStateStr'] = stateStr
+        except:
+            print(f"error: unrecognized controller state: {dd['controllerState']}")
+            dd['controllerStateStr'] = 'UNKNOWN'
+        #
+        #dd['buttonStatus'] = dd['buttonStatus'][-4:]
         return dd
 
 
@@ -405,7 +453,8 @@ class DwaDataParser():
         inHeader = False
         delimIdxs = []  # line numbers of frame delimiters
         for ii, line in enumerate(udpPayload):
-            print(line)
+            if VERBOSE > 0:
+                print(line)
             if line.startswith("8"):
                 ### FIXME: KLUGE KLUGE!!!!
                 print("DwaDataParser.parse(): MAJOR KLUGE NEEDS TO BE REMOVED!")
@@ -414,10 +463,12 @@ class DwaDataParser():
                 continue
             if dwa.isHeaderLine(line):
                 delimIdxs.append(ii)
-        print("Header lines = ")
-        print(delimIdxs)
+        if VERBOSE > 0:
+            print("Header lines = ")
+            print(delimIdxs)
         nFrames = len(delimIdxs)//2
-        print("Number of header frames: {}".format(nFrames))
+        if VERBOSE > 0:
+            print("Number of header frames: {}".format(nFrames))
 
         self.dwaPayload = {}   # will be a dict of dict. Each entry is a parsed frame
 
@@ -425,12 +476,14 @@ class DwaDataParser():
         for ii in range(nFrames):
             frameStartIdx = delimIdxs[ii*2]
             frameStartLine = udpPayload[frameStartIdx]
-            print("")
-            print("frameStartLine = {}".format(frameStartLine))
+            if VERBOSE > 0:
+                print("")
+                print("frameStartLine = {}".format(frameStartLine))
         
             # get frame type
             frameType = int(udpPayload[frameStartIdx][0], hexBase)
-            print("frameType = 0d{} = 0x{:X}".format(frameType, frameType))
+            if VERBOSE > 0:
+                print("frameType = 0d{} = 0x{:X}".format(frameType, frameType))
 
             # FIXME: kluge b/c we don't specify the number of ADC data lines yet...
             if frameStartLine.startswith('DDDD'):
@@ -438,13 +491,15 @@ class DwaDataParser():
             else:
                 # Number of Frame Information lines
                 nFrameInfo = int(frameStartLine[4:], hexBase)
-                print("nFrameInfo = {}".format(nFrameInfo))
+                if VERBOSE > 0:
+                    print("nFrameInfo = {}".format(nFrameInfo))
                 frameEndIdx = frameStartIdx + nFrameInfo + 1
             
             # FIXME: add an "assert" here if delimiters don't match
-            print("frameEndLine = {}".format(udpPayload[frameEndIdx]))
-            print("frame = ")
-            print(udpPayload[frameStartIdx:frameEndIdx+1])
+            if VERBOSE > 0:
+                print("frameEndLine = {}".format(udpPayload[frameEndIdx]))
+                print("frame = ")
+                print(udpPayload[frameStartIdx:frameEndIdx+1])
             frameParser = self._frameParserSelector[frameType]
             # For debugging only
             #if frameStartLine.startswith('DDDD'):
@@ -454,14 +509,16 @@ class DwaDataParser():
                 
             frameDict = frameParser(udpPayload[frameStartIdx+1:frameEndIdx])
         
-            print("frameDict = ")
-            print(frameDict)
+            if VERBOSE > 0:
+                print("frameDict = ")
+                print(frameDict)
         
             framePostProcFxn = self._framePostProcSelector.get(frameType, None)
             if framePostProcFxn:
                 frameDict = framePostProcFxn(frameDict)
-            print("frameDict (postProcessed) = ")
-            print(frameDict)
+            if VERBOSE > 0:
+                print("frameDict (postProcessed) = ")
+                print(frameDict)
         
             #if frameType == Frame.ADC_DATA:
             #    print("not sure what to do for ADC data yet...")
@@ -476,8 +533,9 @@ class DwaDataParser():
 
             self.dwaPayload[frameType] = frameDict
 
-        print("Ignored lines in the UDP payload = ")
-        print(self._ignoredInfoLines)
+        if VERBOSE > 0:
+            print("Ignored lines in the UDP payload = ")
+            print(self._ignoredInfoLines)
         self.dwaPayload['ignoredLines'] = self._ignoredInfoLines
         
         # FIXME: Post-process the frame information

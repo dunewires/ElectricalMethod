@@ -20,14 +20,59 @@
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QWidget" name="controls" native="true">
-         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0,10">
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,0,0,10">
           <item>
-           <widget class="QLabel" name="label_21">
+           <widget class="QPushButton" name="btnDwaConnect">
+            <property name="text">
+             <string>Connect</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_2">
+            <property name="lineWidth">
+             <number>2</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_5">
             <property name="text">
              <string>DWA Status</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignHCenter|Qt::AlignTop</set>
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QFormLayout" name="formLayout_13">
+            <item row="0" column="0">
+             <widget class="QLabel" name="dwaControllerState_label">
+              <property name="text">
+               <string>State</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="dwaControllerState_val">
+              <property name="text">
+               <string>N/A</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line">
+            <property name="lineWidth">
+             <number>2</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -52,7 +97,7 @@
             <item row="0" column="0" colspan="2">
              <widget class="QLabel" name="globalFreqHeading">
               <property name="text">
-               <string>Frequencies [Hz]</string>
+               <string>Scan freqs [Hz]</string>
               </property>
              </widget>
             </item>
@@ -1185,14 +1230,14 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="controllerState_label">
+       <widget class="QLabel" name="buttonStatus_label">
         <property name="text">
-         <string>Controller State</string>
+         <string>buttonStatus</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="controllerState_val">
+       <widget class="QLabel" name="buttonStatus_val">
         <property name="text">
          <string>N/A</string>
         </property>
