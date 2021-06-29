@@ -134,6 +134,7 @@ class DwaDataParser():
         # ADC Data Frame entries
         # N/A
         #
+        self.frameKeys[Frame.STATUS]["61"] = "unknown"
         self.frameKeys[Frame.STATUS]["62"] = "controllerState"
         self.frameKeys[Frame.STATUS]["63"] = "statusErrorBits"
         self.frameKeys[Frame.STATUS]["64"] = "buttonStatus"
@@ -226,6 +227,7 @@ class DwaDataParser():
             #"UNHANDLED_LINES": self._parseUnknownInfoLine  # do this if a key is not recognized...
             #
             # STATUS frame keys
+            "unknown":self._parseInfoLineAsInt,
             "controllerState":self._parseInfoLineAsInt,
             "statusErrorBits":self._parseInfoLineAsBits,
             "buttonStatus":self._parseInfoLineAsBits,

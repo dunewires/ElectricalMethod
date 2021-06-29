@@ -83,6 +83,11 @@ import DwaMicrozed as duz
 
 from SietchConnect import SietchConnect
 
+sys.path.append('./mappings')
+import config_generator
+import channel_map
+import channel_frequencies
+import ChannelMapping
 DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 AMP_DATA_FILE   = "ampData/slowScan.json"
@@ -342,6 +347,22 @@ class MainWindow(qtw.QMainWindow):
         self.ampDataFilename.setText(AMP_DATA_FILE)
 
         # Event viewer tab stuff
+        self.evtVwr_runName_val.setText("20210526T222903")#20210604T170730")
+        self.evtVwr_runName_val.returnPressed.connect(self.loadEventData)
+        self.evtVwrPlotsGLW.setBackground('w')
+        self.evtVwrPlots = []
+        chanNum = 0
+        for irow in range(3):
+            for icol in range(3):
+                if chanNum < 8:
+                    self.evtVwrPlots.append(self.evtVwrPlotsGLW.addPlot())
+                    plotTitle = f'V(t) Chan {chanNum}'
+                    self.evtVwrPlots[-1].setTitle(plotTitle)
+                else:
+                    # A(f) data for all channels
+                    self.evtVwrPlots.append(self.evtVwrPlotsGLW.addPlot())                    
+                chanNum += 1
+            self.evtVwrPlotsGLW.nextRow()
         self._configureEventViewer()
         self.evtData = None
         
@@ -525,6 +546,15 @@ class MainWindow(qtw.QMainWindow):
         self.btnSubmitResonances.clicked.connect(self.submitResonances)
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensions)
+        # Config Tab
+        self.btnConfigureScans.clicked.connect(self.configureScans)
+        self.configStageComboBox.addItem("Pre-production")
+        self.configStageComboBox.addItem("Production")
+        self.configStageComboBox.addItem("Commissioning")
+        self.configLayerComboBox.addItem("G")
+        self.configLayerComboBox.addItem("U")
+        self.configLayerComboBox.addItem("V")
+        self.configLayerComboBox.addItem("X")
 
         
     def _configureEventViewer(self):
@@ -569,6 +599,44 @@ class MainWindow(qtw.QMainWindow):
         self.sock.bind( self.udpServerAddressPort ) # this is required
         #self.sock.settimeout(self.udpTimeoutSec)    # if no new data comes from server, quit
         #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: this is not necessary
+        
+        self.registerOfVal = {}
+        for reg in ddp.Registers:
+            self.registerOfVal[reg.value] = reg
+            
+        self.fnOfReg = {}  # file names for output (empty for now)
+        self._makeOutputFilenames()
+
+        self.ampData = {}  # hold amplitude vs. freq data for a scan
+        self.resonantFreqs = {}
+        for reg in self.registers:
+            self.ampData[reg.value] = {'freq':[], 'ampl':[]}
+            self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
+        self._initResonanceFitLines()
+        
+        # Info about current run
+        self.stimFreqMin = 0
+        self.stimFreqMax = 0
+        self.state = State.IDLE
+
+        # Set A(f) peak detection parameters
+        self.resFitParams = {}
+        self.resFitParams['preprocess'] = {'detrend':True}  # detrend: subtract a line from A(f) before processing?
+        self.resFitParams['find_peaks'] = {'bkgPoly':2, 'width':1, 'prominence':(0.8,None)}
+        # FIXME: replace this with a Model/View approach
+        self.resFitPreDetrend.blockSignals(True)
+        self.resFitPreDetrend.setChecked(self.resFitParams['preprocess']['detrend'])
+        self.resFitPreDetrend.blockSignals(False)
+        self.resFitBkgPoly.setText(str(self.resFitParams['find_peaks']['bkgPoly']))
+        print(f"str(self.resFitParams['find_peaks']['width']) = {str(self.resFitParams['find_peaks']['width'])}")
+        self.resFitWidth.setText(str(self.resFitParams['find_peaks']['width']))
+        self.resFitProminence.setText(str(self.resFitParams['find_peaks']['prominence']))
+
+        # KLUGE for now...
+        self.resFitParamsOut = {}
+        for reg in self.registers:
+            chan = reg.value
+            self.resFitParamsOut[chan] = {'peaks':[], 'properties':{}}
         
         # Start listening for UDP data in a Worker thread
         self.udpListen()
@@ -646,6 +714,157 @@ class MainWindow(qtw.QMainWindow):
         #self.logger.addHandler(ch)
 
         self.logger.info(f'Log created {self.logFilename}')
+
+    #def configureScans(self):
+        #measuredBy = self.measuredByLineEdit.text()
+        # configStage = self.configStageComboBox.currentText()
+        # configApaUuid = self.configApaUuid.text()
+        # configLayer = self.configLayerComboBox.currentText()
+        # configHeadboard = self.configHeadboardSpinBox.value()
+        # channelGroups = []
+        # scanListText = ""
+        # scanNum = 1
+        # for i in range(5):
+        #     startChan = (configHeadboard-1)*40 + i*8 + 1
+        #     channels = range(startChan, startChan+8)
+        #     rangeData = ChannelMapping.get_range_data_for_channels(configLayer, channels)
+        #     for obj in rangeData:
+        #         scanListText = scanListText + srt(scanNum) + ". " + ", ".join(obj["wires"]) + "("+obj["range"][0]+", "+ obj["range"][1] + ")\n"
+        #         scanNum = scanNum + 1
+
+        #     logging.info("Resonances")
+        #     logging.info(resonances)
+        
+        # logging.info("Configuring scans")
+        # logging.info(measuredBy)
+        # logging.info(configStage)
+        # logging.info(configHeadboard)
+        # logging.info(configHeadboard*2)
+        # logging.info(channelGroups)
+        # self.configScanListTextEdit.setPlainText(scanListText)
+    def hexString(self, val):
+        return str(hex(int(val))).upper()[2:].zfill(8)
+
+    def configureScans(self):
+        self.measuredBy = self.measuredByLineEdit.text()
+        self.configStage = self.configStageComboBox.currentText()
+        self.configApaUuid = self.configApaUuid.text()
+        self.configLayer = self.configLayerComboBox.currentText()
+        self.configHeadboard = self.configHeadboardSpinBox.value()
+        self.SideComboBox = self.SideComboBox.currentText()
+
+        advFss = self.advFssLineEdit.text() # Freq step size
+        advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
+        advInitDelay = self.advInitDelayLineEdit.text() # Init delay
+        advAmplitude = self.advAmplitudeLineEdit.text() # Amplitude
+
+        # TODO: Make sure inputs can be safely converted to floats
+        # TODO: Grab default values if undefined
+        if advFss: advFss = float(advFss)
+        else: advFss = 0
+        if advStimTime: advStimTime = float(advStimTime)
+        else: advStimTime = 0
+        if advInitDelay: advInitDelay = float(advInitDelay)
+        else: advInitDelay = 0.
+        if advAmplitude: advAmplitude = float(advAmplitude)
+        else: advAmplitude = 0.
+
+
+
+        channelGroups = channel_map.channel_groupings(self.configLayer, self.configHeadboard)
+        scanListText = ""
+        scanNum = 1
+        for channels in channelGroups:
+
+            range_data = channel_frequencies.get_range_data_for_channels(self.configLayer, channels)
+
+            logging.info("channels")
+            logging.info(channels)
+            for rd in range_data:
+                logging.info("rd")
+                logging.info(rd)
+                wires = rd["wires"]
+                freqMin = float(rd["range"][0])
+                freqMax = float(rd["range"][1])
+                logging.info("freqMin")
+                logging.info(freqMin*16)
+                wires.sort(key = int)
+                scanListText = scanListText + str(scanNum) + "." + ", ".join(wires) + " (" + str(freqMin) + ", " + str(freqMax) + ")\n"
+                # XYZ
+
+                #defaultConfig = dcf.DwaConfigFile("dwaConfig.ini")
+                
+
+                fpgaConfig = config_generator.configure_default()
+                fpgaConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss))
+                fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
+
+                fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
+                fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
+                fpgaConfig.update(config_generator.configure_fixed_frequency())
+                fpgaConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss))
+                logging.info("advInitDelay")
+                logging.info(advInitDelay)
+                logging.info("advStimTime")
+                logging.info(advStimTime)
+                fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
+                fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=0xBB8, digipot=0x7766554433221100)) # TODO: Should stim_mag and digipot be configurable?
+                fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
+                fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
+                fpgaConfig.update(config_generator.configure_noise_subtraction(freqMin, freqMax))
+                
+                logging.info("fpgaConfig")
+                logging.info(fpgaConfig)
+
+                dataConfig = {"channels": channels, "wires": wires, "measuredBy": self.measuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+                "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.SideComboBox}
+
+                combinedConfig = {"FPGA": fpgaConfig, "Database": dataConfig}
+                config_generator.write_config(combinedConfig, 'dwaConfig_'+str(scanNum)+'.ini')
+
+                # with open('dwaConfig_'+str(scanNum)+'.ini', 'w') as configfile:
+                #     configfile.write("[FPGA]\n")
+                #     configfile.write("auto               = 00000001  # 0 is fixed frequency\n")
+                #     configfile.write("stimFreqReq        = 00000C80  # [1/16 Hz] Fixed frequency:\n")
+                #     configfile.write("stimFreqMin        = "+self.hexString(freqMin*16)+"  # [1/16 Hz]\n")
+                #     configfile.write("stimFreqMax        = "+self.hexString(freqMax*16)+"  # [1/16 Hz]\n")
+                #     configfile.write("stimFreqStep       = "+self.hexString(advFss*16)+"  # [1/16 Hz]\n")
+                #     configfile.write("stimTime           = "+self.hexString(advStimTime*1e5)+" # units? (maybe 10us)\n")
+                #     configfile.write("stimMag            = "+self.hexString(advAmplitude)+"  # 12-bit DAC:\n")
+                #     configfile.write("cyclesPerFreq      = 00000002  # \n")
+                #     configfile.write("adcSamplesPerCycle = 00000010  # \n")
+                #     configfile.write("digipot            = 2222222222222222\n")
+                #     configfile.write("relayMask          = 00000000  # relay 32 is 0x1:\n")
+                #     configfile.write("coilDrive          = 00000000 \n")
+                #     configfile.write("stimTimeInitial    = 00100000\n")
+                #     configfile.write("client_IP = 8cf77b61 # James's home (DHCP...): 108.49.52.252\n")
+                #     configfile.write("relayWireTop = 0000000000000000 # 64-bit  top3top2top1top0\n")
+                #     configfile.write("relayWireBot = 00FF0000FF000080 # 64-bit  bot3bot2bot1bot0\n")
+                #     configfile.write("relayBusTop  = 00000000         # 32-bit  top1top0\n")
+                #     configfile.write("relayBusBot  = AAAAAAAA         # 32-bit  bot1bot0\n")
+                #     configfile.write("noiseFreqMin           = 00000340  # [1/16Hz]  55 Hz\n")
+                #     configfile.write("noiseFreqMax           = 00000340  # [1/16Hz]  65 Hz\n")
+                #     configfile.write("noiseFreqStep          = 00000010  # [1/16Hz]   1 Hz\n")
+                #     configfile.write("noiseSettlingTime      = 00001000  # [2.56 us]  00001000 ~ 10ms\n")
+                #     configfile.write("noiseAdcSamplesPerFreq = 00000100  # [unitless] (256 samples) limited to 256\n")
+                #     configfile.write("noiseSamplingPeriod    = 0000CB73  # [10ns]   32 samp/cycle @ 60 Hz\n")
+                
+                scanNum = scanNum + 1
+        
+        self.configNextScanComboBox.clear()
+        for i in range(1, scanNum):
+            self.configNextScanComboBox.addItem(str(i))
+        
+        logging.info("Configuring scans")
+        logging.info(self.measuredBy)
+        logging.info(self.configStage)
+        logging.info(self.configHeadboard)
+        logging.info(self.configHeadboard*2)
+
+
+        logging.info(channelGroups)
+        self.configScanListTextEdit.setPlainText(scanListText)
+
 
         
     def _configurePlots(self):
@@ -1035,9 +1254,20 @@ class MainWindow(qtw.QMainWindow):
         #self.outputText.appendPlainText("CLICKED START")
         #self.outputText.update()
 
+        import os.path #getting the right directory
+        os.chdir('config/')
+
         # startRun() is in a thread...  need to get logger?
         logger = logging.getLogger(__name__)
         self.configFile = self.configFileName.text()
+        # If configFile is blank, use the generated one
+        if not self.configFile:
+            if self.configNextScanComboBox.currentText():
+                self.configFile = "dwaConfig_"+self.configNextScanComboBox.currentText()+".ini"
+            else:
+                # If no generated one was found, use the default one
+                self.configFile = "dwaConfig.ini"
+        logger.info(self.configFile)
         logger.info(f"config file = {self.configFile}")
         #
         ## FIXME: the textbox doesn't update right away...
@@ -1178,25 +1408,23 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def _evtVwrF0LineMoved(self):
-        print("\n\n\nevtVwr f0 Line moved")
+        #print("evtVwr f0 Line moved")
         fDragged = self.curves['evtVwr']['A(f)']['marker'].value()
         # Get the current frequency
         # get index into freq that is closest to fDragged
-
-        if self.evtData is None:
+        try:
+            diffs = np.abs(np.array(self.evtData['freq'])-fDragged)
+            idx = np.where(diffs == np.min(diffs))[0][0]
+            #print(idx)
+        except:
             print("Event Data not loaded yet")
             self.curves['evtVwr']['A(f)']['marker'].setValue(0)
             return
-
-        # Find closest frequency
-        diffs = np.abs(np.array(self.evtData['freqUnion'])-fDragged)
-        dfMin = np.min(diffs)
-        idx = np.where(diffs == dfMin)[0][0]            
         # Update values
-        f0 = self.evtData['freqUnion'][idx]
+        f0 = self.evtData['freq'][idx]
         self.evtData['freqIdx'] = idx
         self.evtData['freqCurrent'] = f0
-        ## Update plots
+        # Update plots
         self.evtVwrUpdatePlots(plotAmpl=False)
         
     @pyqtSlot()
@@ -1372,7 +1600,7 @@ class MainWindow(qtw.QMainWindow):
                     # FIXME: currently this is done is a very dumb way with no logic to which resonances get picked (just uses the first resonance).
                     for i, res in enumerate(resonances):
                         if len(res)>0:
-                            self.tensionData[layer+side][i] = 4*1.16e-4*1.15**2*res[0]**2
+                            self.tensionData[layer+side][i] = 4*1.16e-4*1.15**2*res[0]**2/3.2
 
                         
                     # FIXME: this should only happen once -- in _makeCurves()
@@ -1403,7 +1631,7 @@ class MainWindow(qtw.QMainWindow):
                     "dwaUuid": "1",
                     "versionFirmware": "1.1",
                     "site": "Harvard",
-                    "measuredBy": "Chris not really",
+                    "measuredBy": self.measuredBy,
                     "productionStage": "[dropdown]",
                     "side": "A",
                     "layer": "V",
@@ -1613,7 +1841,13 @@ class MainWindow(qtw.QMainWindow):
         # try to read the requested file
         # if found, display contents
         # if not found, display error message
-        configFileToOpen = self.configFileName.text()
+        
+        if not self.configFileName.text():
+            configFileToOpen = "dwaConfig_"+self.configNextScanComboBox.currentText()+".ini"
+        else:
+            configFileToOpen = self.configFileName.text()
+        
+
         validConfigFilename = False
         try:
             with open(configFileToOpen) as fh:
@@ -2043,8 +2277,8 @@ class MainWindow(qtw.QMainWindow):
 
                 
                 self.resFitLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
-                self.resFitLines['proc'][reg][-1].sigClicked.connect(self._f0LineClicked)
-                self.resFitLines['proc'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
+                #self.resFitLines['proc'][reg][-1].sigClicked.connect(self._f0LineClicked)
+                #self.resFitLines['proc'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
                 self.resFitLines['raw'][reg].append( self.resonanceRawPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
                 self.resFitLines['raw'][reg][-1].sigClicked.connect(self._f0LineClicked)
                 self.resFitLines['raw'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)

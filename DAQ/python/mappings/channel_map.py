@@ -1,5 +1,6 @@
-from channel_frequencies import check_valid_wire_layer
 
+from channel_frequencies import check_valid_wire_layer
+import numpy as np
 
 def wire_to_apa_channel(wire_layer: str, wire_number: int):
     '''Return the APA channel associated to the given wire layer and wire number.'''
@@ -80,3 +81,58 @@ def apa_channel_to_wire_relay(wire_layer: str, apa_channel: int):
 def wire_relay_to_dwa_channel(wire_relay: int):
     '''Return the DWA channel from 0 to 7 associated to the given wire relay.'''
     return ((wire_relay - 1) % 16) // 2
+
+def check_valid_headboard_number(wire_layer: int, headboard_number: int):
+    '''Make sure that the headboard number is valid.'''
+    check_valid_wire_layer(wire_layer)
+    if headboard_number < 1 or headboard_number > 10:
+        raise ValueError('Invalid headboard number: only 1-10 can be used.')
+    return headboard_number
+
+def channel_groupings(wire_layer: str, headboard_number: int):
+    '''Returns a list of lists, with each sublist being a set of channels for a scan.'''
+
+    wire_layer = check_valid_wire_layer(wire_layer)
+    headboard_number = check_valid_headboard_number(wire_layer, headboard_number)
+
+    if wire_layer == "U" or wire_layer == "V":
+        return np.array([ \
+            np.array([ 1, 3, 5, 7, 9,11,13,15]), \
+            np.array([ 2, 4, 6, 8,10,12,14,16]), \
+            np.array([17,19,21,23,25,27,29,31]), \
+            np.array([18,20,22,24,26,28,30,32]), \
+            np.array([33,35,37,39]), \
+            np.array([34,36,38,40]) \
+        ], dtype=object) + (headboard_number - 1)*40
+
+
+    if wire_layer == "X":
+        return np.array([ \
+            [ 1, 3, 5, 7, 9,11,13,15], \
+            [ 2, 4, 6, 8,10,12,14,16], \
+            [17,19,21,23,25,27,29,31], \
+            [18,20,22,24,26,28,30,32], \
+            [33,35,37,39,41,43,45,47], \
+            [34,36,38,40,42,44,46,48] \
+        ], dtype=object) + (headboard_number - 1)*48
+
+    if wire_layer == "G" and headboard_number == 1:
+        return np.array([ \
+            [ 1, 3, 5, 7, 9,11,13,15], \
+            [ 2, 4, 6, 8,10,12,14,16], \
+            [17,19,21,23,25,27,29,31], \
+            [18,20,22,24,26,28,30,32], \
+            [33,35,37,39,41,43,45,47], \
+            [34,36,38,40,42,44,46,48], [49] \
+        ], dtype=object)
+
+    if wire_layer == "G" and headboard_number > 1:
+        return np.array([ \
+            [ 1, 3, 5, 7, 9,11,13,15], \
+            [ 2, 4, 6, 8,10,12,14,16], \
+            [17,19,21,23,25,27,29,31], \
+            [18,20,22,24,26,28,30,32], \
+            [33,35,37,39,41,43,45,47], \
+            [34,36,38,40,42,44,46,48] \
+        ], dtype=object) + 49 + (headboard_number - 2)*48    
+    

@@ -3,7 +3,7 @@ import string
 #import logging
 #logger = logging.getLogger(__name__)
 
-SECTIONS = ["FPGA","DAQ"]
+SECTIONS = ["FPGA","DAQ", "Database"]
 
 class DwaConfigFile():
 
@@ -49,7 +49,11 @@ class DwaConfigFile():
                                      "client_IP",
                                      "noiseFreqMin", "noiseFreqMax", "noiseFreqStep",
                                      "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq",
-                                     "relayWireTop", "relayWireBot", "relayBusTop", "relayBusBot"]
+                                     "relayWireTop", "relayWireBot", "relayBusTop", "relayBusBot",
+                                     "statusPeriod"]
+        self.validOptions["Database"] = ["wires", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side", "channels"]
+
+        self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose"]
 
         self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose"]
 
