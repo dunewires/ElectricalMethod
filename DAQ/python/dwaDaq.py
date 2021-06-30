@@ -27,10 +27,6 @@
 # * look for dropped UDP packets by monitoring the UDP counter
 #   (careful with wraps of the counter, and with STATUS frames)
 # * if there is a dropped UDP packet, how can we tell what register it was from?
-# * database logging (seitch)
-# * Redundant saving of amplitude data?!?
-#                self._writeAmplitudesToFile()
-#                self.saveAmplitudeData()
 # * From Sebastien: 4/17/2020
 #   Another idea that came from people doing the measurement for
 #   protodune was to get a summary of the recent previous wire tension
@@ -88,6 +84,7 @@ import config_generator
 import channel_map
 import channel_frequencies
 import ChannelMapping
+
 DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 AMP_DATA_FILE   = "ampData/slowScan.json"
@@ -347,22 +344,6 @@ class MainWindow(qtw.QMainWindow):
         self.ampDataFilename.setText(AMP_DATA_FILE)
 
         # Event viewer tab stuff
-        self.evtVwr_runName_val.setText("20210526T222903")#20210604T170730")
-        self.evtVwr_runName_val.returnPressed.connect(self.loadEventData)
-        self.evtVwrPlotsGLW.setBackground('w')
-        self.evtVwrPlots = []
-        chanNum = 0
-        for irow in range(3):
-            for icol in range(3):
-                if chanNum < 8:
-                    self.evtVwrPlots.append(self.evtVwrPlotsGLW.addPlot())
-                    plotTitle = f'V(t) Chan {chanNum}'
-                    self.evtVwrPlots[-1].setTitle(plotTitle)
-                else:
-                    # A(f) data for all channels
-                    self.evtVwrPlots.append(self.evtVwrPlotsGLW.addPlot())                    
-                chanNum += 1
-            self.evtVwrPlotsGLW.nextRow()
         self._configureEventViewer()
         self.evtData = None
         
@@ -599,44 +580,6 @@ class MainWindow(qtw.QMainWindow):
         self.sock.bind( self.udpServerAddressPort ) # this is required
         #self.sock.settimeout(self.udpTimeoutSec)    # if no new data comes from server, quit
         #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: this is not necessary
-        
-        self.registerOfVal = {}
-        for reg in ddp.Registers:
-            self.registerOfVal[reg.value] = reg
-            
-        self.fnOfReg = {}  # file names for output (empty for now)
-        self._makeOutputFilenames()
-
-        self.ampData = {}  # hold amplitude vs. freq data for a scan
-        self.resonantFreqs = {}
-        for reg in self.registers:
-            self.ampData[reg.value] = {'freq':[], 'ampl':[]}
-            self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
-        self._initResonanceFitLines()
-        
-        # Info about current run
-        self.stimFreqMin = 0
-        self.stimFreqMax = 0
-        self.state = State.IDLE
-
-        # Set A(f) peak detection parameters
-        self.resFitParams = {}
-        self.resFitParams['preprocess'] = {'detrend':True}  # detrend: subtract a line from A(f) before processing?
-        self.resFitParams['find_peaks'] = {'bkgPoly':2, 'width':1, 'prominence':(0.8,None)}
-        # FIXME: replace this with a Model/View approach
-        self.resFitPreDetrend.blockSignals(True)
-        self.resFitPreDetrend.setChecked(self.resFitParams['preprocess']['detrend'])
-        self.resFitPreDetrend.blockSignals(False)
-        self.resFitBkgPoly.setText(str(self.resFitParams['find_peaks']['bkgPoly']))
-        print(f"str(self.resFitParams['find_peaks']['width']) = {str(self.resFitParams['find_peaks']['width'])}")
-        self.resFitWidth.setText(str(self.resFitParams['find_peaks']['width']))
-        self.resFitProminence.setText(str(self.resFitParams['find_peaks']['prominence']))
-
-        # KLUGE for now...
-        self.resFitParamsOut = {}
-        for reg in self.registers:
-            chan = reg.value
-            self.resFitParamsOut[chan] = {'peaks':[], 'properties':{}}
         
         # Start listening for UDP data in a Worker thread
         self.udpListen()
@@ -1408,23 +1351,25 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def _evtVwrF0LineMoved(self):
-        #print("evtVwr f0 Line moved")
+        print("\n\n\nevtVwr f0 Line moved")
         fDragged = self.curves['evtVwr']['A(f)']['marker'].value()
         # Get the current frequency
         # get index into freq that is closest to fDragged
-        try:
-            diffs = np.abs(np.array(self.evtData['freq'])-fDragged)
-            idx = np.where(diffs == np.min(diffs))[0][0]
-            #print(idx)
-        except:
+
+        if self.evtData is None:
             print("Event Data not loaded yet")
             self.curves['evtVwr']['A(f)']['marker'].setValue(0)
             return
+
+        # Find closest frequency
+        diffs = np.abs(np.array(self.evtData['freqUnion'])-fDragged)
+        dfMin = np.min(diffs)
+        idx = np.where(diffs == dfMin)[0][0]            
         # Update values
-        f0 = self.evtData['freq'][idx]
+        f0 = self.evtData['freqUnion'][idx]
         self.evtData['freqIdx'] = idx
         self.evtData['freqCurrent'] = f0
-        # Update plots
+        ## Update plots
         self.evtVwrUpdatePlots(plotAmpl=False)
         
     @pyqtSlot()
@@ -1890,12 +1835,6 @@ class MainWindow(qtw.QMainWindow):
     def _loadDaqConfig(self):
         self.daqConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
         self.daqConfig = self.daqConfigFile.getConfigDict(section='DAQ')
-        #self.daqConfig['DWA_IP'] = '149.130.136.211'
-        #self.daqConfig['statusPeriod'] = '0007A120'  # string or Hex????
-        #self.daqConfig['statusPeriod'] = '00000000'  # string or Hex????
-        #self.daqConfig['verbose'] = 1
-        # Populate fields in the GUI
-        #self.statusFramePeriod_val.setText(f"{self.daqConfig['statusPeriodSec']}")
 
     def _makeWordList(self, udpDataStr):
         '''
@@ -2277,6 +2216,7 @@ class MainWindow(qtw.QMainWindow):
 
                 
                 self.resFitLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
+                # FIXME: should the next 2 lines really be commented out?
                 #self.resFitLines['proc'][reg][-1].sigClicked.connect(self._f0LineClicked)
                 #self.resFitLines['proc'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
                 self.resFitLines['raw'][reg].append( self.resonanceRawPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
