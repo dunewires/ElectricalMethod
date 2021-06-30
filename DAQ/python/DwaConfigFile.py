@@ -50,10 +50,8 @@ class DwaConfigFile():
                                      "noiseFreqMin", "noiseFreqMax", "noiseFreqStep",
                                      "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq",
                                      "relayWireTop", "relayWireBot", "relayBusTop", "relayBusBot",
-                                     "statusPeriod"]
+                                     ]
         self.validOptions["Database"] = ["wires", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side", "channels"]
-
-        self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose"]
 
         self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose"]
 
