@@ -92,6 +92,8 @@ import channel_map
 import channel_frequencies
 import ChannelMapping
 
+DWA_DAQ_VERSION = "X.X.X"
+#
 DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 AMP_DATA_FILE   = "ampData/slowScan.json"
@@ -1222,8 +1224,8 @@ class MainWindow(qtw.QMainWindow):
         #self.outputText.appendPlainText("CLICKED START")
         #self.outputText.update()
 
-        import os.path #getting the right directory
-        os.chdir('config/')
+        #import os.path #getting the right directory
+        #os.chdir('config/')
 
         # startRun() is in a thread...  need to get logger?
         logger = logging.getLogger(__name__)
@@ -2304,7 +2306,7 @@ class MainWindow(qtw.QMainWindow):
 def main():
     app = qtw.QApplication(sys.argv)
     win = MainWindow()
-    win.setWindowTitle("DWA: DUNE Wire Analyzer v. X.X.X")
+    win.setWindowTitle(f"DWA: DUNE Wire Analyzer v. {DWA_DAQ_VERSION}")
     app.aboutToQuit.connect(win.cleanUp)
     app.exec_()
     #sys.exit(app.exec_())  # diff btw this and prev. line???
