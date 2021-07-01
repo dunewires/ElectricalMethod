@@ -704,13 +704,13 @@ class MainWindow(qtw.QMainWindow):
         # TODO: Make sure inputs can be safely converted to floats
         # TODO: Grab default values if undefined
         if advFss: advFss = float(advFss)
-        else: advFss = 0
+        else: pass
         if advStimTime: advStimTime = float(advStimTime)
-        else: advStimTime = 0
+        else: pass
         if advInitDelay: advInitDelay = float(advInitDelay)
-        else: advInitDelay = 0.
+        else: pass
         if advAmplitude: advAmplitude = float(advAmplitude)
-        else: advAmplitude = 0.
+        else: pass
 
 
 
@@ -739,19 +739,29 @@ class MainWindow(qtw.QMainWindow):
                 
 
                 fpgaConfig = config_generator.configure_default()
-                fpgaConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss))
+                
+                if advFss: fpgaConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss))
+                else: pass
                 fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
 
                 fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
                 fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
                 fpgaConfig.update(config_generator.configure_fixed_frequency())
-                fpgaConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss))
+
                 logging.info("advInitDelay")
                 logging.info(advInitDelay)
                 logging.info("advStimTime")
                 logging.info(advStimTime)
-                fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
-                fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=0xBB8, digipot=0x7766554433221100)) # TODO: Should stim_mag and digipot be configurable?
+                if advInitDelay: 
+                    if advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
+                    else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
+                elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advStimTime))
+                else: pass
+
+                if advAmplitude: 
+                    fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=int(advAmplitude)))
+                else: pass
+
                 fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
                 fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
                 fpgaConfig.update(config_generator.configure_noise_subtraction(freqMin, freqMax))
