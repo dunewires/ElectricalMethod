@@ -819,6 +819,10 @@ class MainWindow(qtw.QMainWindow):
         self.configScanListTextEdit.setPlainText(scanListText)
 
 
+
+
+
+
         
     def _configurePlots(self):
         self.chanViewMain = 0  # which channel to show large for V(t) data
@@ -1207,19 +1211,16 @@ class MainWindow(qtw.QMainWindow):
         #self.outputText.appendPlainText("CLICKED START")
         #self.outputText.update()
 
-        import os.path #getting the right directory
-        os.chdir('config/')
-
         # startRun() is in a thread...  need to get logger?
         logger = logging.getLogger(__name__)
-        self.configFile = self.configFileName.text()
+        self.configFile = os.path.join("config/", self.configFileName.text())
         # If configFile is blank, use the generated one
         if not self.configFile:
             if self.configNextScanComboBox.currentText():
-                self.configFile = "dwaConfig_"+self.configNextScanComboBox.currentText()+".ini"
+                self.configFile = os.path.join("config/", "dwaConfig_"+self.configNextScanComboBox.currentText()+".ini")
             else:
                 # If no generated one was found, use the default one
-                self.configFile = "dwaConfig.ini"
+                self.configFile = os.path.join("config/", "dwaConfig.ini")
         logger.info(self.configFile)
         logger.info(f"config file = {self.configFile}")
         #
