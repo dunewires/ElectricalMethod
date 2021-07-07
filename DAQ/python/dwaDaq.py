@@ -84,6 +84,7 @@ import DwaDataParser as ddp
 import DwaConfigFile as dcf
 import DwaMicrozed as duz
 
+
 from SietchConnect import SietchConnect
 
 sys.path.append('./mappings')
@@ -741,6 +742,7 @@ class MainWindow(qtw.QMainWindow):
         channelGroups = channel_map.channel_groupings(self.configLayer, self.configHeadboard)
         scanListText = ""
         scanNum = 1
+        
         for channels in channelGroups:
 
             range_data = channel_frequencies.get_range_data_for_channels(self.configLayer, channels)
@@ -793,11 +795,60 @@ class MainWindow(qtw.QMainWindow):
                 logging.info("fpgaConfig")
                 logging.info(fpgaConfig)
 
-                dataConfig = {"channels": channels, "wires": wires, "measuredBy": self.measuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+                #sorting apa channels list to follow increasing order of dwa channels
+                dwaChannels = []
+                for i in range(0,len(channels)):
+                    dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
+                apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
+
+                dataConfig = {"channels": apaChannels, "wires": wires, "measuredBy": self.measuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
                 "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.SideComboBox}
 
                 combinedConfig = {"FPGA": fpgaConfig, "Database": dataConfig}
                 config_generator.write_config(combinedConfig, 'dwaConfig_'+str(scanNum)+'.ini')
+
+                scanNum = scanNum + 1
+
+                #table with scan details
+
+                self.scanTable.setRowCount(scanNum-1)
+                item = qtw.QTableWidgetItem()
+                self.scanTable.setVerticalHeaderItem(scanNum-2, item)
+                #select column
+                item = qtw.QRadioButton(self.scanTable)
+                self.scanTable.setCellWidget(scanNum-2, 0, item)
+                item = qtw.QRadioButton(self.scanTable)
+                self.scanTable.setCellWidget(0, 0, item)
+                item.setChecked(True)
+                self.scanTable.resizeColumnsToContents()
+                #run number column
+                item = qtw.QTableWidgetItem()
+                self.scanTable.setItem(scanNum-2, 1, item)
+                item = self.scanTable.item(scanNum-2, 1)
+                item.setTextAlignment(qtc.Qt.AlignHCenter)
+                item.setText(qtc.QCoreApplication.translate("MainWindow", str(scanNum-1)))
+                self.scanTable.resizeColumnsToContents() 
+                #wires column
+                item = qtw.QTableWidgetItem()
+                self.scanTable.setItem(scanNum-2, 2, item)
+                item = self.scanTable.item(scanNum-2, 2)
+                item.setTextAlignment(qtc.Qt.AlignHCenter)
+                item.setText(qtc.QCoreApplication.translate("MainWindow", str(wires)))
+                self.scanTable.resizeColumnsToContents()
+                #freq min column
+                item = qtw.QTableWidgetItem()
+                self.scanTable.setItem(scanNum-2, 3, item)
+                item = self.scanTable.item(scanNum-2, 3)
+                item.setTextAlignment(qtc.Qt.AlignHCenter)
+                item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMin)))
+                self.scanTable.resizeColumnsToContents()
+                #freq max column
+                item = qtw.QTableWidgetItem()
+                self.scanTable.setItem(scanNum-2, 4, item)
+                item = self.scanTable.item(scanNum-2, 4)
+                item.setTextAlignment(qtc.Qt.AlignHCenter)
+                item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
+                self.scanTable.resizeColumnsToContents()
 
                 # with open('dwaConfig_'+str(scanNum)+'.ini', 'w') as configfile:
                 #     configfile.write("[FPGA]\n")
@@ -825,13 +876,13 @@ class MainWindow(qtw.QMainWindow):
                 #     configfile.write("noiseSettlingTime      = 00001000  # [2.56 us]  00001000 ~ 10ms\n")
                 #     configfile.write("noiseAdcSamplesPerFreq = 00000100  # [unitless] (256 samples) limited to 256\n")
                 #     configfile.write("noiseSamplingPeriod    = 0000CB73  # [10ns]   32 samp/cycle @ 60 Hz\n")
-                
-                scanNum = scanNum + 1
+
+                #Add a scan row here 
         
         self.configNextScanComboBox.clear()
         for i in range(1, scanNum):
             self.configNextScanComboBox.addItem(str(i))
-        
+
         logging.info("Configuring scans")
         logging.info(self.measuredBy)
         logging.info(self.configStage)
@@ -840,9 +891,7 @@ class MainWindow(qtw.QMainWindow):
 
 
         logging.info(channelGroups)
-        self.configScanListTextEdit.setPlainText(scanListText)
-
-
+        #self.configScanListTextEdit.setPlainText(scanListText)
 
 
 
