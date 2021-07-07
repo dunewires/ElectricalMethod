@@ -184,7 +184,7 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -315,9 +315,6 @@
                  <property name="fieldGrowthPolicy">
                   <enum>QFormLayout::ExpandingFieldsGrow</enum>
                  </property>
-                 <item row="15" column="1">
-                  <layout class="QHBoxLayout" name="horizontalLayout_9"/>
-                 </item>
                  <item row="0" column="0">
                   <widget class="QLabel" name="measure_by_label">
                    <property name="text">
@@ -327,6 +324,13 @@
                  </item>
                  <item row="0" column="1">
                   <widget class="QLineEdit" name="measuredByLineEdit"/>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="apaSide">
+                   <property name="text">
+                    <string>Side</string>
+                   </property>
+                  </widget>
                  </item>
                  <item row="1" column="1">
                   <widget class="QComboBox" name="SideComboBox">
@@ -340,13 +344,6 @@
                      <string>B</string>
                     </property>
                    </item>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="apaSide">
-                   <property name="text">
-                    <string>Side</string>
-                   </property>
                   </widget>
                  </item>
                  <item row="2" column="0">
@@ -369,13 +366,20 @@
                  <item row="3" column="1">
                   <widget class="QLineEdit" name="configApaUuid"/>
                  </item>
-                 <item row="4" column="1">
-                  <widget class="QComboBox" name="configLayerComboBox"/>
-                 </item>
                  <item row="4" column="0">
                   <widget class="QLabel" name="layer_label">
                    <property name="text">
                     <string>Layer</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1">
+                  <widget class="QComboBox" name="configLayerComboBox"/>
+                 </item>
+                 <item row="5" column="0">
+                  <widget class="QLabel" name="headboardString_label">
+                   <property name="text">
+                    <string>Headboard #</string>
                    </property>
                   </widget>
                  </item>
@@ -389,13 +393,6 @@
                    </property>
                    <property name="value">
                     <number>1</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="5" column="0">
-                  <widget class="QLabel" name="headboardString_label">
-                   <property name="text">
-                    <string>Headboard #</string>
                    </property>
                   </widget>
                  </item>
@@ -438,13 +435,37 @@
                   </widget>
                  </item>
                  <item row="10" column="1">
-                  <widget class="QPlainTextEdit" name="configScanListTextEdit"/>
-                 </item>
-                 <item row="11" column="0">
-                  <widget class="QLabel" name="nextScan_label">
-                   <property name="text">
-                    <string>Next scan</string>
-                   </property>
+                  <widget class="QTableWidget" name="scanTable">
+                   <column>
+                    <property name="text">
+                     <string>Select</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Run Number</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Wires</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Freq Min</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Freq Max</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </column>
                   </widget>
                  </item>
                  <item row="11" column="1">
