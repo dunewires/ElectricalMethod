@@ -29,10 +29,10 @@ force -freeze sim:/tb_headergenerator/sendRunHdr TRUE {500 ns} -cancel {520 ns}
 #
 force -freeze sim:/tb_headergenerator/fromDaqReg.udpDataDone TRUE {440 ns} -cancel {460 ns}
 #
-force -freeze sim:/tb_headergenerator/udpDataRen TRUE {100 ns} -cancel {170 ns}
-force -freeze sim:/tb_headergenerator/udpDataRen TRUE {200 ns} -cancel {280 ns}
-force -freeze sim:/tb_headergenerator/udpDataRen TRUE {290 ns} -cancel {450 ns}
-force -freeze sim:/tb_headergenerator/udpDataRen TRUE {510 ns} -cancel {900 ns}
+force -freeze sim:/tb_headergenerator/fromDaqReg.udpDataRen TRUE {100 ns} -cancel {170 ns}
+force -freeze sim:/tb_headergenerator/fromDaqReg.udpDataRen TRUE {200 ns} -cancel {280 ns}
+force -freeze sim:/tb_headergenerator/fromDaqReg.udpDataRen TRUE {290 ns} -cancel {450 ns}
+force -freeze sim:/tb_headergenerator/fromDaqReg.udpDataRen TRUE {510 ns} -cancel {900 ns}
 
 # PS signals
 #force -freeze sim:/tb_headergenerator/fromDaqReg.dwaCtrl 24'h0C0C0C 0
@@ -42,12 +42,12 @@ force -freeze sim:/tb_headergenerator/fromDaqReg.stimFreqReq 24'hBABABA 0
 force -freeze sim:/tb_headergenerator/fromDaqReg.stimFreqMin 24'hABCD12 0
 force -freeze sim:/tb_headergenerator/fromDaqReg.stimFreqMax 24'hDCBA12 0
 force -freeze sim:/tb_headergenerator/fromDaqReg.stimFreqStep 24'hCAFE66 0
-force -freeze sim:/tb_headergenerator/fromDaqReg.acStim_mag 24'hDEAD66 0
+#force -freeze sim:/tb_headergenerator/fromDaqReg.acStim_mag 24'hDEAD66 0
 force -freeze sim:/tb_headergenerator/fromDaqReg.stimTime 24'hBEEF66 0
 #force -freeze sim:/tb_headergenerator/fromDaqReg.adcAutoDc_chSel 16'h0102 0
 force -freeze sim:/tb_headergenerator/fromDaqReg.cyclesPerFreq 24'h00CFCF 0
 force -freeze sim:/tb_headergenerator/fromDaqReg.adcSamplesPerCycle 16'h002C 0
-force -freeze sim:/tb_headergenerator/fromDaqReg.acStim_mag 12'h023 0
+#force -freeze sim:/tb_headergenerator/fromDaqReg.stimMag 12'h023 0
 force -freeze sim:/tb_headergenerator/fromDaqReg.clientIp 32'h95828854 0
 force -freeze sim:/tb_headergenerator/fromDaqReg.activeChannels 8'h09 0
 force -freeze sim:/tb_headergenerator/fromDaqReg.relayMask 32'h91817161 0

@@ -17,7 +17,7 @@ src/nor.o src/nor.o: ../src/nor.c ../src/fsbl.h \
  ../../dwaFsbl_bsp/ps7_cortexa9_0/include/xstatus.h \
  ../../dwaFsbl_bsp/ps7_cortexa9_0/include/xil_assert.h \
  ../src/fsbl_debug.h \
- /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.h \
+ /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwa_ps_bd_wrapper_hw_platform_0/ps7_init.h \
  ../src/nor.h ../../dwaFsbl_bsp/ps7_cortexa9_0/include/xstatus.h
 
 ../src/fsbl.h:
@@ -60,7 +60,7 @@ src/nor.o src/nor.o: ../src/nor.c ../src/fsbl.h \
 
 ../src/fsbl_debug.h:
 
-/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/design_1_wrapper_hw_platform_0/ps7_init.h:
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/sdk/dwa_ps_bd_wrapper_hw_platform_0/ps7_init.h:
 
 ../src/nor.h:
 

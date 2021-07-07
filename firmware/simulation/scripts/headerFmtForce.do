@@ -25,6 +25,15 @@ force -freeze sim:/tb_adc_emu/fromDaqReg.clientIp 32'h95828854 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.stimTime 24'h000010 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.activeChannels 8'h09 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.relayMask 32'h91817161 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(7) 8'h00 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(6) 8'h00 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(5) 8'h00 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(4) 8'h01 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(3) 8'h64 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(2) 8'h63 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(1) 8'h62 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(0) 8'h61 0
+
 # set reset and start
 force -freeze sim:/tb_adc_emu/fromDaqReg.reset true 20ns -cancel 30ns
 force -freeze sim:/tb_adc_emu/fromDaqReg.ctrlStart true 100ns -cancel 110ns
