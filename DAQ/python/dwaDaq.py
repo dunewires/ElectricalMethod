@@ -1,4 +1,11 @@
 # FIXME/TODO:
+# * use tabWidget.currentChanged.connect(self.tabChanged)
+#   https://stackoverflow.com/questions/21562485/pyqt-qtabwidget-currentchanged
+#   def tabChanged(self, i):
+#       print(f"Tab index: {i}")
+#   To keep track of the current tab index!
+#   And make keyboard shortcuts just change the active tab (then the callback will handle remembering the active tab)
+# * self.currentView is not properly coded... both MainView and StimView share indices. Yikes!!!!
 # * Event Viewer: plot data accurately -- all freq data on a per-channel basis. Not just freqs that are present for all channels!
 # * add a "listen" mode -- no need to connect to a DWA to listen for udp packets (e.g. when replaying data)
 # * Update plot title V(t) to show frequency of scan
@@ -85,15 +92,19 @@ import channel_map
 import channel_frequencies
 import ChannelMapping
 
+DWA_DAQ_VERSION = "X.X.X"
+#
 DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
-AMP_DATA_FILE   = "ampData/slowScan.json"
+AMP_DATA_FILE   = "test/data/50cm24inch/20210616T203958_amp.json"
+#AMP_DATA_FILE   = "ampData/slowScan.json"
 #EVT_VWR_TIMESTAMP = "20210526T222903"
 EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
 OUTPUT_DIR_UDP_DATA = './udpData/'
 OUTPUT_DIR_AMP_DATA = './ampData/'        
 CLOCK_PERIOD_SEC = 1e8
+STIM_VIEW_OFFSET = 0
 
 # FIXME: these should go in DwaDataParser.py
 RUN_START = 1
@@ -118,23 +129,26 @@ class State(IntEnum):
 
 class MainView(IntEnum):
     STIMULUS  = 0 # config/V(t)/A(f) [Stimulus view]
-    RESFREQ   = 1 # A(f) data and fitting
+    RESONANCE = 1 # A(f) data and fitting
     TENSION   = 2 # Tension view
     LOG       = 3 # Log-file output    
+    EVTVWR    = 4 # Event Viewer tab
 
 class StimView(IntEnum):
     ''' for stackedWidget page indexing '''
-    CONFIG  = 0  # Show the configuration parameters
-    V_GRID  = 1  # V(t) (grid view)
-    V_CHAN  = 2  # V(t) (channel view)
-    A_GRID  = 3  # A(f) (grid view)
-    A_CHAN  = 4  # A(f) (channel view)
+    CONFIG   = 0+STIM_VIEW_OFFSET  # Show the configuration parameters
+    ADVANCED = 1+STIM_VIEW_OFFSET  # "Advanced" configuration tab
+    V_GRID   = 2+STIM_VIEW_OFFSET  # V(t) (grid view)
+    V_CHAN   = 3+STIM_VIEW_OFFSET  # V(t) (channel view)
+    A_GRID   = 4+STIM_VIEW_OFFSET  # A(f) (grid view)
+    A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 class Shortcut(Enum):
-    STIMULUS = "CTRL+S"
-    RESFREQ  = "CTRL+R"
-    TENSION  = "CTRL+T"
-    LOG      = "CTRL+L"
+    STIMULUS  = "CTRL+S"
+    RESONANCE = "CTRL+R"
+    TENSION   = "CTRL+T"
+    LOG       = "CTRL+L"
+    EVTVWR    = "CTRL+E"
     #
     CONFIG   = "CTRL+C"
     V_GRID   = "CTRL+V"
@@ -350,10 +364,15 @@ class MainWindow(qtw.QMainWindow):
         # Make handles for widgets in the UI
         #self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
         #self.stack.setStyleSheet("background-color:white")
-        self.currentView = MainView.STIMULUS
-        self.tabWidget.setCurrentIndex(self.currentView)
+        
+        # self.tabWidgetStage is the main set of tabs showing each stage in the process
+        # self.tabWidgetStim is the set of tabs under the stimulus tab
+        self.currentViewStage = MainView.RESONANCE
+        self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
+        self.currentViewStim = StimView.CONFIG
+        self.tabWidgetStim.setCurrentIndex(self.currentViewStim)
+        
         # testing updating tab labels
-        #self.tabWidget.setTabText(StimView.TENSION, "Tension\nCTRL+t")
         self._setTabTooltips()
         
         # Connect slots/signals
@@ -507,7 +526,11 @@ class MainWindow(qtw.QMainWindow):
             'GB':[0]*960,
         }
         
+
+    
     def _connectSignalsSlots(self):
+        self.tabWidgetStages.currentChanged.connect(self.tabChangedStage)
+        self.tabWidgetStim.currentChanged.connect(self.tabChangedStim)
         self.btnDwaConnect.clicked.connect(self.dwaConnect)
         self.btnScanCtrl.clicked.connect(self.startRunThread)
         #self.btnSaveAmpl.clicked.connect(self.saveAmplitudeData)
@@ -614,13 +637,14 @@ class MainWindow(qtw.QMainWindow):
             
     def _setTabTooltips(self):
         self.tabWidgetStages.setTabToolTip(MainView.STIMULUS, Shortcut.STIMULUS.value)
-        self.tabWidgetStages.setTabToolTip(MainView.RESFREQ, Shortcut.RESFREQ.value)
+        self.tabWidgetStages.setTabToolTip(MainView.RESONANCE, Shortcut.RESONANCE.value)
         self.tabWidgetStages.setTabToolTip(MainView.TENSION, Shortcut.TENSION.value)
         self.tabWidgetStages.setTabToolTip(MainView.LOG, Shortcut.LOG.value)
+        self.tabWidgetStages.setTabToolTip(MainView.EVTVWR, Shortcut.EVTVWR.value)
         #
-        self.tabWidget.setTabToolTip(StimView.CONFIG, Shortcut.CONFIG.value)
-        self.tabWidget.setTabToolTip(StimView.V_GRID, Shortcut.V_GRID.value)
-        self.tabWidget.setTabToolTip(StimView.A_GRID, Shortcut.A_GRID.value)
+        self.tabWidgetStim.setTabToolTip(StimView.CONFIG, Shortcut.CONFIG.value)
+        self.tabWidgetStim.setTabToolTip(StimView.V_GRID, Shortcut.V_GRID.value)
+        self.tabWidgetStim.setTabToolTip(StimView.A_GRID, Shortcut.A_GRID.value)
 
     def _initLogging(self):
         # logging levels (in order of severity): DEBUG, INFO, WARNING, ERROR, CRITICAL
@@ -1060,13 +1084,13 @@ class MainWindow(qtw.QMainWindow):
                                                               #self.dummyDataTension['y'])
             
     def _keyboardShortcuts(self):
-
+        print("Setting up keyboard shortcuts")
         # Stimulus Screen
         self.scStimulusView = qtw.QShortcut(qtg.QKeySequence(Shortcut.STIMULUS.value), self)
         self.scStimulusView.activated.connect(self.viewStimulus)
 
         # Resonant frequency fit
-        self.scResFreqFitView = qtw.QShortcut(qtg.QKeySequence(Shortcut.RESFREQ.value), self)
+        self.scResFreqFitView = qtw.QShortcut(qtg.QKeySequence(Shortcut.RESONANCE.value), self)
         self.scResFreqFitView.activated.connect(self.viewResFreqFit)
 
         # Tension data
@@ -1076,6 +1100,10 @@ class MainWindow(qtw.QMainWindow):
         # Show log
         self.scLog = qtw.QShortcut(qtg.QKeySequence(Shortcut.LOG.value), self)
         self.scLog.activated.connect(self.viewLog)
+
+        # Show event viewer
+        self.scEvtVwr = qtw.QShortcut(qtg.QKeySequence(Shortcut.EVTVWR.value), self)
+        self.scEvtVwr.activated.connect(self.viewEvtVwr)
 
         # Show configuration parameters
         self.scConfig = qtw.QShortcut(qtg.QKeySequence(Shortcut.CONFIG.value), self)
@@ -1265,6 +1293,16 @@ class MainWindow(qtw.QMainWindow):
     #@pyqtSlot()
     #def quitAll(self):
 
+    @pyqtSlot()
+    def tabChangedStage(self):
+        self.currentViewStage = self.tabWidgetStages.currentIndex()
+        print(f"tabWidgetStage changed... self.currentViewStage = {self.currentViewStage}")
+
+    @pyqtSlot()
+    def tabChangedStim(self):
+        self.currentViewStim = self.tabWidgetStim.currentIndex()
+        print(f"tabWidgetStim changed... self.currentViewStim = {self.currentViewStim}")
+        
 
     @pyqtSlot()
     def resFitParameterUpdate(self):
@@ -1281,8 +1319,11 @@ class MainWindow(qtw.QMainWindow):
             self.resFitParams['find_peaks']['bkgPoly'] = 2
 
         # peak width parameter
+        parens_to_replace = {"(":"", ")":"", "[":"", "]":""}
         print(f'self.resFitWidth.text() = {self.resFitWidth.text()}')
         entryStr = self.resFitWidth.text().strip()
+        for key,val in parens_to_replace.items():
+            entryStr = entryStr.replace(key, val)
         toks = [x.strip() for x in entryStr.split(",")]
         print(f'peak width toks = {toks}')
         self.resFitParams['find_peaks']['width'] = [None, None]
@@ -1296,8 +1337,8 @@ class MainWindow(qtw.QMainWindow):
         print(f'self.resFitProminence.text() = {self.resFitProminence.text()}')
         entryStr = self.resFitProminence.text().strip()
         # Get rid of any parentheses
-        entryStr = entryStr.replace("(","")
-        entryStr = entryStr.replace(")","")
+        for key, val in parens_to_replace.items():
+            entryStr = entryStr.replace(key, val)
         toks = [x.strip() for x in entryStr.split(",")]
         print(f'prominence toks = {toks}')
         self.resFitParams['find_peaks']['prominence'] = [None, None]
@@ -1414,50 +1455,78 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot()
     def viewStimulus(self):
-        self.currentView = MainView.STIMULUS
-        self.tabWidgetStages.setCurrentIndex(self.currentView)
+        self.currentViewStage = MainView.STIMULUS
+        self.updateTabView()
+        #self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
         self.logger.info("View Stimulus")
 
     @pyqtSlot()
     def viewResFreqFit(self):
-        self.currentView = MainView.RESFREQ
-        self.tabWidgetStages.setCurrentIndex(self.currentView)
+        self.currentViewStage = MainView.RESONANCE
+        self.updateTabView()
+        #self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
         self.logger.info("View Resonant Frequencies")
             
     @pyqtSlot()
     def viewTensions(self):
-        self.currentView = MainView.TENSION
-        self.tabWidgetStages.setCurrentIndex(self.currentView)
+        self.currentViewStage = MainView.TENSION
+        self.updateTabView()
+        #self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
         self.logger.info("View Tensions")
 
     @pyqtSlot()
     def viewLog(self):
-        self.currentView = MainView.LOG
-        self.tabWidgetStages.setCurrentIndex(self.currentView)
+        self.currentViewStage = MainView.LOG
+        self.updateTabView()
+        #self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
         self.logger.info("View LOG")
         
     @pyqtSlot()
+    def viewEvtVwr(self):
+        self.currentViewStage = MainView.EVTVWR
+        self.updateTabView()
+        #self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
+        self.logger.info("View EVENT VIEWER")
+        
+    @pyqtSlot()
     def viewConfig(self):
-        self.currentView = StimView.CONFIG
-        self.tabWidget.setCurrentIndex(self.currentView)
+        self.currentViewStage = MainView.STIMULUS
+        self.currentViewStim = StimView.CONFIG
+        self.updateTabView()
+        #self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
+        #self.tabWidget.setCurrentIndex(self.currentViewStim)
         self.logger.info("View CONFIG")
+        print("view config")
 
+    def updateTabView(self):
+        self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
+        self.tabWidgetStim.setCurrentIndex(self.currentViewStim)
+        
     @pyqtSlot()
     def viewGrid(self):
-        self.currentView = StimView.V_GRID
-        self.tabWidget.setCurrentIndex(self.currentView)
+        self.currentViewStage = MainView.STIMULUS
+        self.currentViewStim = StimView.V_GRID
+        self.updateTabView()
+        #self.tabWidgetStages.setCurrentIndex(MainView.STIMULUS)
+        #self.tabWidget.setCurrentIndex(self.currentView % STIM_VIEW_OFFSET)
         self.logger.info("View V(t) GRID")
 
     @pyqtSlot()
     def viewAmplGrid(self):
-        self.currentView = StimView.A_GRID
-        self.tabWidget.setCurrentIndex(self.currentView)
+        self.currentViewStage = MainView.STIMULUS
+        self.currentViewStim = StimView.A_GRID
+        self.updateTabView()
+        #self.tabWidgetStages.setCurrentIndex(MainView.STIMULUS)
+        #self.tabWidget.setCurrentIndex(self.currentView % STIM_VIEW_OFFSET)
         self.logger.info("View A(f) GRID")
 
     @pyqtSlot(int)
     def viewAmplChan(self, chan):
-        self.currentView = StimView.A_CHAN
-        self.tabWidget.setCurrentIndex(self.currentView)
+        self.currentViewStage = MainView.STIMULUS
+        self.currentViewStim = StimView.A_CHAN
+        self.updateTabView()
+        #self.tabWidgetStages.setCurrentIndex(MainView.STIMULUS)
+        #self.tabWidget.setCurrentIndex(self.currentView % STIM_VIEW_OFFSET)
         self.logger.info("View A(f) A_CHAN.  Channel = {}".format(chan))
 
         if self.chanViewMainAmpl != chan:
@@ -1468,8 +1537,11 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot(int)
     def viewChan(self, chan):
-        self.currentView = StimView.V_CHAN
-        self.tabWidget.setCurrentIndex(self.currentView)
+        self.currentViewStage = MainView.STIMULUS
+        self.currentViewStim = StimView.V_CHAN
+        self.updateTabView()
+        #self.tabWidgetStages.setCurrentIndex(MainView.STIMULUS)
+        #self.tabWidget.setCurrentIndex(self.currentView % STIM_VIEW_OFFSET)
         self.logger.info("View V(t) A_CHAN.  Channel = {}".format(chan))
 
         if self.chanViewMain != chan:
@@ -2072,18 +2144,18 @@ class MainWindow(qtw.QMainWindow):
             self.logger.info(f'regId = {regId}')
             reg = self.registerOfVal[regId]
             #self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
-            # FIXME: check which view is active and only update that one...
-            # can use self.tabWidget.currentIndex()
             dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
             tt = np.arange(len(udpDict[ddp.Frame.ADC_DATA]['adcSamples']))*dt
 
             #################################
             # Update plots
-            self.curves['grid'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
-            self.curves['chan'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
-            # FIXME: need to update the main window in chan view, too
-            if regId == self.chanViewMain:
-                self.curves['chan']['main'].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
+            if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_GRID:
+                self.curves['grid'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
+            if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_CHAN:
+                self.curves['chan'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
+                # FIXME: need to update the main window in chan view, too
+                if regId == self.chanViewMain:
+                    self.curves['chan']['main'].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
 
             # compute the best fit to V(t) and plot (in red)
             (B, C, D, freq_Hz) = dwa.processWaveform(udpDict)
@@ -2095,19 +2167,24 @@ class MainWindow(qtw.QMainWindow):
             #print(f'   B = {B}')
             #print(f'   C = {C}')
             #print(f'   D = {D}')
-            self.curvesFit['grid'][regId].setData(tfit, yfit)
-            self.curvesFit['chan'][regId].setData(tfit, yfit)
-            if regId == self.chanViewMain:
-                self.curvesFit['chan']['main'].setData(tfit, yfit)
+            if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_GRID:
+                self.curvesFit['grid'][regId].setData(tfit, yfit)
+            if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_CHAN:
+                self.curvesFit['chan'][regId].setData(tfit, yfit)
+                if regId == self.chanViewMain:
+                    self.curvesFit['chan']['main'].setData(tfit, yfit)
 
             # Update A(f) plot
-            self.curves['resRawFit'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+            if self.currentViewStage == MainView.RESONANCE:
+                self.curves['resRawFit'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
 
-            self.curves['amplgrid'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-            self.curves['amplgrid']['all'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-            self.curves['amplchan'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-            if regId == self.chanViewMainAmpl:
-                self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+            if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.A_GRID:
+                self.curves['amplgrid'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+                self.curves['amplgrid']['all'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+            if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.A_CHAN:
+                self.curves['amplchan'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+                if regId == self.chanViewMainAmpl:
+                    self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
 
         # Look for STATUS frame
         if ddp.Frame.STATUS in udpDict:
@@ -2125,6 +2202,9 @@ class MainWindow(qtw.QMainWindow):
         # overlay f0 locations on A(f) plots
         # loop over each register
 
+        # FIXME: this function should be farmed out to dwaTools, or somewhere else...
+        #        need only pass the self.ampData and self.resFitParams dictionaries
+        
         print("postScanAnalysis():")
         for reg in self.registers:
             #print(f'reg       = {reg}')
@@ -2140,22 +2220,19 @@ class MainWindow(qtw.QMainWindow):
             # subtract a line first?
             if self.resFitParams['preprocess']['detrend']:
                 # remove linear fit
-                if self.verbose > 0:
+                if self.verbose > 2:
                     print("detrending")
                 dataToFit -= dwa.baseline(self.ampData[reg]['freq'], dataToFit, polyDeg=1)
-                # FIXME: REMOVE!!!!
-                #print(f"\n\n reg = {reg}")
-                #print(dataToFit)
-                #self.curves['amplchan'][reg].setData(self.ampData[reg]['freq'], dataToFit)
-                #if (reg == 0):
-                #    self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], dataToFit)
             
             # Cumulative sum, remove baseline, plot, fit peaks, annotate plot
             # Vertical shift to start the y-values at zero
             dataToFit -= np.min(dataToFit)
             dataToFit  = scipy.integrate.cumtrapz(dataToFit, x=self.ampData[reg]['freq'], initial=0)
-            dataToFit -= dwa.baseline(self.ampData[reg]['freq'], dataToFit,
-                                      polyDeg=self.resFitParams['find_peaks']['bkgPoly'])
+
+            # User can disable this step by specifying a negative Baseline poly value
+            if self.resFitParams['find_peaks']['bkgPoly'] >= 0:
+                dataToFit -= dwa.baseline(self.ampData[reg]['freq'], dataToFit,
+                                          polyDeg=self.resFitParams['find_peaks']['bkgPoly'])
 
             # plot fxn that is used for peakfinding
             self.curves['resProcFit'][reg].setData(self.ampData[reg]['freq'], dataToFit)
@@ -2190,11 +2267,11 @@ class MainWindow(qtw.QMainWindow):
         # FIXME: move pen definition to __init__ (self.f0pen)
         f0Pen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
 
-        debug = True
+        debug = False
         
         for reg in self.registers:
             chan = reg.value
-            print(f'in update: {chan}: {self.resonantFreqs[chan]}')
+            #print(f'in update: {chan}: {self.resonantFreqs[chan]}')
             labelStr = ', '.join([f'{ff:.2f}' for ff in self.resonantFreqs[chan]])
             getattr(self, f'le_resfreq_val_{reg}').setText(labelStr)
             
@@ -2243,7 +2320,7 @@ class MainWindow(qtw.QMainWindow):
 def main():
     app = qtw.QApplication(sys.argv)
     win = MainWindow()
-    win.setWindowTitle("DWA: DUNE Wire Analyzer v. X.X.X")
+    win.setWindowTitle(f"DWA: DUNE Wire Analyzer v. {DWA_DAQ_VERSION}")
     app.aboutToQuit.connect(win.cleanUp)
     app.exec_()
     #sys.exit(app.exec_())  # diff btw this and prev. line???

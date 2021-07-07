@@ -179,7 +179,7 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
-            <widget class="QTabWidget" name="tabWidget">
+            <widget class="QTabWidget" name="tabWidgetStim">
              <property name="tabPosition">
               <enum>QTabWidget::North</enum>
              </property>
