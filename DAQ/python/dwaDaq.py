@@ -96,7 +96,8 @@ DWA_DAQ_VERSION = "X.X.X"
 #
 DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
-AMP_DATA_FILE   = "ampData/slowScan.json"
+AMP_DATA_FILE   = "test/data/50cm24inch/20210616T203958_amp.json"
+#AMP_DATA_FILE   = "ampData/slowScan.json"
 #EVT_VWR_TIMESTAMP = "20210526T222903"
 EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
@@ -128,7 +129,7 @@ class State(IntEnum):
 
 class MainView(IntEnum):
     STIMULUS  = 0 # config/V(t)/A(f) [Stimulus view]
-    RESFREQ   = 1 # A(f) data and fitting
+    RESONANCE = 1 # A(f) data and fitting
     TENSION   = 2 # Tension view
     LOG       = 3 # Log-file output    
     EVTVWR    = 4 # Event Viewer tab
@@ -143,11 +144,11 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 class Shortcut(Enum):
-    STIMULUS = "CTRL+S"
-    RESFREQ  = "CTRL+R"
-    TENSION  = "CTRL+T"
-    LOG      = "CTRL+L"
-    EVTVWR   = "CTRL+E"
+    STIMULUS  = "CTRL+S"
+    RESONANCE = "CTRL+R"
+    TENSION   = "CTRL+T"
+    LOG       = "CTRL+L"
+    EVTVWR    = "CTRL+E"
     #
     CONFIG   = "CTRL+C"
     V_GRID   = "CTRL+V"
@@ -366,7 +367,7 @@ class MainWindow(qtw.QMainWindow):
         
         # self.tabWidgetStage is the main set of tabs showing each stage in the process
         # self.tabWidgetStim is the set of tabs under the stimulus tab
-        self.currentViewStage = MainView.STIMULUS
+        self.currentViewStage = MainView.RESONANCE
         self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
         self.currentViewStim = StimView.CONFIG
         self.tabWidgetStim.setCurrentIndex(self.currentViewStim)
@@ -636,7 +637,7 @@ class MainWindow(qtw.QMainWindow):
             
     def _setTabTooltips(self):
         self.tabWidgetStages.setTabToolTip(MainView.STIMULUS, Shortcut.STIMULUS.value)
-        self.tabWidgetStages.setTabToolTip(MainView.RESFREQ, Shortcut.RESFREQ.value)
+        self.tabWidgetStages.setTabToolTip(MainView.RESONANCE, Shortcut.RESONANCE.value)
         self.tabWidgetStages.setTabToolTip(MainView.TENSION, Shortcut.TENSION.value)
         self.tabWidgetStages.setTabToolTip(MainView.LOG, Shortcut.LOG.value)
         self.tabWidgetStages.setTabToolTip(MainView.EVTVWR, Shortcut.EVTVWR.value)
@@ -1075,7 +1076,7 @@ class MainWindow(qtw.QMainWindow):
         self.scStimulusView.activated.connect(self.viewStimulus)
 
         # Resonant frequency fit
-        self.scResFreqFitView = qtw.QShortcut(qtg.QKeySequence(Shortcut.RESFREQ.value), self)
+        self.scResFreqFitView = qtw.QShortcut(qtg.QKeySequence(Shortcut.RESONANCE.value), self)
         self.scResFreqFitView.activated.connect(self.viewResFreqFit)
 
         # Tension data
@@ -1307,8 +1308,11 @@ class MainWindow(qtw.QMainWindow):
             self.resFitParams['find_peaks']['bkgPoly'] = 2
 
         # peak width parameter
+        parens_to_replace = {"(":"", ")":"", "[":"", "]":""}
         print(f'self.resFitWidth.text() = {self.resFitWidth.text()}')
         entryStr = self.resFitWidth.text().strip()
+        for key,val in parens_to_replace.items():
+            entryStr = entryStr.replace(key, val)
         toks = [x.strip() for x in entryStr.split(",")]
         print(f'peak width toks = {toks}')
         self.resFitParams['find_peaks']['width'] = [None, None]
@@ -1322,8 +1326,8 @@ class MainWindow(qtw.QMainWindow):
         print(f'self.resFitProminence.text() = {self.resFitProminence.text()}')
         entryStr = self.resFitProminence.text().strip()
         # Get rid of any parentheses
-        entryStr = entryStr.replace("(","")
-        entryStr = entryStr.replace(")","")
+        for key, val in parens_to_replace.items():
+            entryStr = entryStr.replace(key, val)
         toks = [x.strip() for x in entryStr.split(",")]
         print(f'prominence toks = {toks}')
         self.resFitParams['find_peaks']['prominence'] = [None, None]
@@ -1447,7 +1451,7 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def viewResFreqFit(self):
-        self.currentViewStage = MainView.RESFREQ
+        self.currentViewStage = MainView.RESONANCE
         self.updateTabView()
         #self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
         self.logger.info("View Resonant Frequencies")
@@ -2160,7 +2164,7 @@ class MainWindow(qtw.QMainWindow):
                     self.curvesFit['chan']['main'].setData(tfit, yfit)
 
             # Update A(f) plot
-            if self.currentViewStage == MainView.RESFREQ:
+            if self.currentViewStage == MainView.RESONANCE:
                 self.curves['resRawFit'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
 
             if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.A_GRID:
@@ -2187,6 +2191,9 @@ class MainWindow(qtw.QMainWindow):
         # overlay f0 locations on A(f) plots
         # loop over each register
 
+        # FIXME: this function should be farmed out to dwaTools, or somewhere else...
+        #        need only pass the self.ampData and self.resFitParams dictionaries
+        
         print("postScanAnalysis():")
         for reg in self.registers:
             #print(f'reg       = {reg}')
@@ -2202,26 +2209,22 @@ class MainWindow(qtw.QMainWindow):
             # subtract a line first?
             if self.resFitParams['preprocess']['detrend']:
                 # remove linear fit
-                if self.verbose > 0:
+                if self.verbose > 2:
                     print("detrending")
                 dataToFit -= dwa.baseline(self.ampData[reg]['freq'], dataToFit, polyDeg=1)
-                # FIXME: REMOVE!!!!
-                #print(f"\n\n reg = {reg}")
-                #print(dataToFit)
-                #self.curves['amplchan'][reg].setData(self.ampData[reg]['freq'], dataToFit)
-                #if (reg == 0):
-                #    self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], dataToFit)
             
             # Cumulative sum, remove baseline, plot, fit peaks, annotate plot
             # Vertical shift to start the y-values at zero
             dataToFit -= np.min(dataToFit)
             dataToFit  = scipy.integrate.cumtrapz(dataToFit, x=self.ampData[reg]['freq'], initial=0)
-            dataToFit -= dwa.baseline(self.ampData[reg]['freq'], dataToFit,
-                                      polyDeg=self.resFitParams['find_peaks']['bkgPoly'])
+
+            # User can disable this step by specifying a negative Baseline poly value
+            if self.resFitParams['find_peaks']['bkgPoly'] >= 0:
+                dataToFit -= dwa.baseline(self.ampData[reg]['freq'], dataToFit,
+                                          polyDeg=self.resFitParams['find_peaks']['bkgPoly'])
 
             # plot fxn that is used for peakfinding
-            if self.currentViewStage == MainView.RESFREQ:
-                self.curves['resProcFit'][reg].setData(self.ampData[reg]['freq'], dataToFit)
+            self.curves['resProcFit'][reg].setData(self.ampData[reg]['freq'], dataToFit)
             
             # FIXME: set width based on frequency, not hard-coded number of samples!
             peakIds, properties = find_peaks(dataToFit,
@@ -2253,11 +2256,11 @@ class MainWindow(qtw.QMainWindow):
         # FIXME: move pen definition to __init__ (self.f0pen)
         f0Pen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
 
-        debug = True
+        debug = False
         
         for reg in self.registers:
             chan = reg.value
-            print(f'in update: {chan}: {self.resonantFreqs[chan]}')
+            #print(f'in update: {chan}: {self.resonantFreqs[chan]}')
             labelStr = ', '.join([f'{ff:.2f}' for ff in self.resonantFreqs[chan]])
             getattr(self, f'le_resfreq_val_{reg}').setText(labelStr)
             
