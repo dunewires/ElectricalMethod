@@ -804,7 +804,7 @@
               <item>
                <widget class="QPushButton" name="pb_ampDataLoad">
                 <property name="text">
-                 <string>Load Scan</string>
+                 <string>Load A(f) data</string>
                 </property>
                </widget>
               </item>
