@@ -23,7 +23,7 @@ use duneDwa.global_def.all;
 entity dacInterface is
 	port (
 		acStim_mag     : in  unsigned(11 downto 0) := (others => '0');
-		acStim_nPeriod : in  unsigned(23 downto 0) := (others => '0');
+		acStim_nPeriod : in  unsigned(24 downto 0) := (others => '0');
 		acStim_enable  : in  std_logic             := '0';
 		acStim_trigger : out std_logic             := '0';
 
