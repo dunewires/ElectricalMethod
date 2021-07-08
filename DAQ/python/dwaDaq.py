@@ -445,7 +445,7 @@ class MainWindow(qtw.QMainWindow):
         # Set default A(f) peak detection parameters
         self.resFitParams = {}
         self.resFitParams['preprocess'] = {'detrend':True}  # detrend: subtract a line from A(f) before processing?
-        self.resFitParams['find_peaks'] = {'bkgPoly':2, 'width':5, 'prominence':(5.0,None)}
+        self.resFitParams['find_peaks'] = {'bkgPoly':2, 'width':5, 'prominence':4}
         # FIXME: replace this with a Model/View approach
         self.resFitPreDetrend.blockSignals(True)
         self.resFitPreDetrend.setChecked(self.resFitParams['preprocess']['detrend'])
@@ -455,7 +455,7 @@ class MainWindow(qtw.QMainWindow):
         self.resFitWidth.setText(str(self.resFitParams['find_peaks']['width']))
         self.resFitProminence.setText(str(self.resFitParams['find_peaks']['prominence']))
         #FIXME: remove!!!!
-        self.resFitKwargs.setText("width=[9,None)")
+        #self.resFitKwargs.setText("width=[9,None)")
 
         # KLUGE for now...
         self.resFitParamsOut = {}
@@ -515,6 +515,12 @@ class MainWindow(qtw.QMainWindow):
         x = screen.width() - wgeom.width()
         y = screen.height() - wgeom.height()
         self.move(x, y-GUI_Y_OFFSET)
+
+        # set the background color of the main window
+        #self.setStyleSheet("background-color: white;")
+        # set the border style
+        #self.setStyleSheet("border : 1px solid black;")
+        
         self.show()
 
     def _configureTensions(self):
@@ -934,12 +940,16 @@ class MainWindow(qtw.QMainWindow):
         self.resonanceRawPlots = []
         self.resonanceProcessedPlots = []
         chanNum = 0
-        for irow in range(4):
-            for icol in range(2):
+        #for irow in range(4):
+        #    for icol in range(2):
+        for irow in range(3):
+            for icol in range(3):
+                if irow == 2 and icol == 2:
+                    continue
                 self.resonanceRawPlots.append(self.resonanceRawDataGLW.addPlot())
-                self.resonanceRawPlots[-1].setTitle(f'A(f) raw Chan {chanNum}')
+                self.resonanceRawPlots[-1].setTitle(f'A(f) Raw DWA:{chanNum}')
                 self.resonanceProcessedPlots.append(self.resonanceProcessedDataGLW.addPlot())
-                self.resonanceProcessedPlots[-1].setTitle(f'A(f) proc. Chan {chanNum}')
+                self.resonanceProcessedPlots[-1].setTitle(f'A(f) Proc. DWA:{chanNum}')
                 chanNum += 1
             self.resonanceRawDataGLW.nextRow()
             self.resonanceProcessedDataGLW.nextRow()
@@ -1501,7 +1511,11 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers:
             fString = getattr(self, f'le_resfreq_val_{reg}').text()
             toks = fString.split(',')
-            self.resonantFreqs[reg.value] = [ float(tok) for tok in toks ]
+            print(f"resFreqUserInputText: toks = {toks}")
+            try:
+                self.resonantFreqs[reg.value] = [ float(tok) for tok in toks ]
+            except:
+                self.resonantFreqs[reg.value] = [ ]
         self._updateResonantFreqDisplay(chan=None)
 
     @pyqtSlot()
