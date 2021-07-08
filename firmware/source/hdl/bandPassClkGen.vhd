@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Apr  8 16:50:15 2021
--- Last update : Wed Jun 16 18:48:07 2021
+-- Last update : Wed Jul  7 23:58:06 2021
 -- Platform    : DWA
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ use duneDwa.global_def.all;
 
 entity bandPassClkGen is
 	port (
-		bPClk_nHPeriod : in unsigned(31 downto 0) := (others => '0');
+		bPClk_nPeriod_fp8 : in unsigned(25 downto 0) := (others => '0');
 
 		bPClk : out std_logic;
 		--regToDwa       : in SLV_VECTOR_TYPE_32(31 downto 0);
@@ -40,16 +40,17 @@ architecture STRUCT of bandPassClkGen is
 	-- With the odelay and DDR we have 32 X 2 = 64 phases.
 	-- There is an extra bit of  precision for the accumulator
 	-- This will give a more accurate frequency with the jitter determined by the tap delay
-	alias phaseStep : unsigned(6 downto 0) is bPClk_nHPeriod(6 downto 0);
+	-- bPClk_nPeriod_fp8 is shifted to fixed point 7 as we are defining half periods, ie the number of periods before a transition
+	alias phaseStep : unsigned(8 downto 0) is bPClk_nPeriod_fp8(8 downto 0);
 	-- the portion after the point is done
-	alias clk200Step                       : unsigned(16 downto 0) is bPClk_nHPeriod(23 downto 7);
+	alias clk200Step                       : unsigned(16 downto 0) is bPClk_nPeriod_fp8(25 downto 9); -- need 16 bits for min 10 HZ half period count with an extra bit for good luck :)
 	signal bPClk200,bPClk200Ph180,bPClk400 : std_logic             := '0';
 	signal phaseShift180                   : std_logic             := '0';
 	signal odlyLd                          : std_logic             := '0';
 	signal odlyTap                         : unsigned(4 downto 0)  := (others => '0');
 	signal bPClkPeriodCnt                  : unsigned(16 downto 0) := (others => '0');
-	signal fineCount                       : unsigned(7 downto 0)  := (others => '0');
-	alias phaseOF                          : std_logic is fineCount(7);
+	signal fineCount                       : unsigned(9 downto 0)  := (others => '0');
+	alias phaseOF                          : std_logic is fineCount(9);
 	signal phaseOFDone                     : std_logic := '0';
 
 begin
@@ -103,7 +104,7 @@ begin
 
 				bPClkPeriodCnt(bPClkPeriodCnt'left downto 1) <= (others => '0');
 				-- reset counter to 1 except during fine phase overflow reset to 0 for 1 extra clock cycle
-				bPClkPeriodCnt(0) <= not (phaseOF xor phaseOFDone);
+				bPClkPeriodCnt(0) <= not (phaseOF xor phaseOFDone); -- pulse once every flip 0 to 1 and 1 to 0 
 				phaseOFDone       <= phaseOF;
 			else
 				-- Default Increment
@@ -112,8 +113,8 @@ begin
 			-- update the fine delay settings in between transitions of the bPClk signal
 			if bPClkPeriodCnt = '0' & x"0005" then
 				fineCount     <= fineCount + phaseStep;
-				odlyTap       <= fineCount(5 downto 1);
-				phaseShift180 <= fineCount(6);
+				odlyTap       <= fineCount(7 downto 3);
+				phaseShift180 <= fineCount(8);
 				odlyLd        <= '1';
 			end if;
 

@@ -23,7 +23,7 @@ use duneDwa.global_def.all;
 entity dacInterface is
 	port (
 		acStim_mag     : in  unsigned(11 downto 0) := (others => '0');
-		acStim_nHPeriod : in  unsigned(23 downto 0) := (others => '0');
+		acStim_nPeriod : in  unsigned(23 downto 0) := (others => '0');
 		acStim_enable  : in  std_logic             := '0';
 		acStim_trigger : out std_logic             := '0';
 
@@ -33,7 +33,7 @@ entity dacInterface is
 		DAC_CLR_B : out std_logic := '0';
 		DAC_CLK   : out std_logic := '0';
 
-		dwaClk100 : in std_logic := '0';
+		dwaClk200 : in std_logic := '0';
 		dwaClk10 : in std_logic := '0'
 	);
 end entity dacInterface;
@@ -45,7 +45,8 @@ architecture STRUCT of dacInterface is
 	signal shiftCnt          : unsigned(3 downto 0)         := (others => '0');
 	signal DAC_CLK_EN        : std_logic                    := '0';
 	signal acStim_periodCnt  : unsigned(23 downto 0)        := (others => '0');
-	signal acStim,acStim_del : std_logic_vector(3 downto 0) := (others => '0');
+	--length of acStim vector determines pulse width
+	signal acStim : std_logic_vector(12 downto 0) := (others => '0');
 
 
 begin
@@ -85,24 +86,28 @@ begin
 		end if;
 	end process load_dac;
 
-	make_ac_stim : process (dwaClk100)
+	make_ac_stim : process (dwaClk200)
 	begin
-		if rising_edge(dwaClk100) then
+		if rising_edge(dwaClk200) then
 			acStim_periodCnt <= acStim_periodCnt +1;
-
-			if acStim_periodCnt >= acStim_nHPeriod then
+			if acStim_periodCnt >= acStim_nPeriod(acStim_nPeriod'left downto 1) then  -- clock edge at half the period
 				if not DAC_CLK_EN and acStim_enable then --also disable when updating magnitude
 					acStim(0) <= not acStim(0);          -- flip
 				end if;
 				-- we are counting the exact number
-				acStim_periodCnt <= (acStim_periodCnt'left downto 1 => '0', 0 => '1'); --x"000001";
+				-- when LSb is 1 reset to 0 every other acStim 'flip'
+				-- not exactly 50% duty cycle but 2x the resolution in frequency
+				acStim_periodCnt <= (
+				acStim_periodCnt'left downto 1 => '0', 
+				0 => not (acStim_nPeriod(0) and acStim(0))
+				); --
 			end if;
-			acStim(3 downto 1) <= acStim(2 downto 0);
+			acStim(acStim'left downto 1) <= acStim(acStim'left-1 downto 0);
 			--sync For ADC readout
-			-- generate pulses with the required length
-			acStim_trigger <= acStim(0) and not acStim(1);
-			DAC_LD_B       <= acStim(3) or not acStim(0);
-			DAC_CLR_B      <= not acStim(3) or acStim(0);
+			-- generate pulses with the required length, need > 10 ns pulse for 100 MHz rx
+			acStim_trigger <= acStim(0) and not acStim(4); 
+			DAC_LD_B       <= acStim(acStim'left) or not acStim(0);
+			DAC_CLR_B      <= not acStim(acStim'left) or acStim(0);
 
 		end if;
 	end process make_ac_stim;

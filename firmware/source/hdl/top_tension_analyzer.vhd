@@ -14,6 +14,7 @@ entity top_tension_analyzer is
 
     --regToDwa       : in SLV_VECTOR_TYPE_32(31 downto 0);
     dwaClk400 : in std_logic;
+    dwaClk333 : in std_logic;
     dwaClk200 : in std_logic;
     dwaClk100 : in std_logic;
     dwaClk10  : in std_logic;
@@ -114,13 +115,13 @@ architecture STRUCT of top_tension_analyzer is
   signal adcCnv_nPeriod          : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriodAuto : unsigned(23 downto 0) := (others => '0');
 
-  signal acStim_mag               : unsigned(11 downto 0) := (others => '0');
-  signal acStim_enable            : std_logic             := '0';
-  signal ctrl_acStim_enable       : std_logic             := '0';
-  signal acStim_trigger           : std_logic             := '0';
-  signal acStim_nHPeriod          : unsigned(23 downto 0) := (others => '0');
-  signal acStimX200_nHPeriod_fxp8 : unsigned(31 downto 0) := (others => '0'); -- floating point at 8
-                                                                              --initial value non zero
+  signal acStim_mag              : unsigned(11 downto 0) := (others => '0');
+  signal acStim_enable           : std_logic             := '0';
+  signal ctrl_acStim_enable      : std_logic             := '0';
+  signal acStim_trigger          : std_logic             := '0';
+  signal acStim_nPeriod          : unsigned(24 downto 0) := (others => '0');
+  signal acStimX200_nPeriod_fxp8 : unsigned(32 downto 0) := (others => '0'); -- floating point at 8
+                                                                             --initial value non zero
   signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
   signal ctrlFreqSet : unsigned(23 downto 0) := (others => '1');
 
@@ -255,10 +256,10 @@ begin
   -- convert requested stim frequency to number of 100Mhz clocks
   -- move this to the processor!
   compute_n_periods : process (dwaClk10)
-    variable acStim_nHPeriod_fxp8 : unsigned(43 downto 0 );
-    variable adcCnv_nCnv_all     : unsigned(39 downto 0 );
+    variable acStim_nPeriod_all : unsigned(35 downto 0 );
+    variable adcCnv_nCnv_all      : unsigned(39 downto 0 );
 
-  begin 
+  begin
     if rising_edge(dwaClk10) then
       if fromDaqReg.auto then
         stimFreqReq   <= ctrlFreqSet;
@@ -268,14 +269,13 @@ begin
         acStim_enable <= '1';
       end if;
 
-      acStim_nHPeriod_fxp8 := (x"2FAF0800000"/ stimFreqReq);
-      -- only take the integer part and use as a basis for remaining calculations
-      acStim_nHPeriod          <= acStim_nHPeriod_fxp8(31 downto 8);
-      acStimX200_nHPeriod_fxp8 <= acStim_nHPeriod_fxp8(31 downto 0) / x"C8";
+      acStim_nPeriod_all := (x"BEBC20000"/ stimFreqReq(17 downto 0)); -- only use the necessary number of bits 
+      acStim_nPeriod          <= acStim_nPeriod_all(24 downto 0);-- only take what is needed for min 10 HZ stim freq
+      acStimX200_nPeriod_fxp8 <= (acStim_nPeriod & x"00") / x"C8";  -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
 
       --  let's start with a fixed conversion 
       -- temp shift left ~8 samples per cycle
-      adcCnv_nPeriod <= "00" & acStim_nHPeriod(23 downto 2);
+      adcCnv_nPeriod <= "00" & acStim_nPeriod(24 downto 3);
       -- find the number of total canversions for each frequency
       adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
       adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
@@ -284,10 +284,10 @@ begin
 
   bandPassClkGen_inst : entity work.bandPassClkGen
     port map (
-      bPClk_nHPeriod => acStimX200_nHPeriod_fxp8,
-      bPClk          => acStimX200,
-      dwaClk400      => dwaClk400,
-      dwaClk200      => dwaClk200
+      bPClk_nPeriod_fp6 => acStimX200_nPeriod_fxp8(25 downto 0),
+      bPClk             => acStimX200,
+      dwaClk400         => dwaClk400,
+      dwaClk200         => dwaClk200
     );
 
 
@@ -364,10 +364,10 @@ begin
   -- stimulus frequency generation via DAC
   dacInterface_inst : entity work.dacInterface
     port map (
-      acStim_mag      => fromDaqReg.stimMag,
-      acStim_nHPeriod => acStim_nHPeriod,
-      acStim_enable   => acStim_enable,
-      acStim_trigger  => acStim_trigger,
+      acStim_mag     => fromDaqReg.stimMag,
+      acStim_nPeriod => acStim_nPeriod,
+      acStim_enable  => acStim_enable,
+      acStim_trigger => acStim_trigger,
 
       DAC_SDI   => DAC_SDI,
       DAC_CS_B  => DAC_CS_B,
@@ -375,7 +375,7 @@ begin
       DAC_CLR_B => DAC_CLR_B,
       DAC_CLK   => DAC_CLK,
 
-      dwaClk100 => dwaClk100,
+      dwaClk200 => dwaClk200,
       dwaClk10  => dwaClk10
     );
 
@@ -501,7 +501,7 @@ begin
       pktBuildBusy => pktBuildBusy,
       freqScanBusy => freqScanBusy,
 
-      stimPeriodActive  => acStim_nHPeriod(22 downto 0) & '0',
+      stimPeriodActive  => acStim_nPeriod(23 downto 0),
       stimPeriodCounter => (others => '0'),
 
       adcSamplingPeriod => adcCnv_nPeriod,
@@ -515,16 +515,16 @@ begin
       dwaClk100 => dwaClk100
     );
 
-  ila_4x32_inst : ila_4x32
-    PORT MAP (
-      clk                  => dwaClk10,
-      probe0(31 downto 24) => (others => '0'),
-      probe0(23 downto 0)  => std_logic_vector(acStim_nHPeriod),
-      probe1  => std_logic_vector(acStimX200_nHPeriod_fxp8),
-      probe2(31 downto 24) => (others => '0'),
-      probe2(23 downto 0)  => std_logic_vector(adcCnv_nPeriod),
-      probe3  => std_logic_vector(acStimX200_nHPeriod_fxp8)
-    );
+  --ila_4x32_inst : ila_4x32
+  --  PORT MAP (
+  --    clk                  => dwaClk10,
+  --    probe0(31 downto 24) => (others => '0'),
+  --    probe0(23 downto 0)  => std_logic_vector(acStim_nHPeriod),
+  --    probe1               => std_logic_vector(acStimX200_nPeriod_fxp8),
+  --    probe2(31 downto 24) => (others => '0'),
+  --    probe2(23 downto 0)  => std_logic_vector(adcCnv_nPeriod),
+  --    probe3               => std_logic_vector(acStimX200_nPeriod_fxp8)
+  --  );
   --
   --  vio_ctrl_inst : vio_ctrl
   --    PORT MAP (
