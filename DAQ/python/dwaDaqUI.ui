@@ -171,7 +171,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -184,7 +184,7 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -545,7 +545,7 @@
                 <item row="0" column="0">
                  <widget class="QLabel" name="configFileName_label">
                   <property name="text">
-                   <string>Config File:</string>
+                   <string>Scan config File:</string>
                   </property>
                  </widget>
                 </item>

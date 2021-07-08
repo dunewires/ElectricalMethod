@@ -2,6 +2,7 @@ import socket
 #import nmap
 #import getmac
 import urllib.request
+import os
 import sys
 sys.path.append('./mappings')
 from channel_map import *
@@ -293,8 +294,9 @@ def configure_default():
     configs.update(configure_noise_subtraction(stim_freq_min=99, stim_freq_max=100))
     return configs
 
-def write_config(generated_config, outfilename):
-    with open("config/"+outfilename, 'w') as outconfigfile:
+def write_config(generated_config, outfilename, subdir="config"):
+    outfilename = os.path.join(subdir, outfilename)
+    with open(outfilename, 'w') as outconfigfile:
         for header in generated_config.keys():
             outconfigfile.write("["+header+"]\n")
             subconfig = generated_config[header]
