@@ -718,6 +718,7 @@ class MainWindow(qtw.QMainWindow):
         channelGroups = channel_map.channel_groupings(self.configLayer, self.configHeadboard)
         scanListText = ""
         scanNum = 1
+        self.radioBtns = [] #list of radio button names 
         
         for channels in channelGroups:
 
@@ -790,13 +791,17 @@ class MainWindow(qtw.QMainWindow):
                 self.scanTable.setRowCount(scanNum-1)
                 item = qtw.QTableWidgetItem()
                 self.scanTable.setVerticalHeaderItem(scanNum-2, item)
-                #select column
+                #select column...Radio buttons
+                item = qtw.QTableWidgetItem()
+                self.scanTable.setItem(scanNum-2, 0, item)
                 item = qtw.QRadioButton(self.scanTable)
                 self.scanTable.setCellWidget(scanNum-2, 0, item)
+                self.radioBtns.append(item)
+                #this creates the whole list of buttons and the following replaces the first button with a new one, which is auto selected
                 item = qtw.QRadioButton(self.scanTable)
                 self.scanTable.setCellWidget(0, 0, item)
                 item.setChecked(True)
-                self.scanTable.resizeColumnsToContents()
+                self.radioBtns[0]=item #replaces the first item in the list of radio buttons as the item was replaced as well
                 #run number column
                 item = qtw.QTableWidgetItem()
                 self.scanTable.setItem(scanNum-2, 1, item)
@@ -825,6 +830,7 @@ class MainWindow(qtw.QMainWindow):
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
                 item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
                 self.scanTable.resizeColumnsToContents()
+                self.scanTable.setColumnCount(5)
 
                 # with open('dwaConfig_'+str(scanNum)+'.ini', 'w') as configfile:
                 #     configfile.write("[FPGA]\n")
@@ -855,9 +861,9 @@ class MainWindow(qtw.QMainWindow):
 
                 #Add a scan row here 
         
-        self.configNextScanComboBox.clear()
-        for i in range(1, scanNum):
-            self.configNextScanComboBox.addItem(str(i))
+        #self.configNextScanComboBox.clear()
+        #for i in range(1, scanNum):
+        #    self.configNextScanComboBox.addItem(str(i))
 
         logging.info("Configuring scans")
         logging.info(self.measuredBy)
@@ -872,7 +878,6 @@ class MainWindow(qtw.QMainWindow):
 
 
 
-        
     def _configurePlots(self):
         self.chanViewMain = 0  # which channel to show large for V(t) data
         self.chanViewMainAmpl = 0  # which channel to show large for A(f) data
@@ -1241,6 +1246,14 @@ class MainWindow(qtw.QMainWindow):
             self.btnScanCtrl.setStyleSheet("background-color : red")
             self.btnScanCtrl.setText("Abort Scan")
             self.state = State.SCAN
+            for i, btn in enumerate(self.radioBtns):
+                if btn.isChecked():
+                    #logging.info("Changing color of row "+str(i))
+                    for c in range(0, self.scanTable.columnCount()):
+                        self.scanTable.item(i,c).setBackground(qtg.QColor(255,170,20))
+                else:
+                    #logging.info("Row "+str(i)+"has not been selected")
+                    pass
             
             # Pass the function to execute
             worker = Worker(self.startRun)  # could pass args/kwargs too..
@@ -1264,12 +1277,16 @@ class MainWindow(qtw.QMainWindow):
         logger = logging.getLogger(__name__)
         self.configFile = os.path.join("config/", self.configFileName.text())
         # If configFile is blank, use the generated one
-        if not self.configFile:
-            if self.configNextScanComboBox.currentText():
-                self.configFile = os.path.join("config/", "dwaConfig_"+self.configNextScanComboBox.currentText()+".ini")
-            else:
-                # If no generated one was found, use the default one
-                self.configFile = os.path.join("config/", "dwaConfig.ini")
+        if not self.configFileName.text():
+            for i, btn in enumerate(self.radioBtns):
+                if btn.isChecked():
+                    self.configFile = os.path.join("config/", "dwaConfig_"+str(i+1)+".ini")
+                else:
+                    logging.info("Row "+str(i)+"has not been selected")
+        #else:
+            # If no generated one was found, use the default one
+            #self.configFile = os.path.join("config/", "dwaConfig.ini")
+
         logger.info(self.configFile)
         logger.info(f"config file = {self.configFile}")
         #
@@ -1846,12 +1863,14 @@ class MainWindow(qtw.QMainWindow):
         # try to read the requested file
         # if found, display contents
         # if not found, display error message
-        
-        if not self.configFileName.text():
-            configFileToOpen = "dwaConfig_"+self.configNextScanComboBox.currentText()+".ini"
-        else:
-            configFileToOpen = self.configFileName.text()
-        
+        for i, btn in enumerate(self.radioBtns):
+            if btn.isChecked():
+                if not self.configFileName.text():
+                    configFileToOpen = os.path.join("config/", "dwaConfig_"+str(i+1)+".ini")
+                else:
+                    configFileToOpen = os.path.join("config/", self.configFileName.text())
+            else:
+                logging.info("Row "+str(i)+"has not been selected")
 
         validConfigFilename = False
         try:
@@ -2096,6 +2115,14 @@ class MainWindow(qtw.QMainWindow):
                 print("\n\n\n\n\n\n\n SCAN IS DONE!!!")
                 self.btnScanCtrl.setStyleSheet("background-color : green")
                 self.btnScanCtrl.setText("Start Scan")
+                for i, btn in enumerate(self.radioBtns):
+                    if btn.isChecked():
+                        #logging.info("Changing color of row "+str(i))
+                        for c in range(0, self.scanTable.columnCount()):
+                            self.scanTable.item(i,c).setBackground(qtg.QColor(0,255,50))
+                    else:
+                        #logging.info("Row "+str(i)+"has not been selected")
+                        pass
                 self.state = State.IDLE
                 self._writeAmplitudesToFile()
                 self.saveAmplitudeData()
