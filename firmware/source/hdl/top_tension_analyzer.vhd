@@ -284,7 +284,7 @@ begin
 
   bandPassClkGen_inst : entity work.bandPassClkGen
     port map (
-      bPClk_nPeriod_fp6 => acStimX200_nPeriod_fxp8(25 downto 0),
+      bPClk_nPeriod_fp8 => acStimX200_nPeriod_fxp8(25 downto 0),
       bPClk             => acStimX200,
       dwaClk400         => dwaClk400,
       dwaClk200         => dwaClk200
