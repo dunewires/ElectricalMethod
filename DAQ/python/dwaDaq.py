@@ -93,6 +93,9 @@ import channel_map
 import channel_frequencies
 import ChannelMapping
 
+
+GUI_Y_OFFSET = 200 #FIXME: remove this!
+
 DWA_DAQ_VERSION = "X.X.X"
 #
 DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
@@ -439,7 +442,7 @@ class MainWindow(qtw.QMainWindow):
             self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
         self._initResonanceFitLines()
         
-        # Set A(f) peak detection parameters
+        # Set default A(f) peak detection parameters
         self.resFitParams = {}
         self.resFitParams['preprocess'] = {'detrend':True}  # detrend: subtract a line from A(f) before processing?
         self.resFitParams['find_peaks'] = {'bkgPoly':2, 'width':5, 'prominence':(5.0,None)}
@@ -451,6 +454,8 @@ class MainWindow(qtw.QMainWindow):
         print(f"str(self.resFitParams['find_peaks']['width']) = {str(self.resFitParams['find_peaks']['width'])}")
         self.resFitWidth.setText(str(self.resFitParams['find_peaks']['width']))
         self.resFitProminence.setText(str(self.resFitParams['find_peaks']['prominence']))
+        #FIXME: remove!!!!
+        self.resFitKwargs.setText("width=[9,None)")
 
         # KLUGE for now...
         self.resFitParamsOut = {}
@@ -509,7 +514,7 @@ class MainWindow(qtw.QMainWindow):
         wgeom = self.geometry()
         x = screen.width() - wgeom.width()
         y = screen.height() - wgeom.height()
-        self.move(x, y)
+        self.move(x, y-GUI_Y_OFFSET)
         self.show()
 
     def _configureTensions(self):
@@ -545,6 +550,7 @@ class MainWindow(qtw.QMainWindow):
         self.resFitBkgPoly.returnPressed.connect(self.resFitParameterUpdate)
         self.resFitWidth.returnPressed.connect(self.resFitParameterUpdate)
         self.resFitProminence.returnPressed.connect(self.resFitParameterUpdate)
+        self.resFitKwargs.returnPressed.connect(self.resFitParameterUpdate)
         #
         #self.statusFramePeriod_val.returnPressed.connect(self.setStatusFramePeriod)
         # Resonance Tab
@@ -1356,6 +1362,8 @@ class MainWindow(qtw.QMainWindow):
     @pyqtSlot()
     def resFitParameterUpdate(self):
 
+        self._resFreqSetDefaultParams()  # reset to defaults
+
         # Should we detrend the A(f) data first?
         self.resFitParams['preprocess']['detrend'] = self.resFitPreDetrend.isChecked()
 
@@ -1368,41 +1376,112 @@ class MainWindow(qtw.QMainWindow):
             self.resFitParams['find_peaks']['bkgPoly'] = 2
 
         # peak width parameter
-        parens_to_replace = {"(":"", ")":"", "[":"", "]":""}
         print(f'self.resFitWidth.text() = {self.resFitWidth.text()}')
-        entryStr = self.resFitWidth.text().strip()
-        for key,val in parens_to_replace.items():
-            entryStr = entryStr.replace(key, val)
-        toks = [x.strip() for x in entryStr.split(",")]
-        print(f'peak width toks = {toks}')
-        self.resFitParams['find_peaks']['width'] = [None, None]
-        for ii, tok in enumerate(toks):
-            try:
-                self.resFitParams['find_peaks']['width'][ii] = int(tok)
-            except:
-                print(f"invalid entry resFit width: {tok} in {entryStr}")
+        self.resFitParams['find_peaks']['width'] = self._resFreqParseNumOrList( self.resFitWidth.text() )
 
         # prominence parameter
         print(f'self.resFitProminence.text() = {self.resFitProminence.text()}')
-        entryStr = self.resFitProminence.text().strip()
-        # Get rid of any parentheses
-        for key, val in parens_to_replace.items():
-            entryStr = entryStr.replace(key, val)
-        toks = [x.strip() for x in entryStr.split(",")]
-        print(f'prominence toks = {toks}')
-        self.resFitParams['find_peaks']['prominence'] = [None, None]
-        for ii, tok in enumerate(toks):
-            if tok.upper() == 'NONE':
+        self.resFitParams['find_peaks']['prominence'] =self._resFreqParseNumOrList( self.resFitProminence.text() )
+
+        print("BEFORE READING KWARGS:")
+        print(f'   self.resFitParams = {self.resFitParams}')
+        
+        # read the kwargs field, (which takes precedence over anything set previously)!
+        # expect: "key1=val1, key2=val2, ..."
+        kwargDict = self._resFreqParseKwargParam( self.resFitKwargs.text() )
+        for key, val in kwargDict.items():
+            if key not in self.resFitParams['find_peaks']:
                 continue
-            try:
-                self.resFitParams['find_peaks']['prominence'][ii] = float(tok)
-            except:
-                print(f"invalid entry resFit prominence: {tok} in {entryStr}")
+            self.resFitParams['find_peaks'][key] = val
 
         # Print params and refit
         print(f'self.resFitParams = {self.resFitParams}')
         self.postScanAnalysis()
 
+    def _resFreqSetDefaultParams(self):
+        #height=None, threshold=None, distance=None, prominence=None, width=None, wlen=None, rel_height=0.5, plateau_size=None
+        self.resFitParams['find_peaks'] = {'height':None, 'threshold':None, 'distance':None,
+                                           'prominence':None, 'width':None, 'wlen':None,
+                                           'rel_height':0.5, 'plateau_size':None}
+        
+    def _resFreqParseKwargParam(self, entryStr):
+        entryStr = entryStr.strip()
+        toks = entryStr.split(";")
+        toks = [tok.strip() for tok in toks]
+        print(f"kwarg toks: {toks}")
+        kwargDict = {}
+        for tok in toks:
+            print(f"kwarg: {tok}")
+            try:
+                key, val = tok.split("=")
+            except:
+                print(f"invalid kwarg: {tok}")
+                continue
+            key = key.strip()
+            if key == 'width':
+                val = self._resFreqParseNumOrList(val)
+            elif key == 'prominence':
+                val = self._resFreqParseNumOrList(val)
+            elif key == 'wlen':
+                val = int(val)
+            elif key == 'rel_height':
+                val = float(val)
+            elif key == 'distance':
+                val = float(val)
+            elif key == 'plateau_size':
+                val = self._resFreqParseNumOrList(val)
+            elif key == 'threshold':
+                val = self._resFreqParseNumOrList(val)
+            elif key == 'height':
+                val = self._resFreqParseNumOrList(val)
+            else:
+                print(f"unrecognized kwval: {tok}")
+            kwargDict[key] = val
+        print(f"kwargDict = {kwargDict}")
+        return kwargDict
+                
+    #def _resFreqParseWidthParam(self, entryStr):
+    def _resFreqParseNumOrList(self, entryStr):
+        parens_to_replace = {"(":"", ")":"", "[":"", "]":""}
+        entryStr = entryStr.strip()
+        for key,val in parens_to_replace.items():
+            entryStr = entryStr.replace(key, val)
+        toks = [x.strip() for x in entryStr.split(",")]
+        print(f'toks = {toks}')
+        vals = [None,None]
+        for ii, tok in enumerate(toks):
+            if tok.upper() == 'NONE':
+                continue
+            try:
+                #self.resFitParams['find_peaks']['width'][ii] = int(tok)
+                vals[ii] = float(tok)
+            except:
+                print(f"invalid entry: {tok} in {entryStr}")
+                vals[ii] = None
+        return vals
+
+                
+    #def _resFreqParseProminenceParam(self, entryStr):
+    #    entryStr = entryStr.strip()
+    #    # Get rid of any parentheses
+    #    parens_to_replace = {"(":"", ")":"", "[":"", "]":""}
+    #    for key, val in parens_to_replace.items():
+    #        entryStr = entryStr.replace(key, val)
+    #    toks = [x.strip() for x in entryStr.split(",")]
+    #    print(f'prominence toks = {toks}')
+    #    promVal = [None, None]
+    #    for ii, tok in enumerate(toks):
+    #        if tok.upper() == 'NONE':
+    #            continue
+    #        try:
+    #            #self.resFitParams['find_peaks']['prominence'][ii] = float(tok)
+    #            promVal[ii] = float(tok)
+    #        except:
+    #            print(f"invalid entry resFit prominence: {tok} in {entryStr}")
+    #            promVal[ii] = None
+    #    return promVal
+
+        
     @pyqtSlot()
     def configFileNameEnter(self):
         self._loadConfigFile()
@@ -2288,8 +2367,14 @@ class MainWindow(qtw.QMainWindow):
             
             # FIXME: set width based on frequency, not hard-coded number of samples!
             peakIds, properties = find_peaks(dataToFit,
+                                             height=self.resFitParams['find_peaks']['height'],
+                                             threshold=self.resFitParams['find_peaks']['threshold'],
+                                             distance=self.resFitParams['find_peaks']['distance'],
                                              prominence=self.resFitParams['find_peaks']['prominence'],
-                                             width=self.resFitParams['find_peaks']['width']
+                                             width=self.resFitParams['find_peaks']['width'],
+                                             wlen=self.resFitParams['find_peaks']['wlen'],
+                                             rel_height=self.resFitParams['find_peaks']['rel_height'],
+                                             plateau_size=self.resFitParams['find_peaks']['plateau_size']
                                              )
             self.resFitParamsOut[chan]['peaks'] = peakIds
             self.resFitParamsOut[chan]['properties'] = properties

@@ -171,7 +171,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -974,7 +974,7 @@
                  <item>
                   <widget class="QLabel" name="label_9">
                    <property name="text">
-                    <string>Tune Fit Parameters (find_peaks)</string>
+                    <string>Tune Fit Parameters</string>
                    </property>
                   </widget>
                  </item>
@@ -983,6 +983,13 @@
                    <property name="horizontalSpacing">
                     <number>6</number>
                    </property>
+                   <item row="1" column="1">
+                    <widget class="QCheckBox" name="resFitPreDetrend">
+                     <property name="text">
+                      <string>Detrend A(f)</string>
+                     </property>
+                    </widget>
+                   </item>
                    <item row="2" column="0">
                     <widget class="QLabel" name="label_8">
                      <property name="text">
@@ -1003,9 +1010,6 @@
                    <item row="3" column="1">
                     <widget class="QLineEdit" name="resFitWidth"/>
                    </item>
-                   <item row="4" column="1">
-                    <widget class="QLineEdit" name="resFitProminence"/>
-                   </item>
                    <item row="4" column="0">
                     <widget class="QLabel" name="label_11">
                      <property name="text">
@@ -1013,12 +1017,18 @@
                      </property>
                     </widget>
                    </item>
-                   <item row="1" column="1">
-                    <widget class="QCheckBox" name="resFitPreDetrend">
+                   <item row="4" column="1">
+                    <widget class="QLineEdit" name="resFitProminence"/>
+                   </item>
+                   <item row="5" column="0">
+                    <widget class="QLabel" name="label_16">
                      <property name="text">
-                      <string>Detrend A(f)</string>
+                      <string>kwargs</string>
                      </property>
                     </widget>
+                   </item>
+                   <item row="5" column="1">
+                    <widget class="QLineEdit" name="resFitKwargs"/>
                    </item>
                   </layout>
                  </item>
