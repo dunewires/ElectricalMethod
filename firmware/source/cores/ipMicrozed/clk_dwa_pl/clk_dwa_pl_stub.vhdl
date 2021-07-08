@@ -1,8 +1,8 @@
 -- Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2020.2 (lin64) Build 3064766 Wed Nov 18 09:12:47 MST 2020
--- Date        : Wed Mar 24 19:02:24 2021
--- Host        : pc0 running 64-bit CentOS Linux release 8.3.2011
+-- Date        : Wed Jul  7 19:33:26 2021
+-- Host        : pc0 running 64-bit CentOS Linux release 8.4.2105
 -- Command     : write_vhdl -force -mode synth_stub
 --               /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ipMicrozed/clk_dwa_pl/clk_dwa_pl_stub.vhdl
 -- Design      : clk_dwa_pl
@@ -18,6 +18,7 @@ entity clk_dwa_pl is
     clk_out2 : out STD_LOGIC;
     clk_out3 : out STD_LOGIC;
     clk_out4 : out STD_LOGIC;
+    clk_out5 : out STD_LOGIC;
     reset : in STD_LOGIC;
     locked : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
@@ -29,6 +30,6 @@ architecture stub of clk_dwa_pl is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;
-attribute black_box_pad_pin of stub : architecture is "clk_out1,clk_out2,clk_out3,clk_out4,reset,locked,clk_in1";
+attribute black_box_pad_pin of stub : architecture is "clk_out1,clk_out2,clk_out3,clk_out4,clk_out5,reset,locked,clk_in1";
 begin
 end;
