@@ -96,7 +96,8 @@ GUI_Y_OFFSET = 200 #FIXME: remove this!
 DWA_DAQ_VERSION = "X.X.X"
 #
 #DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
-DWA_CONFIG_FILE = "config/dwaConfigShortScan.ini"
+#DWA_CONFIG_FILE = "config/dwaConfigShortScan.ini"
+DWA_CONFIG_FILE = "config/dwaConfig_SP.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 #
 AMP_DATA_FILE   = "test/data/50cm24inch/20210616T203958_amp.json"
@@ -109,7 +110,7 @@ OUTPUT_DIR_CONFIG = './config/'
 CLOCK_PERIOD_SEC = 1e8
 STIM_VIEW_OFFSET = 0
 #
-UDP_RECV_BUF_SIZE = 2**22
+UDP_RECV_BUF_SIZE = 2**20 # Bytes (2**20 Bytes is ~1MB)
 #
 N_DWA_CHANS = 8
 
@@ -1068,40 +1069,51 @@ class MainWindow(qtw.QMainWindow):
         self.curvesFit['evtVwr'] = {'V(t)':{}} # V(t) 
         self.curvesFit['grid'] = {} # V(t), grid
         self.curvesFit['chan'] = {} # V(t), chan
-        #amplAllPlotPens = [pg.mkPen(color=(0,  0, 0)), pg.mkPen(color=(210,105,30)),
-        #                   pg.mkPen(color=(255,0, 0)), pg.mkPen(color=(255,165, 0)),
-        #                   pg.mkPen(color=(255,255,0)), pg.mkPen(color=(0,255,0)),
-        #                   pg.mkPen(color=(0,0,255)), pg.mkPen(color=(148,0,211))]
-        amplAllPlotPens = [pg.mkPen(color='#2a1636'), pg.mkPen(color='#541e4e'),
-                           pg.mkPen(color='#841e5a'), pg.mkPen(color='#b41658'),
-                           pg.mkPen(color='#dd2c45'), pg.mkPen(color='#f06043'),
-                           pg.mkPen(color='#f5946b'), pg.mkPen(color='#f6c19f')]
+        amplAllPlotColors = ['#2a1636', '#541e4e', '#841e5a', '#b41658',
+                         '#dd2c45', '#f06043', '#f5946b', '#f6c19f']
+        amplAllPlotPens = [pg.mkPen(color=col) for col in amplAllPlotColors]
+        vtAllPlotColors = amplAllPlotColors[:]
+        vtAllPlotPens = amplAllPlotPens[:]
+        
         for pen in amplAllPlotPens:
             pen.setWidth(3)
         amplPlotPen = pg.mkPen(color=(0,0,0), style=qtc.Qt.DotLine, width=1)
         for loc in range(N_DWA_CHANS):
+            #
             # V(t) plots
-            self.curvesFit['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], pen=fitPen)
-            self.curvesFit['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0], pen=fitPen)
-            self.curves['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
-            self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
+            self.curvesFit['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([], pen=fitPen)
+            self.curvesFit['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([], pen=fitPen)
+            self.curves['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([], symbol='o', symbolSize=2,
+                                                                            symbolBrush=vtAllPlotColors[loc],
+                                                                            symbolPen=vtAllPlotColors[loc],
+                                                                            pen=None)
+            self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([], symbol='o', symbolSize=2,
+                                                                            symbolBrush=vtAllPlotColors[loc],
+                                                                            symbolPen=vtAllPlotColors[loc],
+                                                                            pen=None)
             #
             # A(f) plots (grid view)
-            self.curves['amplgrid'][loc] = getattr(self, f'pw_amplgrid_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplAllPlotPens[loc])
+            self.curves['amplgrid'][loc] = getattr(self, f'pw_amplgrid_{loc}').plot([], symbol='o', symbolSize=2,
+                                                                                    symbolBrush=amplAllPlotColors[loc],
+                                                                                    symbolPen=amplAllPlotColors[loc],
+                                                                                    pen=amplAllPlotPens[loc])
+            # for testing only
+            #getattr(self, f'pw_amplgrid_{loc}').setRange(xRange=(0, 1000), yRange=(0,35000), update=True)
+           
             # A(f), all channels on single axes
-            self.curves['amplgrid']['all'][loc] = getattr(self, f'pw_amplgrid_all').plot([0],[0], pen=amplAllPlotPens[loc])
+            self.curves['amplgrid']['all'][loc] = getattr(self, f'pw_amplgrid_all').plot([], pen=amplAllPlotPens[loc])
             # A(f) plots (channel view)
-            self.curves['amplchan'][loc] = getattr(self, f'pw_amplchan_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
+            self.curves['amplchan'][loc] = getattr(self, f'pw_amplchan_{loc}').plot([], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
             # Fitting f0 to A(f) plots
-            self.curves['resRawFit'][loc] = self.resonanceRawPlots[loc].plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
-            self.curves['resProcFit'][loc] = self.resonanceProcessedPlots[loc].plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
+            self.curves['resRawFit'][loc] = self.resonanceRawPlots[loc].plot([], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
+            self.curves['resProcFit'][loc] = self.resonanceProcessedPlots[loc].plot([], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
             
         # add in the main window, too (large view of V(t) for a single channel)
-        self.curvesFit['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0], pen=fitPen)
-        self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
+        self.curvesFit['chan']['main'] = getattr(self, f'pw_chan_main').plot([], pen=fitPen)
+        self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
 
         # add in the main window, too (large view of A(f) for a single channel)
-        self.curves['amplchan']['main'] = getattr(self, f'pw_amplchan_main').plot([0],[0], symbol='o', symbolSize=3, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
+        self.curves['amplchan']['main'] = getattr(self, f'pw_amplchan_main').plot([], symbol='o', symbolSize=3, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
 
         # Tension
         #self.curves['tension']['TofWireNum'] = {}
@@ -1111,21 +1123,21 @@ class MainWindow(qtw.QMainWindow):
         #        self.curves['tension']['TofWireNum'][layer+side] = pg.ScatterPlotItem(pen=tensionPen, symbol='o', size=1)
         
         ### Tension information
-        ###self.curves['tension']['tensionOfWireNumber'] = self.tensionPlots['tensionOfWireNumber'].plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
+        ###self.curves['tension']['tensionOfWireNumber'] = self.tensionPlots['tensionOfWireNumber'].plot([], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
 
         # Event Viewer plots
         evtVwrPlotPenVolt = pg.mkPen(color=(0,0,0), style=qtc.Qt.DotLine, width=1)
         evtVwrPlotPenAmpl = pg.mkPen(color=(0,0,0), style=qtc.Qt.DotLine, width=1)
         for loc in range(N_DWA_CHANS):
-            self.curvesFit['evtVwr']['V(t)'][loc] = self.evtVwrPlots[loc].plot([0],[0], pen=amplAllPlotPens[loc])
-            self.curves['evtVwr']['V(t)'][loc] = self.evtVwrPlots[loc].plot([0],[0], symbol='o', symbolSize=3, symbolBrush='k',
+            self.curvesFit['evtVwr']['V(t)'][loc] = self.evtVwrPlots[loc].plot([], pen=amplAllPlotPens[loc])
+            self.curves['evtVwr']['V(t)'][loc] = self.evtVwrPlots[loc].plot([], symbol='o', symbolSize=3, symbolBrush='k',
                                                                             symbolPen='k', pen=None)#, pen=evtVwrPlotPenVolt)
         self.evtVwrPlots[6].setLabel("bottom", "Time [s]")
         self.evtVwrPlots[7].setLabel("bottom", "Time [s]")
         self.evtVwrPlots[8].setLabel("bottom", "Frequency [Hz]")
         # In the 9th plot, put all A(f) data
         for chan in range(N_DWA_CHANS):
-            self.curves['evtVwr']['A(f)'][chan] = self.evtVwrPlots[-1].plot([0], [0], pen=amplAllPlotPens[chan], symbol='o', symbolSize=2, symbolBrush=amplAllPlotPens[chan].color(), symbolPen=amplAllPlotPens[chan].color())
+            self.curves['evtVwr']['A(f)'][chan] = self.evtVwrPlots[-1].plot([], pen=amplAllPlotPens[chan], symbol='o', symbolSize=2, symbolBrush=amplAllPlotPens[chan].color(), symbolPen=amplAllPlotPens[chan].color())
         # Add a vertical line showing the current frequency
         f0Pen = pg.mkPen(color='#000000', width=2, style=qtc.Qt.DashLine)
         self.curves['evtVwr']['A(f)']['marker'] = self.evtVwrPlots[-1].addLine(x=0, movable=True, pen=f0Pen)
@@ -1284,8 +1296,8 @@ class MainWindow(qtw.QMainWindow):
                 self.curvesFit['evtVwr']['V(t)'][ichan].setData(self.evtData['V(t)_fit_time'][ichan][ifrq],
                                                                 self.evtData['V(t)_fit'][ichan][ifrq])
             else:
-                self.curves['evtVwr']['V(t)'][ichan].setData([0],[0])
-                self.curvesFit['evtVwr']['V(t)'][ichan].setData([0],[0])
+                self.curves['evtVwr']['V(t)'][ichan].setData([])
+                self.curvesFit['evtVwr']['V(t)'][ichan].setData([])
             
         # update the amplitude plots in the 9th window
         self.curves['evtVwr']['A(f)']['marker'].setValue(self.evtData['freqUnion'][ifrq])
@@ -2263,13 +2275,16 @@ class MainWindow(qtw.QMainWindow):
                 if regId == self.chanViewMain:
                     self.curvesFit['chan']['main'].setData(tfit, yfit)
 
-            # Update A(f) plot
+            # Update A(f) plots
             if self.currentViewStage == MainView.RESONANCE:
                 self.curves['resRawFit'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
 
             if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.A_GRID:
+            # Restrict which channels are updated
+            #if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.A_GRID and (regId == 0 or regId==1):
                 self.curves['amplgrid'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-                self.curves['amplgrid']['all'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+                # don't update the "all" plot until the end...
+                # self.curves['amplgrid']['all'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
             if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.A_CHAN:
                 self.curves['amplchan'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
                 if regId == self.chanViewMainAmpl:
@@ -2488,10 +2503,27 @@ class MainWindow(qtw.QMainWindow):
         self.logger.info("App quitting:")
         self.logger.info("   closing UDP connection")
         self.sock.close()
-        
+
+
+class MyApplication(qtw.QApplication):
+
+    t = qtc.QElapsedTimer()
+
+    def notify(self, receiver, event):
+        self.t.start()
+        ret = qtw.QApplication.notify(self, receiver, event)
+        if(self.t.elapsed() > 10):
+            print(f"processing event type {event.type()} for object {receiver.objectName()} " 
+                  f"took {self.t.elapsed()}ms")
+        return ret
         
 def main():
+
     app = qtw.QApplication(sys.argv)
+    #app = MyApplication(sys.argv)
+
+    pg.setConfigOptions(antialias=False)
+    
     win = MainWindow()
     win.setWindowTitle(f"DWA: DUNE Wire Analyzer v. {DWA_DAQ_VERSION}")
     app.aboutToQuit.connect(win.cleanUp)
