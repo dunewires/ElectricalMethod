@@ -318,7 +318,7 @@ class MainWindow(qtw.QMainWindow):
         # Load the UI (built in Qt Designer)
         uic.loadUi(DAQ_UI_FILE, self)
         self.configFileContents.setReadOnly(True)
-        self.btnScanCtrl.setEnabled(False)
+        self.btnScanCtrl.setEnabled(True)
 
         # adapt the tabs...
         # see https://stackoverflow.com/questions/51404102/pyqt5-tabwidget-vertical-tab-horizontal-text-alignment-left
@@ -690,104 +690,40 @@ class MainWindow(qtw.QMainWindow):
         return str(hex(int(val))).upper()[2:].zfill(8)
 
     def configureScans(self):
-        self.measuredBy = self.measuredByLineEdit.text()
-        self.configStage = self.configStageComboBox.currentText()
-        self.configApaUuid = self.configApaUuid.text()
+        #self.measuredBy = self.measuredByLineEdit.text()
+        #self.configStage = self.configStageComboBox.currentText()
+        #self.configApaUuid = self.configApaUuid.text()
         self.configLayer = self.configLayerComboBox.currentText()
         self.configHeadboard = self.configHeadboardSpinBox.value()
-        self.SideComboBox = self.SideComboBox.currentText()
-
-        advFss = self.advFssLineEdit.text() # Freq step size
-        advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
-        advInitDelay = self.advInitDelayLineEdit.text() # Init delay
-        advAmplitude = self.advAmplitudeLineEdit.text() # Amplitude
-
-        # TODO: Make sure inputs can be safely converted to floats
-        # TODO: Grab default values if undefined
-        if advFss: advFss = float(advFss)
-        else: pass
-        if advStimTime: advStimTime = float(advStimTime)
-        else: pass
-        if advInitDelay: advInitDelay = float(advInitDelay)
-        else: pass
-        if advAmplitude: advAmplitude = float(advAmplitude)
-        else: pass
-
-
+        #self.SideComboBox = self.SideComboBox.currentText()
 
         channelGroups = channel_map.channel_groupings(self.configLayer, self.configHeadboard)
         scanListText = ""
         scanNum = 1
         self.radioBtns = [] #list of radio button names 
+        self.freqMinBox = [] 
+        self.freqMaxBox = [] #these are lists to hold the boxes for these values in the table, that way they can be looped later on
         
         for channels in channelGroups:
 
-            range_data = channel_frequencies.get_range_data_for_channels(self.configLayer, channels)
+            self.range_data = channel_frequencies.get_range_data_for_channels(self.configLayer, channels)
 
             logging.info("channels")
             logging.info(channels)
-            for rd in range_data:
+            for rd in self.range_data:
                 logging.info("rd")
                 logging.info(rd)
                 wires = rd["wires"]
-                freqMin = float(rd["range"][0])
-                freqMax = float(rd["range"][1])
+                self.freqMin = float(rd["range"][0])
+                self.freqMax = float(rd["range"][1])
                 logging.info("freqMin")
-                logging.info(freqMin*16)
+                logging.info(self.freqMin*16)
                 wires.sort(key = int)
-                scanListText = scanListText + str(scanNum) + "." + ", ".join(wires) + " (" + str(freqMin) + ", " + str(freqMax) + ")\n"
-                # XYZ
-
-                #defaultConfig = dcf.DwaConfigFile("dwaConfig.ini")
-                
-
-                fpgaConfig = config_generator.configure_default()
-                
-                if advFss: fpgaConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss))
-                else: pass
-                fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
-
-                fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
-                fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
-                fpgaConfig.update(config_generator.configure_fixed_frequency())
-
-                logging.info("advInitDelay")
-                logging.info(advInitDelay)
-                logging.info("advStimTime")
-                logging.info(advStimTime)
-                if advInitDelay: 
-                    if advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
-                    else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
-                elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advStimTime))
-                else: pass
-
-                if advAmplitude: 
-                    fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=int(advAmplitude)))
-                else: pass
-
-                fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
-                fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
-                fpgaConfig.update(config_generator.configure_noise_subtraction(freqMin, freqMax))
-                
-                logging.info("fpgaConfig")
-                logging.info(fpgaConfig)
-
-                #sorting apa channels list to follow increasing order of dwa channels
-                dwaChannels = []
-                for i in range(0,len(channels)):
-                    dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
-                apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
-
-                dataConfig = {"channels": apaChannels, "wires": wires, "measuredBy": self.measuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
-                "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.SideComboBox}
-
-                combinedConfig = {"FPGA": fpgaConfig, "Database": dataConfig}
-                config_generator.write_config(combinedConfig, 'dwaConfig_'+str(scanNum)+'.ini')
+                scanListText = scanListText + str(scanNum) + "." + ", ".join(wires) + " (" + str(self.freqMin) + ", " + str(self.freqMax) + ")\n"
 
                 scanNum = scanNum + 1
 
                 #table with scan details
-
                 self.scanTable.setRowCount(scanNum-1)
                 item = qtw.QTableWidgetItem()
                 self.scanTable.setVerticalHeaderItem(scanNum-2, item)
@@ -821,15 +757,17 @@ class MainWindow(qtw.QMainWindow):
                 self.scanTable.setItem(scanNum-2, 3, item)
                 item = self.scanTable.item(scanNum-2, 3)
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
-                item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMin)))
+                item.setText(qtc.QCoreApplication.translate("MainWindow", str(self.freqMin)))
                 self.scanTable.resizeColumnsToContents()
+                self.freqMinBox.append(self.freqMin)
                 #freq max column
                 item = qtw.QTableWidgetItem()
                 self.scanTable.setItem(scanNum-2, 4, item)
                 item = self.scanTable.item(scanNum-2, 4)
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
-                item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
+                item.setText(qtc.QCoreApplication.translate("MainWindow", str(self.freqMax)))
                 self.scanTable.resizeColumnsToContents()
+                self.freqMaxBox.append(self.freqMax)
                 self.scanTable.setColumnCount(5)
 
                 # with open('dwaConfig_'+str(scanNum)+'.ini', 'w') as configfile:
@@ -866,10 +804,10 @@ class MainWindow(qtw.QMainWindow):
         #    self.configNextScanComboBox.addItem(str(i))
 
         logging.info("Configuring scans")
-        logging.info(self.measuredBy)
-        logging.info(self.configStage)
-        logging.info(self.configHeadboard)
-        logging.info(self.configHeadboard*2)
+        #logging.info(self.measuredBy)
+        #logging.info(self.configStage)
+        #logging.info(self.configHeadboard)
+        #logging.info(self.configHeadboard*2)
 
 
         logging.info(channelGroups)
@@ -1272,21 +1210,149 @@ class MainWindow(qtw.QMainWindow):
     def startRun(self):
         #self.outputText.appendPlainText("CLICKED START")
         #self.outputText.update()
+        #need to create dictionaries in this thread to actually update things
+        self.measuredBy = self.measuredByLineEdit.text()
+        self.configStage = self.configStageComboBox.currentText()
+        self.configApaUuid = self.configApaUuid.text()
+        self.configLayer = self.configLayerComboBox.currentText()
+        self.configHeadboard = self.configHeadboardSpinBox.value()
+        self.SideComboBox = self.SideComboBox.currentText()
 
+        advFss = self.advFssLineEdit.text() # Freq step size
+        advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
+        advInitDelay = self.advInitDelayLineEdit.text() # Init delay
+        advAmplitude = self.advAmplitudeLineEdit.text() # Amplitude
+
+        # TODO: Make sure inputs can be safely converted to floats
+        # TODO: Grab default values if undefined
+        if advFss: advFss = float(advFss)
+        else: pass
+        if advStimTime: advStimTime = float(advStimTime)
+        else: pass
+        if advInitDelay: advInitDelay = float(advInitDelay)
+        else: pass
+        if advAmplitude: advAmplitude = float(advAmplitude)
+        else: pass
+
+
+
+        channelGroups = channel_map.channel_groupings(self.configLayer, self.configHeadboard)
+        scanListText = ""
+        scanNum = 1
+        
+        for channels in channelGroups:
+
+            self.range_data = channel_frequencies.get_range_data_for_channels(self.configLayer, channels)
+
+            logging.info("channels")
+            logging.info(channels)
+            for rd in self.range_data:
+                logging.info("rd")
+                logging.info(rd)
+                wires = rd["wires"]
+                self.freqMin = float(rd["range"][0])
+                self.freqMax = float(rd["range"][1])
+                logging.info("freqMin")
+                logging.info(self.freqMin*16)
+                wires.sort(key = int)
+                scanListText = scanListText + str(scanNum) + "." + ", ".join(wires) + " (" + str(self.freqMin) + ", " + str(self.freqMax) + ")\n"
+                # XYZ
+
+                #defaultConfig = dcf.DwaConfigFile("dwaConfig.ini")
+
+                fpgaConfig = config_generator.configure_default()
+                
+                if advFss: fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
+                else: pass
+                fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
+
+                fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
+                fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
+                fpgaConfig.update(config_generator.configure_fixed_frequency())
+
+                logging.info("advInitDelay")
+                logging.info(advInitDelay)
+                logging.info("advStimTime")
+                logging.info(advStimTime)
+                if advInitDelay: 
+                    if advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
+                    else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
+                elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advStimTime))
+                else: pass
+
+                if advAmplitude: 
+                    fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, stim_mag=int(advAmplitude)))
+                else: pass
+
+                fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
+                fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
+                fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
+                
+                logging.info("fpgaConfig")
+                logging.info(fpgaConfig)
+
+                #sorting apa channels list to follow increasing order of dwa channels
+                dwaChannels = []
+                for i in range(0,len(channels)):
+                    dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
+                apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
+
+                dataConfig = {"channels": apaChannels, "wires": wires, "measuredBy": self.measuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+                "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.SideComboBox}
+
+                self.combinedConfig = {"FPGA": fpgaConfig, "Database": dataConfig}
+
+                scanNum = scanNum + 1
+
+                for i, btn in enumerate(self.radioBtns):
+                    if btn.isChecked():
+                        if not self.freqMaxBox[i] == float(self.scanTable.item(i, 4).text()):
+                            self.freqMinBox[i] = float(self.scanTable.item(i, 4).text())
+                            self.freqMax = float(self.scanTable.item(i, 4).text())
+                            fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
+                            if advFss: 
+                                fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
+                            else: 
+                                fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax))
+                        if not self.freqMinBox[i] == float(self.scanTable.item(i, 3).text()):
+                            self.freqMinBox[i] = float(self.scanTable.item(i, 3).text())
+                            self.freqMin = float(self.scanTable.item(i, 3).text())
+                            fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
+                            if advFss: 
+                                fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
+                            else: 
+                                fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax))
+                    else:
+                        #logging.info("Row "+str(i)+"has not been selected")
+                        pass
+                for i, btn in enumerate(self.radioBtns):
+                    if btn.isChecked() and i == scanNum-2:
+                        config_generator.write_config(self.combinedConfig, 'dwaConfig_'+str(i+1)+'.ini')
+
+                logging.info("Configuring scans")
+                logging.info(self.measuredBy)
+                logging.info(self.configStage)
+                logging.info(self.configHeadboard)
+                logging.info(self.configHeadboard*2)
+
+
+        logging.info(channelGroups)
+                        
+
+ 
         # startRun() is in a thread...  need to get logger?
         logger = logging.getLogger(__name__)
         self.configFile = os.path.join("config/", self.configFileName.text())
         # If configFile is blank, use the generated one
+
         if not self.configFileName.text():
             for i, btn in enumerate(self.radioBtns):
                 if btn.isChecked():
                     self.configFile = os.path.join("config/", "dwaConfig_"+str(i+1)+".ini")
-                else:
-                    logging.info("Row "+str(i)+"has not been selected")
         #else:
             # If no generated one was found, use the default one
             #self.configFile = os.path.join("config/", "dwaConfig.ini")
-
+        #the above else statement should never happen because a radio button should always be clicked
         logger.info(self.configFile)
         logger.info(f"config file = {self.configFile}")
         #
@@ -1295,7 +1361,6 @@ class MainWindow(qtw.QMainWindow):
         self._loadConfigFile(updateGui=False)
 
         print("\n\n =================== startRun()\n\n")
-        
         print(f"self.configFile = {self.configFile}")
         # verify that config file can be opened
         try:
@@ -1870,7 +1935,7 @@ class MainWindow(qtw.QMainWindow):
                 else:
                     configFileToOpen = os.path.join("config/", self.configFileName.text())
             else:
-                logging.info("Row "+str(i)+"has not been selected")
+                pass
 
         validConfigFilename = False
         try:
@@ -2120,6 +2185,10 @@ class MainWindow(qtw.QMainWindow):
                         #logging.info("Changing color of row "+str(i))
                         for c in range(0, self.scanTable.columnCount()):
                             self.scanTable.item(i,c).setBackground(qtg.QColor(0,255,50))
+                        item = qtw.QRadioButton(self.scanTable)
+                        self.scanTable.setCellWidget(i+1, 0, item)
+                        item.setChecked(True)
+                        self.radioBtns[i+1]=item
                     else:
                         #logging.info("Row "+str(i)+"has not been selected")
                         pass
