@@ -1017,14 +1017,14 @@ class MainWindow(qtw.QMainWindow):
     def _makeDummyData(self):
         # V(t)
         self.dummyData = {}  
-        xx = np.linspace(0, 2*np.pi, 1000)
+        xx = np.linspace(0, 2*np.pi, 100)
         for ii in range(9):
             self.dummyData[ii] = {'x':xx[:],
                                   'y':np.sin(xx[:]*(ii+1))
             }
         # Amplitude vs. Freq
         self.dummyDataAmpl = {}
-        xx = np.linspace(10, 100, 1000)
+        xx = np.linspace(10, 100, 30)
         for ii in range(9):
             self.dummyDataAmpl[ii] = {'x':xx[:],
                                       'y':xx[:]*ii+1
@@ -1083,11 +1083,11 @@ class MainWindow(qtw.QMainWindow):
             # V(t) plots
             self.curvesFit['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], pen=fitPen)
             self.curvesFit['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0], pen=fitPen)
-            self.curves['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
+            self.curves['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
             self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
             #
             # A(f) plots (grid view)
-            self.curves['amplgrid'][loc] = getattr(self, f'pw_amplgrid_{loc}').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
+            self.curves['amplgrid'][loc] = getattr(self, f'pw_amplgrid_{loc}').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplAllPlotPens[loc])
             # A(f), all channels on single axes
             self.curves['amplgrid']['all'][loc] = getattr(self, f'pw_amplgrid_all').plot([0],[0], pen=amplAllPlotPens[loc])
             # A(f) plots (channel view)
@@ -1098,10 +1098,10 @@ class MainWindow(qtw.QMainWindow):
             
         # add in the main window, too (large view of V(t) for a single channel)
         self.curvesFit['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0], pen=fitPen)
-        self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=None)
+        self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([0],[0], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
 
         # add in the main window, too (large view of A(f) for a single channel)
-        self.curves['amplchan']['main'] = getattr(self, f'pw_amplchan_main').plot([0],[0], symbol='o', symbolSize=5, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
+        self.curves['amplchan']['main'] = getattr(self, f'pw_amplchan_main').plot([0],[0], symbol='o', symbolSize=3, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
 
         # Tension
         #self.curves['tension']['TofWireNum'] = {}
