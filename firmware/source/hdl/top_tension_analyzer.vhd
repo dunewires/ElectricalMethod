@@ -380,6 +380,7 @@ begin
 
       dwaClk400 => dwaClk400,
       dwaClk200 => dwaClk200,
+      dwaClk100 => dwaClk100,
       dwaClk10  => dwaClk10
     );
 

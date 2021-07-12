@@ -35,6 +35,7 @@ entity dacInterface is
 
 		dwaClk400 : in std_logic := '0';
 		dwaClk200 : in std_logic := '0';
+		dwaClk100 : in std_logic := '0';
 		dwaClk10  : in std_logic := '0'
 	);
 end entity dacInterface;
@@ -152,6 +153,7 @@ begin
 
 	-- generate a trigger signal that the ADC can use to sync to the stim freq
 	-- the ADC has a resolution of 10 ns so this will only work with multiple of 10 ns frequency step size
+	-- otherwise there will be aliasing 
 	-- this trigger is currently only used for evaluation and not part of the DWA operation.  
 	acStimTrig_gen : process (dwaClk100)
 	begin
