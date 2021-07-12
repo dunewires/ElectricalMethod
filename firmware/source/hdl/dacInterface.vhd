@@ -51,13 +51,14 @@ architecture STRUCT of dacInterface is
 	-- acStim_nPeriod_fp1 is shifted to fixed point 2 as we are defining half periods, ie the number of periods before a transition
 	alias phaseStep : unsigned(1 downto 0) is acStim_nPeriod_fp1(1 downto 0);
 	-- the portion after the point is done
-	alias clk200Step                  : unsigned(23 downto 0) is acStim_nPeriod_fp1(25 downto 2); -- need 16 bits for min 10 HZ half period count with an extra bit for good luck :)
-	signal stimClk200,stimClk200Ph180 : std_logic             := '0';
-	signal phaseShift180              : std_logic             := '0';
-	signal stimClkPeriodCnt           : unsigned(23 downto 0) := (others => '0');
-	signal fineCount                  : unsigned(2 downto 0)  := (others => '0');
-	alias phaseOF                     : std_logic is fineCount(2);
-	signal phaseOFDone                : std_logic := '0';
+	alias clk200Step                   : unsigned(23 downto 0) is acStim_nPeriod_fp1(25 downto 2); -- need 16 bits for min 10 HZ half period count with an extra bit for good luck :)
+	signal stimClk200, stimClk200Ph180 : std_logic             := '0';
+	signal stimClk100,stimClk100_del   : std_logic             := '0';
+	signal phaseShift180               : std_logic             := '0';
+	signal stimClkPeriodCnt            : unsigned(23 downto 0) := (others => '0');
+	signal fineCount                   : unsigned(2 downto 0)  := (others => '0');
+	alias phaseOF                      : std_logic is fineCount(2);
+	signal phaseOFDone                 : std_logic := '0';
 
 	--length of stimClk400 vector determines pulse width
 	signal stimClk400 : std_logic_vector(12 downto 0) := (others => '0');
@@ -144,10 +145,22 @@ begin
 			stimClk400(stimClk400'left downto 1) <= stimClk400(stimClk400'left-1 downto 0);
 			--sync For ADC readout
 			-- generate pulses with the required length, need > 10 ns pulse for 100 MHz rx
-			acStim_trigger <= stimClk400(0) and not stimClk400(5);
-			DAC_LD_B       <= stimClk400(stimClk400'left) or not stimClk400(0);
-			DAC_CLR_B      <= not stimClk400(stimClk400'left) or stimClk400(0);
+			DAC_LD_B  <= stimClk400(stimClk400'left) or not stimClk400(0);
+			DAC_CLR_B <= not stimClk400(stimClk400'left) or stimClk400(0);
 		end if;
 	end process dacPulseGen;
+
+	-- generate a trigger signal that the ADC can use to sync to the stim freq
+	-- the ADC has a resolution of 10 ns so this will only work with multiple of 10 ns frequency step size
+	-- this trigger is currently only used for evaluation and not part of the DWA operation.  
+	acStimTrig_gen : process (dwaClk100)
+	begin
+		if rising_edge(dwaClk100) then
+			stimClk100     <= stimClk200;
+			stimClk100_del <= stimClk100;
+			-- pulse once on the rising edge.	
+			acStim_trigger <= stimClk100 and not stimClk100_del;
+		end if;
+	end process acStimTrig_gen;
 
 end architecture STRUCT;
