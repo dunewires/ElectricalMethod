@@ -91,7 +91,7 @@ import channel_frequencies
 import ChannelMapping
 
 
-GUI_Y_OFFSET = 200 #FIXME: remove this!
+GUI_Y_OFFSET = 0 #FIXME: remove this!
 
 DWA_DAQ_VERSION = "X.X.X"
 #
