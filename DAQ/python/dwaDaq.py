@@ -1,4 +1,7 @@
 # FIXME/TODO:
+# * move client_IP to DAQ config file
+# * Resonance tab: only loads data from .json file. When scan runs, the Stimulus tab makes a .json file. Resonance tab loads that file.
+# * Resonance tab: when field loses focus, update the values (for the manually entered resonance values)
 # * use tabWidget.currentChanged.connect(self.tabChanged)
 #   https://stackoverflow.com/questions/21562485/pyqt-qtabwidget-currentchanged
 #   def tabChanged(self, i):
@@ -57,6 +60,7 @@ import os
 import sys
 import logging
 import json
+import platform
 
 from functools import partial
 from enum import Enum, IntEnum
@@ -529,15 +533,25 @@ class MainWindow(qtw.QMainWindow):
               self.threadPool.maxThreadCount())
 
     def _configureGUI(self):
-        ############ Resize and launch GUI in bottom right corner of screen
-        # tested on mac & linux (unclear about windows)
-        # https://stackoverflow.com/questions/39046059/pyqt-location-of-the-window
-        self.resize(1400,800)
-        screen = qtw.QDesktopWidget().screenGeometry()
-        wgeom = self.geometry()
-        x = screen.width() - wgeom.width()
-        y = screen.height() - wgeom.height()
-        self.move(x, y-GUI_Y_OFFSET)
+        # Get platform:
+        # platform.system()
+        # Returns the system/OS name, such as 'Linux', 'Darwin', 'Java', 'Windows'. An empty string is returned if the value cannot be determined.
+        psys = platform.system().upper()
+        print(f"platform.system() = {psys}")
+        if psys == 'WINDOWS':
+            self.showMaximized()
+        else:
+            ############ Resize and launch GUI in bottom right corner of screen
+            # tested on mac & linux (unclear about windows)
+            # https://stackoverflow.com/questions/39046059/pyqt-location-of-the-window
+            # FIXME: QDesktopWidget() is deprecated... see:
+            # https://stackoverflow.com/questions/55227303/qt-qdesktopwidget-is-deprecated-what-should-i-use-instead
+            self.resize(1400,800)
+            screen = qtw.QDesktopWidget().screenGeometry()
+            wgeom = self.geometry()
+            x = screen.width() - wgeom.width()
+            y = screen.height() - wgeom.height()
+            self.move(x, y-GUI_Y_OFFSET)
 
         # set the background color of the main window
         #self.setStyleSheet("background-color: white;")
