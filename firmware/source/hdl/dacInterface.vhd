@@ -22,10 +22,10 @@ use duneDwa.global_def.all;
 
 entity dacInterface is
 	port (
-		acStim_mag     : in  unsigned(11 downto 0) := (others => '0');
-		acStim_nPeriod : in  unsigned(24 downto 0) := (others => '0');
-		acStim_enable  : in  std_logic             := '0';
-		acStim_trigger : out std_logic             := '0';
+		acStim_mag         : in  unsigned(11 downto 0) := (others => '0');
+		acStim_nPeriod_fp1 : in  unsigned(25 downto 0) := (others => '0');
+		acStim_enable      : in  std_logic             := '0';
+		acStim_trigger     : out std_logic             := '0';
 
 		DAC_SDI   : out std_logic := '0';
 		DAC_CS_B  : out std_logic := '0';
@@ -33,24 +33,38 @@ entity dacInterface is
 		DAC_CLR_B : out std_logic := '0';
 		DAC_CLK   : out std_logic := '0';
 
+		dwaClk400 : in std_logic := '0';
 		dwaClk200 : in std_logic := '0';
-		dwaClk10 : in std_logic := '0'
+		dwaClk10  : in std_logic := '0'
 	);
 end entity dacInterface;
 
 architecture STRUCT of dacInterface is
+	signal acStim_mag_del : unsigned(11 downto 0) := (others => '0');
+	signal magShiftReg    : unsigned(11 downto 0) := (others => '0');
+	signal shiftCnt       : unsigned(3 downto 0)  := (others => '0');
+	signal DAC_CLK_EN     : std_logic             := '0';
 
-	signal acStim_mag_del    : unsigned(11 downto 0)        := (others => '0');
-	signal magShiftReg       : unsigned(11 downto 0)        := (others => '0');
-	signal shiftCnt          : unsigned(3 downto 0)         := (others => '0');
-	signal DAC_CLK_EN        : std_logic                    := '0';
-	signal acStim_periodCnt  : unsigned(23 downto 0)        := (others => '0');
-	--length of acStim vector determines pulse width
-	signal acStim : std_logic_vector(12 downto 0) := (others => '0');
+	-- There is an extra bit of  precision for the accumulator
+	-- This will give a more accurate frequency with an extra clk 400 every other clock edge
+	-- exact frequency not exact 50% duty cycle
+	-- acStim_nPeriod_fp1 is shifted to fixed point 2 as we are defining half periods, ie the number of periods before a transition
+	alias phaseStep : unsigned(1 downto 0) is acStim_nPeriod_fp1(1 downto 0);
+	-- the portion after the point is done
+	alias clk200Step                  : unsigned(23 downto 0) is acStim_nPeriod_fp1(25 downto 2); -- need 16 bits for min 10 HZ half period count with an extra bit for good luck :)
+	signal stimClk200,stimClk200Ph180 : std_logic             := '0';
+	signal phaseShift180              : std_logic             := '0';
+	signal stimClkPeriodCnt           : unsigned(23 downto 0) := (others => '0');
+	signal fineCount                  : unsigned(2 downto 0)  := (others => '0');
+	alias phaseOF                     : std_logic is fineCount(2);
+	signal phaseOFDone                : std_logic := '0';
+
+	--length of stimClk400 vector determines pulse width
+	signal stimClk400 : std_logic_vector(12 downto 0) := (others => '0');
 
 
 begin
-	ODDR_acStim : ODDR
+	ODDR_stimClk400 : ODDR
 		generic map(
 			DDR_CLK_EDGE => "SAME_EDGE", -- "OPPOSITE_EDGE" or "SAME_EDGE"
 			INIT         => '0',         -- Initial value for Q port ('1' or '0')
@@ -86,30 +100,54 @@ begin
 		end if;
 	end process load_dac;
 
-	make_ac_stim : process (dwaClk200)
+	-- count the number of clk200s needed between clock edges. 
+	-- add one when the fine count overflows
+	make_ac_stimX200 : process (dwaClk200)
 	begin
 		if rising_edge(dwaClk200) then
-			acStim_periodCnt <= acStim_periodCnt +1;
-			if acStim_periodCnt >= acStim_nPeriod(acStim_nPeriod'left downto 1) then  -- clock edge at half the period
-				if not DAC_CLK_EN and acStim_enable then --also disable when updating magnitude
-					acStim(0) <= not acStim(0);          -- flip
-				end if;
-				-- we are counting the exact number
-				-- when LSb is 1 reset to 0 every other acStim 'flip'
-				-- not exactly 50% duty cycle but 2x the resolution in frequency
-				acStim_periodCnt <= (
-				acStim_periodCnt'left downto 1 => '0', 
-				0 => not (acStim_nPeriod(0) and acStim(0))
-				); --
+			-- need the > to catch when the nPeriod decreases at the wrong time
+			if stimClkPeriodCnt >= clk200Step then
+				-- dont use the enable here to keep the filter working
+				stimClk200 <= not stimClk200;
+
+				stimClkPeriodCnt(stimClkPeriodCnt'left downto 1) <= (others => '0');
+				-- reset counter to 1 except during fine phase overflow reset to 0 for 1 extra clock cycle
+				stimClkPeriodCnt(0) <= not (phaseOF xor phaseOFDone); -- pulse once every flip 0 to 1 and 1 to 0 
+				phaseOFDone         <= phaseOF;
+			else
+				-- Default Increment
+				stimClkPeriodCnt <= stimClkPeriodCnt +1;
 			end if;
-			acStim(acStim'left downto 1) <= acStim(acStim'left-1 downto 0);
-			--sync For ADC readout
-			-- generate pulses with the required length, need > 10 ns pulse for 100 MHz rx
-			acStim_trigger <= acStim(0) and not acStim(4); 
-			DAC_LD_B       <= acStim(acStim'left) or not acStim(0);
-			DAC_CLR_B      <= not acStim(acStim'left) or acStim(0);
+			-- update the fine delay settings in between transitions of the stimClk signal
+			if stimClkPeriodCnt = x"000020" then
+				fineCount     <= fineCount + phaseStep;
+				phaseShift180 <= fineCount(1);
+			end if;
 
 		end if;
-	end process make_ac_stim;
+	end process make_ac_stimX200;
+
+	-- use the 400 MHz clk to cover the second half of the clk 200 period
+	phase180Gen : process (dwaClk400)
+	begin
+		if rising_edge(dwaClk400) then
+			stimClk200Ph180 <= stimClk200;
+			-- Keep this register to drive the idelay from a single source
+			stimClk400(0) <= stimClk200Ph180 when phaseShift180 else stimClk200;
+		end if;
+	end process phase180Gen;
+
+	-- stretch the 400 pulse to be long enough for the DAC 
+	dacPulseGen : process (dwaClk400)
+	begin
+		if rising_edge(dwaClk400) then
+			stimClk400(stimClk400'left downto 1) <= stimClk400(stimClk400'left-1 downto 0);
+			--sync For ADC readout
+			-- generate pulses with the required length, need > 10 ns pulse for 100 MHz rx
+			acStim_trigger <= stimClk400(0) and not stimClk400(5);
+			DAC_LD_B       <= stimClk400(stimClk400'left) or not stimClk400(0);
+			DAC_CLR_B      <= not stimClk400(stimClk400'left) or stimClk400(0);
+		end if;
+	end process dacPulseGen;
 
 end architecture STRUCT;
