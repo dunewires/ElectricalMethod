@@ -256,7 +256,7 @@ begin
   -- convert requested stim frequency to number of 100Mhz clocks
   -- move this to the processor!
   compute_n_periods : process (dwaClk10)
-    variable acStim_nPeriod_fp1_all : unsigned(31 downto 0 );
+    variable acStim_nPeriod_fp1_all : unsigned(39 downto 0 );
     variable adcCnv_nCnv_all        : unsigned(39 downto 0 );
 
   begin
@@ -270,7 +270,7 @@ begin
       end if;
 
       -- nPeriod has units of 5ns with specified fixed point
-      acStim_nPeriod_fp1_all  := (x"17d78400"/ stimFreqReq(17 downto 0));
+      acStim_nPeriod_fp1_all  := (x"17d7840000"/ stimFreqReq(17 downto 0));
       acStim_nPeriod_fp1      <= acStim_nPeriod_fp1_all(25 downto 0);      -- only take what is needed for min 10 HZ stim freq
       acStimX200_nPeriod_fxp8 <= (acStim_nPeriod_fp1 & "0000000") / x"C8"; -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
 
