@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Jul 12 12:07:30 2021
+-- Last update : Mon Jul 12 14:01:33 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -218,9 +218,10 @@ begin
             x"40" & std_logic_vector(stimPeriodCounter),
             --FIXME: the following product can overflow...
             x"41" & std_logic_vector(adcSamplesPerFreq(23 downto 0)),
+            x"42" & std_logic_vector(stimPeriodActive_reg(25 downto 2)),
             x"43" & std_logic_vector(adcSamplingPeriod_reg),
-            x"52" & "00" & x"000" & std_logic_vector(stimPeriodActive_reg(25 downto 16)),
-            x"53" & x"00" & std_logic_vector(stimPeriodActive_reg(15 downto 0)),
+           -- x"52" & "00" & x"000" & std_logic_vector(stimPeriodActive_reg(25 downto 16)),
+           -- x"53" & x"00" & std_logic_vector(stimPeriodActive_reg(15 downto 0)),
             x"CCCCCCCC",
             x"DDDD" & x"5151" -- FIXME: this shoould be in the genDFrame_s...
     );
