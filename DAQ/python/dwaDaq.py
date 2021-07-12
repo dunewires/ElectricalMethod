@@ -533,7 +533,7 @@ class MainWindow(qtw.QMainWindow):
         # tested on mac & linux (unclear about windows)
         # https://stackoverflow.com/questions/39046059/pyqt-location-of-the-window
         self.resize(1400,800)
-        screen = qtg.QDesktopWidget().screenGeometry()
+        screen = qtw.QDesktopWidget().screenGeometry()
         wgeom = self.geometry()
         x = screen.width() - wgeom.width()
         y = screen.height() - wgeom.height()
