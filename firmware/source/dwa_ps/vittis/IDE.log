@@ -1183,3 +1183,773 @@ Troubleshooting hints:
 2. In case of zynq board, check whether Digilent/Xilinx cable switch settings are correct.
 3. If you are using Xilinx Platform Cable USB, ensure that status LED is green.
 14:01:25 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+13:45:03 INFO  : Launching XSCT server: xsct -n  -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/temp_xsdb_launch_script.tcl
+13:45:06 INFO  : XSCT server has started successfully.
+13:45:06 INFO  : plnx-install-location is set to ''
+13:45:06 INFO  : Successfully done setting XSCT server connection channel  
+13:45:06 INFO  : Successfully done setting workspace for the tool. 
+13:45:09 INFO  : Platform repository initialization has completed.
+13:45:10 INFO  : Registering command handlers for Vitis TCF services
+13:45:14 INFO  : Successfully done query RDI_DATADIR 
+13:45:59 ERROR : Failed to connect to hardware server on host 'localhost' and port '3124'.
+Reason: connection failed
+13:46:51 INFO  : Connected to target on host 'localhost' and port '3124'.
+13:46:51 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+13:46:55 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_122207_-0.393ns.bit"
+13:51:54 ERROR : Could not find FPGA device on the board for connection 'Local'.
+
+
+Troubleshooting hints:
+1. Check whether board is connected to system properly.
+2. In case of zynq board, check whether Digilent/Xilinx cable switch settings are correct.
+3. If you are using Xilinx Platform Cable USB, ensure that status LED is green.
+13:52:48 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+13:52:48 INFO  : 'fpga -state' command is executed.
+13:52:50 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+13:52:50 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+13:52:50 INFO  : 'jtag frequency' command is executed.
+13:52:50 INFO  : Context for 'APU' is selected.
+13:52:50 INFO  : System reset is completed.
+13:52:53 INFO  : 'after 3000' command is executed.
+13:52:53 INFO  : Context for 'APU' is selected.
+13:52:53 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+13:52:53 INFO  : 'configparams force-mem-access 1' command is executed.
+13:52:53 INFO  : Context for 'APU' is selected.
+13:52:53 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+13:52:54 INFO  : 'ps7_init' command is executed.
+13:52:54 INFO  : 'ps7_post_config' command is executed.
+13:52:54 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+13:52:54 ERROR : Cannot halt processor core, timeout
+13:52:54 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+----------------End of Script----------------
+
+13:52:54 ERROR : Cannot halt processor core, timeout
+13:53:26 INFO  : Connected to target on host 'localhost' and port '3124'.
+13:53:26 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+13:53:30 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_122207_-0.393ns.bit"
+13:54:27 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+13:54:27 INFO  : 'fpga -state' command is executed.
+13:54:27 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+13:54:28 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+13:54:28 INFO  : 'jtag frequency' command is executed.
+13:54:28 INFO  : Context for 'APU' is selected.
+13:54:28 INFO  : System reset is completed.
+13:54:31 INFO  : 'after 3000' command is executed.
+13:54:31 INFO  : Context for 'APU' is selected.
+13:54:31 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+13:54:31 INFO  : 'configparams force-mem-access 1' command is executed.
+13:54:31 INFO  : Context for 'APU' is selected.
+13:54:31 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+13:54:32 INFO  : 'ps7_init' command is executed.
+13:54:32 INFO  : 'ps7_post_config' command is executed.
+13:54:32 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+13:54:32 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf' is downloaded to processor 'ps7_cortexa9_0'.
+13:54:32 INFO  : 'configparams force-mem-access 0' command is executed.
+13:54:32 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+13:54:32 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+13:54:32 INFO  : 'con' command is executed.
+13:54:32 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "*A9*#0"}
+con
+----------------End of Script----------------
+
+13:54:32 INFO  : Disconnected from the channel tcfchan#4.
+13:55:00 INFO  : Connected to target on host 'localhost' and port '3124'.
+13:55:01 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+13:55:04 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_122207_-0.393ns.bit"
+14:15:45 INFO  : Connected to target on host 'localhost' and port '3124'.
+14:15:45 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:15:48 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_122207_-0.393ns.bit"
+14:16:16 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:16:16 INFO  : 'fpga -state' command is executed.
+14:16:17 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+14:16:17 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+14:16:17 INFO  : 'jtag frequency' command is executed.
+14:16:17 INFO  : Context for 'APU' is selected.
+14:16:17 INFO  : System reset is completed.
+14:16:20 INFO  : 'after 3000' command is executed.
+14:16:20 INFO  : Context for 'APU' is selected.
+14:16:20 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+14:16:20 INFO  : 'configparams force-mem-access 1' command is executed.
+14:16:20 INFO  : Context for 'APU' is selected.
+14:16:20 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+14:16:21 INFO  : 'ps7_init' command is executed.
+14:16:21 INFO  : 'ps7_post_config' command is executed.
+14:16:21 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:16:21 ERROR : Cannot halt processor core, timeout
+14:16:21 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+----------------End of Script----------------
+
+14:16:21 ERROR : Cannot halt processor core, timeout
+14:16:38 INFO  : Connected to target on host 'localhost' and port '3124'.
+14:16:38 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:16:42 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_122207_-0.393ns.bit"
+14:17:13 INFO  : Connected to target on host 'localhost' and port '3124'.
+14:17:14 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:17:17 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_141224_-0.347ns.bit"
+14:17:32 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:17:33 INFO  : 'fpga -state' command is executed.
+14:17:33 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+14:17:33 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+14:17:33 INFO  : 'jtag frequency' command is executed.
+14:17:33 INFO  : Context for 'APU' is selected.
+14:17:33 INFO  : System reset is completed.
+14:17:36 INFO  : 'after 3000' command is executed.
+14:17:36 INFO  : Context for 'APU' is selected.
+14:17:36 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+14:17:36 INFO  : 'configparams force-mem-access 1' command is executed.
+14:17:36 INFO  : Context for 'APU' is selected.
+14:17:36 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+14:17:37 INFO  : 'ps7_init' command is executed.
+14:17:37 INFO  : 'ps7_post_config' command is executed.
+14:17:37 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:17:37 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf' is downloaded to processor 'ps7_cortexa9_0'.
+14:17:37 INFO  : 'configparams force-mem-access 0' command is executed.
+14:17:37 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+14:17:37 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:17:37 INFO  : 'con' command is executed.
+14:17:37 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "*A9*#0"}
+con
+----------------End of Script----------------
+
+14:17:37 INFO  : Disconnected from the channel tcfchan#5.
+14:17:59 INFO  : Connected to target on host 'localhost' and port '3124'.
+14:17:59 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:18:02 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_141224_-0.347ns.bit"
+14:30:14 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:30:14 INFO  : 'fpga -state' command is executed.
+14:30:15 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+14:30:15 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+14:30:15 INFO  : 'jtag frequency' command is executed.
+14:30:15 INFO  : Context for 'APU' is selected.
+14:30:15 INFO  : System reset is completed.
+14:30:18 INFO  : 'after 3000' command is executed.
+14:30:18 INFO  : Context for 'APU' is selected.
+14:30:18 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+14:30:18 INFO  : 'configparams force-mem-access 1' command is executed.
+14:30:18 INFO  : Context for 'APU' is selected.
+14:30:18 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+14:30:19 INFO  : 'ps7_init' command is executed.
+14:30:19 INFO  : 'ps7_post_config' command is executed.
+14:30:19 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:30:19 ERROR : Cannot halt processor core, timeout
+14:30:19 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+----------------End of Script----------------
+
+14:30:19 ERROR : Cannot halt processor core, timeout
+14:30:37 INFO  : Connected to target on host 'localhost' and port '3124'.
+14:30:37 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:30:40 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_141224_-0.347ns.bit"
+14:30:54 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:30:54 INFO  : 'fpga -state' command is executed.
+14:30:54 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+14:30:55 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+14:30:55 INFO  : 'jtag frequency' command is executed.
+14:30:55 INFO  : Context for 'APU' is selected.
+14:30:55 INFO  : System reset is completed.
+14:30:58 INFO  : 'after 3000' command is executed.
+14:30:58 INFO  : Context for 'APU' is selected.
+14:30:58 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+14:30:58 INFO  : 'configparams force-mem-access 1' command is executed.
+14:30:58 INFO  : Context for 'APU' is selected.
+14:30:58 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+14:30:58 INFO  : 'ps7_init' command is executed.
+14:30:59 INFO  : 'ps7_post_config' command is executed.
+14:30:59 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:30:59 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf' is downloaded to processor 'ps7_cortexa9_0'.
+14:30:59 INFO  : 'configparams force-mem-access 0' command is executed.
+14:30:59 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+14:30:59 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:30:59 INFO  : 'con' command is executed.
+14:30:59 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "*A9*#0"}
+con
+----------------End of Script----------------
+
+14:30:59 INFO  : Disconnected from the channel tcfchan#6.
+14:31:27 INFO  : Connected to target on host 'localhost' and port '3124'.
+14:31:27 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:31:30 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_142854_-0.366ns.bit"
+14:31:47 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:31:47 INFO  : 'fpga -state' command is executed.
+14:31:48 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+14:31:48 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+14:31:48 INFO  : 'jtag frequency' command is executed.
+14:31:48 INFO  : Context for 'APU' is selected.
+14:31:48 INFO  : System reset is completed.
+14:31:51 INFO  : 'after 3000' command is executed.
+14:31:51 INFO  : Context for 'APU' is selected.
+14:31:51 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+14:31:51 INFO  : 'configparams force-mem-access 1' command is executed.
+14:31:51 INFO  : Context for 'APU' is selected.
+14:31:51 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+14:31:52 INFO  : 'ps7_init' command is executed.
+14:31:52 INFO  : 'ps7_post_config' command is executed.
+14:31:52 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:31:52 ERROR : Cannot halt processor core, timeout
+14:31:52 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+----------------End of Script----------------
+
+14:31:52 ERROR : Cannot halt processor core, timeout
+14:32:12 INFO  : Connected to target on host 'localhost' and port '3124'.
+14:32:12 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:32:16 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_142854_-0.366ns.bit"
+14:32:25 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:32:25 INFO  : 'fpga -state' command is executed.
+14:32:25 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+14:32:25 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+14:32:25 INFO  : 'jtag frequency' command is executed.
+14:32:25 INFO  : Context for 'APU' is selected.
+14:32:25 INFO  : System reset is completed.
+14:32:28 INFO  : 'after 3000' command is executed.
+14:32:28 INFO  : Context for 'APU' is selected.
+14:32:28 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+14:32:28 INFO  : 'configparams force-mem-access 1' command is executed.
+14:32:28 INFO  : Context for 'APU' is selected.
+14:32:28 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+14:32:29 INFO  : 'ps7_init' command is executed.
+14:32:29 INFO  : 'ps7_post_config' command is executed.
+14:32:29 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:32:29 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf' is downloaded to processor 'ps7_cortexa9_0'.
+14:32:29 INFO  : 'configparams force-mem-access 0' command is executed.
+14:32:29 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+14:32:29 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:32:29 INFO  : 'con' command is executed.
+14:32:29 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "*A9*#0"}
+con
+----------------End of Script----------------
+
+14:32:29 INFO  : Disconnected from the channel tcfchan#7.
+14:32:44 INFO  : Connected to target on host 'localhost' and port '3124'.
+14:32:44 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:32:47 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_142854_-0.366ns.bit"
+14:58:16 INFO  : Connected to target on host 'localhost' and port '3124'.
+14:58:16 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:58:20 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_145155_-0.390ns.bit"
+14:58:31 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:58:31 INFO  : 'fpga -state' command is executed.
+14:58:32 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+14:58:32 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+14:58:32 INFO  : 'jtag frequency' command is executed.
+14:58:32 INFO  : Context for 'APU' is selected.
+14:58:32 INFO  : System reset is completed.
+14:58:35 INFO  : 'after 3000' command is executed.
+14:58:35 INFO  : Context for 'APU' is selected.
+14:58:35 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+14:58:35 INFO  : 'configparams force-mem-access 1' command is executed.
+14:58:35 INFO  : Context for 'APU' is selected.
+14:58:35 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+14:58:36 INFO  : 'ps7_init' command is executed.
+14:58:36 INFO  : 'ps7_post_config' command is executed.
+14:58:36 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:58:36 ERROR : Cannot halt processor core, timeout
+14:58:36 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+----------------End of Script----------------
+
+14:58:36 ERROR : Cannot halt processor core, timeout
+14:58:51 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:58:51 INFO  : 'fpga -state' command is executed.
+14:58:51 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+14:58:51 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+14:58:51 INFO  : 'jtag frequency' command is executed.
+14:58:51 INFO  : Context for 'APU' is selected.
+14:58:51 INFO  : System reset is completed.
+14:58:54 INFO  : 'after 3000' command is executed.
+14:58:54 INFO  : Context for 'APU' is selected.
+14:58:54 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+14:58:54 INFO  : 'configparams force-mem-access 1' command is executed.
+14:58:54 INFO  : Context for 'APU' is selected.
+14:58:54 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+14:58:55 INFO  : 'ps7_init' command is executed.
+14:58:55 INFO  : 'ps7_post_config' command is executed.
+14:58:55 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:58:56 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf' is downloaded to processor 'ps7_cortexa9_0'.
+14:58:56 INFO  : 'configparams force-mem-access 0' command is executed.
+14:58:56 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+14:58:56 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:58:56 INFO  : 'con' command is executed.
+14:58:56 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "*A9*#0"}
+con
+----------------End of Script----------------
+
+14:58:56 INFO  : Disconnected from the channel tcfchan#8.
+14:59:11 INFO  : Connected to target on host 'localhost' and port '3124'.
+14:59:11 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:59:14 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_145155_-0.390ns.bit"
+14:59:26 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:59:26 INFO  : 'fpga -state' command is executed.
+14:59:26 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+14:59:26 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+14:59:26 INFO  : 'jtag frequency' command is executed.
+14:59:26 INFO  : Context for 'APU' is selected.
+14:59:26 INFO  : System reset is completed.
+14:59:29 INFO  : 'after 3000' command is executed.
+14:59:29 INFO  : Context for 'APU' is selected.
+14:59:29 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+14:59:29 INFO  : 'configparams force-mem-access 1' command is executed.
+14:59:29 INFO  : Context for 'APU' is selected.
+14:59:29 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+14:59:30 INFO  : 'ps7_init' command is executed.
+14:59:30 INFO  : 'ps7_post_config' command is executed.
+14:59:30 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:59:30 ERROR : Cannot halt processor core, timeout
+14:59:30 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+----------------End of Script----------------
+
+14:59:30 ERROR : Cannot halt processor core, timeout
+14:59:52 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+14:59:52 INFO  : 'fpga -state' command is executed.
+14:59:52 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+14:59:53 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+14:59:53 INFO  : 'jtag frequency' command is executed.
+14:59:53 INFO  : Context for 'APU' is selected.
+14:59:53 INFO  : System reset is completed.
+14:59:56 INFO  : 'after 3000' command is executed.
+14:59:56 INFO  : Context for 'APU' is selected.
+14:59:56 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+14:59:56 INFO  : 'configparams force-mem-access 1' command is executed.
+14:59:56 INFO  : Context for 'APU' is selected.
+14:59:56 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+14:59:57 INFO  : 'ps7_init' command is executed.
+14:59:57 INFO  : 'ps7_post_config' command is executed.
+14:59:57 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:59:57 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf' is downloaded to processor 'ps7_cortexa9_0'.
+14:59:57 INFO  : 'configparams force-mem-access 0' command is executed.
+14:59:57 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+14:59:57 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+14:59:57 INFO  : 'con' command is executed.
+14:59:57 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "*A9*#0"}
+con
+----------------End of Script----------------
+
+14:59:57 INFO  : Disconnected from the channel tcfchan#9.
+15:00:09 INFO  : Connected to target on host 'localhost' and port '3124'.
+15:00:09 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:00:13 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_145155_-0.390ns.bit"
+15:00:20 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:00:20 INFO  : 'fpga -state' command is executed.
+15:00:20 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+15:00:20 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+15:00:20 INFO  : 'jtag frequency' command is executed.
+15:00:20 INFO  : Context for 'APU' is selected.
+15:00:21 INFO  : System reset is completed.
+15:00:24 INFO  : 'after 3000' command is executed.
+15:00:24 INFO  : Context for 'APU' is selected.
+15:00:24 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+15:00:24 INFO  : 'configparams force-mem-access 1' command is executed.
+15:00:24 INFO  : Context for 'APU' is selected.
+15:00:24 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+15:00:24 INFO  : 'ps7_init' command is executed.
+15:00:24 INFO  : 'ps7_post_config' command is executed.
+15:00:24 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:00:25 ERROR : Cannot halt processor core, timeout
+15:00:25 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+----------------End of Script----------------
+
+15:00:25 ERROR : Cannot halt processor core, timeout
+15:00:46 INFO  : Connected to target on host 'localhost' and port '3124'.
+15:00:46 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:00:50 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_145155_-0.390ns.bit"
+15:00:57 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:00:57 INFO  : 'fpga -state' command is executed.
+15:00:57 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+15:00:58 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+15:00:58 INFO  : 'jtag frequency' command is executed.
+15:00:58 INFO  : Context for 'APU' is selected.
+15:00:58 INFO  : System reset is completed.
+15:01:01 INFO  : 'after 3000' command is executed.
+15:01:01 INFO  : Context for 'APU' is selected.
+15:01:01 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+15:01:01 INFO  : 'configparams force-mem-access 1' command is executed.
+15:01:01 INFO  : Context for 'APU' is selected.
+15:01:01 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+15:01:02 INFO  : 'ps7_init' command is executed.
+15:01:02 INFO  : 'ps7_post_config' command is executed.
+15:01:02 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:01:02 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf' is downloaded to processor 'ps7_cortexa9_0'.
+15:01:02 INFO  : 'configparams force-mem-access 0' command is executed.
+15:01:02 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+15:01:02 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:01:02 INFO  : 'con' command is executed.
+15:01:02 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "*A9*#0"}
+con
+----------------End of Script----------------
+
+15:01:02 INFO  : Disconnected from the channel tcfchan#10.
+15:01:18 INFO  : Connected to target on host 'localhost' and port '3124'.
+15:01:18 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:01:21 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_145155_-0.390ns.bit"
+15:01:51 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:01:51 INFO  : 'fpga -state' command is executed.
+15:01:52 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+15:01:52 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+15:01:52 INFO  : 'jtag frequency' command is executed.
+15:01:52 INFO  : Context for 'APU' is selected.
+15:01:53 INFO  : System reset is completed.
+15:01:56 INFO  : 'after 3000' command is executed.
+15:01:56 INFO  : Context for 'APU' is selected.
+15:01:56 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+15:01:56 INFO  : 'configparams force-mem-access 1' command is executed.
+15:01:56 INFO  : Context for 'APU' is selected.
+15:01:56 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+15:01:56 INFO  : 'ps7_init' command is executed.
+15:01:56 INFO  : 'ps7_post_config' command is executed.
+15:01:57 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:01:57 ERROR : Cannot halt processor core, timeout
+15:01:57 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+----------------End of Script----------------
+
+15:01:57 ERROR : Cannot halt processor core, timeout
+15:02:22 INFO  : Connected to target on host 'localhost' and port '3124'.
+15:02:22 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:02:26 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_145155_-0.390ns.bit"
+15:02:38 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:02:38 INFO  : 'fpga -state' command is executed.
+15:02:38 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+15:02:38 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+15:02:38 INFO  : 'jtag frequency' command is executed.
+15:02:38 INFO  : Context for 'APU' is selected.
+15:02:38 INFO  : System reset is completed.
+15:02:41 INFO  : 'after 3000' command is executed.
+15:02:41 INFO  : Context for 'APU' is selected.
+15:02:41 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+15:02:41 INFO  : 'configparams force-mem-access 1' command is executed.
+15:02:41 INFO  : Context for 'APU' is selected.
+15:02:41 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+15:02:42 INFO  : 'ps7_init' command is executed.
+15:02:42 INFO  : 'ps7_post_config' command is executed.
+15:02:42 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:02:42 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf' is downloaded to processor 'ps7_cortexa9_0'.
+15:02:42 INFO  : 'configparams force-mem-access 0' command is executed.
+15:02:42 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+15:02:42 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:02:42 INFO  : 'con' command is executed.
+15:02:42 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "*A9*#0"}
+con
+----------------End of Script----------------
+
+15:02:42 INFO  : Disconnected from the channel tcfchan#11.
+15:03:25 INFO  : Connected to target on host 'localhost' and port '3124'.
+15:03:26 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:03:29 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_145155_-0.390ns.bit"
+15:04:26 INFO  : Connected to target on host 'localhost' and port '3124'.
+15:04:26 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:04:29 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_145155_-0.390ns.bit"
+15:04:50 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:04:50 INFO  : 'fpga -state' command is executed.
+15:04:51 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+15:04:51 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+15:04:51 INFO  : 'jtag frequency' command is executed.
+15:04:51 INFO  : Context for 'APU' is selected.
+15:04:51 INFO  : System reset is completed.
+15:04:54 INFO  : 'after 3000' command is executed.
+15:04:55 INFO  : Context for 'APU' is selected.
+15:04:55 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+15:04:55 INFO  : 'configparams force-mem-access 1' command is executed.
+15:04:55 INFO  : Context for 'APU' is selected.
+15:04:55 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+15:04:55 INFO  : 'ps7_init' command is executed.
+15:04:55 INFO  : 'ps7_post_config' command is executed.
+15:04:55 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:04:56 ERROR : Cannot halt processor core, timeout
+15:04:56 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+----------------End of Script----------------
+
+15:04:56 ERROR : Cannot halt processor core, timeout
+15:05:20 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:05:20 INFO  : 'fpga -state' command is executed.
+15:05:20 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+15:05:21 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+15:05:21 INFO  : 'jtag frequency' command is executed.
+15:05:21 INFO  : Context for 'APU' is selected.
+15:05:21 INFO  : System reset is completed.
+15:05:24 INFO  : 'after 3000' command is executed.
+15:05:24 INFO  : Context for 'APU' is selected.
+15:05:24 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+15:05:24 INFO  : 'configparams force-mem-access 1' command is executed.
+15:05:24 INFO  : Context for 'APU' is selected.
+15:05:24 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+15:05:25 INFO  : 'ps7_init' command is executed.
+15:05:25 INFO  : 'ps7_post_config' command is executed.
+15:05:25 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:05:25 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf' is downloaded to processor 'ps7_cortexa9_0'.
+15:05:25 INFO  : 'configparams force-mem-access 0' command is executed.
+15:05:25 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+15:05:25 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+15:05:25 INFO  : 'con' command is executed.
+15:05:25 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "*A9*#0"}
+con
+----------------End of Script----------------
+
+15:05:25 INFO  : Disconnected from the channel tcfchan#12.
+15:05:38 INFO  : Connected to target on host 'localhost' and port '3124'.
+15:05:38 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+15:05:42 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_145155_-0.390ns.bit"
