@@ -1,7 +1,9 @@
 # FIXME/TODO:
+# * When clicking to add f0 line -- use "hover" width for tolerance (instead of a hardcoded # of pixels)
+#   or just check to see if any of the InfiniteLines are in "hover" mode. If so, don't add a new line
+# * Add validator() to QLineEdits (e.g. for resonance fits)
+# * Resonance analysis: add/remove resonance frequency by clicking on plot
 # * self.state is useless now -- should use the states as reported by the STATUS frame
-# * Resonance tab: only loads data from .json file. When scan runs, the Stimulus tab makes a .json file. Resonance tab loads that file.
-# * Resonance tab: when field loses focus, update the values (for the manually entered resonance values)
 # * Update plot title V(t) to show frequency of scan
 # * Update plot title to list file root YYYYMMDDTHHMMSS
 # * Print GUI software version in title bar
@@ -145,7 +147,7 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-TAB_ACTIVE_MAIN = MainView.STIMULUS
+TAB_ACTIVE_MAIN = MainView.RESONANCE
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -420,6 +422,10 @@ class MainWindow(qtw.QMainWindow):
             self.registerOfVal[reg.value] = reg
 
         self._configureAmps()
+
+        # KLUGE to prevent a res freq InfLine from being added right after removal
+        # via mouse click
+        self.removedInfLine = False
         
         # Info about current run
         self.stimFreqMin = 0
@@ -575,12 +581,12 @@ class MainWindow(qtw.QMainWindow):
         self.ampDataFilename.returnPressed.connect(self.ampDataFilenameEnter)
         self.pb_ampDataLoad.clicked.connect(self.ampDataFilenameEnter)
         for reg in self.registers:
-            getattr(self, f'le_resfreq_val_{reg}').returnPressed.connect(self._resFreqUserInputText)
+            getattr(self, f'le_resfreq_val_{reg}').editingFinished.connect(self._resFreqUserInputText)
         self.resFitPreDetrend.stateChanged.connect(self.resFitParameterUpdated)
-        self.resFitBkgPoly.returnPressed.connect(self.resFitParameterUpdated)
-        self.resFitWidth.returnPressed.connect(self.resFitParameterUpdated)
-        self.resFitProminence.returnPressed.connect(self.resFitParameterUpdated)
-        self.resFitKwargs.returnPressed.connect(self.resFitParameterUpdated)
+        self.resFitBkgPoly.editingFinished.connect(self.resFitParameterUpdated)
+        self.resFitWidth.editingFinished.connect(self.resFitParameterUpdated)
+        self.resFitProminence.editingFinished.connect(self.resFitParameterUpdated)
+        self.resFitKwargs.editingFinished.connect(self.resFitParameterUpdated)
         #
         #self.statusFramePeriod_val.returnPressed.connect(self.setStatusFramePeriod)
         # Resonance Tab
@@ -597,6 +603,86 @@ class MainWindow(qtw.QMainWindow):
         self.configLayerComboBox.addItem("V")
         self.configLayerComboBox.addItem("X")
 
+        # Resonance analysis plots
+        self.resonanceProcessedDataGLW.scene().sigMouseClicked.connect(self._resProcGraphClicked)
+
+    #@pyqtSlot() For some reason, uncommenting this prevents evt from being passed!!!???!!!
+    #see: https://groups.google.com/u/1/g/pyqtgraph/c/bCWNA0Mown8
+    def _resProcGraphClicked(self, evt):
+        print("=== Clicked on the GLW ===")
+        print(evt)
+        #print(f"evt.screenPos() = {evt.screenPos()}")
+        #print(f"evt.scenePos()  = {evt.scenePos()}")
+        ##print(f"evt.pos()       = {evt.pos()}")
+        #print(f"evt.modifiers() = {evt.modifiers()}")
+
+        if evt.modifiers() == qtc.Qt.ControlModifier:
+            print("CTRL held down")
+            self._addF0LineViaClick(evt)
+        #if evt.modifiers() == qtc.Qt.ShiftModifier:
+        #    print("SHIFT held down")
+        #if evt.modifiers() == qtc.Qt.AltModifier:
+        #    print("ALT held down")
+        #if evt.modifiers() == (qtc.Qt.AltModifier | qtc.Qt.ShiftModifier):
+        #    print("ALT+SHIFT held down")
+
+        
+    def _addF0LineViaClick(self, evt):
+        # FIXME: don't add line if there is already an f0 sufficiently close...
+
+        # KLUGE: if a line was just removed, don't add a new line!
+        if self.removedInfLine:
+            print("warning: InfLine was just removed... will not add a new one in the same place...")
+            self.removedInfLine = False
+            return
+        
+        items = self.resonanceProcessedDataGLW.scene().items(evt.scenePos())
+        clickedItems = [x for x in items if isinstance(x, pg.PlotItem)]
+        if self.verbose:
+            print(f"Plots: {clickedItems}")
+
+        # Take the first item (should only be one!)
+        try:
+            ci = clickedItems[0]
+        except:
+            print("no PlotItem here...")
+            return
+
+        # which DWA channel was clicked?
+        try:
+            chan = self.resonanceProcessedPlots.index(ci)
+        except ValueError:
+            print(f"error: PlotItem {ci} not found in self.resonanceProcessedPlots: {self.resonanceProcessedPlots}")
+        
+        if self.verbose:
+            print(f"ci, chan = {ci}, {chan}")
+        # Convert to data coordinates
+        dataPoint = ci.getViewBox().mapSceneToView(evt.scenePos())
+        newF0 = dataPoint.x()
+        if self.verbose:
+            print(f"dataPoint = {dataPoint}")
+
+        # specify clicking tolerance for new line creation in pixels (so tolerance in Hz changes with zoom level)
+        minTolerancePixels = 5  # how far (in pixels) from existing f0 line must click be?
+        scenePosTol = qtc.QPointF(evt.scenePos().x() + minTolerancePixels, evt.scenePos().y())
+        tolPoint = ci.getViewBox().mapSceneToView(scenePosTol)
+        f0Tol = tolPoint.x()-newF0
+        print(f"f0Tol = {f0Tol}")
+        # If there is already a line at this frequency (within tolerance) then *remove* that line
+        f0Diff = np.abs(np.array(self.resonantFreqs[chan])-newF0)
+        if newF0 < 0:
+            print("Warning: cannot add line with f<0")
+            return
+        elif (len(self.resonantFreqs[chan]) > 0) and (np.min(f0Diff) < f0Tol):
+            print("Warning: already have an f0 line nearby. Will not add new line...")
+            return
+        else:
+            if self.verbose:
+                print(f"Will add InfLine at f={dataPoint.x()} Hz")
+            self.resonantFreqs[chan].append(newF0)
+            self.resonantFreqs[chan].sort()
+
+        self.resFreqUpdateDisplay()
         
     def _configureEventViewer(self):
         self.evtVwr_runName_val.setText(EVT_VWR_TIMESTAMP)
@@ -1470,43 +1556,61 @@ class MainWindow(qtw.QMainWindow):
 
         # FIXME: add check for which channel's textbox this came from
         # and only update the f0 values and GUI display for that associated channel
-        # FIXME: add check to guard against failed parse
         for reg in self.registers:
             fString = getattr(self, f'le_resfreq_val_{reg}').text()
-            toks = fString.split(',')
-            print(f"resFreqUserInputText: toks = {toks}")
-            try:
-                self.resonantFreqs[reg.value] = [ float(tok) for tok in toks ]
-            except:
-                self.resonantFreqs[reg.value] = [ ]
+            self.resonantFreqs[reg.value] = self._freqsOfString(fString)
         self.resFreqUpdateDisplay(chan=None)
 
-    @pyqtSlot()
-    def _f0LineClicked(self):
+    def _freqsOfString(self, fString):
+        # FIXME: add check to guard against failed parse
+        toks = fString.split(',')
+        print(f"resFreqUserInputText: toks = {toks}")
+        try:
+            freqList = [ float(tok) for tok in toks ]
+        except:
+            freqList = []
+        return freqList
+        
+    #@pyqtSlot()
+    def _f0LineClicked(self, infLine, clickEvt):
+        # evt is an InfiniteLine and an event (sigClicked sent by InfiniteLine)
+
         print("f0Line clicked")
-        print(f"pyqtgraph version {pg.__version__}")
-        #print(ev)
-        #print(f"line = {line}")
-        #print(f"ev   = {ev}")
-        #if ev.button() == qtc.Qt.RightButton:
-        #    print('right button!')
-            #if self.raiseContextMenu(ev):
-            #    ev.accept()
-        #else:
-        #    print("not right button...")
+        #print(f"pyqtgraph version {pg.__version__}")
+        print(f"infLine   = {infLine}")
+        print(f"clickEvt  = {clickEvt}")
 
-    #def raiseContextMenu(self, ev):
-    #    menu = self.getContextMenus()
-    #    
-    #    # Let the scene add on to the end of our context menu
-    #    # (this is optional)
-    #    menu = self.scene().addParentContextMenus(self, menu, ev)
-    #    
-    #    pos = ev.screenPos()
-    #    menu.popup(QtCore.QPoint(pos.x(), pos.y()))
-    #    return True
+        if clickEvt.modifiers() == qtc.Qt.ControlModifier:
+            print("CTRL held down")
+            self._f0LineRemove(infLine)
 
-    @pyqtSlot()
+    def _f0LineRemove(self, infLine):
+        print(f"removing InfiniteLine {infLine} at f={infLine.value()}")
+        source = self._getInfLineSource(infLine)  # 'proc' or 'raw'
+        #print(f"Before: {self.resFitLines['proc']}")
+        keys = self.resFitLines[source].keys()
+        for kk in keys:
+            if infLine in self.resFitLines[source][kk]:
+                self.resFitLines[source][kk].remove(infLine)  # remove infline from the correct list
+                break
+        #print(f"After: {self.resFitLines['proc']}")
+        #print(f"infLine was in register {kk}")
+        if source == 'proc':
+            print("removing from proc")
+            self.resonanceProcessedPlots[kk].removeItem(infLine)
+        elif source == 'raw':
+            print("removing from raw")
+            self.resonanceRawPlots[kk].removeItem(infLine)
+        else:
+            print("error: could not find the plot that owns {infLine}")
+            print("cannot remove line from the plot...")
+        del infLine
+        
+        self._updateResFreqsFromLineLocations(source)
+        self.resFreqUpdateDisplay(chan=None)  # update GUI
+        self.removedInfLine = True
+        
+    #@pyqtSlot()
     def _evtVwrF0LineMoved(self):
         print("\n\n\nevtVwr f0 Line moved")
         fDragged = self.curves['evtVwr']['A(f)']['marker'].value()
@@ -1529,34 +1633,45 @@ class MainWindow(qtw.QMainWindow):
         ## Update plots
         self.evtVwrUpdatePlots(plotAmpl=False)
         
-    @pyqtSlot()
-    def _f0LineMoved(self):
+    #@pyqtSlot()
+    def _f0LineMoved(self, evt):
+        # evt is an InfiniteLine instance (sigDragged event from InfiniteLine)
+        
         print("f0Line moved")
+        print(f"evt = {evt}")
+        print(f"self.resFitLines['raw'] = {self.resFitLines['raw']}")
+        print(f"self.resFitLines['proc'] = {self.resFitLines['proc']}")
 
+        source = self._getInfLineSource(evt)
+        self._updateResFreqsFromLineLocations(source)
+        self.resFreqUpdateDisplay(chan=None)  # update GUI
+        
+    def _getInfLineSource(self, infLine):
         # Figure out which plot the line drag was in
         # Flatten the list of InfiniteLines and match to source of signal
         rawLines = list(chain(*self.resFitLines['raw'].values()))
         procLines = list(chain(*self.resFitLines['proc'].values()))
-        #rawLines = [x for v in self.resFitLines['raw'].values() for x in v]
-        #procLines = [x for v in self.resFitLines['proc'].values() for x in v]
-        if self.sender() in rawLines:
+        if infLine in rawLines:
             source = 'raw'
-        elif self.sender() in procLines:
+        elif infLine in procLines:
             source = 'proc'
         else:
-            print("ERROR: unknown source of signal: {self.sender}")
+            print("ERROR: unknown source of signal: {infLine}")
+            print("      rawLines  = {rawLines}")
+            print("      procLines = {procLines}")
             return
         print(f"_f0LineMoved(): sender is from {source}")
-            
+        return source
+
+    def _updateResFreqsFromLineLocations(self, source):
+        # source is either 'proc' or 'raw'
+        
         # loop over all channels. Get locations of lines
         for reg in self.registers:
             self.resonantFreqs[reg.value] = []  # start w/ empty list
             for infLine in self.resFitLines[source][reg]: # re-create resFreq list
                 self.resonantFreqs[reg.value].append(infLine.value())
-        
-        # update GUI
-        self.resFreqUpdateDisplay(chan=None)
-
+                self.resonantFreqs[reg.value].sort()
         
     @pyqtSlot()
     def viewStimulus(self):
@@ -2474,7 +2589,7 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers:
             chan = reg.value
             #print(f'in update: {chan}: {self.resonantFreqs[chan]}')
-            labelStr = ', '.join([f'{ff:.2f}' for ff in self.resonantFreqs[chan]])
+            labelStr = ', '.join([f'{ff:.3f}' for ff in self.resonantFreqs[chan]])
             getattr(self, f'le_resfreq_val_{reg}').setText(labelStr)
             
             fitx, fity = self.curves['resProcFit'][chan].getData()
@@ -2531,8 +2646,7 @@ class MyApplication(qtw.QApplication):
                   f"took {self.t.elapsed()}ms")
         return ret
         
-def main():
-
+if __name__ == "__main__":
     app = qtw.QApplication(sys.argv)
     #app = MyApplication(sys.argv)
 
@@ -2543,7 +2657,4 @@ def main():
     app.aboutToQuit.connect(win.cleanUp)
     app.exec_()
     #sys.exit(app.exec_())  # diff btw this and prev. line???
-
-if __name__ == "__main__":
-    main()
         
