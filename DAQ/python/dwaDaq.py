@@ -2211,8 +2211,8 @@ class MainWindow(qtw.QMainWindow):
                 self.stimFreqMin  = udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']
                 self.stimFreqMax  = udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']
                 self.stimFreqStep = udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']
-                self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.2f}")
-                self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.2f}")
+                self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.3f}")
+                self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.3f}")
                 self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
                 
             elif udpDict[ddp.Frame.RUN]['runStatus'] == RUN_END:
@@ -2235,7 +2235,7 @@ class MainWindow(qtw.QMainWindow):
         if ddp.Frame.FREQ in udpDict:  
             self.logger.info("FOUND FREQUENCY HEADER")
             self.logger.info(udpDict)
-            self.globalFreqActive_val.setText(f"{udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']:.2f}")
+            self.globalFreqActive_val.setText(f"{udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']:.3f}")
 
         # Check to see if this is an ADC data transfer:
         if ddp.Frame.ADC_DATA in udpDict:
