@@ -53,7 +53,7 @@ class DwaConfigFile():
                                      ]
         self.validOptions["Database"] = ["wires", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side", "channels"]
 
-        self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose"]
+        self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose", "client_IP"]
 
     def parse(self):
         """Parse the DWA configuration parameters from a file

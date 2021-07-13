@@ -17,7 +17,6 @@
 #   and DAQ Config Filename in "Advanced"
 # * New directory for config files config/
 # * Can't close window without killing process on linux...
-# * Put the client_IP in the DAQ config file
 # * should we really log the status frames to file?
 # * Update human parsing of frequency (fixed point now...)
 # * Status frame parsing/displaying...
@@ -99,9 +98,9 @@ GUI_Y_OFFSET = 0 #FIXME: remove this!
 
 DWA_DAQ_VERSION = "X.X.X"
 #
-#DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
+DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
 #DWA_CONFIG_FILE = "config/dwaConfigShortScan.ini"
-DWA_CONFIG_FILE = "config/dwaConfig_SP.ini"
+#DWA_CONFIG_FILE = "config/dwaConfig_SP.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 #
 AMP_DATA_FILE   = "test/data/50cm24inch/20210616T203958_amp.json"
@@ -671,12 +670,24 @@ class MainWindow(qtw.QMainWindow):
         self._loadDaqConfig()
 
         # Set up connection to Microzed
-        self.uz = duz.DwaMicrozed(ip=self.daqConfig['DWA_IP'])
-        self.uz.setVerbose(self.daqConfig['verbose'])
-        self.verbose = int(self.daqConfig['verbose'])
+        if 'DWA_IP' not in self.daqConfig:
+            print("Error: cannot connect to DWA... DWA_IP not specified in DAQ config file")
+            return
+        else:
+            self.uz = duz.DwaMicrozed(ip=self.daqConfig['DWA_IP'])
+
+        if 'verbose' in self.daqConfig:
+            self.uz.setVerbose(self.daqConfig['verbose'])
+            self.verbose = int(self.daqConfig['verbose'])
+            
         # Set up STATUS frame cadence
         self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
 
+        # Set up Client IP address
+        if 'client_IP' in self.daqConfig:
+            print(f"setting client_IP to {self.daqConfig['client_IP']}")
+            self.uz.setUdpAddress(self.daqConfig['client_IP'])
+        
         self.btnDwaConnect.setText("Re-connect")
         self.btnScanCtrl.setStyleSheet("background-color : green")  # button is green when scan is inactive, red when active
         self.btnScanCtrl.setEnabled(True)
@@ -905,33 +916,6 @@ class MainWindow(qtw.QMainWindow):
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
                 item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
                 self.scanTable.resizeColumnsToContents()
-
-                # with open('dwaConfig_'+str(scanNum)+'.ini', 'w') as configfile:
-                #     configfile.write("[FPGA]\n")
-                #     configfile.write("auto               = 00000001  # 0 is fixed frequency\n")
-                #     configfile.write("stimFreqReq        = 00000C80  # [1/16 Hz] Fixed frequency:\n")
-                #     configfile.write("stimFreqMin        = "+self.hexString(freqMin*16)+"  # [1/16 Hz]\n")
-                #     configfile.write("stimFreqMax        = "+self.hexString(freqMax*16)+"  # [1/16 Hz]\n")
-                #     configfile.write("stimFreqStep       = "+self.hexString(advFss*16)+"  # [1/16 Hz]\n")
-                #     configfile.write("stimTime           = "+self.hexString(advStimTime*1e5)+" # units? (maybe 10us)\n")
-                #     configfile.write("stimMag            = "+self.hexString(advAmplitude)+"  # 12-bit DAC:\n")
-                #     configfile.write("cyclesPerFreq      = 00000002  # \n")
-                #     configfile.write("adcSamplesPerCycle = 00000010  # \n")
-                #     configfile.write("digipot            = 2222222222222222\n")
-                #     configfile.write("relayMask          = 00000000  # relay 32 is 0x1:\n")
-                #     configfile.write("coilDrive          = 00000000 \n")
-                #     configfile.write("stimTimeInitial    = 00100000\n")
-                #     configfile.write("client_IP = 8cf77b61 # James's home (DHCP...): 108.49.52.252\n")
-                #     configfile.write("relayWireTop = 0000000000000000 # 64-bit  top3top2top1top0\n")
-                #     configfile.write("relayWireBot = 00FF0000FF000080 # 64-bit  bot3bot2bot1bot0\n")
-                #     configfile.write("relayBusTop  = 00000000         # 32-bit  top1top0\n")
-                #     configfile.write("relayBusBot  = AAAAAAAA         # 32-bit  bot1bot0\n")
-                #     configfile.write("noiseFreqMin           = 00000340  # [1/16Hz]  55 Hz\n")
-                #     configfile.write("noiseFreqMax           = 00000340  # [1/16Hz]  65 Hz\n")
-                #     configfile.write("noiseFreqStep          = 00000010  # [1/16Hz]   1 Hz\n")
-                #     configfile.write("noiseSettlingTime      = 00001000  # [2.56 us]  00001000 ~ 10ms\n")
-                #     configfile.write("noiseAdcSamplesPerFreq = 00000100  # [unitless] (256 samples) limited to 256\n")
-                #     configfile.write("noiseSamplingPeriod    = 0000CB73  # [10ns]   32 samp/cycle @ 60 Hz\n")
 
                 #Add a scan row here 
         
@@ -1457,11 +1441,13 @@ class MainWindow(qtw.QMainWindow):
         
         # read the kwargs field, (which takes precedence over anything set previously)!
         # expect: "key1=val1, key2=val2, ..."
-        kwargDict = self._resFreqParseKwargParam( self.resFitKwargs.text() )
-        for key, val in kwargDict.items():
-            if key not in self.resFitParams['find_peaks']:
-                continue
-            self.resFitParams['find_peaks'][key] = val
+        kwargString = self.resFitKwargs.text().strip()
+        if kwargString != '':
+            kwargDict = self._resFreqParseKwargParam( self.resFitKwargs.text() )
+            for key, val in kwargDict.items():
+                if key not in self.resFitParams['find_peaks']:
+                    continue
+                self.resFitParams['find_peaks'][key] = val
 
         # Print params and refit
         print(f'self.resFitParams = {self.resFitParams}')
