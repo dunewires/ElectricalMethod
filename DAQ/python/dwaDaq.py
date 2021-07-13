@@ -1,16 +1,12 @@
 # FIXME/TODO:
+# * self.state is useless now -- should use the states as reported by the STATUS frame
 # * Resonance tab: only loads data from .json file. When scan runs, the Stimulus tab makes a .json file. Resonance tab loads that file.
 # * Resonance tab: when field loses focus, update the values (for the manually entered resonance values)
 # * Update plot title V(t) to show frequency of scan
 # * Update plot title to list file root YYYYMMDDTHHMMSS
 # * Print GUI software version in title bar
-# * When starting a new run, set the x-range appropriately (avoid rescaling)
-# * When starting a new run, clear all plots (prior to sending TCP/IP data?)
-# * "Connect" button that loads the DAQ config file
-#   and DAQ Config Filename in "Advanced"
-# * New directory for config files config/
+# * Add a "Start Scan" button in the Advanced tab (separate from the "Config" tab)
 # * Can't close window without killing process on linux...
-# * Put the client_IP in the DAQ config file
 # * should we really log the status frames to file?
 # * Update human parsing of frequency (fixed point now...)
 # * Status frame parsing/displaying...
@@ -575,8 +571,6 @@ class MainWindow(qtw.QMainWindow):
         self.tabWidgetStim.currentChanged.connect(self.tabChangedStim)
         self.btnDwaConnect.clicked.connect(self.dwaConnect)
         self.btnScanCtrl.clicked.connect(self.startRunThread)
-        #self.btnSaveAmpl.clicked.connect(self.saveAmplitudeData)
-        #self.btnQuit.clicked.connect(self.close)
         self.configFileName.returnPressed.connect(self.configFileNameEnter)
         self.ampDataFilename.returnPressed.connect(self.ampDataFilenameEnter)
         self.pb_ampDataLoad.clicked.connect(self.ampDataFilenameEnter)
@@ -1942,21 +1936,6 @@ class MainWindow(qtw.QMainWindow):
         f.close()
         return data
 
-
-    # Defunct -- use the json output instead!
-    #def _writeAmplitudesToFile(self):
-    #    # write out the A(f) data for this frequency to a file
-    #    fh = open(self.fnOfAmpData.replace('.json', '.txt'), 'w')
-    #    for ii in range(len(self.ampData[0]['freq'])):
-    #        outstr = f"{self.ampData[0]['freq'][ii]:8.4f} "
-    #        for reg in range(N_DWA_CHANS):
-    #            outstr += f"{self.ampData[reg]['ampl'][ii]:8.4f} "
-    #        outstr += "\n"
-    #        fh.write(outstr)
-    #    fh.close()
-
-
-        
     def _loadAmpData(self):
         ampFilename = self.ampDataFilename.text()
         print(f"ampFilename = {ampFilename}")
@@ -1966,7 +1945,7 @@ class MainWindow(qtw.QMainWindow):
         with open(ampFilename, "r") as fh:
             data = json.load(fh)
         for reg in self.registers:
-            print(data[str(reg.value)]['freq'])
+            #print(data[str(reg.value)]['freq'])
             self.ampData[reg.value]['freq'] = data[str(reg.value)]['freq']
             self.ampData[reg.value]['ampl'] = data[str(reg.value)]['ampl']
             self.curves['resRawFit'][reg].setData(self.ampData[reg.value]['freq'],
@@ -2085,7 +2064,6 @@ class MainWindow(qtw.QMainWindow):
         self.curves['amplgrid']['all'][regId].setData([])
         self.curves['amplchan']['main'].setData([])
         
-        #BOBOBOB
         # Set x-ranges for frequency plots so pyqtgraph does not have to autoscale
         runFreqMin = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMin_Hz'] 
         runFreqMax = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMax_Hz'] 
@@ -2242,16 +2220,16 @@ class MainWindow(qtw.QMainWindow):
                 self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.2f}")
                 self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.2f}")
                 self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
-                
+
+            #if end of run...
             elif udpDict[ddp.Frame.RUN]['runStatus'] == RUN_END:
                 print("\n\n\n\n\n\n\n SCAN IS DONE!!!")
                 self.btnScanCtrl.setStyleSheet("background-color : green")
                 self.btnScanCtrl.setText("Start Scan")
                 self.state = State.IDLE
-                #self._writeAmplitudesToFile()
+                self.saveAmplitudeData()  # do this first to avoid data loss
                 self.updateAmplitudePlots()
-                self.saveAmplitudeData()
-                self.runResonanceAnalysis()
+                self.initiateResonanceAnalysis()
                 
             else:
                  print("ERROR: unknown value of runStatus:")   
@@ -2326,9 +2304,11 @@ class MainWindow(qtw.QMainWindow):
 
 
     def updateAmplitudePlots(self):
+        # This should only update the plots on the STIMULUS tab
+        # other A(f) plots are updated elsewhere
         for reg in self.registers:
             regId = reg
-            self.curves['resRawFit'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+            # Stimulus tab plots
             self.curves['amplgrid'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
             self.curves['amplgrid']['all'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
             self.curves['amplchan'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
@@ -2397,7 +2377,17 @@ class MainWindow(qtw.QMainWindow):
                 vals[ii] = None
         return vals
 
-            
+    def initiateResonanceAnalysis(self):
+        # Set the active tab to be RESONANCE
+        self.currentViewStage = MainView.RESONANCE
+        self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
+
+        # Set the amplitude filename to the most recent run
+        self.ampDataFilename.setText(self.fnOfAmpData)
+        
+        # "load" that file
+        self.ampDataFilenameEnter()
+
     def runResonanceAnalysis(self):
         # get A(f) data for each channel
         # run peakfinding -- assumes that peak finding parameters are already set
