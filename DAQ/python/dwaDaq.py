@@ -92,7 +92,7 @@ AMP_DATA_FILE   = "ampData/slowScan.json"
 #EVT_VWR_TIMESTAMP = "20210526T222903"
 EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
-OUTPUT_DIR_UDP_DATA = './udpData/'
+OUTPUT_DIR_SCAN_DATA = './scanData/'
 OUTPUT_DIR_AMP_DATA = './ampData/'        
 CLOCK_PERIOD_SEC = 1e8
 
@@ -442,15 +442,15 @@ class MainWindow(qtw.QMainWindow):
     def _configureOutputs(self):
 
         ###########################################
-        # Ensure there is a directory to save UDP data
-        self.udpDataDir = OUTPUT_DIR_UDP_DATA
+        # Ensure there is a directory to save scan data
+        self.scanDataDir = OUTPUT_DIR_SCAN_DATA
         try:
             logging.info("Checking for UDP Data directory...")
-            os.makedirs(self.udpDataDir)
-            logging.info("  Directory did not exist... made {}".format(self.udpDataDir))
+            os.makedirs(self.scanDataDir)
+            logging.info("  Directory did not exist... made {}".format(self.scanDataDir))
         except FileExistsError:
             # directory already exists
-            logging.warning("  Directory already exists: [{}]".format(self.udpDataDir))        
+            logging.warning("  Directory already exists: [{}]".format(self.scanDataDir))        
         
         ###########################################
         # Ensure there is a directory to save amplitude data
@@ -463,8 +463,9 @@ class MainWindow(qtw.QMainWindow):
             # directory already exists
             logging.warning("  Directory already exists: [{}]".format(self.ampDataDir))
 
+
         self.fnOfReg = {}  # file names for output (empty for now)
-        self._makeOutputFilenames()
+        #self._makeOutputFilenames() #TODO: no longer works now that directory is made at start of scan
         
 
             
@@ -803,14 +804,14 @@ class MainWindow(qtw.QMainWindow):
         #for i in range(1, scanNum):
         #    self.configNextScanComboBox.addItem(str(i))
 
-        logging.info("Configuring scans")
+        #logging.info("Configuring scans")
         #logging.info(self.measuredBy)
         #logging.info(self.configStage)
         #logging.info(self.configHeadboard)
         #logging.info(self.configHeadboard*2)
 
 
-        logging.info(channelGroups)
+        #logging.info(channelGroups)
         #self.configScanListTextEdit.setPlainText(scanListText)
 
 
@@ -1188,7 +1189,7 @@ class MainWindow(qtw.QMainWindow):
                 if btn.isChecked():
                     #logging.info("Changing color of row "+str(i))
                     for c in range(0, self.scanTable.columnCount()):
-                        self.scanTable.item(i,c).setBackground(qtg.QColor(255,170,20))
+                        self.scanTable.item(i,c).setBackground(qtg.QColor(255,140,0))
                 else:
                     #logging.info("Row "+str(i)+"has not been selected")
                     pass
@@ -1206,11 +1207,16 @@ class MainWindow(qtw.QMainWindow):
             print("User has requested a soft abort of this run...")
             print("... this is not yet tested")
             self.uz.abort()
-            
+
+    def _loadDaqConfig(self):
+        self.daqConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
+        self.daqConfig = self.daqConfigFile.getConfigDict(section='DAQ')
+
     def startRun(self):
         #self.outputText.appendPlainText("CLICKED START")
         #self.outputText.update()
-        #need to create dictionaries in this thread to actually update things
+        #need to create dictionaries in this thread to actually update inputs and files
+
         self.measuredBy = self.measuredByLineEdit.text()
         self.configStage = self.configStageComboBox.currentText()
         self.configApaUuid = self.configApaUuid.text()
@@ -1300,7 +1306,9 @@ class MainWindow(qtw.QMainWindow):
                 dataConfig = {"channels": apaChannels, "wires": wires, "measuredBy": self.measuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
                 "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.SideComboBox}
 
-                self.combinedConfig = {"FPGA": fpgaConfig, "Database": dataConfig}
+                self._loadDaqConfig()
+
+                self.combinedConfig = {"FPGA": fpgaConfig, "Database": dataConfig, "DAQ": self.daqConfig}
 
                 scanNum = scanNum + 1
 
@@ -1327,7 +1335,12 @@ class MainWindow(qtw.QMainWindow):
                         pass
                 for i, btn in enumerate(self.radioBtns):
                     if btn.isChecked() and i == scanNum-2:
-                        config_generator.write_config(self.combinedConfig, 'dwaConfig_'+str(i+1)+'.ini')
+                        #no longer need try method because there should never be two files with the same name
+                        self.scanRunDataDir = os.path.join(self.scanDataDir, datetime.datetime.now().strftime("%Y%m%dT%H%M%S"))
+                        os.makedirs(self.scanRunDataDir)
+                        logging.info("scanrundatadir"+self.scanRunDataDir)
+                        config_generator.write_config(self.combinedConfig, 'dwaConfig_'+str(i+1)+'.ini', self.scanRunDataDir) #self.configFileDir
+
 
                 logging.info("Configuring scans")
                 logging.info(self.measuredBy)
@@ -1736,11 +1749,11 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def loadEventData(self):
-
         scanId = self.evtVwr_runName_val.text()
         print(f'scanId = {scanId}')
 
-        fileroot = 'udpData/'
+        fileroot = 'scanData/' #+self.scanRunDataDir+'/'#previously udpData, or just scanData
+
 
         nChan = 8
         wireDataFilenames = [ f'{scanId}_{nn:02d}.txt' for nn in range(nChan) ]
@@ -1925,6 +1938,7 @@ class MainWindow(qtw.QMainWindow):
                                                   self.ampData[reg.value]['ampl'])
         
     def _loadConfigFile(self, updateGui=True):
+        #updateGui function no longer works with left column  and original textbox removed 
         # try to read the requested file
         # if found, display contents
         # if not found, display error message
@@ -1976,9 +1990,6 @@ class MainWindow(qtw.QMainWindow):
                 self.sampPerCyc_val.setText(self.dwaConfigFile.config['FPGA']['adcSamplesPerCycle_dec'])
                 self.clientIP_val.setText(self.dwaConfigFile.config['FPGA']['client_IP'])
             
-    def _loadDaqConfig(self):
-        self.daqConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
-        self.daqConfig = self.daqConfigFile.getConfigDict(section='DAQ')
 
     def _makeWordList(self, udpDataStr):
         '''
@@ -2041,7 +2052,7 @@ class MainWindow(qtw.QMainWindow):
         #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
         print("_makeOutputFilenames()")
         timestring = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
-        froot = os.path.join(self.udpDataDir, timestring)
+        froot = os.path.join(self.scanRunDataDir, timestring)
         self.logger.info(f"fileroot = {froot}")
         # create new output filenames
         self.fnOfReg = {}  # file names for output. Keys are 2-digit hex string (e.g. '03' or 'FF'). values are filenames
@@ -2178,20 +2189,21 @@ class MainWindow(qtw.QMainWindow):
                 
             elif udpDict[ddp.Frame.RUN]['runStatus'] == RUN_END:
                 print("\n\n\n\n\n\n\n SCAN IS DONE!!!")
-                self.btnScanCtrl.setStyleSheet("background-color : green")
+                self.btnScanCtrl.setStyleSheet("background-color : rgb(3, 205,0)")
                 self.btnScanCtrl.setText("Start Scan")
                 for i, btn in enumerate(self.radioBtns):
                     if btn.isChecked():
                         #logging.info("Changing color of row "+str(i))
                         for c in range(0, self.scanTable.columnCount()):
-                            self.scanTable.item(i,c).setBackground(qtg.QColor(0,255,50))
-                        item = qtw.QRadioButton(self.scanTable)
-                        self.scanTable.setCellWidget(i+1, 0, item)
-                        item.setChecked(True)
-                        self.radioBtns[i+1]=item
+                            self.scanTable.item(i,c).setBackground(qtg.QColor(3,205,0))
+                        self.nextBtn = i+1
                     else:
-                        #logging.info("Row "+str(i)+"has not been selected")
                         pass
+                item = qtw.QRadioButton(self.scanTable)
+                self.scanTable.setCellWidget(self.nextBtn, 0, item)
+                item.setChecked(True)
+                self.radioBtns[self.nextBtn]=item
+
                 self.state = State.IDLE
                 self._writeAmplitudesToFile()
                 self.saveAmplitudeData()
