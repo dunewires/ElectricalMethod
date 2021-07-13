@@ -1,17 +1,10 @@
 # FIXME/TODO:
-# * move client_IP to DAQ config file
 # * Resonance tab: only loads data from .json file. When scan runs, the Stimulus tab makes a .json file. Resonance tab loads that file.
 # * Resonance tab: when field loses focus, update the values (for the manually entered resonance values)
-# * use tabWidget.currentChanged.connect(self.tabChanged)
-#   https://stackoverflow.com/questions/21562485/pyqt-qtabwidget-currentchanged
-#   def tabChanged(self, i):
-#       print(f"Tab index: {i}")
-#   To keep track of the current tab index!
-#   And make keyboard shortcuts just change the active tab (then the callback will handle remembering the active tab)
-# * self.currentView is not properly coded... both MainView and StimView share indices. Yikes!!!!
 # * Update plot title V(t) to show frequency of scan
 # * Update plot title to list file root YYYYMMDDTHHMMSS
 # * Print GUI software version in title bar
+# * When starting a new run, set the x-range appropriately (avoid rescaling)
 # * When starting a new run, clear all plots (prior to sending TCP/IP data?)
 # * "Connect" button that loads the DAQ config file
 #   and DAQ Config Filename in "Advanced"
@@ -99,9 +92,9 @@ GUI_Y_OFFSET = 0 #FIXME: remove this!
 
 DWA_DAQ_VERSION = "X.X.X"
 #
-#DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
+DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
 #DWA_CONFIG_FILE = "config/dwaConfigShortScan.ini"
-DWA_CONFIG_FILE = "config/dwaConfig_SP.ini"
+#DWA_CONFIG_FILE = "config/dwaConfig_SP.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 #
 AMP_DATA_FILE   = "test/data/50cm24inch/20210616T203958_amp.json"
@@ -1379,12 +1372,12 @@ class MainWindow(qtw.QMainWindow):
         print("\n\n =================== startRun()\n\n")
         
         print(f"self.configFile = {self.configFile}")
-        # verify that config file can be opened
-        try:
-            with open(self.configFile) as fh:
-                pass
-        except:
-            self.logger.error("Could not open config file -- cannot proceed")
+        # verify that config file can be opened (DEFUNCT: this is done in _loadConfigFile()
+        #try:
+        #    with open(self.configFile) as fh:
+        #        pass
+        #except:
+        #    self.logger.error("Could not open config file -- cannot proceed")
 
         try:
             self.logger.info('======= dwaReset() ===========')
@@ -1801,8 +1794,7 @@ class MainWindow(qtw.QMainWindow):
 
         fileroot = 'udpData/'
 
-        nChan = 8
-        wireDataFilenames = [ f'{scanId}_{nn:02d}.txt' for nn in range(nChan) ]
+        wireDataFilenames = [ f'{scanId}_{nn:02d}.txt' for nn in range(N_DWA_CHANS) ]
         wireDataFilenames = [ os.path.join(fileroot, ff) for ff in wireDataFilenames ]
         runHeaderFile = os.path.join(fileroot, f'{scanId}_FF.txt')
 
@@ -1815,7 +1807,7 @@ class MainWindow(qtw.QMainWindow):
         udpData = {}
         udpData['FF'] = self._getAllLines(runHeaderFile)
 
-        for chan in range(nChan):
+        for chan in range(N_DWA_CHANS):
             # Read the full file into memory
             lines = self._getAllLines(wireDataFilenames[chan])
             # Find where the UDP packet boundaries are in the file (lines starting with 'AAAA0')
@@ -1843,7 +1835,7 @@ class MainWindow(qtw.QMainWindow):
                     'dt':{}
                    }
         
-        for ii in range(nChan):
+        for ii in range(N_DWA_CHANS):
             tmpData['dt'][ii] = []              # list for each channel
             tmpData['freq'][ii] = []            # list for each channel
             tmpData['V(t)'][ii] = []            # list of lists for each channel
@@ -1862,7 +1854,8 @@ class MainWindow(qtw.QMainWindow):
         # First pass through the data -- gather V(t) and frequency information
         udpCounterList = []
         self.evtDataParser = ddp.DwaDataParser()
-        for ichan in range(nChan):
+
+        for ichan in range(N_DWA_CHANS):
             nfreqs = len(udpData[ichan])
             for ifreq in range(nfreqs):
                 self.evtDataParser.parse(udpData[ichan][ifreq])
@@ -1897,7 +1890,7 @@ class MainWindow(qtw.QMainWindow):
         # Missing data is represented by None instead of a list of data
         nptsInFit=500
         for ifrq, period in enumerate(self.evtData['stimPeriodUnion']):
-            for ichan in range(nChan):
+            for ichan in range(N_DWA_CHANS):
                 if period in tmpData['stimPeriod_int'][ichan]:
                     idx = tmpData['stimPeriod_int'][ichan].index(period)
                     dt = tmpData['dt'][ichan][idx]
@@ -1922,7 +1915,7 @@ class MainWindow(qtw.QMainWindow):
                 self.evtData['V(t)_fit'][ichan].append(yfit)
 
         # Update the A(f) and V(t) plots
-        for ichan in range(nChan):
+        for ichan in range(N_DWA_CHANS):
             self.evtData['freqIdx'] = 0
             self.evtData['freqCurrent'] = self.evtData['freqUnion'][self.evtData['freqIdx']] 
         self.evtVwrUpdatePlots(plotAmpl=True)
@@ -2002,32 +1995,33 @@ class MainWindow(qtw.QMainWindow):
             else:
                 print(textToDisplay)
 
-        # FIXME: should this all go in the try: above?
-        if validConfigFilename:
-            # read/parse config file
-            self.dwaConfigFile = dcf.DwaConfigFile(configFileToOpen, sections=['FPGA'])
-            textToDisplay = self.dwaConfigFile.getRawText()
-            if self.omitComments_cb.isChecked():
-                self.logger.info("cutting out commented lines from config file")
-                lines = textToDisplay.split('\n')
-                lines = [line for line in lines if line.strip()!="" and not line.strip().startswith('#')]
-                textToDisplay = '\n'.join(lines)
+        if not validConfigFilename:
+            return
+                
+        # read/parse config file
+        self.dwaConfigFile = dcf.DwaConfigFile(configFileToOpen, sections=['FPGA'])
+        textToDisplay = self.dwaConfigFile.getRawText()
+        if self.omitComments_cb.isChecked():
+            self.logger.info("cutting out commented lines from config file")
+            lines = textToDisplay.split('\n')
+            lines = [line for line in lines if line.strip()!="" and not line.strip().startswith('#')]
+            textToDisplay = '\n'.join(lines)
 
-            # FIXME: need to find a way to update the GUI in a thread that is not main thread....
-            # right now, updating the GUI in a thread causes a crash.
-            # see: https://stackoverflow.com/questions/10905981/pyqt-qobject-cannot-create-children-for-a-parent-that-is-in-a-different-thread
-            # https://stackoverflow.com/questions/3268073/qobject-cannot-create-children-for-a-parent-that-is-in-a-different-thread
-            if updateGui:
-                self.configFileContents.setPlainText(textToDisplay)
+        # FIXME: need to find a way to update the GUI in a thread that is not main thread....
+        # right now, updating the GUI in a thread causes a crash.
+        # see: https://stackoverflow.com/questions/10905981/pyqt-qobject-cannot-create-children-for-a-parent-that-is-in-a-different-thread
+        # https://stackoverflow.com/questions/3268073/qobject-cannot-create-children-for-a-parent-that-is-in-a-different-thread
+        if updateGui:
+            self.configFileContents.setPlainText(textToDisplay)
 
-                # update various config file fields in the GUI
-                self.freqMin_val.setText(self.dwaConfigFile.config['FPGA']['stimFreqMin_Hz'])
-                self.freqMax_val.setText(self.dwaConfigFile.config['FPGA']['stimFreqMax_Hz'])
-                self.freqStep_val.setText(self.dwaConfigFile.config['FPGA']['stimFreqStep_Hz'])
-                self.stimTime_val.setText(self.dwaConfigFile.config['FPGA']['stimTime_s'])
-                self.cycPerFreq_val.setText(self.dwaConfigFile.config['FPGA']['cyclesPerFreq_dec'])
-                self.sampPerCyc_val.setText(self.dwaConfigFile.config['FPGA']['adcSamplesPerCycle_dec'])
-                self.clientIP_val.setText(self.dwaConfigFile.config['FPGA']['client_IP'])
+            # update various config file fields in the GUI
+            self.freqMin_val.setText(self.dwaConfigFile.config['FPGA']['stimFreqMin_Hz'])
+            self.freqMax_val.setText(self.dwaConfigFile.config['FPGA']['stimFreqMax_Hz'])
+            self.freqStep_val.setText(self.dwaConfigFile.config['FPGA']['stimFreqStep_Hz'])
+            self.stimTime_val.setText(self.dwaConfigFile.config['FPGA']['stimTime_s'])
+            self.cycPerFreq_val.setText(self.dwaConfigFile.config['FPGA']['cyclesPerFreq_dec'])
+            self.sampPerCyc_val.setText(self.dwaConfigFile.config['FPGA']['adcSamplesPerCycle_dec'])
+            self.clientIP_val.setText(self.dwaConfigFile.config['FPGA']['client_IP'])
             
     def _loadDaqConfig(self):
         self.daqConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
@@ -2082,6 +2076,26 @@ class MainWindow(qtw.QMainWindow):
             self.ampData[reg] = {'freq':[],  # stim freq in Hz
                                  'ampl':[] } # amplitude in ADC counts
 
+        # Clear amplitude plots
+        plotTypes = ['amplchan', 'amplgrid', 'resRawFit', 'resProcFit']
+        for ptype in plotTypes:
+            for reg in self.registers:
+                regId = reg
+                self.curves[ptype][regId].setData([])
+        self.curves['amplgrid']['all'][regId].setData([])
+        self.curves['amplchan']['main'].setData([])
+        
+        #BOBOBOB
+        # Set x-ranges for frequency plots so pyqtgraph does not have to autoscale
+        runFreqMin = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMin_Hz'] 
+        runFreqMax = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMax_Hz'] 
+        plotTypes = ['amplgrid', 'amplchan']
+        for ptype in plotTypes:
+            for ii in range(N_DWA_CHANS):
+                getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
+        self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
+        self.pw_amplchan_main.setXRange(runFreqMin, runFreqMax)
+            
         #self.registerOfVal = {}
         #for reg in ddp.Registers:
         #    self.registerOfVal[reg.value] = reg
@@ -2290,25 +2304,21 @@ class MainWindow(qtw.QMainWindow):
                     self.curvesFit['chan']['main'].setData(tfit, yfit)
 
             # Update A(f) plots
-            if self.currentViewStage == MainView.RESONANCE:
-                self.curves['resRawFit'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-
-            if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.A_GRID:
-            # Restrict which channels are updated
-            #if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.A_GRID and (regId == 0 or regId==1):
-                self.curves['amplgrid'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-                # don't update the "all" plot until the end...
-                # self.curves['amplgrid']['all'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-            if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.A_CHAN:
-                self.curves['amplchan'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-                if regId == self.chanViewMainAmpl:
-                    self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-
+            # During scan, only update plots in the STIMULUS tab.
+            if self.currentViewStage == MainView.STIMULUS:
+                if self.currentViewStim == StimView.A_GRID:
+                    self.curves['amplgrid'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+                    # don't update the "all" plot until the end...
+                if self.currentViewStim == StimView.A_CHAN:
+                    self.curves['amplchan'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+                    if regId == self.chanViewMainAmpl:
+                        self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+                    
         # Look for STATUS frame
         if ddp.Frame.STATUS in udpDict:
             self.outputText.appendPlainText("\nFOUND STATUS FRAME:")
             self.outputText.appendPlainText(str(udpDict[ddp.Frame.STATUS]))
-            print(f"\n\n\n FOUND STATUS FRAME {datetime.datetime.now()}")
+            print(f"\n FOUND STATUS FRAME {datetime.datetime.now()}")
             print(udpDict[ddp.Frame.STATUS])
             self.dwaControllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerStateStr']}")
             self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")
