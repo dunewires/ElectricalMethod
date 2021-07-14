@@ -1305,7 +1305,7 @@ class MainWindow(qtw.QMainWindow):
                 for i, btn in enumerate(self.radioBtns):
                     if btn.isChecked():
                         if not self.freqMaxBox[i] == float(self.scanTable.item(i, 4).text()):
-                            self.freqMinBox[i] = float(self.scanTable.item(i, 4).text())
+                            self.freqMaxBox[i] = float(self.scanTable.item(i, 4).text())
                             self.freqMax = float(self.scanTable.item(i, 4).text())
                             fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
                             if advFss: 
