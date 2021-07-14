@@ -14,19 +14,19 @@
 puts "program_flash -f  $boot_bin   -offset 0 -flash_type qspi-x4-single -fsbl  $fsbl_elf  -cable type xilinx_tcf url TCP:127.0.0.1:3121"
 exec program_flash -f $boot_bin  -offset 0 -flash_type qspi-x4-single -fsbl $fsbl_elf  -cable type xilinx_tcf url $hardware_loc 
 # optional reboot stuff
-open_hw_manager
-connect_hw_server -url 127.0.0.1:3124 -allow_non_jtag
-
-## t #jeff
-## t #current_hw_target [get_hw_targets */xilinx_tcf/Xilinx/00001c726cd801]
-## t #set_property PARAM.FREQUENCY 6000000 [get_hw_targets */xilinx_tcf/Xilinx/00001c726cd801]
-## t #nw
-current_hw_target [get_hw_targets */xilinx_tcf/Digilent/210249A0D0C2]
-set_property PARAM.FREQUENCY 6000000 [get_hw_targets */xilinx_tcf/Digilent/210249A0D0C2]
-
-open_hw_target
-current_hw_device [get_hw_devices xc7z020_1]
-boot_hw_device  [lindex [get_hw_devices xc7z020_1] 0]
+#tw  open_hw_manager
+#tw  connect_hw_server -url 127.0.0.1:3124 -allow_non_jtag
+#tw  
+#tw  ## t #jeff
+#tw  ## t #current_hw_target [get_hw_targets */xilinx_tcf/Xilinx/00001c726cd801]
+#tw  ## t #set_property PARAM.FREQUENCY 6000000 [get_hw_targets */xilinx_tcf/Xilinx/00001c726cd801]
+#tw  ## t #nw
+#tw  current_hw_target [get_hw_targets */xilinx_tcf/Digilent/210249A0D0C2]
+#tw  set_property PARAM.FREQUENCY 6000000 [get_hw_targets */xilinx_tcf/Digilent/210249A0D0C2]
+#tw  
+#tw  open_hw_target
+#tw  current_hw_device [get_hw_devices xc7z020_1]
+#tw  boot_hw_device  [lindex [get_hw_devices xc7z020_1] 0]
 
 # example on programming the flash directly outside of MCS  may add confusion?
 #zynq_flash -f ./mm_top/mm_top.sdk/top_vc707_dev_hw_platform_0/cache/BOOT.bin -offset 0x61800000 -flash_type mt28gu01gaax1e-bpi-x16 -cable type xilinx_tcf url TCP:127.0.0.1:3121 
