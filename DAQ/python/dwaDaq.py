@@ -88,12 +88,12 @@ import ChannelMapping
 
 DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
-AMP_DATA_FILE   = "ampData/slowScan.json"
+AMP_DATA_FILE   = 'scan run timestamp' #"ampData/slowScan.json"
 #EVT_VWR_TIMESTAMP = "20210526T222903"
 EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
 OUTPUT_DIR_SCAN_DATA = './scanData/'
-OUTPUT_DIR_AMP_DATA = './ampData/'        
+#OUTPUT_DIR_AMP_DATA = './ampData/'        
 CLOCK_PERIOD_SEC = 1e8
 
 # FIXME: these should go in DwaDataParser.py
@@ -452,16 +452,6 @@ class MainWindow(qtw.QMainWindow):
             # directory already exists
             logging.warning("  Directory already exists: [{}]".format(self.scanDataDir))        
         
-        ###########################################
-        # Ensure there is a directory to save amplitude data
-        self.ampDataDir = OUTPUT_DIR_AMP_DATA
-        try:
-            logging.info("Checking for Amplitude Data directory...")
-            os.makedirs(self.ampDataDir)
-            logging.info("  Directory did not exist... made {}".format(self.ampDataDir))
-        except FileExistsError:
-            # directory already exists
-            logging.warning("  Directory already exists: [{}]".format(self.ampDataDir))
 
 
         self.fnOfReg = {}  # file names for output (empty for now)
@@ -1336,7 +1326,8 @@ class MainWindow(qtw.QMainWindow):
                 for i, btn in enumerate(self.radioBtns):
                     if btn.isChecked() and i == scanNum-2:
                         #no longer need try method because there should never be two files with the same name
-                        self.scanRunDataDir = os.path.join(self.scanDataDir, datetime.datetime.now().strftime("%Y%m%dT%H%M%S"))
+                        self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+                        self.scanRunDataDir = os.path.join(self.scanDataDir, self.timeString)
                         os.makedirs(self.scanRunDataDir)
                         logging.info("scanrundatadir"+self.scanRunDataDir)
                         config_generator.write_config(self.combinedConfig, 'dwaConfig_'+str(i+1)+'.ini', self.scanRunDataDir) #self.configFileDir
@@ -1923,7 +1914,8 @@ class MainWindow(qtw.QMainWindow):
         #self.postScanAnalysis()
         
     def _loadAmpData(self):
-        ampFilename = self.ampDataFilename.text()
+        ampFilename = "DWANUM_HEADBOARDNUM_LAYER_"+self.ampDataFilename.text()+".json"
+        ampFilename = os.path.join(self.scanRunDataDir, ampFilename)
         print(f"ampFilename = {ampFilename}")
         self.ampDataActiveLabel.setText(ampFilename)
         # read in the json file
@@ -2051,8 +2043,7 @@ class MainWindow(qtw.QMainWindow):
         #def getUniqueFileroot():
         #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
         print("_makeOutputFilenames()")
-        timestring = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
-        froot = os.path.join(self.scanRunDataDir, timestring)
+        froot = os.path.join(self.scanRunDataDir, self.timeString)
         self.logger.info(f"fileroot = {froot}")
         # create new output filenames
         self.fnOfReg = {}  # file names for output. Keys are 2-digit hex string (e.g. '03' or 'FF'). values are filenames
@@ -2060,7 +2051,7 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers_all:
             self.fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
         self.logger.info(f"self.fnOfReg = {self.fnOfReg}")
-        self.fnOfAmpData = os.path.join(self.ampDataDir, "DWANUM_HEADBOARDNUM_LAYER_"+timestring+".json") # FIXME: get the DWANUM HEADBOARDNUM and LAYER from user input
+        self.fnOfAmpData = os.path.join(self.scanRunDataDir, "DWANUM_HEADBOARDNUM_LAYER_"+self.timeString+".json") # FIXME: get the DWANUM HEADBOARDNUM and LAYER from user input
         self.logger.info(f"self.fnOfAmpData = {self.fnOfAmpData}") 
 
     def startUdpReceiver(self, newdata_callback):
@@ -2196,7 +2187,10 @@ class MainWindow(qtw.QMainWindow):
                         #logging.info("Changing color of row "+str(i))
                         for c in range(0, self.scanTable.columnCount()):
                             self.scanTable.item(i,c).setBackground(qtg.QColor(3,205,0))
-                        self.nextBtn = i+1
+                        if len(self.radioBtns)>(i+1):
+                            self.nextBtn = i+1
+                        else: 
+                            self.nextBtn = 0
                     else:
                         pass
                 item = qtw.QRadioButton(self.scanTable)
