@@ -1743,7 +1743,7 @@ class MainWindow(qtw.QMainWindow):
         scanId = self.evtVwr_runName_val.text()
         print(f'scanId = {scanId}')
 
-        fileroot = 'scanData/' #+self.scanRunDataDir+'/'#previously udpData, or just scanData
+        fileroot = 'scanData/'+self.evtVwr_runName_val.text()+'/'
 
 
         nChan = 8
