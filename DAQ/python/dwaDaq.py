@@ -684,7 +684,7 @@ class MainWindow(qtw.QMainWindow):
         self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
 
         # Set up Client IP address
-        if 'client_IP' in self.daqConfig:
+        if 'client_IP' in self.daqConfig and self.daqConfig['client_IP'] is not None:
             print(f"setting client_IP to {self.daqConfig['client_IP']}")
             self.uz.setUdpAddress(self.daqConfig['client_IP'])
         
