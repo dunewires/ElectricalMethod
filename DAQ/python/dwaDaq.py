@@ -2,16 +2,17 @@
 # * When clicking to add f0 line -- use "hover" width for tolerance (instead of a hardcoded # of pixels)
 #   or just check to see if any of the InfiniteLines are in "hover" mode. If so, don't add a new line
 # * Add validator() to QLineEdits (e.g. for resonance fits)
-# * Resonance analysis: add/remove resonance frequency by clicking on plot
 # * self.state is useless now -- should use the states as reported by the STATUS frame
 # * Update plot title V(t) to show frequency of scan
 # * Update plot title to list file root YYYYMMDDTHHMMSS
 # * Print GUI software version in title bar
 # * Add a "Start Scan" button in the Advanced tab (separate from the "Config" tab)
 # * Can't close window without killing process on linux...
-# * should we really log the status frames to file?
+# * stop logging the status frames to file
+# * base end-of-run on STATUS frame?  or on end-of-run frame?
 # * Update human parsing of frequency (fixed point now...)
 # * Status frame parsing/displaying...
+# * Force "Windows style" tabs on mac
 # * Add axis labels to plots
 # * resonance lines could use "span" keyword to draw only the part of the plot that is in the peak
 #   e.g. from "baseline" to peak, as well as peak width, as in final example of:
