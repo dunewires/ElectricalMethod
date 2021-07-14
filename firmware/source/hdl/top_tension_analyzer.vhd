@@ -270,7 +270,7 @@ begin
       end if;
 
       -- nPeriod has units of 5ns with specified fixed point
-      acStim_nPeriod_fp1_all  := (x"17d7840000"/ stimFreqReq;
+      acStim_nPeriod_fp1_all  := (x"17d7840000"/ stimFreqReq);
       acStim_nPeriod_fp1      <= acStim_nPeriod_fp1_all(25 downto 0);      -- only take what is needed for min 10 HZ stim freq
       acStimX200_nPeriod_fxp8 <= (acStim_nPeriod_fp1 & "0000000") / x"C8"; -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
 
