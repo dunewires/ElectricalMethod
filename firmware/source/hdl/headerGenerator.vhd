@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Jul 15 15:53:11 2021
+-- Last update : Thu Jul 15 16:22:37 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ architecture rtl of headerGenerator is
     signal udpCnt_next : unsigned(15 downto 0) := (others => '0');
     signal udpPktCnt   : unsigned(15 downto 0) := (others => '0');
 
-    signal stimPeriodActive_reg  : unsigned(25 downto 0) := (others => '0');
+    signal stimPeriodActive_reg  : unsigned(30 downto 0) := (others => '0');
     signal adcSamplingPeriod_reg : unsigned(23 downto 0) := (others => '0');
 
 begin
