@@ -1,5 +1,11 @@
 # FIXME/TODO:
+# * on "Connect" get FPGA datecode and display in GUI (Issue #23)
+# * Update GUI process to protect against missing end of run frame.
+#   Can listen for STATUS frame. If DAQ things a run is active but then sees STATUS=IDLE,
+#   then trigger end of run sequence
 # * Disable "Start next scan" button until user has "configured scan list"
+# * "All wires" and "Single wire" should be in the same "radio group" and
+#   the wire number spinBox should be disabled unless "Single Wire" is selected
 # * When clicking to add f0 line -- use "hover" width for tolerance (instead of a hardcoded # of pixels)
 #   or just check to see if any of the InfiniteLines are in "hover" mode. If so, don't add a new line
 # * Add validator() to QLineEdits (e.g. for resonance fits)
@@ -354,6 +360,9 @@ class MainWindow(qtw.QMainWindow):
         self.talkingToUzed = False
         self.connectedToUzed = False
         self._scanButtonDisable()
+
+
+        
         
         # adapt the tabs...
         # see https://stackoverflow.com/questions/51404102/pyqt5-tabwidget-vertical-tab-horizontal-text-alignment-left
@@ -1346,6 +1355,10 @@ class MainWindow(qtw.QMainWindow):
         self.threadPool.start(worker)
 
 
+    def _loadDaqConfig(self):
+        self.daqConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
+        self.daqConfig = self.daqConfigFile.getConfigDict(section='DAQ')
+
     @pyqtSlot()
     def abortScan(self):
         print("User has requested a soft abort of this run...")
@@ -1391,10 +1404,6 @@ class MainWindow(qtw.QMainWindow):
         # execute
         self.threadPool.start(worker)
         
-
-    def _loadDaqConfig(self):
-        self.daqConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
-        self.daqConfig = self.daqConfigFile.getConfigDict(section='DAQ')
 
     def startScan(self):
         #self.outputText.appendPlainText("CLICKED START")
@@ -1532,21 +1541,9 @@ class MainWindow(qtw.QMainWindow):
 
         logging.info(channelGroups)
                         
-
- 
-        # startScan() is in a thread...  need to get logger?
-        logger = logging.getLogger(__name__)
-        #self.configFile = os.path.join("config/", self.configFileName.text())
-        # If configFile is blank, use the generated one
-
-        if not self.configFileName.text():
-            for i, btn in enumerate(self.radioBtns):
-                if btn.isChecked():
-                    self.configFile = os.path.join(OUTPUT_DIR_CONFIG, "dwaConfig_"+str(i+1)+".ini")
-        #else:
-            # If no generated one was found, use the default one
-            #self.configFile = os.path.join("config/", "dwaConfig.ini")
-        #the above else statement should never happen because a radio button should always be clicked
+        for i, btn in enumerate(self.radioBtns):
+            if btn.isChecked():
+                self.configFile = os.path.join(OUTPUT_DIR_CONFIG, "dwaConfig_"+str(i+1)+".ini")
 
         self.runScan()
 
