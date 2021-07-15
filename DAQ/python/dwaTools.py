@@ -5,8 +5,6 @@
 
 # FIXME: change print() statements to logger statements
 
-import matplotlib.pyplot as plt
-
 import sys
 import string
 import os, errno
