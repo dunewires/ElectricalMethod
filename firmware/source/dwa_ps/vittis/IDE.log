@@ -1953,3 +1953,6 @@ con
 15:05:38 INFO  : Connected to target on host 'localhost' and port '3124'.
 15:05:38 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
 15:05:42 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210712_145155_-0.390ns.bit"
+16:39:27 INFO  : Result from executing command 'getProjects': dwaPsHw
+16:39:27 INFO  : Result from executing command 'getPlatforms': dwaPsHw|/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/dwaPsHw.xpfm
+16:39:30 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
