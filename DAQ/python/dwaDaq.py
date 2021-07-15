@@ -46,7 +46,6 @@ import faulthandler   # helps debug segfaults
 faulthandler.enable()
 
 import traceback, sys
-import requests
 import time
 import socket
 import binascii
