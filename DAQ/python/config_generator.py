@@ -294,7 +294,8 @@ def configure_default():
     configs.update(configure_noise_subtraction(stim_freq_min=99, stim_freq_max=100))
     return configs
 
-def write_config(generated_config, outfilename, subdir):
+
+def write_config(generated_config, outfilename, subdir="config"):
     outfilename = os.path.join(subdir, outfilename)
     with open(outfilename, 'w') as outconfigfile:
         for header in generated_config.keys():

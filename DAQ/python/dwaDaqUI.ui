@@ -179,12 +179,12 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
-            <widget class="QTabWidget" name="tabWidget">
+            <widget class="QTabWidget" name="tabWidgetStim">
              <property name="tabPosition">
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -423,7 +423,7 @@
                 <item row="0" column="0">
                  <widget class="QLabel" name="configFileName_label">
                   <property name="text">
-                   <string>Config File:</string>
+                   <string>Scan config File:</string>
                   </property>
                  </widget>
                 </item>
@@ -682,7 +682,7 @@
               <item>
                <widget class="QPushButton" name="pb_ampDataLoad">
                 <property name="text">
-                 <string>Load Scan</string>
+                 <string>Load A(f) data</string>
                 </property>
                </widget>
               </item>
@@ -852,7 +852,7 @@
                  <item>
                   <widget class="QLabel" name="label_9">
                    <property name="text">
-                    <string>Tune Fit Parameters (find_peaks)</string>
+                    <string>Tune Fit Parameters</string>
                    </property>
                   </widget>
                  </item>
@@ -861,6 +861,13 @@
                    <property name="horizontalSpacing">
                     <number>6</number>
                    </property>
+                   <item row="1" column="1">
+                    <widget class="QCheckBox" name="resFitPreDetrend">
+                     <property name="text">
+                      <string>Detrend A(f)</string>
+                     </property>
+                    </widget>
+                   </item>
                    <item row="2" column="0">
                     <widget class="QLabel" name="label_8">
                      <property name="text">
@@ -881,9 +888,6 @@
                    <item row="3" column="1">
                     <widget class="QLineEdit" name="resFitWidth"/>
                    </item>
-                   <item row="4" column="1">
-                    <widget class="QLineEdit" name="resFitProminence"/>
-                   </item>
                    <item row="4" column="0">
                     <widget class="QLabel" name="label_11">
                      <property name="text">
@@ -891,12 +895,18 @@
                      </property>
                     </widget>
                    </item>
-                   <item row="1" column="1">
-                    <widget class="QCheckBox" name="resFitPreDetrend">
+                   <item row="4" column="1">
+                    <widget class="QLineEdit" name="resFitProminence"/>
+                   </item>
+                   <item row="5" column="0">
+                    <widget class="QLabel" name="label_16">
                      <property name="text">
-                      <string>Detrend A(f)</string>
+                      <string>kwargs</string>
                      </property>
                     </widget>
+                   </item>
+                   <item row="5" column="1">
+                    <widget class="QLineEdit" name="resFitKwargs"/>
                    </item>
                   </layout>
                  </item>
