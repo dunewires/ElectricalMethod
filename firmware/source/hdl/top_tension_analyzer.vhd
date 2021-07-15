@@ -256,7 +256,7 @@ begin
   -- convert requested stim frequency to number of 100Mhz clocks
   -- move this to the processor!
   compute_n_periods : process (dwaClk10)
-    variable acStim_nPeriod_fp6_all : unsigned(44 downto 0 );
+    variable acStim_nPeriod_fp6_all : unsigned(43 downto 0 );
     variable adcCnv_nCnv_all        : unsigned(39 downto 0 );
 
   begin
