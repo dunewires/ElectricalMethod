@@ -1,4 +1,9 @@
 # FIXME/TODO:
+# * after all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
+# * the "Wires" column in the AUTO scan confit table should just list the numbers, not an array of strings...
+#   and should be left-justified
+# * When starting  scan, the Start Scan button should stay disabled until a non IDLE state is seen
+#   and when non-IDLE state is seen, the button should be enabled and be for "Abort"
 # * remove self.oldDataFormat -- it's not actually used (is it?)
 # * on "Connect" get FPGA datecode and display in GUI (Issue #23)
 # * Update GUI process to protect against missing end of run frame.
@@ -766,9 +771,14 @@ class MainWindow(qtw.QMainWindow):
             print(f"setting client_IP to {self.daqConfig['client_IP']}")
             self.uz.setUdpAddress(self.daqConfig['client_IP'])
         
-        self.btnDwaConnect.setText("Re-connect")
-        self.connectedToUzed = True
-        
+        self.connectedToUzed = True  # FIXME: should actively verify that the connection worked...
+        if self.connectedToUzed:
+            self.btnDwaConnect.setText("Re-connect")
+            # FIXME: READ THESE VALUES FROM THE UZED!
+            self.clientIp_val.setText(self.daqConfig['client_IP'])
+            self.dwaIp_val.setText(self.daqConfig['DWA_IP'])
+            # ALSO GET FIRMWARE VERSION AND DATE CODE AND SERIAL NUMBER...
+            
     def _initResonanceFitLines(self):
         self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
                             'proc':{},  # raw and processed A(f) plots
