@@ -2498,13 +2498,11 @@ class MainWindow(qtw.QMainWindow):
 
     def disableScanButtonForTime(self, disableDuration):
         """ disableDuration is a time in seconds """
-        print("\n\n\nDISABLE BUTTON FOR SOME TIME\n\n\n")
+        # CURRENTLY "FAILS" BECAUSE BUTTON IS ENABLED BY IDLE STATE IN STATUS FRAME
+        # should check if the timer has expired before enabling...
+        print(f"\n\n\nDISABLE BUTTON FOR {disableDuration} seconds\n\n\n")
         self._scanButtonDisable()
-        #self._scanButtonEnable(state=False)
-        #for scb in self.scanCtrlButtons:
-        #    scb.setEnabled(False)
-        #    scb.repaint()
-        qtc.QTimer.singleShot(disableDuration*1000, self._scanButtonEnable)
+        qtc.QTimer.singleShot(disableDuration*1000, lambda: self.btnScanCtrl.setEnabled(True))
         #qtc.QTimer.singleShot(disableDuration*1000, lambda: XXXXself.targetBtn.setDisabled(False)XXXX)
 
     def _setScanButtonAction(self, state=None):
