@@ -127,9 +127,15 @@ RUN_END = 0
 #        #XStream.stdout().write("{}\n".format(record))
 
 class State(IntEnum):
-    IDLE = 0
-    SCAN = 1
-    POST_SCAN = 2
+    IDLE = 0             # Idle Waiting for the start of a test
+    NOISE_PREP = 1       # Prepare to sample noise for mains noise subtraction
+    NOISE_READOUT = 2    # Sample noise for mains noise subtraction
+    STIM_ENABLE = 3      # Enable stimulus frequency and wait for initial stimulus time
+    STIM_PREP = 4        # Wait for stimulus frequency to update and check that the ADC data buffer is empty
+    STIM_RUN = 5         # Wait for the specified stimulus time
+    STIM_READOUT = 6     # Get the stimulated sense wire ADC samples
+    FREQ_SCAN_FINISH = 7 # At the end of the frequency sweep, wait for the last UDP data to be sent
+    PKT_BUILD_FINISH = 8 # Wait for the end of run header to be sent before we go to the idle state and wait for another scan
 
 class MainView(IntEnum):
     STIMULUS  = 0 # config/V(t)/A(f) [Stimulus view]
@@ -431,7 +437,7 @@ class MainWindow(qtw.QMainWindow):
         # Info about current run
         self.stimFreqMin = 0
         self.stimFreqMax = 0
-        self.state = State.IDLE
+        self.state = None
 
         # Socket for UDP connection to FPGA    
         self.sock = None
