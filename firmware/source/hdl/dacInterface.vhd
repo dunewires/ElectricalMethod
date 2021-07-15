@@ -50,9 +50,9 @@ architecture STRUCT of dacInterface is
 	-- This will give a more accurate frequency and allow the rising edge and falling edge to have different 78ps counts
 	-- exact frequency not exact 50% duty cycle
 	-- acStim_nPeriod_fp6 is shifted to fixed point 7 as we are defining half periods, ie the number of periods before a transition
-	alias phaseStep : unsigned(6 downto 0) is acStim_nPeriod_fp1(6 downto 0);
+	alias phaseStep : unsigned(6 downto 0) is acStim_nPeriod_fp6(6 downto 0);
 	-- the portion after the point is done
-	alias clk200Step                   : unsigned(23 downto 0) is acStim_nPeriod_fp1(30 downto 7); -- need 16 bits for min 10 HZ half period count with an extra bit for good luck :)
+	alias clk200Step                   : unsigned(23 downto 0) is acStim_nPeriod_fp6(30 downto 7); -- need 16 bits for min 10 HZ half period count with an extra bit for good luck :)
 	signal stimClk200, stimClk200Ph180 : std_logic             := '0';
 	signal stimClk100,stimClk100_del   : std_logic             := '0';
 	signal phaseShift180               : std_logic             := '0';
@@ -61,6 +61,8 @@ architecture STRUCT of dacInterface is
 	alias phaseOF                      : std_logic is fineCount(7);
 	signal phaseOFDone                 : std_logic := '0';
 	signal DAC_LD_B_400, DAC_CLR_B_400           : std_logic := '0';
+	signal odlyLd                          : std_logic             := '0';
+	signal odlyTap                         : unsigned(4 downto 0)  := (others => '0');
 
 	--length of stimClk400 vector determines pulse width
 	signal stimClk400 : std_logic_vector(12 downto 0) := (others => '0');
