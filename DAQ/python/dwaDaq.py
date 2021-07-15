@@ -748,9 +748,16 @@ class MainWindow(qtw.QMainWindow):
         self._loadDaqConfig()
 
         # Set up connection to Microzed
-        self.uz = duz.DwaMicrozed(ip=self.daqConfig['DWA_IP'])
-        self.uz.setVerbose(self.daqConfig['verbose'])
-        self.verbose = int(self.daqConfig['verbose'])
+        if 'DWA_IP' not in self.daqConfig:
+            print("Error: cannot connect to DWA... DWA_IP not specified in DAQ config file")
+            return
+        else:
+            self.uz = duz.DwaMicrozed(ip=self.daqConfig['DWA_IP'])
+
+        if 'verbose' in self.daqConfig:
+            self.uz.setVerbose(self.daqConfig['verbose'])
+            self.verbose = int(self.daqConfig['verbose'])
+            
         # Set up STATUS frame cadence
         self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
 
@@ -899,6 +906,23 @@ class MainWindow(qtw.QMainWindow):
                 self.scanTable.resizeColumnsToContents()
                 self.freqMaxBox.append(self.freqMax)
                 self.scanTable.setColumnCount(5)
+
+        # MERGE: should the following lines be here or not???
+        #        #Add a scan row here 
+        #
+        #self.configNextScanComboBox.clear()
+        #for i in range(1, scanNum):
+        #    self.configNextScanComboBox.addItem(str(i))
+        #
+        #logging.info("Configuring scans")
+        #logging.info(self.measuredBy)
+        #logging.info(self.configStage)
+        #logging.info(self.configHeadboard)
+        #logging.info(self.configHeadboard*2)
+        #
+        #
+        #logging.info(channelGroups)
+        ##self.configScanListTextEdit.setPlainText(scanListText)
 
     def _configurePlots(self):
         self.chanViewMain = 0  # which channel to show large for V(t) data
@@ -1573,11 +1597,13 @@ class MainWindow(qtw.QMainWindow):
         
         # read the kwargs field, (which takes precedence over anything set previously)!
         # expect: "key1=val1, key2=val2, ..."
-        kwargDict = self._resFreqParseKwargParam( self.resFitKwargs.text() )
-        for key, val in kwargDict.items():
-            if key not in self.resFitParams['find_peaks']:
-                continue
-            self.resFitParams['find_peaks'][key] = val
+        kwargString = self.resFitKwargs.text().strip()
+        if kwargString != '':
+            kwargDict = self._resFreqParseKwargParam( self.resFitKwargs.text() )
+            for key, val in kwargDict.items():
+                if key not in self.resFitParams['find_peaks']:
+                    continue
+                self.resFitParams['find_peaks'][key] = val
 
         # Print params and refit
         print(f'self.resFitParams = {self.resFitParams}')
@@ -2373,8 +2399,8 @@ class MainWindow(qtw.QMainWindow):
                 self.stimFreqMin  = udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']
                 self.stimFreqMax  = udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']
                 self.stimFreqStep = udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']
-                self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.2f}")
-                self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.2f}")
+                self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.3f}")
+                self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.3f}")
                 self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
 
             #if end of scan...
@@ -2427,7 +2453,7 @@ class MainWindow(qtw.QMainWindow):
         if ddp.Frame.FREQ in udpDict:  
             self.logger.info("FOUND FREQUENCY HEADER")
             self.logger.info(udpDict)
-            self.globalFreqActive_val.setText(f"{udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']:.2f}")
+            self.globalFreqActive_val.setText(f"{udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']:.3f}")
 
         # Check to see if this is an ADC data transfer:
         if ddp.Frame.ADC_DATA in udpDict:

@@ -118,7 +118,6 @@ class DwaConfigFile():
         self.defaults["FPGA"]["relayBusTop"]   = "00000000"         # 32-bit  top1top0
         self.defaults["FPGA"]["relayBusBot"]   = "00000000"         # 32-bit  bot1bot0
 
-
         # 
         self.defaults["DAQ"]["statusPeriodSec"] = 1    # seconds (float)
         self.defaults["DAQ"]["verbose"]         = 1    # verbosity level (integer)
