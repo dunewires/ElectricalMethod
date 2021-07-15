@@ -242,6 +242,25 @@ class DwaMicrozed():
         self._tcpClose()
 
 
+    def disableAllRelays(self):
+        """ set all relays to be inactive (no connection from input to output) """
+        offState = '0000'
+        relayCfg = {
+            "relayWireBot0":offState,
+            "relayWireBot1":offState,
+            "relayWireBot2":offState,
+            "relayWireBot3":offState,
+            "relayBusBot0":offState,
+            "relayBusBot1":offState,
+            "relayWireTop0":offState,
+            "relayWireTop1":offState,
+            "relayWireTop2":offState,
+            "relayWireTop3":offState,
+            "relayBusTop0":offState,
+            "relayBusTop1":offState
+        }
+        self.setRelays(relayCfg)
+        
     def setRelays(self, cfg):
         # Relays
         #v3 relays.  16bits each relayWireBot(0), ... relayWireBot(3)

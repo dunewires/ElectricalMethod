@@ -1,4 +1,5 @@
 # FIXME/TODO:
+# * remove self.oldDataFormat -- it's not actually used (is it?)
 # * on "Connect" get FPGA datecode and display in GUI (Issue #23)
 # * Update GUI process to protect against missing end of run frame.
 #   Can listen for STATUS frame. If DAQ things a run is active but then sees STATUS=IDLE,
@@ -111,6 +112,7 @@ STIM_VIEW_OFFSET = 0
 UDP_RECV_BUF_SIZE = 2**20 # Bytes (2**20 Bytes is ~1MB)
 #
 N_DWA_CHANS = 8
+INTER_SCAN_DELAY_SEC = 5  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
 
 # FIXME: these should go in DwaDataParser.py
 RUN_START = 1
@@ -140,10 +142,8 @@ class State(IntEnum):
     PKT_BUILD_FINISH = 8 # Wait for the end of run header to be sent before we go to the idle state and wait for another scan
 
 class ScanType(IntEnum):
-    CUSTOM = 0
-    STANDARD = 1
-    
-
+    CUSTOM = 0 # user-defined custom config file
+    AUTO = 1   # auto-generated scan list
     
 class MainView(IntEnum):
     STIMULUS  = 0 # config/V(t)/A(f) [Stimulus view]
@@ -354,22 +354,13 @@ class MainWindow(qtw.QMainWindow):
         # Load the UI (built in Qt Designer)
         uic.loadUi(DAQ_UI_FILE, self)
         self.configFileContents.setReadOnly(True)
+
         self.scanCtrlButtons = [self.btnScanCtrl, self.btnScanCtrlAdv]
         self.scanType = None
         self.talkingToUzed = False
         self.connectedToUzed = False
         self._scanButtonDisable()
-
-
-        
-        
-        # adapt the tabs...
-        # see https://stackoverflow.com/questions/51404102/pyqt5-tabwidget-vertical-tab-horizontal-text-alignment-left
-        #self.tabWidget.setTabBar(TabBar(self.tabWidget))
-        #self.tabWidget.setTabPosition(self.tabWidget.West)
-        #self.tabWidget.insertTab(0, self.tab_config, "Config")
-        #self.tabWidget.insertTab(1, self.tab_tension, "Tension")
-        #self.pushButton_reach.clicked.connect(self.display)
+        self.interScanDelay = INTER_SCAN_DELAY_SEC
         
         ####self.logTextBox = QTextEditLogger(self.page_logging)
         self.logTextBox.appendPlainText("log viewing not yet implemented")
@@ -826,45 +817,14 @@ class MainWindow(qtw.QMainWindow):
 
         self.logger.info(f'Log created {self.logFilename}')
 
-    #def configureScans(self):
-        #measuredBy = self.measuredByLineEdit.text()
-        # configStage = self.configStageComboBox.currentText()
-        # configApaUuid = self.configApaUuid.text()
-        # configLayer = self.configLayerComboBox.currentText()
-        # configHeadboard = self.configHeadboardSpinBox.value()
-        # channelGroups = []
-        # scanListText = ""
-        # scanNum = 1
-        # for i in range(5):
-        #     startChan = (configHeadboard-1)*40 + i*8 + 1
-        #     channels = range(startChan, startChan+8)
-        #     rangeData = ChannelMapping.get_range_data_for_channels(configLayer, channels)
-        #     for obj in rangeData:
-        #         scanListText = scanListText + srt(scanNum) + ". " + ", ".join(obj["wires"]) + "("+obj["range"][0]+", "+ obj["range"][1] + ")\n"
-        #         scanNum = scanNum + 1
-
-        #     logging.info("Resonances")
-        #     logging.info(resonances)
-        
-        # logging.info("Configuring scans")
-        # logging.info(measuredBy)
-        # logging.info(configStage)
-        # logging.info(configHeadboard)
-        # logging.info(configHeadboard*2)
-        # logging.info(channelGroups)
-        # self.configScanListTextEdit.setPlainText(scanListText)
     def hexString(self, val):
         return str(hex(int(val))).upper()[2:].zfill(N_DWA_CHANS)
 
     def configureScans(self):
-        #self.measuredBy = self.measuredByLineEdit.text()
-        #self.configStage = self.configStageComboBox.currentText()
-        #self.configApaUuid = self.configApaUuid.text()
-        self.configLayer = self.configLayerComboBox.currentText()
-        self.configHeadboard = self.configHeadboardSpinBox.value()
-        #self.SideComboBox = self.SideComboBox.currentText()
+        configLayer = self.configLayerComboBox.currentText()
+        configHeadboard = self.configHeadboardSpinBox.value()
 
-        channelGroups = channel_map.channel_groupings(self.configLayer, self.configHeadboard)
+        channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
         scanListText = ""
         scanNum = 1
         self.radioBtns = [] #list of radio button names 
@@ -873,7 +833,7 @@ class MainWindow(qtw.QMainWindow):
         
         for channels in channelGroups:
 
-            self.range_data = channel_frequencies.get_range_data_for_channels(self.configLayer, channels)
+            self.range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
 
             logging.info("channels")
             logging.info(channels)
@@ -937,52 +897,6 @@ class MainWindow(qtw.QMainWindow):
                 self.scanTable.resizeColumnsToContents()
                 self.freqMaxBox.append(self.freqMax)
                 self.scanTable.setColumnCount(5)
-
-                # with open('dwaConfig_'+str(scanNum)+'.ini', 'w') as configfile:
-                #     configfile.write("[FPGA]\n")
-                #     configfile.write("auto               = 00000001  # 0 is fixed frequency\n")
-                #     configfile.write("stimFreqReq        = 00000C80  # [1/16 Hz] Fixed frequency:\n")
-                #     configfile.write("stimFreqMin        = "+self.hexString(freqMin*16)+"  # [1/16 Hz]\n")
-                #     configfile.write("stimFreqMax        = "+self.hexString(freqMax*16)+"  # [1/16 Hz]\n")
-                #     configfile.write("stimFreqStep       = "+self.hexString(advFss*16)+"  # [1/16 Hz]\n")
-                #     configfile.write("stimTime           = "+self.hexString(advStimTime*1e5)+" # units? (maybe 10us)\n")
-                #     configfile.write("stimMag            = "+self.hexString(advAmplitude)+"  # 12-bit DAC:\n")
-                #     configfile.write("cyclesPerFreq      = 00000002  # \n")
-                #     configfile.write("adcSamplesPerCycle = 00000010  # \n")
-                #     configfile.write("digipot            = 2222222222222222\n")
-                #     configfile.write("relayMask          = 00000000  # relay 32 is 0x1:\n")
-                #     configfile.write("coilDrive          = 00000000 \n")
-                #     configfile.write("stimTimeInitial    = 00100000\n")
-                #     configfile.write("client_IP = 8cf77b61 # James's home (DHCP...): 108.49.52.252\n")
-                #     configfile.write("relayWireTop = 0000000000000000 # 64-bit  top3top2top1top0\n")
-                #     configfile.write("relayWireBot = 00FF0000FF000080 # 64-bit  bot3bot2bot1bot0\n")
-                #     configfile.write("relayBusTop  = 00000000         # 32-bit  top1top0\n")
-                #     configfile.write("relayBusBot  = AAAAAAAA         # 32-bit  bot1bot0\n")
-                #     configfile.write("noiseFreqMin           = 00000340  # [1/16Hz]  55 Hz\n")
-                #     configfile.write("noiseFreqMax           = 00000340  # [1/16Hz]  65 Hz\n")
-                #     configfile.write("noiseFreqStep          = 00000010  # [1/16Hz]   1 Hz\n")
-                #     configfile.write("noiseSettlingTime      = 00001000  # [2.56 us]  00001000 ~ 10ms\n")
-                #     configfile.write("noiseAdcSamplesPerFreq = 00000100  # [unitless] (256 samples) limited to 256\n")
-                #     configfile.write("noiseSamplingPeriod    = 0000CB73  # [10ns]   32 samp/cycle @ 60 Hz\n")
-
-                #Add a scan row here 
-        
-        #self.configNextScanComboBox.clear()
-        #for i in range(1, scanNum):
-        #    self.configNextScanComboBox.addItem(str(i))
-
-        #logging.info("Configuring scans")
-        #logging.info(self.measuredBy)
-        #logging.info(self.configStage)
-        #logging.info(self.configHeadboard)
-        #logging.info(self.configHeadboard*2)
-
-
-        #logging.info(channelGroups)
-        #self.configScanListTextEdit.setPlainText(scanListText)
-
-
-
 
     def _configurePlots(self):
         self.chanViewMain = 0  # which channel to show large for V(t) data
@@ -1367,8 +1281,8 @@ class MainWindow(qtw.QMainWindow):
     @pyqtSlot()
     def startScanThread(self):
             
-        print("User has requested a new STANDARD scan (DWA is IDLE")
-        self.scanType = ScanType.STANDARD 
+        print("User has requested a new AUTO scan (DWA is IDLE")
+        self.scanType = ScanType.AUTO
         for i, btn in enumerate(self.radioBtns):
             if btn.isChecked():
                 #logging.info("Changing color of row "+str(i))
@@ -1405,16 +1319,14 @@ class MainWindow(qtw.QMainWindow):
         
 
     def startScan(self):
-        #self.outputText.appendPlainText("CLICKED START")
-        #self.outputText.update()
         #need to create dictionaries in this thread to actually update inputs and files
 
-        self.measuredBy = self.measuredByLineEdit.text()
-        self.configStage = self.configStageComboBox.currentText()
-        self.configApaUuid = self.configApaUuid.text()
-        self.configLayer = self.configLayerComboBox.currentText()
-        self.configHeadboard = self.configHeadboardSpinBox.value()
-        self.SideComboBox = self.SideComboBox.currentText()
+        measuredBy = self.measuredByLineEdit.text()
+        configStage = self.configStageComboBox.currentText()
+        configApaUuid = self.configApaUuid.text()
+        configLayer = self.configLayerComboBox.currentText()
+        configHeadboard = self.configHeadboardSpinBox.value()
+        apaSide = self.SideComboBox.currentText()
 
         advFss = self.advFssLineEdit.text() # Freq step size
         advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
@@ -1432,13 +1344,13 @@ class MainWindow(qtw.QMainWindow):
         if advAmplitude: advAmplitude = float(advAmplitude)
         else: pass
 
-        channelGroups = channel_map.channel_groupings(self.configLayer, self.configHeadboard)
+        channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
         scanListText = ""
         scanNum = 1
         
         for channels in channelGroups:
 
-            self.range_data = channel_frequencies.get_range_data_for_channels(self.configLayer, channels)
+            self.range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
 
             logging.info("channels")
             logging.info(channels)
@@ -1460,7 +1372,7 @@ class MainWindow(qtw.QMainWindow):
                 
                 if advFss: fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
                 else: pass
-                fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
+                fpgaConfig.update(config_generator.configure_relays(configLayer,channels))
 
                 fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
                 fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
@@ -1481,7 +1393,7 @@ class MainWindow(qtw.QMainWindow):
                 else: pass
 
                 fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
-                fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
+                fpgaConfig.update(config_generator.configure_relays(configLayer, channels))
                 fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
                 
                 logging.info("fpgaConfig")
@@ -1490,11 +1402,11 @@ class MainWindow(qtw.QMainWindow):
                 #sorting apa channels list to follow increasing order of dwa channels
                 dwaChannels = []
                 for i in range(0,len(channels)):
-                    dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
+                    dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(configLayer, channels[i]))))
                 apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
 
-                dataConfig = {"channels": apaChannels, "wires": wires, "measuredBy": self.measuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
-                "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.SideComboBox}
+                dataConfig = {"channels": apaChannels, "wires": wires, "measuredBy": measuredBy, "stage": configStage, "apaUuid": configApaUuid, 
+                "layer": configLayer, "headboardNum": configHeadboard, "side": apaSide}
 
                 self._loadDaqConfig()
 
@@ -1532,10 +1444,10 @@ class MainWindow(qtw.QMainWindow):
 
 
                 logging.info("Configuring scans")
-                logging.info(self.measuredBy)
-                logging.info(self.configStage)
-                logging.info(self.configHeadboard)
-                logging.info(self.configHeadboard*2)
+                logging.info(measuredBy)
+                logging.info(configStage)
+                logging.info(configHeadboard)
+                logging.info(configHeadboard*2)
 
 
         logging.info(channelGroups)
@@ -1660,6 +1572,7 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot()
     def configFileNameEnter(self):
+        self.configFile = self.configFileName.text()
         self._loadConfigFile()
 
     @pyqtSlot()
@@ -1986,6 +1899,7 @@ class MainWindow(qtw.QMainWindow):
     @pyqtSlot()
     def submitResonances(self):
         # Load sietch credentials #FIXME still using James's credentials
+        # FIXME: values like 'measuredBy' and 'dwaUuid' etc should be pulled from the .json amplitude file
         sietch = SietchConnect("sietch.creds")
         for ch in [1, 2, 3, 4]: # Loop over wire numbers in scan
             resonance_result = {
@@ -1997,7 +1911,7 @@ class MainWindow(qtw.QMainWindow):
                     "dwaUuid": "1",
                     "versionFirmware": "1.1",
                     "site": "Harvard",
-                    "measuredBy": self.measuredBy,
+                    "measuredBy": 'someone',
                     "productionStage": "[dropdown]",
                     "side": "A",
                     "layer": "V",
@@ -2200,11 +2114,11 @@ class MainWindow(qtw.QMainWindow):
         #    else:
         #        pass
        
-        configFileToOpen = self.configFile # KLUGE
-
+        print("=== _loadConfigFile ===")
+        print(f"   self.configFile = {self.configFile}")
         validConfigFilename = False
         try:
-            with open(configFileToOpen) as fh:
+            with open(self.configFile) as fh:
                 pass
             validConfigFilename = True
         except:
@@ -2218,7 +2132,7 @@ class MainWindow(qtw.QMainWindow):
             return
                 
         # read/parse config file
-        self.dwaConfigFile = dcf.DwaConfigFile(configFileToOpen, sections=['FPGA'])
+        self.dwaConfigFile = dcf.DwaConfigFile(self.configFile, sections=['FPGA'])
         textToDisplay = self.dwaConfigFile.getRawText()
         if self.omitComments_cb.isChecked():
             self.logger.info("cutting out commented lines from config file")
@@ -2232,16 +2146,6 @@ class MainWindow(qtw.QMainWindow):
         # https://stackoverflow.com/questions/3268073/qobject-cannot-create-children-for-a-parent-that-is-in-a-different-thread
         if updateGui:
             self.configFileContents.setPlainText(textToDisplay)
-
-            # update various config file fields in the GUI
-            self.freqMin_val.setText(self.dwaConfigFile.config['FPGA']['stimFreqMin_Hz'])
-            self.freqMax_val.setText(self.dwaConfigFile.config['FPGA']['stimFreqMax_Hz'])
-            self.freqStep_val.setText(self.dwaConfigFile.config['FPGA']['stimFreqStep_Hz'])
-            self.stimTime_val.setText(self.dwaConfigFile.config['FPGA']['stimTime_s'])
-            self.cycPerFreq_val.setText(self.dwaConfigFile.config['FPGA']['cyclesPerFreq_dec'])
-            self.sampPerCyc_val.setText(self.dwaConfigFile.config['FPGA']['adcSamplesPerCycle_dec'])
-            self.clientIP_val.setText(self.dwaConfigFile.config['FPGA']['client_IP'])
-            
 
     def _makeWordList(self, udpDataStr):
         '''
@@ -2464,7 +2368,10 @@ class MainWindow(qtw.QMainWindow):
             elif udpDict[ddp.Frame.RUN]['runStatus'] == RUN_END:
                 print("\n\n\n\n\n\n\n SCAN IS DONE!!!")
 
-                if self.scanType == ScanType.STANDARD:
+                if self.scanType == ScanType.AUTO:  # One scan of a set is done
+                    self.uz.disableAllRelays() # Break all relay connections to let charge bleed off of wires
+                    self.disableScanButtonForTime(self.interScanDelay)  # Don't allow user to start another scan for a bit
+                    
                     for i, btn in enumerate(self.radioBtns):
                         if btn.isChecked():
                             #logging.info("Changing color of row "+str(i))
@@ -2481,6 +2388,8 @@ class MainWindow(qtw.QMainWindow):
                     item.setChecked(True)
                     self.radioBtns[self.nextBtn]=item
 
+
+                    
                 # FIXME: shouldn't really change button state or controller state via
                 # RUN end frame. Should only do this from STATUS frame...
                 for scb in self.scanCtrlButtons:
@@ -2571,6 +2480,13 @@ class MainWindow(qtw.QMainWindow):
             self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")
             self.buttonStatus_val.setText(f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
 
+
+    def disableScanButtonForTime(self, disableDuration):
+        """ disableDuration is a time in seconds """
+        for scb in self.scanCtrlButtons:
+            scb.setEnabled(False)
+        qtc.QTimer.singleShot(disableDuration*1000, self._scanButtonEnable)
+        #qtc.QTimer.singleShot(disableDuration*1000, lambda: XXXXself.targetBtn.setDisabled(False)XXXX)
 
     def _setScanButtonAction(self, state=None):
         ''' change the functionality of the scan buttons (start scan vs. abort scan) '''
