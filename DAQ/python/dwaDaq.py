@@ -43,6 +43,8 @@
 # for logging info:
 # https://fangpenlin.com/posts/2012/08/26/good-logging-practice-in-python/
 
+AUTO_CHANGE_TAB = False # False for debugging
+
 import faulthandler   # helps debug segfaults
 faulthandler.enable()
 
@@ -974,11 +976,16 @@ class MainWindow(qtw.QMainWindow):
     def threadComplete(self):
         logging.info("THREAD COMPLETE!")
 
+    def startScanThreadComplete(self):
+        print("startScanThread complete!")
+        self.talkingToUzed = False
+        self._scanButtonEnable()
+        
     def startScanAdvThreadComplete(self):
         print("startScanAdvThread complete!")
         self.talkingToUzed = False
         self._scanButtonEnable()
-        
+
     def _makeDummyData(self):
         # V(t)
         self.dummyData = {}  
@@ -1283,6 +1290,12 @@ class MainWindow(qtw.QMainWindow):
             
         print("User has requested a new AUTO scan (DWA is IDLE")
         self.scanType = ScanType.AUTO
+        self.talkingToUzed = True
+        self._scanButtonDisable()
+
+        # BUG: user can click Start Scan even before configuring a scan.
+        # FIX: don't enable the Start Scan button until configuring has been done
+        # Question: are the scan config files supposed to be written to ./config/ when user presses "Configure Scan List"?
         for i, btn in enumerate(self.radioBtns):
             if btn.isChecked():
                 #logging.info("Changing color of row "+str(i))
@@ -1295,7 +1308,7 @@ class MainWindow(qtw.QMainWindow):
         # Pass the function to execute
         worker = Worker(self.startScan)  # could pass args/kwargs too..
         #worker.signals.result.connect(self.printOutput)
-        #worker.signals.finished.connect(self.threadComplete)
+        worker.signals.finished.connect(self.startScanAdvThreadComplete)
 
         # execute
         self.threadPool.start(worker)
@@ -2364,14 +2377,26 @@ class MainWindow(qtw.QMainWindow):
                 self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.2f}")
                 self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
 
-            #if end of run...
+            #if end of scan...
             elif udpDict[ddp.Frame.RUN]['runStatus'] == RUN_END:
                 print("\n\n\n\n\n\n\n SCAN IS DONE!!!")
 
+                self.saveAmplitudeData()  # do this first to avoid data loss
+
+                # FIXME: shouldn't really change button state or controller state via
+                # RUN end frame. Should only do this from STATUS frame...
+                self._setScanButtonAction('START')
+                self.dwaControllerState = State.IDLE  
+
+                #
+                print(f'self.scanType = {self.scanType}')
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
-                    self.uz.disableAllRelays() # Break all relay connections to let charge bleed off of wires
                     self.disableScanButtonForTime(self.interScanDelay)  # Don't allow user to start another scan for a bit
-                    
+                    self.uz.disableAllRelays() # Break all relay connections to let charge bleed off of wires
+
+                    # BUG: if a user selects a different radio button during a scan this will fail!
+                    # Should keep track of which radio button was selected at the time the scan was initiated
+                    # and change the color of *that* row.
                     for i, btn in enumerate(self.radioBtns):
                         if btn.isChecked():
                             #logging.info("Changing color of row "+str(i))
@@ -2388,16 +2413,6 @@ class MainWindow(qtw.QMainWindow):
                     item.setChecked(True)
                     self.radioBtns[self.nextBtn]=item
 
-
-                    
-                # FIXME: shouldn't really change button state or controller state via
-                # RUN end frame. Should only do this from STATUS frame...
-                for scb in self.scanCtrlButtons:
-                    scb.setStyleSheet("background-color : rgb(3, 205,0)")
-                    scb.setText("Start Scan")
-                self.dwaControllerState = State.IDLE  
-                #
-                self.saveAmplitudeData()  # do this first to avoid data loss
                 self.updateAmplitudePlots()
                 self.initiateResonanceAnalysis()
                 self.scanType = None
@@ -2483,8 +2498,12 @@ class MainWindow(qtw.QMainWindow):
 
     def disableScanButtonForTime(self, disableDuration):
         """ disableDuration is a time in seconds """
-        for scb in self.scanCtrlButtons:
-            scb.setEnabled(False)
+        print("\n\n\nDISABLE BUTTON FOR SOME TIME\n\n\n")
+        self._scanButtonDisable()
+        #self._scanButtonEnable(state=False)
+        #for scb in self.scanCtrlButtons:
+        #    scb.setEnabled(False)
+        #    scb.repaint()
         qtc.QTimer.singleShot(disableDuration*1000, self._scanButtonEnable)
         #qtc.QTimer.singleShot(disableDuration*1000, lambda: XXXXself.targetBtn.setDisabled(False)XXXX)
 
@@ -2611,8 +2630,9 @@ class MainWindow(qtw.QMainWindow):
 
     def initiateResonanceAnalysis(self):
         # Set the active tab to be RESONANCE
-        self.currentViewStage = MainView.RESONANCE
-        self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
+        if AUTO_CHANGE_TAB:
+            self.currentViewStage = MainView.RESONANCE
+            self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
 
         # Set the amplitude filename to the most recent run
         self.ampDataFilename.setText(self.fnOfAmpData)

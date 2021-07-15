@@ -244,6 +244,7 @@ class DwaMicrozed():
 
     def disableAllRelays(self):
         """ set all relays to be inactive (no connection from input to output) """
+        print("DwaMicrozed: disableAllRelays")
         offState = '0000'
         relayCfg = {
             "relayWireBot0":offState,
@@ -272,7 +273,6 @@ class DwaMicrozed():
         print("Setting v3 relays")
 
         self._tcpOpen(sleep=self.sleepPostOpen)
-        
         self._regWrite('00000020', cfg["relayWireBot0"])
         time.sleep(self.sleepPostWrite)
         self._regWrite('00000021', cfg["relayWireBot1"])
@@ -305,7 +305,7 @@ class DwaMicrozed():
         # This bit just needs to be written and not cleared.
         self._regWrite('00000000', '00000004')
         time.sleep(self.sleepPostWrite)
-        
+
         self._tcpClose()
         
     def setUdpAddress(self, address):
