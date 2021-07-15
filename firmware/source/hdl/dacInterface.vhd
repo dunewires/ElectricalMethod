@@ -23,7 +23,7 @@ use duneDwa.global_def.all;
 entity dacInterface is
 	port (
 		acStim_mag         : in  unsigned(11 downto 0) := (others => '0');
-		acStim_nPeriod_fp1 : in  unsigned(25 downto 0) := (others => '0');
+		acStim_nPeriod_fp6 : in  unsigned(30 downto 0) := (others => '0');
 		acStim_enable      : in  std_logic             := '0';
 		acStim_trigger     : out std_logic             := '0';
 
@@ -47,19 +47,20 @@ architecture STRUCT of dacInterface is
 	signal DAC_CLK_EN     : std_logic             := '0';
 
 	-- There is an extra bit of  precision for the accumulator
-	-- This will give a more accurate frequency with an extra clk 400 every other clock edge
+	-- This will give a more accurate frequency and allow the rising edge and falling edge to have different 78ps counts
 	-- exact frequency not exact 50% duty cycle
-	-- acStim_nPeriod_fp1 is shifted to fixed point 2 as we are defining half periods, ie the number of periods before a transition
-	alias phaseStep : unsigned(1 downto 0) is acStim_nPeriod_fp1(1 downto 0);
+	-- acStim_nPeriod_fp6 is shifted to fixed point 7 as we are defining half periods, ie the number of periods before a transition
+	alias phaseStep : unsigned(6 downto 0) is acStim_nPeriod_fp1(6 downto 0);
 	-- the portion after the point is done
-	alias clk200Step                   : unsigned(23 downto 0) is acStim_nPeriod_fp1(25 downto 2); -- need 16 bits for min 10 HZ half period count with an extra bit for good luck :)
+	alias clk200Step                   : unsigned(23 downto 0) is acStim_nPeriod_fp1(30 downto 7); -- need 16 bits for min 10 HZ half period count with an extra bit for good luck :)
 	signal stimClk200, stimClk200Ph180 : std_logic             := '0';
 	signal stimClk100,stimClk100_del   : std_logic             := '0';
 	signal phaseShift180               : std_logic             := '0';
 	signal stimClkPeriodCnt            : unsigned(23 downto 0) := (others => '0');
-	signal fineCount                   : unsigned(2 downto 0)  := (others => '0');
-	alias phaseOF                      : std_logic is fineCount(2);
+	signal fineCount                   : unsigned(7 downto 0)  := (others => '0');
+	alias phaseOF                      : std_logic is fineCount(7);
 	signal phaseOFDone                 : std_logic := '0';
+	signal DAC_LD_B_400, DAC_CLR_B_400           : std_logic := '0';
 
 	--length of stimClk400 vector determines pulse width
 	signal stimClk400 : std_logic_vector(12 downto 0) := (others => '0');
@@ -79,6 +80,58 @@ begin
 			D2 => '0',
 			R  => '0', -- 1-bit reset input
 			S  => '0'  -- 1-bit set input
+		);
+	-- IDELAYE2: Input Fixed or Variable Delay Element
+	-- 7 Series
+	-- Xilinx HDL Language Template, version 2019.1
+	IDELAYE2_DAC_LD_B : IDELAYE2
+		generic map (
+			CINVCTRL_SEL          => "FALSE",    -- Enable dynamic clock inversion (FALSE, TRUE)
+			DELAY_SRC             => "DATAIN",   -- Delay input (IDATAIN, DATAIN)
+			IDELAY_TYPE           => "VAR_LOAD", -- FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
+			IDELAY_VALUE          => 0,          -- Input delay tap setting (0-31)
+			PIPE_SEL              => "FALSE",    -- Select pipelined mode, FALSE, TRUE
+			REFCLK_FREQUENCY      => 200.0,      -- IDELAYCTRL clock input frequency in MHz (190.0-210.0, 290.0-310.0).
+			SIGNAL_PATTERN        => "DATA"      -- DATA, CLOCK input signal
+		)
+		port map (
+			CNTVALUEOUT => open,                      -- 5-bit output: Counter value output
+			DATAOUT     => DAC_LD_B,                     -- 1-bit output: Delayed data output
+			C           => dwaClk200,                 -- 1-bit input: Clock input
+			CE          => '0',                       -- 1-bit input: Active high enable increment/decrement input
+			CINVCTRL    => '0',                       -- 1-bit input: Dynamic clock inversion input
+			CNTVALUEIN  => std_logic_vector(odlyTap), -- 5-bit input: Counter value input
+			DATAIN      => DAC_LD_B_400,                  -- 1-bit input: Internal delay data input
+			IDATAIN     => '0',                       -- 1-bit input: Data input from the I/O
+			INC         => '0',                       -- 1-bit input: Increment / Decrement tap delay input
+			LD          => odlyLd,                    -- 1-bit input: Load IDELAY_VALUE input
+			LDPIPEEN    => '0',                       -- 1-bit input: Enable PIPELINE register to load data input
+			REGRST      => '0'                        -- 1-bit input: Active-high reset tap-delay input
+		);
+
+	IDELAYE2_DAC_CLR_B : IDELAYE2
+		generic map (
+			CINVCTRL_SEL          => "FALSE",    -- Enable dynamic clock inversion (FALSE, TRUE)
+			DELAY_SRC             => "DATAIN",   -- Delay input (IDATAIN, DATAIN)
+			IDELAY_TYPE           => "VAR_LOAD", -- FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
+			IDELAY_VALUE          => 0,          -- Input delay tap setting (0-31)
+			PIPE_SEL              => "FALSE",    -- Select pipelined mode, FALSE, TRUE
+			REFCLK_FREQUENCY      => 200.0,      -- IDELAYCTRL clock input frequency in MHz (190.0-210.0, 290.0-310.0).
+			SIGNAL_PATTERN        => "DATA"      -- DATA, CLOCK input signal
+		)
+		port map (
+			CNTVALUEOUT => open,                      -- 5-bit output: Counter value output
+			DATAOUT     => DAC_CLR_B,                     -- 1-bit output: Delayed data output
+			C           => dwaClk200,                 -- 1-bit input: Clock input
+			CE          => '0',                       -- 1-bit input: Active high enable increment/decrement input
+			CINVCTRL    => '0',                       -- 1-bit input: Dynamic clock inversion input
+			CNTVALUEIN  => std_logic_vector(odlyTap), -- 5-bit input: Counter value input
+			DATAIN      => DAC_CLR_B_400,                  -- 1-bit input: Internal delay data input
+			IDATAIN     => '0',                       -- 1-bit input: Data input from the I/O
+			INC         => '0',                       -- 1-bit input: Increment / Decrement tap delay input
+			LD          => odlyLd,                    -- 1-bit input: Load IDELAY_VALUE input
+			LDPIPEEN    => '0',                       -- 1-bit input: Enable PIPELINE register to load data input
+			REGRST      => '0'                        -- 1-bit input: Active-high reset tap-delay input
 		);
 
 	-- load DAC on PS slow clock 
@@ -107,6 +160,8 @@ begin
 	make_ac_stimX200 : process (dwaClk200)
 	begin
 		if rising_edge(dwaClk200) then
+					--default
+			odlyLd <= '0';
 			-- need the > to catch when the nPeriod decreases at the wrong time
 			if stimClkPeriodCnt >= clk200Step then
 				-- dont use the enable here to keep the filter working
@@ -123,7 +178,10 @@ begin
 			-- update the fine delay settings in between transitions of the stimClk signal
 			if stimClkPeriodCnt = x"000020" then
 				fineCount     <= fineCount + phaseStep;
-				phaseShift180 <= fineCount(1);
+				phaseShift180 <= fineCount(6);
+				-- fineCount 0 will allow duty cycle to be different by 78ps
+				odlyTap       <= fineCount(5 downto 1);
+				odlyLd        <= '1';
 			end if;
 
 		end if;
@@ -146,8 +204,8 @@ begin
 			stimClk400(stimClk400'left downto 1) <= stimClk400(stimClk400'left-1 downto 0);
 			--sync For ADC readout
 			-- generate pulses with the required length, need > 10 ns pulse for 100 MHz rx
-			DAC_LD_B  <= stimClk400(stimClk400'left) or not stimClk400(0);
-			DAC_CLR_B <= not stimClk400(stimClk400'left) or stimClk400(0);
+			DAC_LD_B_400  <= stimClk400(stimClk400'left) or not stimClk400(0);
+			DAC_CLR_B_400 <= not stimClk400(stimClk400'left) or stimClk400(0);
 		end if;
 	end process dacPulseGen;
 

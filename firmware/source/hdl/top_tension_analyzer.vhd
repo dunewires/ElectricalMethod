@@ -119,7 +119,7 @@ architecture STRUCT of top_tension_analyzer is
   signal acStim_enable           : std_logic             := '0';
   signal ctrl_acStim_enable      : std_logic             := '0';
   signal acStim_trigger          : std_logic             := '0';
-  signal acStim_nPeriod_fp1      : unsigned(25 downto 0) := (others => '0');
+  signal acStim_nPeriod_fp6      : unsigned(30 downto 0) := (others => '0');
   signal acStimX200_nPeriod_fxp8 : unsigned(32 downto 0) := (others => '0'); -- floating point at 8
                                                                              --initial value non zero
   signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
@@ -256,7 +256,7 @@ begin
   -- convert requested stim frequency to number of 100Mhz clocks
   -- move this to the processor!
   compute_n_periods : process (dwaClk10)
-    variable acStim_nPeriod_fp1_all : unsigned(39 downto 0 );
+    variable acStim_nPeriod_fp6_all : unsigned(44 downto 0 );
     variable adcCnv_nCnv_all        : unsigned(39 downto 0 );
 
   begin
@@ -270,15 +270,16 @@ begin
       end if;
 
       -- nPeriod has units of 5ns with specified fixed point
-      acStim_nPeriod_fp1_all  := (x"17d7840000"/ stimFreqReq);
-      acStim_nPeriod_fp1      <= acStim_nPeriod_fp1_all(25 downto 0);      -- only take what is needed for min 10 HZ stim freq
-      acStimX200_nPeriod_fxp8 <= (acStim_nPeriod_fp1 & "0000000") / x"C8"; -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
+      --acStim_nPeriod_fp6_all  := (x"17d7840000"/ stimFreqReq);
+      acStim_nPeriod_fp6_all  := (x"2FAF0800000"/ stimFreqReq);
+      acStim_nPeriod_fp6      <= acStim_nPeriod_fp6_all(30 downto 0);      -- only take what is needed for min 10 HZ stim freq
+      acStimX200_nPeriod_fxp8 <= (acStim_nPeriod_fp6 & "00") / x"C8"; -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
 
       --  let's start with a fixed conversion 
       -- temp shift left ~8 samples per cycle
       -- nPeriod of ADC is still 10 ns. shift additional 1 
       -- fp1 - 1 , 200 to 100 - 1 ,8 samples per cycle -3 (5 total)
-      adcCnv_nPeriod <= "000" & acStim_nPeriod_fp1(25 downto 5);
+      adcCnv_nPeriod <= "000" & acStim_nPeriod_fp6(30 downto 10);
       -- find the number of total canversions for each frequency
       adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
       adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
@@ -368,7 +369,7 @@ begin
   dacInterface_inst : entity work.dacInterface
     port map (
       acStim_mag         => fromDaqReg.stimMag,
-      acStim_nPeriod_fp1 => acStim_nPeriod_fp1,
+      acStim_nPeriod_fp6 => acStim_nPeriod_fp6,
       acStim_enable      => acStim_enable,
       acStim_trigger     => acStim_trigger,
 
@@ -506,7 +507,7 @@ begin
       pktBuildBusy => pktBuildBusy,
       freqScanBusy => freqScanBusy,
 
-      stimPeriodActive  => acStim_nPeriod_fp1,
+      stimPeriodActive  => acStim_nPeriod_fp6,
       stimPeriodCounter => (others => '0'),
 
       adcSamplingPeriod => adcCnv_nPeriod,
