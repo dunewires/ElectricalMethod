@@ -368,7 +368,7 @@ class DwaDataParser():
         return self._parseGenericFrame(infoLines, Frame.FREQ)
 
     def _parseStatusFrame(self, infoLines):
-        print("\n\n\n STATUS FRAME FOUND!!!!!!")
+        #print("\n\n\n STATUS FRAME FOUND!!!!!!")
         return self._parseGenericFrame(infoLines, Frame.STATUS)
 
     def _parseAdcDataFrame(self, infoLines):

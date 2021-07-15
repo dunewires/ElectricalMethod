@@ -53,7 +53,7 @@ class DwaConfigFile():
                                      ]
         self.validOptions["Database"] = ["wires", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side", "channels"]
 
-        self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose"]
+        self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose", "client_IP"]
 
     def parse(self):
         """Parse the DWA configuration parameters from a file
@@ -120,8 +120,9 @@ class DwaConfigFile():
 
 
         # 
-        self.defaults["DAQ"]["statusPeriodSec"] = 1  # seconds (float)
-        self.defaults["DAQ"]["verbose"]         = 1  # verbosity level (integer)
+        self.defaults["DAQ"]["statusPeriodSec"] = 1    # seconds (float)
+        self.defaults["DAQ"]["verbose"]         = 1    # verbosity level (integer)
+        #self.defaults["DAQ"]["client_IP"]       = None # verbosity level (integer)
         
     def validate(self):
         """ validate the values read from a config file

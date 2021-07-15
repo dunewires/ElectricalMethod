@@ -352,7 +352,7 @@
                  <item row="11" column="1">
                   <widget class="QPushButton" name="btnScanCtrl">
                    <property name="text">
-                    <string>Start</string>
+                    <string>Start next scan</string>
                    </property>
                   </widget>
                  </item>
@@ -377,57 +377,57 @@
                 <property name="fieldGrowthPolicy">
                  <enum>QFormLayout::ExpandingFieldsGrow</enum>
                 </property>
-                <item row="9" column="1">
+                <item row="11" column="1">
                  <layout class="QHBoxLayout" name="horizontalLayout_10"/>
                 </item>
-                <item row="13" column="1">
+                <item row="15" column="1">
                  <widget class="QLineEdit" name="advAmplitudeLineEdit"/>
                 </item>
-                <item row="13" column="0">
+                <item row="15" column="0">
                  <widget class="QLabel" name="label_15">
                   <property name="text">
                    <string>Amplitude</string>
                   </property>
                  </widget>
                 </item>
-                <item row="12" column="0">
+                <item row="14" column="0">
                  <widget class="QLabel" name="label_14">
                   <property name="text">
                    <string>Initialization delay(s)</string>
                   </property>
                  </widget>
                 </item>
-                <item row="12" column="1">
+                <item row="14" column="1">
                  <widget class="QLineEdit" name="advInitDelayLineEdit"/>
                 </item>
-                <item row="11" column="0">
+                <item row="13" column="0">
                  <widget class="QLabel" name="label_13">
                   <property name="text">
                    <string>Stimulation time (s)</string>
                   </property>
                  </widget>
                 </item>
-                <item row="11" column="1">
+                <item row="13" column="1">
                  <widget class="QLineEdit" name="advStimTimeLineEdit"/>
                 </item>
-                <item row="10" column="0">
+                <item row="12" column="0">
                  <widget class="QLabel" name="label_12">
                   <property name="text">
                    <string>Frequency step size</string>
                   </property>
                  </widget>
                 </item>
-                <item row="10" column="1">
+                <item row="12" column="1">
                  <widget class="QLineEdit" name="advFssLineEdit"/>
                 </item>
-                <item row="0" column="0">
+                <item row="1" column="0">
                  <widget class="QLabel" name="configFileName_label">
                   <property name="text">
                    <string>Scan config File:</string>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="1">
+                <item row="1" column="1">
                  <widget class="QLineEdit" name="configFileName">
                   <property name="autoFillBackground">
                    <bool>false</bool>
@@ -440,14 +440,14 @@
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="0">
+                <item row="2" column="0">
                  <widget class="QLabel" name="omitComments_label">
                   <property name="text">
                    <string>Omit comments:</string>
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="1">
+                <item row="2" column="1">
                  <widget class="QCheckBox" name="omitComments_cb">
                   <property name="text">
                    <string/>
@@ -460,31 +460,38 @@
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="0">
+                <item row="3" column="0">
                  <widget class="QLabel" name="configFileContents_label">
                   <property name="text">
                    <string>Config file contents:</string>
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="1">
+                <item row="3" column="1">
                  <widget class="QPlainTextEdit" name="configFileContents">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
                  </widget>
                 </item>
-                <item row="3" column="0">
+                <item row="5" column="0">
                  <widget class="QLabel" name="logFilename_label">
                   <property name="text">
                    <string>Log file:</string>
                   </property>
                  </widget>
                 </item>
-                <item row="3" column="1">
+                <item row="5" column="1">
                  <widget class="QLabel" name="logFilename_val">
                   <property name="text">
                    <string>.....</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QPushButton" name="btnScanCtrlAdv">
+                  <property name="text">
+                   <string>Start Scan</string>
                   </property>
                  </widget>
                 </item>

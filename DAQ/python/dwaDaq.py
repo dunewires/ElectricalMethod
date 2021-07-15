@@ -1,14 +1,12 @@
 # FIXME/TODO:
+# * Disable "Start next scan" button until user has "configured scan list"
 # * When clicking to add f0 line -- use "hover" width for tolerance (instead of a hardcoded # of pixels)
 #   or just check to see if any of the InfiniteLines are in "hover" mode. If so, don't add a new line
 # * Add validator() to QLineEdits (e.g. for resonance fits)
-# * self.state is useless now -- should use the states as reported by the STATUS frame
 # * Update plot title V(t) to show frequency of scan
 # * Update plot title to list file root YYYYMMDDTHHMMSS
 # * Print GUI software version in title bar
-# * Add a "Start Scan" button in the Advanced tab (separate from the "Config" tab)
 # * Can't close window without killing process on linux...
-# * stop logging the status frames to file
 # * base end-of-run on STATUS frame?  or on end-of-run frame?
 # * Update human parsing of frequency (fixed point now...)
 # * Status frame parsing/displaying...
@@ -17,7 +15,6 @@
 # * resonance lines could use "span" keyword to draw only the part of the plot that is in the peak
 #   e.g. from "baseline" to peak, as well as peak width, as in final example of:
 #   https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
-# * fix the "abort" button. After clicking Start button --> button becomes "Abort Scan".
 # * The new register to set an additional stimulus time for the first sample in the run,  stimTimeInitial,
 #   is a 24 bit register with the same units as the stimulus time, 2.56us, and is at address 0x2C. 
 # * Logging: is generally a mess. many log entries are printed to screen in duplicate...
@@ -91,7 +88,7 @@ GUI_Y_OFFSET = 0 #FIXME: remove this!
 
 DWA_DAQ_VERSION = "X.X.X"
 #
-DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
+DWA_CONFIG_FILE = "dwaConfigWC.ini"
 #DWA_CONFIG_FILE = "config/dwaConfigShortScan.ini"
 #DWA_CONFIG_FILE = "config/dwaConfig_SP.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
@@ -137,6 +134,12 @@ class State(IntEnum):
     FREQ_SCAN_FINISH = 7 # At the end of the frequency sweep, wait for the last UDP data to be sent
     PKT_BUILD_FINISH = 8 # Wait for the end of run header to be sent before we go to the idle state and wait for another scan
 
+class ScanType(IntEnum):
+    CUSTOM = 0
+    STANDARD = 1
+    
+
+    
 class MainView(IntEnum):
     STIMULUS  = 0 # config/V(t)/A(f) [Stimulus view]
     RESONANCE = 1 # A(f) data and fitting
@@ -154,7 +157,7 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-TAB_ACTIVE_MAIN = MainView.RESONANCE
+TAB_ACTIVE_MAIN = MainView.STIMULUS
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -346,8 +349,12 @@ class MainWindow(qtw.QMainWindow):
         # Load the UI (built in Qt Designer)
         uic.loadUi(DAQ_UI_FILE, self)
         self.configFileContents.setReadOnly(True)
-        self.btnScanCtrl.setEnabled(True)
-
+        self.scanCtrlButtons = [self.btnScanCtrl, self.btnScanCtrlAdv]
+        self.scanType = None
+        self.talkingToUzed = False
+        self.connectedToUzed = False
+        self._scanButtonDisable()
+        
         # adapt the tabs...
         # see https://stackoverflow.com/questions/51404102/pyqt5-tabwidget-vertical-tab-horizontal-text-alignment-left
         #self.tabWidget.setTabBar(TabBar(self.tabWidget))
@@ -437,7 +444,7 @@ class MainWindow(qtw.QMainWindow):
         # Info about current run
         self.stimFreqMin = 0
         self.stimFreqMax = 0
-        self.state = None
+        self.dwaControllerState = None
 
         # Socket for UDP connection to FPGA    
         self.sock = None
@@ -574,7 +581,6 @@ class MainWindow(qtw.QMainWindow):
         self.tabWidgetStages.currentChanged.connect(self.tabChangedStage)
         self.tabWidgetStim.currentChanged.connect(self.tabChangedStim)
         self.btnDwaConnect.clicked.connect(self.dwaConnect)
-        self.btnScanCtrl.clicked.connect(self.startRunThread)
         self.configFileName.returnPressed.connect(self.configFileNameEnter)
         self.ampDataFilename.returnPressed.connect(self.ampDataFilenameEnter)
         self.pb_ampDataLoad.clicked.connect(self.ampDataFilenameEnter)
@@ -586,7 +592,6 @@ class MainWindow(qtw.QMainWindow):
         self.resFitProminence.editingFinished.connect(self.resFitParameterUpdated)
         self.resFitKwargs.editingFinished.connect(self.resFitParameterUpdated)
         #
-        #self.statusFramePeriod_val.returnPressed.connect(self.setStatusFramePeriod)
         # Resonance Tab
         self.btnSubmitResonances.clicked.connect(self.submitResonances)
         # Tensions tab
@@ -748,10 +753,13 @@ class MainWindow(qtw.QMainWindow):
         # Set up STATUS frame cadence
         self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
 
-        self.btnDwaConnect.setText("Re-connect")
-        self.btnScanCtrl.setStyleSheet("background-color : green")  # button is green when scan is inactive, red when active
-        self.btnScanCtrl.setEnabled(True)
+        # Set up Client IP address
+        if 'client_IP' in self.daqConfig and self.daqConfig['client_IP'] is not None:
+            print(f"setting client_IP to {self.daqConfig['client_IP']}")
+            self.uz.setUdpAddress(self.daqConfig['client_IP'])
         
+        self.btnDwaConnect.setText("Re-connect")
+        self.connectedToUzed = True
         
     def _initResonanceFitLines(self):
         self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
@@ -1044,6 +1052,11 @@ class MainWindow(qtw.QMainWindow):
     def threadComplete(self):
         logging.info("THREAD COMPLETE!")
 
+    def startScanAdvThreadComplete(self):
+        print("startScanAdvThread complete!")
+        self.talkingToUzed = False
+        self._scanButtonEnable()
+        
     def _makeDummyData(self):
         # V(t)
         self.dummyData = {}  
@@ -1279,20 +1292,6 @@ class MainWindow(qtw.QMainWindow):
         self.scEvtVwrFirst.activated.connect(partial(self.evtVwrChange, -100000000))
 
         
-    #@pyqtSlot()
-    #def setStatusFramePeriod(self):
-    #    # Set up STATUS frame cadence
-    #    try:
-    #        statusFramePeriod_sec = float(self.statusFramePeriod_val.text())
-    #        print(f'statusFramePeriod_sec = {statusFramePeriod_sec}')
-    #    except:
-    #        print("invalid value for status frame period (must be float)")
-    #        return
-    #
-    #    self.daqConfig['statusPeriodSec'] = statusFramePeriod_sec
-    #    self.daqConfig['statusPeriod'] = f"{int(float(self.daqConfig['statusPeriodSec']) / 2.56e-6):08X}"
-    #    self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
-        
     @pyqtSlot()
     def evtVwrChange(self, step=None):
         print('\n\n\n')
@@ -1346,43 +1345,58 @@ class MainWindow(qtw.QMainWindow):
         # execute
         self.threadPool.start(worker)
 
+
     @pyqtSlot()
-    def startRunThread(self):
-
-        if self.state == State.IDLE:
-            print("User has requested a new scan")
-            # Change the button to "Abort Scan" (and change color, too)
-            self.btnScanCtrl.setStyleSheet("background-color : red")
-            self.btnScanCtrl.setText("Abort Scan")
-            self.state = State.SCAN
-            for i, btn in enumerate(self.radioBtns):
-                if btn.isChecked():
-                    #logging.info("Changing color of row "+str(i))
-                    for c in range(0, self.scanTable.columnCount()):
-                        self.scanTable.item(i,c).setBackground(qtg.QColor(255,140,0))
-                else:
-                    #logging.info("Row "+str(i)+"has not been selected")
-                    pass
+    def abortScan(self):
+        print("User has requested a soft abort of this run...")
+        print("... this is not yet tested")
+        self.uz.abort()
+        
+    @pyqtSlot()
+    def startScanThread(self):
             
-            # Pass the function to execute
-            worker = Worker(self.startRun)  # could pass args/kwargs too..
-            #worker.signals.result.connect(self.printOutput)
-            #worker.signals.finished.connect(self.threadComplete)
+        print("User has requested a new STANDARD scan (DWA is IDLE")
+        self.scanType = ScanType.STANDARD 
+        for i, btn in enumerate(self.radioBtns):
+            if btn.isChecked():
+                #logging.info("Changing color of row "+str(i))
+                for c in range(0, self.scanTable.columnCount()):
+                    self.scanTable.item(i,c).setBackground(qtg.QColor(255,140,0))
+            else:
+                #logging.info("Row "+str(i)+"has not been selected")
+                pass
+        
+        # Pass the function to execute
+        worker = Worker(self.startScan)  # could pass args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        #worker.signals.finished.connect(self.threadComplete)
 
-            # execute
-            self.threadPool.start(worker)
+        # execute
+        self.threadPool.start(worker)
 
-        elif self.state == State.SCAN:
-            # Change the button to "Abort Scan" (and change color, too)
-            print("User has requested a soft abort of this run...")
-            print("... this is not yet tested")
-            self.uz.abort()
+
+    @pyqtSlot()
+    def startScanAdvThread(self):
+            
+        print("User has requested a new CUSTOM scan (DWA is IDLE")
+        self.scanType = ScanType.CUSTOM
+        self.talkingToUzed = True
+        self._scanButtonDisable()
+
+        # Pass the function to execute
+        worker = Worker(self.startScanAdv)  # could pass args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.startScanAdvThreadComplete)
+
+        # execute
+        self.threadPool.start(worker)
+        
 
     def _loadDaqConfig(self):
         self.daqConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
         self.daqConfig = self.daqConfigFile.getConfigDict(section='DAQ')
 
-    def startRun(self):
+    def startScan(self):
         #self.outputText.appendPlainText("CLICKED START")
         #self.outputText.update()
         #need to create dictionaries in this thread to actually update inputs and files
@@ -1409,8 +1423,6 @@ class MainWindow(qtw.QMainWindow):
         else: pass
         if advAmplitude: advAmplitude = float(advAmplitude)
         else: pass
-
-
 
         channelGroups = channel_map.channel_groupings(self.configLayer, self.configHeadboard)
         scanListText = ""
@@ -1506,9 +1518,7 @@ class MainWindow(qtw.QMainWindow):
                 for i, btn in enumerate(self.radioBtns):
                     if btn.isChecked() and i == scanNum-2:
                         #no longer need try method because there should never be two files with the same name
-                        self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
-                        self.scanRunDataDir = os.path.join(self.scanDataDir, self.timeString)
-                        os.makedirs(self.scanRunDataDir)
+                        self.makeScanOutputDir()
                         logging.info("scanrundatadir"+self.scanRunDataDir)
                         config_generator.write_config(self.combinedConfig, 'dwaConfig_'+str(i+1)+'.ini', self.scanRunDataDir) #self.configFileDir
 
@@ -1524,19 +1534,37 @@ class MainWindow(qtw.QMainWindow):
                         
 
  
-        # startRun() is in a thread...  need to get logger?
+        # startScan() is in a thread...  need to get logger?
         logger = logging.getLogger(__name__)
-        self.configFile = os.path.join("config/", self.configFileName.text())
+        #self.configFile = os.path.join("config/", self.configFileName.text())
         # If configFile is blank, use the generated one
 
         if not self.configFileName.text():
             for i, btn in enumerate(self.radioBtns):
                 if btn.isChecked():
-                    self.configFile = os.path.join("config/", "dwaConfig_"+str(i+1)+".ini")
+                    self.configFile = os.path.join(OUTPUT_DIR_CONFIG, "dwaConfig_"+str(i+1)+".ini")
         #else:
             # If no generated one was found, use the default one
             #self.configFile = os.path.join("config/", "dwaConfig.ini")
         #the above else statement should never happen because a radio button should always be clicked
+
+        self.runScan()
+
+
+    def makeScanOutputDir(self):
+        self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        self.scanRunDataDir = os.path.join(self.scanDataDir, self.timeString)
+        os.makedirs(self.scanRunDataDir)
+     
+    def startScanAdv(self):
+        self.configFile = self.configFileName.text()
+        self.makeScanOutputDir()
+        self.runScan()
+        
+    def runScan(self):
+
+        # runScan() is in a thread...  need to get logger?
+        logger = logging.getLogger(__name__)
         logger.info(self.configFile)
         logger.info(f"config file = {self.configFile}")
         #
@@ -1544,7 +1572,7 @@ class MainWindow(qtw.QMainWindow):
         ## need to force an update somehow....
         self._loadConfigFile(updateGui=False)
 
-        print("\n\n =================== startRun()\n\n")
+        print("\n\n =================== runScan()\n\n")
         print(f"self.configFile = {self.configFile}")
         # verify that config file can be opened (DEFUNCT: this is done in _loadConfigFile()
         #try:
@@ -2146,8 +2174,9 @@ class MainWindow(qtw.QMainWindow):
         return data
 
     def _loadAmpData(self):
-        ampFilename = "DWANUM_HEADBOARDNUM_LAYER_"+self.ampDataFilename.text()+".json"
-        ampFilename = os.path.join(self.scanRunDataDir, ampFilename)
+        #ampFilename = "DWANUM_HEADBOARDNUM_LAYER_"+self.ampDataFilename.text()+".json"
+        #ampFilename = os.path.join(self.scanRunDataDir, ampFilename)
+        ampFilename = self.ampDataFilename.text()
         print(f"ampFilename = {ampFilename}")
         self.ampDataActiveLabel.setText(ampFilename)
         # read in the json file
@@ -2166,14 +2195,16 @@ class MainWindow(qtw.QMainWindow):
         # try to read the requested file
         # if found, display contents
         # if not found, display error message
-        for i, btn in enumerate(self.radioBtns):
-            if btn.isChecked():
-                if not self.configFileName.text():
-                    configFileToOpen = os.path.join("config/", "dwaConfig_"+str(i+1)+".ini")
-                else:
-                    configFileToOpen = os.path.join("config/", self.configFileName.text())
-            else:
-                pass
+        #for i, btn in enumerate(self.radioBtns):
+        #    if btn.isChecked():
+        #        if not self.configFileName.text():
+        #            configFileToOpen = os.path.join("config/", "dwaConfig_"+str(i+1)+".ini")
+        #        else:
+        #            configFileToOpen = os.path.join("config/", self.configFileName.text())
+        #    else:
+        #        pass
+       
+        configFileToOpen = self.configFile # KLUGE
 
         validConfigFilename = False
         try:
@@ -2340,13 +2371,13 @@ class MainWindow(qtw.QMainWindow):
                 # FIXME: THIS EVENTUALLY GOES AWAY
                 # Currently it's a kluge to handle the case where DWA transmission
                 # contains the old-style (and now non-standard) header lines...
-                while not dataStrings[0].startswith("AAAA"):
-                    if self.verbose > 0:
-                        logger.info(f"popping udp word: {dataStrings[0]}")
-                    dataStrings.pop(0)
+                #while not dataStrings[0].startswith("AAAA"):
+                #    if self.verbose > 0:
+                #        logger.info(f"popping udp word: {dataStrings[0]}")
+                #    dataStrings.pop(0)
 
                 if self.verbose > 0:
-                    print("post popping")
+                    print("dataStrings = ")
                     print(dataStrings)
                     
                 # Parse UDP transmission
@@ -2379,15 +2410,18 @@ class MainWindow(qtw.QMainWindow):
                 
                 # write data to file by register
                 reg = self.dwaDataParser.dwaPayload[ddp.Frame.UDP]['Register_ID_hexStr']
-                if self.verbose > 0:
-                    print(f"reg = {reg}")
-                    print(f"self.fnOfReg: {self.fnOfReg}")
-                    logger.info(f"self.fnOfReg: {self.fnOfReg}")
-                with open(self.fnOfReg[reg], 'a') as regFH:
-                    for item in dataStrings:
-                        regFH.write(f'{item}\n')
-                    regFH.close()
-                
+                # Don't write status frames to disk
+                statusFrameReg = '{:02X}'.format(ddp.Registers.STATUS)
+                if reg != statusFrameReg:
+                    if self.verbose > 0:
+                        print(f"reg = {reg}")
+                        print(f"self.fnOfReg: {self.fnOfReg}")
+                        logger.info(f"self.fnOfReg: {self.fnOfReg}")
+                    with open(self.fnOfReg[reg], 'a') as regFH:
+                        for item in dataStrings:
+                            regFH.write(f'{item}\n')
+                        regFH.close()
+                    
                 newdata_callback.emit(self.dwaDataParser.dwaPayload)
                     
             except socket.timeout:
@@ -2433,28 +2467,35 @@ class MainWindow(qtw.QMainWindow):
             #if end of run...
             elif udpDict[ddp.Frame.RUN]['runStatus'] == RUN_END:
                 print("\n\n\n\n\n\n\n SCAN IS DONE!!!")
-                self.btnScanCtrl.setStyleSheet("background-color : rgb(3, 205,0)")
-                self.btnScanCtrl.setText("Start Scan")
-                for i, btn in enumerate(self.radioBtns):
-                    if btn.isChecked():
-                        #logging.info("Changing color of row "+str(i))
-                        for c in range(0, self.scanTable.columnCount()):
-                            self.scanTable.item(i,c).setBackground(qtg.QColor(3,205,0))
-                        if len(self.radioBtns)>(i+1):
-                            self.nextBtn = i+1
-                        else: 
-                            self.nextBtn = 0
-                    else:
-                        pass
-                item = qtw.QRadioButton(self.scanTable)
-                self.scanTable.setCellWidget(self.nextBtn, 0, item)
-                item.setChecked(True)
-                self.radioBtns[self.nextBtn]=item
 
-                self.state = State.IDLE
+                if self.scanType == ScanType.STANDARD:
+                    for i, btn in enumerate(self.radioBtns):
+                        if btn.isChecked():
+                            #logging.info("Changing color of row "+str(i))
+                            for c in range(0, self.scanTable.columnCount()):
+                                self.scanTable.item(i,c).setBackground(qtg.QColor(3,205,0))
+                            if len(self.radioBtns)>(i+1):
+                                self.nextBtn = i+1
+                            else: 
+                                self.nextBtn = 0
+                        else:
+                            pass
+                    item = qtw.QRadioButton(self.scanTable)
+                    self.scanTable.setCellWidget(self.nextBtn, 0, item)
+                    item.setChecked(True)
+                    self.radioBtns[self.nextBtn]=item
+
+                # FIXME: shouldn't really change button state or controller state via
+                # RUN end frame. Should only do this from STATUS frame...
+                for scb in self.scanCtrlButtons:
+                    scb.setStyleSheet("background-color : rgb(3, 205,0)")
+                    scb.setText("Start Scan")
+                self.dwaControllerState = State.IDLE  
+                #
                 self.saveAmplitudeData()  # do this first to avoid data loss
                 self.updateAmplitudePlots()
                 self.initiateResonanceAnalysis()
+                self.scanType = None
                 
             else:
                  print("ERROR: unknown value of runStatus:")   
@@ -2523,11 +2564,65 @@ class MainWindow(qtw.QMainWindow):
             self.outputText.appendPlainText(str(udpDict[ddp.Frame.STATUS]))
             print(f"\n FOUND STATUS FRAME {datetime.datetime.now()}")
             print(udpDict[ddp.Frame.STATUS])
+
+            self.dwaControllerState = udpDict[ddp.Frame.STATUS]['controllerState']
+            self._scanButtonEnable()
+            buttonState = 'START' if self.dwaControllerState == State.IDLE else 'ABORT'
+            print(f"buttonState = {buttonState}")
+            self._setScanButtonAction(state=buttonState)
+            
             self.dwaControllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerStateStr']}")
             self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")
             self.buttonStatus_val.setText(f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
 
 
+    def _setScanButtonAction(self, state=None):
+        ''' change the functionality of the scan buttons (start scan vs. abort scan) '''
+        # state can be 'START' or 'ABORT'
+        validStates = ['START', 'ABORT']
+        state = state.upper()
+        if state not in validStates:
+            return
+
+        if state == 'START':
+            for scb in self.scanCtrlButtons:
+                scb.setStyleSheet("background-color : green")
+                if scb == self.btnScanCtrl:
+                    scb.setText("Start next scan")
+                else:
+                    scb.setText("Start scan")
+        elif state == 'ABORT':
+            for scb in self.scanCtrlButtons:
+                scb.setStyleSheet("background-color : red")
+                scb.setText("Abort Scan")
+        else:
+            print("HUH? should never get here...")
+            return
+
+        self._scanButtonConnect(state)
+        
+    def _scanButtonConnect(self, state):
+        try:
+            self.btnScanCtrl.clicked.disconnect()
+            self.btnScanCtrlAdv.clicked.disconnect()
+        except:
+            pass
+        
+        if state == 'START':
+            self.btnScanCtrl.clicked.connect(self.startScanThread)
+            self.btnScanCtrlAdv.clicked.connect(self.startScanAdvThread)
+        elif state == 'ABORT':
+            self.btnScanCtrl.clicked.connect(self.abortScan)
+            self.btnScanCtrlAdv.clicked.connect(self.abortScan)
+        
+    def _scanButtonDisable(self):
+        self._scanButtonEnable(state=False)
+            
+    def _scanButtonEnable(self, state=True):
+        if (self.connectedToUzed and not self.talkingToUzed) or state==False:
+            for scb in self.scanCtrlButtons:
+                scb.setEnabled(state)
+            
     def updateAmplitudePlots(self):
         # This should only update the plots on the STIMULUS tab
         # other A(f) plots are updated elsewhere
