@@ -49,8 +49,6 @@
 # for logging info:
 # https://fangpenlin.com/posts/2012/08/26/good-logging-practice-in-python/
 
-AUTO_CHANGE_TAB = False # False for debugging
-
 import faulthandler   # helps debug segfaults
 faulthandler.enable()
 
@@ -97,12 +95,9 @@ import channel_map
 import channel_frequencies
 import ChannelMapping
 
-
-GUI_Y_OFFSET = 0 #FIXME: remove this!
-
 DWA_DAQ_VERSION = "X.X.X"
 #
-DWA_CONFIG_FILE = "dwaConfigWC.ini"
+DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
 #DWA_CONFIG_FILE = "config/dwaConfigShortScan.ini"
 #DWA_CONFIG_FILE = "config/dwaConfig_SP.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
@@ -122,9 +117,13 @@ UDP_RECV_BUF_SIZE = 2**20 # Bytes (2**20 Bytes is ~1MB)
 N_DWA_CHANS = 8
 INTER_SCAN_DELAY_SEC = 5  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
 
+# DEBUGGING FLAGS
+AUTO_CHANGE_TAB = True # False for debugging
+GUI_Y_OFFSET = 0 #FIXME: remove this!
+
 # FIXME: these should go in DwaDataParser.py
-RUN_START = 1
-RUN_END = 0
+SCAN_START = 1
+SCAN_END = 0
 
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
@@ -365,10 +364,13 @@ class MainWindow(qtw.QMainWindow):
 
         self.scanCtrlButtons = [self.btnScanCtrl, self.btnScanCtrlAdv]
         self.scanType = None
-        self.talkingToUzed = False
         self.connectedToUzed = False
         self._scanButtonDisable()
+        self._setScanButtonAction('START')
         self.interScanDelay = INTER_SCAN_DELAY_SEC
+
+        # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
+        self.enableScanButtonTemp = False
         
         ####self.logTextBox = QTextEditLogger(self.page_logging)
         self.logTextBox.appendPlainText("log viewing not yet implemented")
@@ -773,12 +775,14 @@ class MainWindow(qtw.QMainWindow):
             self.uz.setUdpAddress(self.daqConfig['client_IP'])
         
         self.connectedToUzed = True  # FIXME: should actively verify that the connection worked...
+        
         if self.connectedToUzed:
             self.btnDwaConnect.setText("Re-connect")
             # FIXME: READ THESE VALUES FROM THE UZED!
             self.clientIp_val.setText(self.daqConfig['client_IP'])
             self.dwaIp_val.setText(self.daqConfig['DWA_IP'])
             # ALSO GET FIRMWARE VERSION AND DATE CODE AND SERIAL NUMBER...
+            self.enableScanButtonTemp = True
             
     def _initResonanceFitLines(self):
         self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
@@ -1013,13 +1017,9 @@ class MainWindow(qtw.QMainWindow):
 
     def startScanThreadComplete(self):
         print("startScanThread complete!")
-        self.talkingToUzed = False
-        self._scanButtonEnable()
         
     def startScanAdvThreadComplete(self):
         print("startScanAdvThread complete!")
-        self.talkingToUzed = False
-        self._scanButtonEnable()
 
     def _makeDummyData(self):
         # V(t)
@@ -1325,8 +1325,9 @@ class MainWindow(qtw.QMainWindow):
             
         print("User has requested a new AUTO scan (DWA is IDLE")
         self.scanType = ScanType.AUTO
-        self.talkingToUzed = True
+
         self._scanButtonDisable()
+        self._setScanButtonAction('ABORT')
 
         # BUG: user can click Start Scan even before configuring a scan.
         # FIX: don't enable the Start Scan button until configuring has been done
@@ -1354,8 +1355,9 @@ class MainWindow(qtw.QMainWindow):
             
         print("User has requested a new CUSTOM scan (DWA is IDLE")
         self.scanType = ScanType.CUSTOM
-        self.talkingToUzed = True
+
         self._scanButtonDisable()
+        self._setScanButtonAction('ABORT')
 
         # Pass the function to execute
         worker = Worker(self.startScanAdv)  # could pass args/kwargs too..
@@ -2344,7 +2346,7 @@ class MainWindow(qtw.QMainWindow):
                     self.oldDataFormat = False
                     if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == None:
                         self.oldDataFormat = True
-                    if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == RUN_START or \
+                    if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == SCAN_START or \
                        self.oldDataFormat:
                         print("New run detected... creating new filenames")
                         print("runStatus = ")
@@ -2402,7 +2404,7 @@ class MainWindow(qtw.QMainWindow):
 
 
             # if start of run, set up GUI scan parameters
-            if udpDict[ddp.Frame.RUN]['runStatus'] == RUN_START:
+            if udpDict[ddp.Frame.RUN]['runStatus'] == SCAN_START:
                 # FIXME: TEMPORARY...
                 self.logger.info("\n\n\n\nFOUND RUN HEADER")
                 # update the frequency information (min, max, step)
@@ -2415,7 +2417,7 @@ class MainWindow(qtw.QMainWindow):
                 self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
 
             #if end of scan...
-            elif udpDict[ddp.Frame.RUN]['runStatus'] == RUN_END:
+            elif udpDict[ddp.Frame.RUN]['runStatus'] == SCAN_END:
                 print("\n\n\n\n\n\n\n SCAN IS DONE!!!")
 
                 self.saveAmplitudeData()  # do this first to avoid data loss
@@ -2424,11 +2426,11 @@ class MainWindow(qtw.QMainWindow):
                 # RUN end frame. Should only do this from STATUS frame...
                 self._setScanButtonAction('START')
                 self.dwaControllerState = State.IDLE  
+                #self.disableScanButtonForTime(self.interScanDelay)  # Don't allow user to start another scan for a bit
 
                 #
                 print(f'self.scanType = {self.scanType}')
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
-                    self.disableScanButtonForTime(self.interScanDelay)  # Don't allow user to start another scan for a bit
                     self.uz.disableAllRelays() # Break all relay connections to let charge bleed off of wires
 
                     # BUG: if a user selects a different radio button during a scan this will fail!
@@ -2523,11 +2525,14 @@ class MainWindow(qtw.QMainWindow):
             print(udpDict[ddp.Frame.STATUS])
 
             self.dwaControllerState = udpDict[ddp.Frame.STATUS]['controllerState']
-            self._scanButtonEnable()
-            buttonState = 'START' if self.dwaControllerState == State.IDLE else 'ABORT'
-            print(f"buttonState = {buttonState}")
-            self._setScanButtonAction(state=buttonState)
-            
+
+            if self.dwaControllerState != State.IDLE:
+                self._scanButtonEnable()
+                
+            if self.enableScanButtonTemp and (self.dwaControllerState == State.IDLE):
+                self.enableScanButtonTemp = False
+                self._scanButtonEnable()
+                
             self.dwaControllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerStateStr']}")
             self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")
             self.buttonStatus_val.setText(f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
@@ -2539,7 +2544,8 @@ class MainWindow(qtw.QMainWindow):
         # should check if the timer has expired before enabling...
         print(f"\n\n\nDISABLE BUTTON FOR {disableDuration} seconds\n\n\n")
         self._scanButtonDisable()
-        qtc.QTimer.singleShot(disableDuration*1000, lambda: self.btnScanCtrl.setEnabled(True))
+        qtc.QTimer.singleShot(disableDuration*1000, self._scanButtonEnable)
+        #qtc.QTimer.singleShot(disableDuration*1000, lambda: self.btnScanCtrl.setEnabled(True))
         #qtc.QTimer.singleShot(disableDuration*1000, lambda: XXXXself.targetBtn.setDisabled(False)XXXX)
 
     def _setScanButtonAction(self, state=None):
@@ -2565,6 +2571,9 @@ class MainWindow(qtw.QMainWindow):
             print("HUH? should never get here...")
             return
 
+        for scb in self.scanCtrlButtons:
+            scb.repaint()
+        
         self._scanButtonConnect(state)
         
     def _scanButtonConnect(self, state):
@@ -2585,9 +2594,8 @@ class MainWindow(qtw.QMainWindow):
         self._scanButtonEnable(state=False)
             
     def _scanButtonEnable(self, state=True):
-        if (self.connectedToUzed and not self.talkingToUzed) or state==False:
-            for scb in self.scanCtrlButtons:
-                scb.setEnabled(state)
+        for scb in self.scanCtrlButtons:
+            scb.setEnabled(state)
             
     def updateAmplitudePlots(self):
         # This should only update the plots on the STIMULUS tab
