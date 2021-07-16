@@ -1,3 +1,4 @@
+import binascii
 import socket
 import time
 import struct
@@ -364,7 +365,12 @@ class DwaMicrozed():
 
         self._tcpClose()
 
-
+    def readValue(self, address):
+        self._tcpOpen()
+        self._regRead(address)
+        out = self._recvTimeout()
+        self._tcpClose()
+        return out
         
     def _regComm(self, payload_header='abcd1234', payload_type=None, 
                    address=None, value=None):
@@ -413,6 +419,7 @@ class DwaMicrozed():
         
     
     def _regRead(self, address):
+        print(f'self.sock = {self.sock}')
         self._regComm(payload_header='abcd1234', payload_type='FE170001',
                    address=address)
     

@@ -6,7 +6,9 @@
 #     and should be left-justified
 #   + "All wires" and "Single wire" should be in the same "radio group" and
 #   + also search "BUG:" for a couple other things
-# * on "Connect" get FPGA datecode and display in GUI (Issue #23)
+# * on "Connect"
+#   + verify connection by reading something from the FPGA
+#   + get FPGA datecode and display in GUI (Issue #23)
 # * remove self.oldDataFormat -- it's not actually used (is it?)
 # * after scan ends, update the V(t) plots with the last set of data
 # * Update GUI process to protect against missing end of run frame.
@@ -780,6 +782,10 @@ class MainWindow(qtw.QMainWindow):
             self.dwaIp_val.setText(self.daqConfig['DWA_IP'])
             # ALSO GET FIRMWARE VERSION AND DATE CODE AND SERIAL NUMBER...
             self.enableScanButtonTemp = True
+
+        # TRY READING SOMETHING (fails)
+        #out = self.uz.readValue('00000035')
+        #print(out)
             
     def _initResonanceFitLines(self):
         self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
