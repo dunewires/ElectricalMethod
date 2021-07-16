@@ -1,4 +1,5 @@
 # FIXME/TODO:
+# * after scan ends, update the V(t) plots with the last set of data
 # * after all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
 # * the "Wires" column in the AUTO scan confit table should just list the numbers, not an array of strings...
 #   and should be left-justified

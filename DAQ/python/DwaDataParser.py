@@ -130,8 +130,8 @@ class DwaDataParser():
         self.frameKeys[Frame.FREQ]["41"] = "adcSamplesPerFreq" # 24bit
         self.frameKeys[Frame.FREQ]["42"] = "stimPeriodActiveOld"  # 24bit (currently-used stimulus period)
         self.frameKeys[Frame.FREQ]["43"] = "adcSamplingPeriod" # 24bit
-        self.frameKeys[Frame.FREQ]["52"] = "stimPeriodActive_10MSb"  # 10bit (10MSb of currently-used stimulus period)
-        self.frameKeys[Frame.FREQ]["53"] = "stimPeriodActive_16LSb"  # 16bit (16LSb of currently-used stimulus period)
+        self.frameKeys[Frame.FREQ]["52"] = "stimPeriodActive_MSb"  # 16bit (16MSb of currently-used stimulus period)
+        self.frameKeys[Frame.FREQ]["53"] = "stimPeriodActive_LSb"  # 16bit (16LSb of currently-used stimulus period)
         #
         # ADC Data Frame entries
         # N/A
@@ -218,8 +218,8 @@ class DwaDataParser():
             "adcSamplesPerFreq": self._parseInfoLineAsInt,
             "stimPeriodActiveOld": self._parseInfoLineAsInt,
             "adcSamplingPeriod":self._parseInfoLineAsInt,
-            "stimPeriodActive_10MSb": self._parseInfoLineAsInt,
-            "stimPeriodActive_16LSb": self._parseInfoLineAsInt,
+            "stimPeriodActive_MSb": self._parseInfoLineAsInt,
+            "stimPeriodActive_LSb": self._parseInfoLineAsInt,
             # Defunct (FIXME: remove?)
             "DWA_Ctrl": self._parseInfoLineAsInt,
             #"relayMask_16MSb"
@@ -306,7 +306,8 @@ class DwaDataParser():
         # The 16 MSb give the integer portion of the freq in Hz.
         # The 8 LSb give the fractional portion of the freq in 1/256 Hz. 
         # e.g.  0x000460 corresponds to 4.375 Hz (0x0004 --> 4Hz and 0x60 --> 0.375Hz)
-        freqHz = int(infoLine[2:6], 16) + int(infoLine[6:], 16)/256.
+        hexBase = 16
+        freqHz = int(infoLine[2:6], hexBase) + int(infoLine[6:], hexBase)/256.
         print(f'\n\n Parsing stimFreqLine: hexkey, freqHz = {infoLine}, {infoLine[2:6]}, {infoLine[6:]}, {freqHz}')
         return freqHz
         
@@ -405,32 +406,31 @@ class DwaDataParser():
         dd['clientIP'] = dwa.hexStrToIpAddressStr(hexStr)
 
         # Convert frequencies to Hz
-        #dd['stimFreqMin_Hz'] = dd['stimFreqMin']/16.
-        #dd['stimFreqMax_Hz'] = dd['stimFreqMax']/16.
-        #dd['stimFreqStep_Hz'] = dd['stimFreqStep']/16.
         dd['stimFreqMin_Hz'] = dd['stimFreqMin']
         dd['stimFreqMax_Hz'] = dd['stimFreqMax']
         dd['stimFreqStep_Hz'] = dd['stimFreqStep']
         return dd
-
+                                                                                 
     def _postProcessUdpFrame(self, dd):
         dd['Register_ID_hexStr'] = '{:02X}'.format(dd['Register_ID'])
         return dd
 
     def _postProcessFreqFrame(self, dd):
         dd['adcSamplingPeriod_sec'] = dd['adcSamplingPeriod']*1e-8
-        # Originally, we used a 10ns clock
-        dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodActiveOld'] # convert period in 10ns to freq in Hz
-        # But now we use a 2.5ns clock
-        if 'stimPeriodActive_10MSb' in dd:
+
+        if 'stimPeriodActive_MSb' in dd:    # Now we use a 78ps clock            
             print("found new stimFreq")
-            print(f"dd['stimPeriodActive_10MSb'] = {dd['stimPeriodActive_10MSb']}")
-            print(f"dd['stimPeriodActive_16LSb'] = {dd['stimPeriodActive_16LSb']}")
+            print(f"dd['stimPeriodActive_MSb'] = {dd['stimPeriodActive_MSb']}")
+            print(f"dd['stimPeriodActive_LSb'] = {dd['stimPeriodActive_LSb']}")
             # make the period
             # compute the frequency in Hz
-            dd['stimPeriodActive'] = (dd['stimPeriodActive_10MSb'] << 16) + dd['stimPeriodActive_16LSb']
-            dd['stimFreqActive_Hz'] = (1e9/dd['stimPeriodActive'])/2.5 # convert period in 10ns to freq in Hz
+            dd['stimPeriodActive'] = (dd['stimPeriodActive_MSb'] << 16) + dd['stimPeriodActive_LSb']
+            #dd['stimFreqActive_Hz'] = (1e9/dd['stimPeriodActive'])/2.5 # convert period in 2.5ns to freq in Hz
+            dd['stimFreqActive_Hz'] = (1e12/dd['stimPeriodActive'])/78.0 # convert period in 78ps to freq in Hz
             print(f"dd['stimFreqActive_Hz'] = {dd['stimFreqActive_Hz']}")
+        else:  # but originally, we used a 10ns clock
+            dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodActiveOld'] # convert period in 10ns to freq in Hz
+            
         return dd
 
     def _postProcessAdcDataFrame(self, dd):
