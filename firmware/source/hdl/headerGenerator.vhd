@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Jul 15 18:07:25 2021
+-- Last update : Thu Jul 15 22:19:49 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -143,7 +143,7 @@ begin
     begin
         if rising_edge(dwaClk100) then
             if sendAdcData then
-                stimPeriodActive_reg  <= "00000" & stimPeriodActive(30 downto 5);
+                stimPeriodActive_reg  <= stimPeriodActive;
                 adcSamplingPeriod_reg <= adcSamplingPeriod;
             end if;
 
