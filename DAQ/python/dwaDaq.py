@@ -568,9 +568,11 @@ class MainWindow(qtw.QMainWindow):
         self.show()
 
     def _configureTensions(self):
-        self.tensionStageComboBox.addItem("Pre-production")
-        self.tensionStageComboBox.addItem("Production")
-        self.tensionStageComboBox.addItem("Commissioning")
+        self.tensionStageComboBox.addItem("DWA Development")
+        self.tensionStageComboBox.addItem("Winding")
+        self.tensionStageComboBox.addItem("Post-Winding")
+        self.tensionStageComboBox.addItem("Storage")
+        self.tensionStageComboBox.addItem("Installation")
         self.tensionData = {
             'XA':[0]*960,
             'XB':[0]*960,
@@ -605,9 +607,11 @@ class MainWindow(qtw.QMainWindow):
         self.btnLoadTensions.clicked.connect(self.loadTensions)
         # Config Tab
         self.btnConfigureScans.clicked.connect(self.configureScans)
-        self.configStageComboBox.addItem("Pre-production")
-        self.configStageComboBox.addItem("Production")
-        self.configStageComboBox.addItem("Commissioning")
+        self.configStageComboBox.addItem("DWA Development")
+        self.configStageComboBox.addItem("Winding")
+        self.configStageComboBox.addItem("Post-Winding")
+        self.configStageComboBox.addItem("Storage")
+        self.configStageComboBox.addItem("Installation")
         self.configLayerComboBox.addItem("G")
         self.configLayerComboBox.addItem("U")
         self.configLayerComboBox.addItem("V")
