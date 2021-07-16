@@ -1,17 +1,17 @@
 # FIXME/TODO:
-# * after scan ends, update the V(t) plots with the last set of data
-# * after all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
-# * the "Wires" column in the AUTO scan confit table should just list the numbers, not an array of strings...
-#   and should be left-justified
-# * When starting  scan, the Start Scan button should stay disabled until a non IDLE state is seen
-#   and when non-IDLE state is seen, the button should be enabled and be for "Abort"
-# * remove self.oldDataFormat -- it's not actually used (is it?)
+# * AUTO-SCAN items
+#   + Disable "Start next scan" button until user has "configured scan list"
+#   + After all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
+#   + Suggestion: the "Wires" column in the AUTO scan confit table should just list the numbers, not an array of strings...
+#     and should be left-justified
+#   + "All wires" and "Single wire" should be in the same "radio group" and
+#   + also search "BUG:" for a couple other things
 # * on "Connect" get FPGA datecode and display in GUI (Issue #23)
+# * remove self.oldDataFormat -- it's not actually used (is it?)
+# * after scan ends, update the V(t) plots with the last set of data
 # * Update GUI process to protect against missing end of run frame.
 #   Can listen for STATUS frame. If DAQ things a run is active but then sees STATUS=IDLE,
 #   then trigger end of run sequence
-# * Disable "Start next scan" button until user has "configured scan list"
-# * "All wires" and "Single wire" should be in the same "radio group" and
 #   the wire number spinBox should be disabled unless "Single Wire" is selected
 # * When clicking to add f0 line -- use "hover" width for tolerance (instead of a hardcoded # of pixels)
 #   or just check to see if any of the InfiniteLines are in "hover" mode. If so, don't add a new line
@@ -20,9 +20,6 @@
 # * Update plot title to list file root YYYYMMDDTHHMMSS
 # * Print GUI software version in title bar
 # * Can't close window without killing process on linux...
-# * base end-of-run on STATUS frame?  or on end-of-run frame?
-# * Update human parsing of frequency (fixed point now...)
-# * Status frame parsing/displaying...
 # * Force "Windows style" tabs on mac
 # * Add axis labels to plots
 # * resonance lines could use "span" keyword to draw only the part of the plot that is in the peak
