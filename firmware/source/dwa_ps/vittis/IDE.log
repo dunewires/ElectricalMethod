@@ -1956,3 +1956,460 @@ con
 16:39:27 INFO  : Result from executing command 'getProjects': dwaPsHw
 16:39:27 INFO  : Result from executing command 'getPlatforms': dwaPsHw|/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/dwaPsHw.xpfm
 16:39:30 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+17:17:13 INFO  : Launching XSCT server: xsct -n  -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/temp_xsdb_launch_script.tcl
+17:17:15 INFO  : XSCT server has started successfully.
+17:17:15 INFO  : Successfully done setting XSCT server connection channel  
+17:17:15 INFO  : plnx-install-location is set to ''
+17:17:15 INFO  : Successfully done setting workspace for the tool. 
+17:17:16 INFO  : Platform repository initialization has completed.
+17:17:16 INFO  : Successfully done query RDI_DATADIR 
+17:17:17 INFO  : Registering command handlers for Vitis TCF services
+17:25:08 INFO  : Connected to target on host 'localhost' and port '3124'.
+17:25:09 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+17:25:12 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210715_165640_-2.383ns.bit"
+17:25:47 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+17:25:47 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+17:25:47 INFO  : 'fpga -state' command is executed.
+17:25:48 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+17:25:48 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+17:25:48 INFO  : 'jtag frequency' command is executed.
+17:25:48 INFO  : Context for 'APU' is selected.
+17:25:48 INFO  : System reset is completed.
+17:25:51 INFO  : 'after 3000' command is executed.
+17:25:51 INFO  : Context for 'APU' is selected.
+17:25:51 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+17:25:51 INFO  : 'configparams force-mem-access 1' command is executed.
+17:25:51 INFO  : Context for 'APU' is selected.
+17:25:51 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+17:25:52 INFO  : 'ps7_init' command is executed.
+17:25:52 INFO  : 'ps7_post_config' command is executed.
+17:25:52 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+17:25:52 ERROR : Cannot halt processor core, timeout
+17:25:52 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+----------------End of Script----------------
+
+17:25:52 ERROR : Cannot halt processor core, timeout
+17:26:47 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+17:26:47 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+17:26:47 INFO  : 'fpga -state' command is executed.
+17:26:47 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+17:26:47 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+17:26:47 INFO  : 'jtag frequency' command is executed.
+17:26:47 INFO  : Context for 'APU' is selected.
+17:26:47 INFO  : System reset is completed.
+17:26:51 INFO  : 'after 3000' command is executed.
+17:26:51 INFO  : Context for 'APU' is selected.
+17:26:51 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+17:26:51 INFO  : 'configparams force-mem-access 1' command is executed.
+17:26:51 INFO  : Context for 'APU' is selected.
+17:26:51 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+17:26:52 INFO  : 'ps7_init' command is executed.
+17:26:52 INFO  : 'ps7_post_config' command is executed.
+17:26:52 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+17:26:52 INFO  : The application '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf' is downloaded to processor 'ps7_cortexa9_0'.
+17:26:52 INFO  : 'configparams force-mem-access 0' command is executed.
+17:26:52 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+17:26:52 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+17:26:52 INFO  : 'con' command is executed.
+17:26:52 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "*A9*#0"}
+con
+----------------End of Script----------------
+
+17:26:52 INFO  : Launch script is exported to file '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw_system/_ide/scripts/systemdebugger_dwapssw_system_standalone.tcl'
+17:27:14 INFO  : Connected to target on host 'localhost' and port '3124'.
+17:27:14 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+17:27:17 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210715_165640_-2.383ns.bit"
+18:21:58 INFO  : Disconnected from the channel tcfchan#2.
+18:21:59 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:21:59 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:21:59 INFO  : 'fpga -state' command is executed.
+18:21:59 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+18:21:59 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:21:59 INFO  : 'jtag frequency' command is executed.
+18:21:59 INFO  : Context for 'APU' is selected.
+18:21:59 INFO  : System reset is completed.
+18:22:02 INFO  : 'after 3000' command is executed.
+18:22:02 INFO  : Context for 'APU' is selected.
+18:22:03 INFO  : Hardware design and registers information is loaded from '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa'.
+18:22:03 INFO  : 'configparams force-mem-access 1' command is executed.
+18:22:03 INFO  : Context for 'APU' is selected.
+18:22:03 INFO  : Sourcing of '/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl' is done.
+18:22:04 INFO  : 'ps7_init' command is executed.
+18:22:04 INFO  : 'ps7_post_config' command is executed.
+18:22:04 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+18:22:04 ERROR : AP transaction timeout
+18:22:04 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+targets -set -nocase -filter {name =~"APU*"}
+loadhw -hw /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*"}
+source /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/_ide/psinit/ps7_init.tcl
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "*A9*#0"}
+dow /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+----------------End of Script----------------
+
+18:22:04 ERROR : AP transaction timeout
+18:22:30 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:22:30 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:22:30 INFO  : 'fpga -state' command is executed.
+18:22:30 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+18:22:30 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:22:30 INFO  : 'jtag frequency' command is executed.
+18:22:30 INFO  : Context for 'APU' is selected.
+18:22:30 ERROR : Cannot reset APU. AP transaction error, DAP status 0xF0000021
+18:22:30 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+----------------End of Script----------------
+
+18:22:30 ERROR : Cannot reset APU. AP transaction error, DAP status 0xF0000021
+18:22:47 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:22:47 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:22:47 INFO  : 'fpga -state' command is executed.
+18:22:47 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+18:22:47 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:22:47 INFO  : 'jtag frequency' command is executed.
+18:22:47 INFO  : Context for 'APU' is selected.
+18:22:47 ERROR : Cannot reset APU. AP transaction error, DAP status 0xF0000021
+18:22:47 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+----------------End of Script----------------
+
+18:22:47 ERROR : Cannot reset APU. AP transaction error, DAP status 0xF0000021
+18:23:09 INFO  : Connected to target on host 'localhost' and port '3124'.
+18:23:09 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:23:14 ERROR : fpga configuration failed. DONE PIN is not HIGH
+18:23:29 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:23:29 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:23:29 INFO  : 'fpga -state' command is executed.
+18:23:50 INFO  : Connected to target on host 'localhost' and port '3124'.
+18:23:51 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:23:55 ERROR : fpga configuration failed. DONE PIN is not HIGH
+18:24:27 INFO  : Connected to target on host 'localhost' and port '3124'.
+18:24:27 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:24:31 ERROR : fpga configuration failed. DONE PIN is not HIGH
+18:25:01 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:25:01 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:25:01 INFO  : 'fpga -state' command is executed.
+18:25:07 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+18:25:07 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:25:07 INFO  : 'jtag frequency' command is executed.
+18:25:07 INFO  : Context for 'APU' is selected.
+18:25:07 ERROR : Cannot reset APU. AP transaction error, DAP status 0xF0000021
+18:25:07 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+rst -system
+after 3000
+----------------End of Script----------------
+
+18:25:07 ERROR : Cannot reset APU. AP transaction error, DAP status 0xF0000021
+18:26:26 INFO  : Connected to target on host 'localhost' and port '3124'.
+18:26:26 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:26:31 ERROR : fpga configuration failed. DONE PIN is not HIGH
+18:30:40 INFO  : Launching XSCT server: xsct -n  -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/temp_xsdb_launch_script.tcl
+18:30:42 INFO  : XSCT server has started successfully.
+18:30:42 INFO  : Successfully done setting XSCT server connection channel  
+18:30:42 INFO  : plnx-install-location is set to ''
+18:30:42 INFO  : Successfully done setting workspace for the tool. 
+18:30:44 INFO  : Platform repository initialization has completed.
+18:30:44 INFO  : Successfully done query RDI_DATADIR 
+18:30:44 INFO  : Registering command handlers for Vitis TCF services
+18:31:19 INFO  : Connected to target on host 'localhost' and port '3124'.
+18:31:19 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:31:22 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210715_181908_-2.439ns.bit"
+18:31:56 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:31:56 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:31:56 INFO  : 'fpga -state' command is executed.
+18:31:57 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+18:31:57 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:31:57 INFO  : 'jtag frequency' command is executed.
+18:32:00 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:32:00 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+----------------End of Script----------------
+
+18:32:00 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:32:17 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:32:17 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:32:17 INFO  : 'fpga -state' command is executed.
+18:32:17 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+18:32:17 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:32:17 INFO  : 'jtag frequency' command is executed.
+18:32:20 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:32:20 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+----------------End of Script----------------
+
+18:32:20 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:33:13 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:33:13 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:33:13 INFO  : 'fpga -state' command is executed.
+18:33:13 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+18:33:13 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:33:13 INFO  : 'jtag frequency' command is executed.
+18:33:16 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:33:16 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+----------------End of Script----------------
+
+18:33:16 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:34:06 INFO  : Launching XSCT server: xsct -n  -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/temp_xsdb_launch_script.tcl
+18:34:08 INFO  : XSCT server has started successfully.
+18:34:08 INFO  : Successfully done setting XSCT server connection channel  
+18:34:08 INFO  : plnx-install-location is set to ''
+18:34:08 INFO  : Successfully done setting workspace for the tool. 
+18:34:11 INFO  : Platform repository initialization has completed.
+18:34:11 INFO  : Successfully done query RDI_DATADIR 
+18:34:11 INFO  : Registering command handlers for Vitis TCF services
+18:34:27 INFO  : Result from executing command 'getProjects': dwaPsHw
+18:34:27 INFO  : Result from executing command 'getPlatforms': dwaPsHw|/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/dwaPsHw.xpfm
+18:34:30 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+18:34:52 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:34:52 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:34:52 INFO  : 'fpga -state' command is executed.
+18:34:53 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+18:34:54 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:34:54 INFO  : 'jtag frequency' command is executed.
+18:34:57 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:34:57 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+----------------End of Script----------------
+
+18:34:57 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:35:16 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:35:16 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:35:16 INFO  : 'fpga -state' command is executed.
+18:35:16 INFO  : Connected through redirection to target on host 'localhost' and port '3124'.
+18:35:16 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:35:16 INFO  : 'jtag frequency' command is executed.
+18:35:19 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:35:19 INFO  : ----------------XSDB Script----------------
+connect -path [list tcp::1534 tcp:localhost:3124]
+targets -set -nocase -filter {name =~"APU*"}
+----------------End of Script----------------
+
+18:35:19 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:36:28 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:36:28 ERROR : Failed to connect to hardware server on host 'localhost' and port '3124'.
+Reason: Connection refused
+18:37:02 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:37:02 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:37:02 INFO  : 'fpga -state' command is executed.
+18:37:02 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+18:37:02 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:37:02 INFO  : 'jtag frequency' command is executed.
+18:37:05 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:37:05 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+targets -set -nocase -filter {name =~"APU*"}
+----------------End of Script----------------
+
+18:37:05 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:38:14 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:38:15 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:38:15 INFO  : 'fpga -state' command is executed.
+18:38:15 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+18:38:15 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:38:15 INFO  : 'jtag frequency' command is executed.
+18:38:18 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:38:18 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+targets -set -nocase -filter {name =~"APU*"}
+----------------End of Script----------------
+
+18:38:18 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:38:47 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+18:38:47 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:38:51 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210715_181908_-2.439ns.bit"
+18:39:08 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:39:08 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:39:08 INFO  : 'fpga -state' command is executed.
+18:39:08 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+18:39:08 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:39:08 INFO  : 'jtag frequency' command is executed.
+18:39:11 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:39:11 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+targets -set -nocase -filter {name =~"APU*"}
+----------------End of Script----------------
+
+18:39:11 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:41:35 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:41:35 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:41:35 INFO  : 'fpga -state' command is executed.
+18:41:35 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+18:41:35 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:41:35 INFO  : 'jtag frequency' command is executed.
+18:41:38 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:41:38 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+targets -set -nocase -filter {name =~"APU*"}
+----------------End of Script----------------
+
+18:41:38 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:42:18 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+18:42:18 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:42:21 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210715_165640_-2.383ns.bit"
+18:42:29 INFO  : Updating launch configuration 'SystemDebugger_dwaPsSw_system_Standalone' from currrent build state
+18:42:29 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:42:29 INFO  : 'fpga -state' command is executed.
+18:42:29 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+18:42:29 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:42:29 INFO  : 'jtag frequency' command is executed.
+18:42:32 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:42:32 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+targets -set -nocase -filter {name =~"APU*"}
+----------------End of Script----------------
+
+18:42:32 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:43:06 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+18:43:06 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:43:09 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210715_165640_-2.383ns.bit"
+18:44:17 ERROR : Failed to connect to hardware server on host 'localhost' and port '3124'.
+Reason: Connection refused
+18:44:43 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:44:43 INFO  : 'fpga -state' command is executed.
+18:44:43 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+18:44:43 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:44:43 INFO  : 'jtag frequency' command is executed.
+18:44:46 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:44:46 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+targets -set -nocase -filter {name =~"APU*"}
+----------------End of Script----------------
+
+18:44:46 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:45:13 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+18:45:13 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:45:16 INFO  : Device configured successfully with "/home/nate/projects/duneWireTension/ElectricalMethod/firmware/vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20210715_165640_-2.383ns.bit"
+18:45:40 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS2 210249A0D0C2" && level==0 && jtag_device_ctx=="jsn-JTAG-HS2-210249A0D0C2-23727093-0"}' command is executed.
+18:45:40 INFO  : 'fpga -state' command is executed.
+18:45:40 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+18:45:40 INFO  : Jtag cable 'Digilent JTAG-HS2 210249A0D0C2' is selected.
+18:45:40 INFO  : 'jtag frequency' command is executed.
+18:45:43 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
+18:45:43 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+targets -set -nocase -filter {name =~"APU*"}
+----------------End of Script----------------
+
+18:45:43 ERROR : no targets found with "name =~"APU*"". available targets:
+  1  DAP (Cannot open JTAG port: AP transaction error, DAP status 0x30000021)
+  2* xc7z020
+     3  Legacy Debug Hub
