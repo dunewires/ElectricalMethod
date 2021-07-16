@@ -1373,12 +1373,12 @@ class MainWindow(qtw.QMainWindow):
     def startScan(self):
         #need to create dictionaries in this thread to actually update inputs and files
 
-        measuredBy = self.measuredByLineEdit.text()
-        configStage = self.configStageComboBox.currentText()
-        configApaUuid = self.configApaUuid.text()
-        configLayer = self.configLayerComboBox.currentText()
-        configHeadboard = self.configHeadboardSpinBox.value()
-        apaSide = self.SideComboBox.currentText()
+        self.configMeasuredBy = self.measuredByLineEdit.text()
+        self.configStage = self.configStageComboBox.currentText()
+        self.configApaUuid = self.configApaUuidLineEdit.text()
+        self.configLayer = self.configLayerComboBox.currentText()
+        self.configHeadboard = self.configHeadboardSpinBox.value()
+        self.configApaSide = self.SideComboBox.currentText()
 
         advFss = self.advFssLineEdit.text() # Freq step size
         advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
@@ -1396,13 +1396,13 @@ class MainWindow(qtw.QMainWindow):
         if advAmplitude: advAmplitude = float(advAmplitude)
         else: pass
 
-        channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
+        channelGroups = channel_map.channel_groupings(self.configLayer, self.configHeadboard)
         scanListText = ""
         scanNum = 1
         
         for channels in channelGroups:
 
-            self.range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
+            self.range_data = channel_frequencies.get_range_data_for_channels(self.configLayer, channels)
 
             logging.info("channels")
             logging.info(channels)
@@ -1424,7 +1424,7 @@ class MainWindow(qtw.QMainWindow):
                 
                 if advFss: fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
                 else: pass
-                fpgaConfig.update(config_generator.configure_relays(configLayer,channels))
+                fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
 
                 fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
                 fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
@@ -1445,7 +1445,7 @@ class MainWindow(qtw.QMainWindow):
                 else: pass
 
                 fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
-                fpgaConfig.update(config_generator.configure_relays(configLayer, channels))
+                fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
                 fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
                 
                 logging.info("fpgaConfig")
@@ -1454,11 +1454,11 @@ class MainWindow(qtw.QMainWindow):
                 #sorting apa channels list to follow increasing order of dwa channels
                 dwaChannels = []
                 for i in range(0,len(channels)):
-                    dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(configLayer, channels[i]))))
+                    dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
                 apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
 
-                dataConfig = {"channels": apaChannels, "wires": wires, "measuredBy": measuredBy, "stage": configStage, "apaUuid": configApaUuid, 
-                "layer": configLayer, "headboardNum": configHeadboard, "side": apaSide}
+                dataConfig = {"channels": apaChannels, "wires": wires, "measuredBy": self.ConfigMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+                "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
 
                 self._loadDaqConfig()
 
@@ -1493,13 +1493,6 @@ class MainWindow(qtw.QMainWindow):
                         self.makeScanOutputDir()
                         logging.info("scanrundatadir"+self.scanRunDataDir)
                         config_generator.write_config(self.combinedConfig, 'dwaConfig_'+str(i+1)+'.ini', self.scanRunDataDir) #self.configFileDir
-
-
-                logging.info("Configuring scans")
-                logging.info(measuredBy)
-                logging.info(configStage)
-                logging.info(configHeadboard)
-                logging.info(configHeadboard*2)
 
 
         logging.info(channelGroups)
