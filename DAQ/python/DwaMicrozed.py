@@ -58,7 +58,9 @@ class DwaMicrozed():
         try:
             # FIXME: should we use socket.SOCK_DGRAM instead of SOCK_STREAM?
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM )
+            self.sock.setblocking(True)  # default should be blocking...
             self.sock.settimeout(self.timeout)
+            #self.sock.settimeout(None)
         except socket.error:
             print("Failed to create socket")
             self.sock = None
@@ -369,11 +371,14 @@ class DwaMicrozed():
         self._tcpClose()
 
     def readValue(self, address):
+        print("====readValue")
         self._tcpOpen()
-        self._regRead(address)
-        out = self._recvTimeout()
+        print("====_regRead")
+        val = self._regRead(address)
+        print(f"val = {val}")
+        print("====_tcpClose()")
         self._tcpClose()
-        return out
+        return val
         
     def _regComm(self, payload_header='abcd1234', payload_type=None, 
                    address=None, value=None):
@@ -418,13 +423,14 @@ class DwaMicrozed():
         
         #get reply and print
         if payload_type != 'FE170003':
-            print(self._recvTimeout(timeout=2))
+            #print(self._recvTimeout(timeout=2))
+            return self._recvTimeout(timeout=2)
         
     
     def _regRead(self, address):
         print(f'self.sock = {self.sock}')
-        self._regComm(payload_header='abcd1234', payload_type='FE170001',
-                   address=address)
+        return self._regComm(payload_header='abcd1234', payload_type='FE170001',
+                             address=address)
     
     def _recvTimeout(self, timeout=2):
         # FIXME: there is not actually a timeout!!!!

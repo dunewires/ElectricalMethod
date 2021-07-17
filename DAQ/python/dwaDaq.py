@@ -363,7 +363,6 @@ class MainWindow(qtw.QMainWindow):
 
         self.scanCtrlButtons = [self.btnScanCtrl, self.btnScanCtrlAdv]
         self.scanType = None
-        self.connectedToUzed = False
         self._scanButtonDisable()
         self._setScanButtonAction('START')
         self.interScanDelay = INTER_SCAN_DELAY_SEC
@@ -745,7 +744,7 @@ class MainWindow(qtw.QMainWindow):
         udpbuffsize = self.sock.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
         print(f"New UDP recv buffer size [bytes]:     {udpbuffsize}")
         #
-        self.sock.bind( self.udpServerAddressPort ) # this is required
+        self.sock.bind( self.udpServerAddressPort ) # this is required on OSX...
         #self.sock.settimeout(self.udpTimeoutSec)    # if no new data comes from server, quit
         #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: this is not necessary
         
@@ -777,19 +776,33 @@ class MainWindow(qtw.QMainWindow):
             print(f"setting client_IP to {self.daqConfig['client_IP']}")
             self.uz.setUdpAddress(self.daqConfig['client_IP'])
         
-        self.connectedToUzed = True  # FIXME: should actively verify that the connection worked...
+        self.clientIp_val.setText(self.daqConfig['client_IP'])
+        self.dwaIp_val.setText(self.daqConfig['DWA_IP'])
+
+
+        # Try reading date code from uzed as a way to confirm connection
+        try:
+            # Read date code (0x13)
+            out = self.uz.readValue('00000013')  # Firmware date code (YYMMDD)
+            dateCodeYYMMDD = '{:06x}'.format(out[-1])
+            print(f"Firmware date code [YYMMDD] = {dateCodeYYMMDD}")
+            self.connectedToUzed = True 
+        except:
+            self.connectedToUzed = False
+            print("could not connect to the microzed...")
         
         if self.connectedToUzed:
             self.btnDwaConnect.setText("Re-connect")
-            # FIXME: READ THESE VALUES FROM THE UZED!
-            self.clientIp_val.setText(self.daqConfig['client_IP'])
-            self.dwaIp_val.setText(self.daqConfig['DWA_IP'])
-            # ALSO GET FIRMWARE VERSION AND DATE CODE AND SERIAL NUMBER...
+            self.dwaFirmwareDate_val.setText(dateCodeYYMMDD)
             self.enableScanButtonTemp = True
-
-        # TRY READING SOMETHING (fails)
-        #out = self.uz.readValue('00000035')
-        #print(out)
+        
+        #out = self.uz.readValue('00000012')  # Firmware date code (HHMMSS)
+        #print(f"Firmware date code [HHMMSS] = {hex(out[-1])}")
+        # Read status frame period (0x35)
+        out = self.uz.readValue('00000035') 
+        print(out)
+        statusFramePeriod_str = '{:.1f} s'.format(out[-1]*2.56e-6)
+        self.statusFramePeriod_val.setText(statusFramePeriod_str)
             
     def _initResonanceFitLines(self):
         self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
