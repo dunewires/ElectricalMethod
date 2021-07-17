@@ -114,7 +114,7 @@ STIM_VIEW_OFFSET = 0
 UDP_RECV_BUF_SIZE = 2**20 # Bytes (2**20 Bytes is ~1MB)
 #
 N_DWA_CHANS = 8
-INTER_SCAN_DELAY_SEC = 5  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
+INTER_SCAN_DELAY_SEC = 2  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
 
 # DEBUGGING FLAGS
 AUTO_CHANGE_TAB = False # False for debugging
