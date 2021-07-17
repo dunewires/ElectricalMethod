@@ -19,6 +19,7 @@ class DwaMicrozed():
         self.ip = ip
         self.port = PORT
         self.sock = None
+        self.timeout = 2.0 # seconds
         self.sleepPostWrite = 0.05  # seconds
         self.sleepPostOpen = 0.2   # seconds
         self.closeTcpWhenDone = False
@@ -55,8 +56,9 @@ class DwaMicrozed():
             self.closeTcpWhenDone = True
         
         try:
-            # FIXME: should we ue socket.SOCK_DGRAM instead of SOCK_STREAM?
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # FIXME: should we use socket.SOCK_DGRAM instead of SOCK_STREAM?
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM )
+            self.sock.settimeout(self.timeout)
         except socket.error:
             print("Failed to create socket")
             self.sock = None
@@ -68,6 +70,7 @@ class DwaMicrozed():
                 print("  self.sock.connect: ")
                 print(f"   self.ip   = {self.ip}")
                 print(f"   self.port = {self.port}")
+                print(f"   self.sock.gettimeout() = {self.sock.gettimeout()}")
             self.sock.connect( (self.ip, self.port) )
         except socket.gaierror:
             print("Hostname could not be resolved. Exiting")
