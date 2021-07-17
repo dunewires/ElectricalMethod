@@ -1,17 +1,19 @@
 # FIXME/TODO:
-# * after scan ends, update the V(t) plots with the last set of data
-# * after all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
-# * the "Wires" column in the AUTO scan confit table should just list the numbers, not an array of strings...
-#   and should be left-justified
-# * When starting  scan, the Start Scan button should stay disabled until a non IDLE state is seen
-#   and when non-IDLE state is seen, the button should be enabled and be for "Abort"
+# * AUTO-SCAN items
+#   + Disable "Start next scan" button until user has "configured scan list"
+#   + After all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
+#   + Suggestion: the "Wires" column in the AUTO scan confit table should just list the numbers, not an array of strings...
+#     and should be left-justified
+#   + "All wires" and "Single wire" should be in the same "radio group" and
+#   + also search "BUG:" for a couple other things
+# * on "Connect"
+#   + verify connection by reading something from the FPGA
+#   + get FPGA datecode and display in GUI (Issue #23)
 # * remove self.oldDataFormat -- it's not actually used (is it?)
-# * on "Connect" get FPGA datecode and display in GUI (Issue #23)
+# * after scan ends, update the V(t) plots with the last set of data
 # * Update GUI process to protect against missing end of run frame.
 #   Can listen for STATUS frame. If DAQ things a run is active but then sees STATUS=IDLE,
 #   then trigger end of run sequence
-# * Disable "Start next scan" button until user has "configured scan list"
-# * "All wires" and "Single wire" should be in the same "radio group" and
 #   the wire number spinBox should be disabled unless "Single Wire" is selected
 # * When clicking to add f0 line -- use "hover" width for tolerance (instead of a hardcoded # of pixels)
 #   or just check to see if any of the InfiniteLines are in "hover" mode. If so, don't add a new line
@@ -20,9 +22,6 @@
 # * Update plot title to list file root YYYYMMDDTHHMMSS
 # * Print GUI software version in title bar
 # * Can't close window without killing process on linux...
-# * base end-of-run on STATUS frame?  or on end-of-run frame?
-# * Update human parsing of frequency (fixed point now...)
-# * Status frame parsing/displaying...
 # * Force "Windows style" tabs on mac
 # * Add axis labels to plots
 # * resonance lines could use "span" keyword to draw only the part of the plot that is in the peak
@@ -48,8 +47,6 @@
 
 # for logging info:
 # https://fangpenlin.com/posts/2012/08/26/good-logging-practice-in-python/
-
-AUTO_CHANGE_TAB = False # False for debugging
 
 import faulthandler   # helps debug segfaults
 faulthandler.enable()
@@ -97,9 +94,6 @@ import channel_map
 import channel_frequencies
 import ChannelMapping
 
-
-GUI_Y_OFFSET = 0 #FIXME: remove this!
-
 DWA_DAQ_VERSION = "X.X.X"
 #
 DWA_CONFIG_FILE = "dwaConfigWC.ini"
@@ -120,11 +114,15 @@ STIM_VIEW_OFFSET = 0
 UDP_RECV_BUF_SIZE = 2**20 # Bytes (2**20 Bytes is ~1MB)
 #
 N_DWA_CHANS = 8
-INTER_SCAN_DELAY_SEC = 5  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
+INTER_SCAN_DELAY_SEC = 2  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
+
+# DEBUGGING FLAGS
+AUTO_CHANGE_TAB = False # False for debugging
+GUI_Y_OFFSET = 0 #FIXME: remove this!
 
 # FIXME: these should go in DwaDataParser.py
-RUN_START = 1
-RUN_END = 0
+SCAN_START = 1
+SCAN_END = 0
 
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
@@ -365,10 +363,13 @@ class MainWindow(qtw.QMainWindow):
 
         self.scanCtrlButtons = [self.btnScanCtrl, self.btnScanCtrlAdv]
         self.scanType = None
-        self.talkingToUzed = False
         self.connectedToUzed = False
         self._scanButtonDisable()
+        self._setScanButtonAction('START')
         self.interScanDelay = INTER_SCAN_DELAY_SEC
+
+        # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
+        self.enableScanButtonTemp = False
         
         ####self.logTextBox = QTextEditLogger(self.page_logging)
         self.logTextBox.appendPlainText("log viewing not yet implemented")
@@ -777,12 +778,18 @@ class MainWindow(qtw.QMainWindow):
             self.uz.setUdpAddress(self.daqConfig['client_IP'])
         
         self.connectedToUzed = True  # FIXME: should actively verify that the connection worked...
+        
         if self.connectedToUzed:
             self.btnDwaConnect.setText("Re-connect")
             # FIXME: READ THESE VALUES FROM THE UZED!
             self.clientIp_val.setText(self.daqConfig['client_IP'])
             self.dwaIp_val.setText(self.daqConfig['DWA_IP'])
             # ALSO GET FIRMWARE VERSION AND DATE CODE AND SERIAL NUMBER...
+            self.enableScanButtonTemp = True
+
+        # TRY READING SOMETHING (fails)
+        #out = self.uz.readValue('00000035')
+        #print(out)
             
     def _initResonanceFitLines(self):
         self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
@@ -983,13 +990,9 @@ class MainWindow(qtw.QMainWindow):
 
     def startScanThreadComplete(self):
         print("startScanThread complete!")
-        self.talkingToUzed = False
-        self._scanButtonEnable()
         
     def startScanAdvThreadComplete(self):
         print("startScanAdvThread complete!")
-        self.talkingToUzed = False
-        self._scanButtonEnable()
 
     def _makeDummyData(self):
         # V(t)
@@ -1295,8 +1298,9 @@ class MainWindow(qtw.QMainWindow):
             
         print("User has requested a new AUTO scan (DWA is IDLE")
         self.scanType = ScanType.AUTO
-        self.talkingToUzed = True
+
         self._scanButtonDisable()
+        self._setScanButtonAction('ABORT')
 
         # BUG: user can click Start Scan even before configuring a scan.
         # FIX: don't enable the Start Scan button until configuring has been done
@@ -1324,8 +1328,9 @@ class MainWindow(qtw.QMainWindow):
             
         print("User has requested a new CUSTOM scan (DWA is IDLE")
         self.scanType = ScanType.CUSTOM
-        self.talkingToUzed = True
+
         self._scanButtonDisable()
+        self._setScanButtonAction('ABORT')
 
         # Pass the function to execute
         worker = Worker(self.startScanAdv)  # could pass args/kwargs too..
@@ -2251,14 +2256,6 @@ class MainWindow(qtw.QMainWindow):
                 # Write the raw udp payload to file
                 self._logRawUdpTransmissionToFile(dataStrings)
 
-                # FIXME: THIS EVENTUALLY GOES AWAY
-                # Currently it's a kluge to handle the case where DWA transmission
-                # contains the old-style (and now non-standard) header lines...
-                #while not dataStrings[0].startswith("AAAA"):
-                #    if self.verbose > 0:
-                #        logger.info(f"popping udp word: {dataStrings[0]}")
-                #    dataStrings.pop(0)
-
                 if self.verbose > 0:
                     print("dataStrings = ")
                     print(dataStrings)
@@ -2277,7 +2274,7 @@ class MainWindow(qtw.QMainWindow):
                     self.oldDataFormat = False
                     if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == None:
                         self.oldDataFormat = True
-                    if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == RUN_START or \
+                    if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == SCAN_START or \
                        self.oldDataFormat:
                         print("New run detected... creating new filenames")
                         print("runStatus = ")
@@ -2335,7 +2332,7 @@ class MainWindow(qtw.QMainWindow):
 
 
             # if start of run, set up GUI scan parameters
-            if udpDict[ddp.Frame.RUN]['runStatus'] == RUN_START:
+            if udpDict[ddp.Frame.RUN]['runStatus'] == SCAN_START:
                 # FIXME: TEMPORARY...
                 self.logger.info("\n\n\n\nFOUND RUN HEADER")
                 # update the frequency information (min, max, step)
@@ -2348,21 +2345,32 @@ class MainWindow(qtw.QMainWindow):
                 self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
 
             #if end of scan...
-            elif udpDict[ddp.Frame.RUN]['runStatus'] == RUN_END:
-                print("\n\n\n\n\n\n\n SCAN IS DONE!!!")
+            elif udpDict[ddp.Frame.RUN]['runStatus'] == SCAN_END:
+                print("\n\n SCAN IS DONE!!!")
 
                 self.saveAmplitudeData()  # do this first to avoid data loss
 
                 # FIXME: shouldn't really change button state or controller state via
                 # RUN end frame. Should only do this from STATUS frame...
+                print("\nScan button disable\n")
+                self._scanButtonDisable()
+                print("\nSet button to START\n")
                 self._setScanButtonAction('START')
-                self.dwaControllerState = State.IDLE  
+                qtc.QCoreApplication.processEvents()
+                print("\nDisable relays\n")
+                self.uz.disableAllRelays() # Break all relay connections to let charge bleed off of wires
+                print("\nStart sleep\n")
+                time.sleep(self.interScanDelay)
+                print("\nEnable button\n")
+                self._scanButtonEnable()
+                
+                self.dwaControllerState = State.IDLE
+
+                #self.disableScanButtonForTime(self.interScanDelay)  # Don't allow user to start another scan for a bit
 
                 #
                 print(f'self.scanType = {self.scanType}')
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
-                    self.disableScanButtonForTime(self.interScanDelay)  # Don't allow user to start another scan for a bit
-                    self.uz.disableAllRelays() # Break all relay connections to let charge bleed off of wires
 
                     # BUG: if a user selects a different radio button during a scan this will fail!
                     # Should keep track of which radio button was selected at the time the scan was initiated
@@ -2450,17 +2458,21 @@ class MainWindow(qtw.QMainWindow):
                     
         # Look for STATUS frame
         if ddp.Frame.STATUS in udpDict:
-            self.outputText.appendPlainText("\nFOUND STATUS FRAME:")
-            self.outputText.appendPlainText(str(udpDict[ddp.Frame.STATUS]))
-            print(f"\n FOUND STATUS FRAME {datetime.datetime.now()}")
-            print(udpDict[ddp.Frame.STATUS])
+            if self.verbose > 1:
+                self.outputText.appendPlainText("\nFOUND STATUS FRAME:")
+                self.outputText.appendPlainText(str(udpDict[ddp.Frame.STATUS]))
+                print(f"\n FOUND STATUS FRAME {datetime.datetime.now()}")
+                print(udpDict[ddp.Frame.STATUS])
 
             self.dwaControllerState = udpDict[ddp.Frame.STATUS]['controllerState']
-            self._scanButtonEnable()
-            buttonState = 'START' if self.dwaControllerState == State.IDLE else 'ABORT'
-            print(f"buttonState = {buttonState}")
-            self._setScanButtonAction(state=buttonState)
-            
+
+            if self.dwaControllerState != State.IDLE:
+                self._scanButtonEnable()
+                
+            if self.enableScanButtonTemp and (self.dwaControllerState == State.IDLE):
+                self.enableScanButtonTemp = False
+                self._scanButtonEnable()
+                
             self.dwaControllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerStateStr']}")
             self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")
             self.buttonStatus_val.setText(f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
@@ -2472,7 +2484,8 @@ class MainWindow(qtw.QMainWindow):
         # should check if the timer has expired before enabling...
         print(f"\n\n\nDISABLE BUTTON FOR {disableDuration} seconds\n\n\n")
         self._scanButtonDisable()
-        qtc.QTimer.singleShot(disableDuration*1000, lambda: self.btnScanCtrl.setEnabled(True))
+        qtc.QTimer.singleShot(disableDuration*1000, self._scanButtonEnable)
+        #qtc.QTimer.singleShot(disableDuration*1000, lambda: self.btnScanCtrl.setEnabled(True))
         #qtc.QTimer.singleShot(disableDuration*1000, lambda: XXXXself.targetBtn.setDisabled(False)XXXX)
 
     def _setScanButtonAction(self, state=None):
@@ -2498,6 +2511,9 @@ class MainWindow(qtw.QMainWindow):
             print("HUH? should never get here...")
             return
 
+        for scb in self.scanCtrlButtons:
+            scb.repaint()
+        
         self._scanButtonConnect(state)
         
     def _scanButtonConnect(self, state):
@@ -2518,9 +2534,8 @@ class MainWindow(qtw.QMainWindow):
         self._scanButtonEnable(state=False)
             
     def _scanButtonEnable(self, state=True):
-        if (self.connectedToUzed and not self.talkingToUzed) or state==False:
-            for scb in self.scanCtrlButtons:
-                scb.setEnabled(state)
+        for scb in self.scanCtrlButtons:
+            scb.setEnabled(state)
             
     def updateAmplitudePlots(self):
         # This should only update the plots on the STIMULUS tab
