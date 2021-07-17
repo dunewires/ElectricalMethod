@@ -784,7 +784,7 @@ class MainWindow(qtw.QMainWindow):
         try:
             # Read date code (0x13)
             out = self.uz.readValue('00000013')  # Firmware date code (YYMMDD)
-            dateCodeYYMMDD = '{:06x}'.format(out[-1])
+            dateCodeYYMMDD = '{:06X}'.format(out[-1])
             print(f"Firmware date code [YYMMDD] = {dateCodeYYMMDD}")
             self.connectedToUzed = True 
         except:
@@ -798,11 +798,19 @@ class MainWindow(qtw.QMainWindow):
         
         #out = self.uz.readValue('00000012')  # Firmware date code (HHMMSS)
         #print(f"Firmware date code [HHMMSS] = {hex(out[-1])}")
+
         # Read status frame period (0x35)
         out = self.uz.readValue('00000035') 
         print(out)
         statusFramePeriod_str = '{:.1f} s'.format(out[-1]*2.56e-6)
         self.statusFramePeriod_val.setText(statusFramePeriod_str)
+
+
+        # Read DWA serial number
+        out = self.uz.readValue('00000030')
+        print(out)
+        dwaSerialNumber_str = '{:06X}'.format(out[-1])
+        self.dwaSerialNumber_val.setText(dwaSerialNumber_str)
             
     def _initResonanceFitLines(self):
         self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
