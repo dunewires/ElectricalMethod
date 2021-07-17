@@ -269,6 +269,14 @@ def cull_range_data(reduced_range_data, thresh = 1000.):
             rangeData["wires"] = sorted(rangeData["wires"])
             culled_range_data.append(rangeData)
     return culled_range_data
+
+def append_channel_info(culled_range_data, channel_numbers):
+    """Adds the list of channels to each range_data dictionary"""
+    range_data_with_channel_info = []
+    for rangeData in culled_range_data:
+        rangeData["channels"] = channel_numbers
+        range_data_with_channel_info.append(rangeData)
+    return range_data_with_channel_info
         
 def get_range_data_for_channels(wire_layer: str, channel_numbers: list, range_radius = 0.15):
     """
@@ -278,4 +286,5 @@ def get_range_data_for_channels(wire_layer: str, channel_numbers: list, range_ra
     range_data = wire_range_data(wire_freq_data, range_radius)
     reduced_range_data = reduce_range_data(range_data)
     culled_range_data = cull_range_data(reduced_range_data)
-    return culled_range_data
+    range_data_with_channel_info = append_channel_info(culled_range_data, channel_numbers)
+    return range_data_with_channel_info

@@ -904,22 +904,6 @@ class MainWindow(qtw.QMainWindow):
                 scanNum = scanNum + 1
 
         self.radioBtns[0].setChecked(True)
-        # MERGE: should the following lines be here or not???
-        #        #Add a scan row here 
-        #
-        #self.configNextScanComboBox.clear()
-        #for i in range(1, scanNum):
-        #    self.configNextScanComboBox.addItem(str(i))
-        #
-        #logging.info("Configuring scans")
-        #logging.info(self.measuredBy)
-        #logging.info(self.configStage)
-        #logging.info(self.configHeadboard)
-        #logging.info(self.configHeadboard*2)
-        #
-        #
-        #logging.info(channelGroups)
-        ##self.configScanListTextEdit.setPlainText(scanListText)
 
     def _configurePlots(self):
         self.chanViewMain = 0  # which channel to show large for V(t) data
@@ -1378,113 +1362,80 @@ class MainWindow(qtw.QMainWindow):
         if advAmplitude: advAmplitude = float(advAmplitude)
         else: pass
 
-        channelGroups = channel_map.channel_groupings(self.configLayer, self.configHeadboard)
-        scanListText = ""
-        scanNum = 1
+        scanIndex = -1
         for i, btn in enumerate(self.radioBtns):
             if btn.isChecked():
-                scanNum = i
+                scanIndex = i
+        if scanIndex < 0: return
+
+        rd = self.range_data_list[i]
+        wires = rd["wires"]
+        channels = rd["channels"]
+        self.freqMin = float(rd["range"][0])
+        self.freqMax = float(rd["range"][1])
+        logging.info("freqMin")
+        logging.info(self.freqMin*16)
+        wires.sort(key = int)
+
+        fpgaConfig = config_generator.configure_default()
         
-        for channels in channelGroups:
+        if advFss: fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
+        else: pass
+        fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
 
-            self.range_data = channel_frequencies.get_range_data_for_channels(self.configLayer, channels)
+        fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
+        fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
+        fpgaConfig.update(config_generator.configure_fixed_frequency())
 
-            logging.info("channels")
-            logging.info(channels)
-            for rd in self.range_data:
-                logging.info("rd")
-                logging.info(rd)
-                wires = rd["wires"]
-                self.freqMin = float(rd["range"][0])
-                self.freqMax = float(rd["range"][1])
-                logging.info("freqMin")
-                logging.info(self.freqMin*16)
-                wires.sort(key = int)
-                scanListText = scanListText + str(scanNum) + "." + ", ".join(wires) + " (" + str(self.freqMin) + ", " + str(self.freqMax) + ")\n"
-                # XYZ
+        if advInitDelay: 
+            if advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
+            else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
+        elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advStimTime))
+        else: pass
 
-                #defaultConfig = dcf.DwaConfigFile("dwaConfig.ini")
+        if advAmplitude: 
+            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, stim_mag=int(advAmplitude)))
+        else: pass
 
-                fpgaConfig = config_generator.configure_default()
-                
-                if advFss: fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
-                else: pass
-                fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
+        fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
+        fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
+        fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
+        
+        logging.info("fpgaConfig")
+        logging.info(fpgaConfig)
 
-                fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
-                fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
-                fpgaConfig.update(config_generator.configure_fixed_frequency())
+        #sorting apa channels list to follow increasing order of dwa channels
+        dwaChannels = []
+        for i in range(0,len(channels)):
+            dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
+        apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
 
-                logging.info("advInitDelay")
-                logging.info(advInitDelay)
-                logging.info("advStimTime")
-                logging.info(advStimTime)
-                if advInitDelay: 
-                    if advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
-                    else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
-                elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advStimTime))
-                else: pass
+        dataConfig = {"channels": apaChannels, "wires": wires, "measuredBy": self.ConfigMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+        "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
 
-                if advAmplitude: 
-                    fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, stim_mag=int(advAmplitude)))
-                else: pass
+        self._loadDaqConfig()
 
-                fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
-                fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
-                fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
-                
-                logging.info("fpgaConfig")
-                logging.info(fpgaConfig)
+        self.combinedConfig = {"FPGA": fpgaConfig, "Database": dataConfig, "DAQ": self.daqConfig}
 
-                #sorting apa channels list to follow increasing order of dwa channels
-                dwaChannels = []
-                for i in range(0,len(channels)):
-                    dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
-                apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
+        
+        self.freqMax = float(self.scanTable.item(scanIndex+1, 4).text())
+        fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
+        if advFss: 
+            fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
+        else: 
+            fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax))
 
-                dataConfig = {"channels": apaChannels, "wires": wires, "measuredBy": self.ConfigMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
-                "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
+        self.freqMin = float(self.scanTable.item(scanIndex+1, 3).text())
+        fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
+        if advFss: 
+            fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
+        else: 
+            fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax))
 
-                self._loadDaqConfig()
-
-                self.combinedConfig = {"FPGA": fpgaConfig, "Database": dataConfig, "DAQ": self.daqConfig}
-
-                scanNum = scanNum + 1
-
-                for i, btn in enumerate(self.radioBtns):
-                    if btn.isChecked():
-                        if not self.freqMaxBox[i] == float(self.scanTable.item(i, 4).text()):
-                            self.freqMaxBox[i] = float(self.scanTable.item(i, 4).text())
-                            self.freqMax = float(self.scanTable.item(i, 4).text())
-                            fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
-                            if advFss: 
-                                fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
-                            else: 
-                                fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax))
-                        if not self.freqMinBox[i] == float(self.scanTable.item(i, 3).text()):
-                            self.freqMinBox[i] = float(self.scanTable.item(i, 3).text())
-                            self.freqMin = float(self.scanTable.item(i, 3).text())
-                            fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
-                            if advFss: 
-                                fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
-                            else: 
-                                fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax))
-                    else:
-                        #logging.info("Row "+str(i)+"has not been selected")
-                        pass
-                for i, btn in enumerate(self.radioBtns):
-                    if btn.isChecked() and i == scanNum-2:
-                        #no longer need try method because there should never be two files with the same name
-                        self.makeScanOutputDir()
-                        logging.info("scanrundatadir"+self.scanRunDataDir)
-                        config_generator.write_config(self.combinedConfig, 'dwaConfig_'+str(i+1)+'.ini', self.scanRunDataDir) #self.configFileDir
-
-
-        logging.info(channelGroups)
-                        
-        for i, btn in enumerate(self.radioBtns):
-            if btn.isChecked():
-                self.configFile = os.path.join(OUTPUT_DIR_CONFIG, "dwaConfig_"+str(i+1)+".ini")
+        self.makeScanOutputDir()
+        logging.info("scanrundatadir"+self.scanRunDataDir)
+        config_generator.write_config(self.combinedConfig, 'dwaConfig.ini', self.scanRunDataDir) #self.configFileDir
+        self.configFile = os.path.join(OUTPUT_DIR_CONFIG, "dwaConfig.ini")
 
         self.runScan()
 
