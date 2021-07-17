@@ -96,7 +96,7 @@ import ChannelMapping
 
 DWA_DAQ_VERSION = "X.X.X"
 #
-DWA_CONFIG_FILE = "dwaConfigWCLab.ini"
+DWA_CONFIG_FILE = "dwaConfigWC.ini"
 #DWA_CONFIG_FILE = "config/dwaConfigShortScan.ini"
 #DWA_CONFIG_FILE = "config/dwaConfig_SP.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
@@ -117,7 +117,7 @@ N_DWA_CHANS = 8
 INTER_SCAN_DELAY_SEC = 5  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
 
 # DEBUGGING FLAGS
-AUTO_CHANGE_TAB = True # False for debugging
+AUTO_CHANGE_TAB = False # False for debugging
 GUI_Y_OFFSET = 0 #FIXME: remove this!
 
 # FIXME: these should go in DwaDataParser.py
@@ -2323,14 +2323,6 @@ class MainWindow(qtw.QMainWindow):
                 # Write the raw udp payload to file
                 self._logRawUdpTransmissionToFile(dataStrings)
 
-                # FIXME: THIS EVENTUALLY GOES AWAY
-                # Currently it's a kluge to handle the case where DWA transmission
-                # contains the old-style (and now non-standard) header lines...
-                #while not dataStrings[0].startswith("AAAA"):
-                #    if self.verbose > 0:
-                #        logger.info(f"popping udp word: {dataStrings[0]}")
-                #    dataStrings.pop(0)
-
                 if self.verbose > 0:
                     print("dataStrings = ")
                     print(dataStrings)
@@ -2421,20 +2413,31 @@ class MainWindow(qtw.QMainWindow):
 
             #if end of scan...
             elif udpDict[ddp.Frame.RUN]['runStatus'] == SCAN_END:
-                print("\n\n\n\n\n\n\n SCAN IS DONE!!!")
+                print("\n\n SCAN IS DONE!!!")
 
                 self.saveAmplitudeData()  # do this first to avoid data loss
 
                 # FIXME: shouldn't really change button state or controller state via
                 # RUN end frame. Should only do this from STATUS frame...
+                print("\nScan button disable\n")
+                self._scanButtonDisable()
+                print("\nSet button to START\n")
                 self._setScanButtonAction('START')
-                self.dwaControllerState = State.IDLE  
+                qtc.QCoreApplication.processEvents()
+                print("\nDisable relays\n")
+                self.uz.disableAllRelays() # Break all relay connections to let charge bleed off of wires
+                print("\nStart sleep\n")
+                time.sleep(self.interScanDelay)
+                print("\nEnable button\n")
+                self._scanButtonEnable()
+                
+                self.dwaControllerState = State.IDLE
+
                 #self.disableScanButtonForTime(self.interScanDelay)  # Don't allow user to start another scan for a bit
 
                 #
                 print(f'self.scanType = {self.scanType}')
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
-                    self.uz.disableAllRelays() # Break all relay connections to let charge bleed off of wires
 
                     # BUG: if a user selects a different radio button during a scan this will fail!
                     # Should keep track of which radio button was selected at the time the scan was initiated
@@ -2522,10 +2525,11 @@ class MainWindow(qtw.QMainWindow):
                     
         # Look for STATUS frame
         if ddp.Frame.STATUS in udpDict:
-            self.outputText.appendPlainText("\nFOUND STATUS FRAME:")
-            self.outputText.appendPlainText(str(udpDict[ddp.Frame.STATUS]))
-            print(f"\n FOUND STATUS FRAME {datetime.datetime.now()}")
-            print(udpDict[ddp.Frame.STATUS])
+            if self.verbose > 1:
+                self.outputText.appendPlainText("\nFOUND STATUS FRAME:")
+                self.outputText.appendPlainText(str(udpDict[ddp.Frame.STATUS]))
+                print(f"\n FOUND STATUS FRAME {datetime.datetime.now()}")
+                print(udpDict[ddp.Frame.STATUS])
 
             self.dwaControllerState = udpDict[ddp.Frame.STATUS]['controllerState']
 

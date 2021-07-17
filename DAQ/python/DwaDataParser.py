@@ -308,7 +308,7 @@ class DwaDataParser():
         # e.g.  0x000460 corresponds to 4.375 Hz (0x0004 --> 4Hz and 0x60 --> 0.375Hz)
         hexBase = 16
         freqHz = int(infoLine[2:6], hexBase) + int(infoLine[6:], hexBase)/256.
-        print(f'\n\n Parsing stimFreqLine: hexkey, freqHz = {infoLine}, {infoLine[2:6]}, {infoLine[6:]}, {freqHz}')
+        #print(f'\n\n Parsing stimFreqLine: hexkey, freqHz = {infoLine}, {infoLine[2:6]}, {infoLine[6:]}, {freqHz}')
         return freqHz
         
     def _parseUnknownInfoLine(self, infoLine):
@@ -419,15 +419,15 @@ class DwaDataParser():
         dd['adcSamplingPeriod_sec'] = dd['adcSamplingPeriod']*1e-8
 
         if 'stimPeriodActive_MSb' in dd:    # Now we use a 78ps clock            
-            print("found new stimFreq")
-            print(f"dd['stimPeriodActive_MSb'] = {dd['stimPeriodActive_MSb']}")
-            print(f"dd['stimPeriodActive_LSb'] = {dd['stimPeriodActive_LSb']}")
+            #print("found new stimFreq")
+            #print(f"dd['stimPeriodActive_MSb'] = {dd['stimPeriodActive_MSb']}")
+            #print(f"dd['stimPeriodActive_LSb'] = {dd['stimPeriodActive_LSb']}")
             # make the period
             # compute the frequency in Hz
             dd['stimPeriodActive'] = (dd['stimPeriodActive_MSb'] << 16) + dd['stimPeriodActive_LSb']
             #dd['stimFreqActive_Hz'] = (1e9/dd['stimPeriodActive'])/2.5 # convert period in 2.5ns to freq in Hz
             dd['stimFreqActive_Hz'] = (1e12/dd['stimPeriodActive'])/78.0 # convert period in 78ps to freq in Hz
-            print(f"dd['stimFreqActive_Hz'] = {dd['stimFreqActive_Hz']}")
+            #print(f"dd['stimFreqActive_Hz'] = {dd['stimFreqActive_Hz']}")
         else:  # but originally, we used a 10ns clock
             dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodActiveOld'] # convert period in 10ns to freq in Hz
             
