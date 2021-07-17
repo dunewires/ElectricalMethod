@@ -849,79 +849,61 @@ class MainWindow(qtw.QMainWindow):
         configHeadboard = self.configHeadboardSpinBox.value()
 
         channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
-        scanListText = ""
         scanNum = 1
         self.radioBtns = [] #list of radio button names 
         self.freqMinBox = [] 
         self.freqMaxBox = [] #these are lists to hold the boxes for these values in the table, that way they can be looped later on
-        
+        self.range_data_list = []
+
         for channels in channelGroups:
-
-            self.range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
-
-            logging.info("channels")
-            logging.info(channels)
-            for rd in self.range_data:
-                logging.info("rd")
-                logging.info(rd)
+            range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
+            for rd in range_data:
+                self.range_data_list.append(rd)
                 wires = rd["wires"]
-                self.freqMin = float(rd["range"][0])
-                self.freqMax = float(rd["range"][1])
-                logging.info("freqMin")
-                logging.info(self.freqMin*16)
+                freqMin = float(rd["range"][0])
+                freqMax = float(rd["range"][1])
                 wires.sort(key = int)
-
-                scanListText = scanListText + str(scanNum) + "." + ", ".join(wires) + " (" + str(self.freqMin) + ", " + str(self.freqMax) + ")\n"
-                
-                scanNum = scanNum + 1
-
                 #table with scan details
-                self.scanTable.setRowCount(scanNum-1)
+                self.scanTable.setRowCount(scanNum)
                 item = qtw.QTableWidgetItem()
-                self.scanTable.setVerticalHeaderItem(scanNum-2, item)
+                self.scanTable.setVerticalHeaderItem(scanNum-1, item)
                 #select column...Radio buttons
                 item = qtw.QTableWidgetItem()
-                self.scanTable.setItem(scanNum-2, 0, item)
+                self.scanTable.setItem(scanNum-1, 0, item)
                 item = qtw.QRadioButton(self.scanTable)
-                self.scanTable.setCellWidget(scanNum-2, 0, item)
+                self.scanTable.setCellWidget(scanNum-1, 0, item)
                 self.radioBtns.append(item)
-                #this creates the whole list of buttons and the following replaces the first button with a new one, which is auto selected
-                item = qtw.QRadioButton(self.scanTable)
-                self.scanTable.setCellWidget(0, 0, item)
-                item.setChecked(True)
-                self.radioBtns[0]=item #replaces the first item in the list of radio buttons as the item was replaced as well
                 #run number column
                 item = qtw.QTableWidgetItem()
-                self.scanTable.setItem(scanNum-2, 1, item)
-                item = self.scanTable.item(scanNum-2, 1)
+                self.scanTable.setItem(scanNum-1, 1, item)
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
-                item.setText(qtc.QCoreApplication.translate("MainWindow", str(scanNum-1)))
+                item.setText(qtc.QCoreApplication.translate("MainWindow", str(scanNum)))
                 self.scanTable.resizeColumnsToContents() 
                 #wires column
                 item = qtw.QTableWidgetItem()
-                self.scanTable.setItem(scanNum-2, 2, item)
-                item = self.scanTable.item(scanNum-2, 2)
+                self.scanTable.setItem(scanNum-1, 2, item)
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
                 item.setText(qtc.QCoreApplication.translate("MainWindow", str(wires)))
                 self.scanTable.resizeColumnsToContents()
                 #freq min column
                 item = qtw.QTableWidgetItem()
-                self.scanTable.setItem(scanNum-2, 3, item)
-                item = self.scanTable.item(scanNum-2, 3)
+                self.scanTable.setItem(scanNum-1, 3, item)
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
-                item.setText(qtc.QCoreApplication.translate("MainWindow", str(self.freqMin)))
+                item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMin)))
                 self.scanTable.resizeColumnsToContents()
-                self.freqMinBox.append(self.freqMin)
+                self.freqMinBox.append(freqMin)
                 #freq max column
                 item = qtw.QTableWidgetItem()
-                self.scanTable.setItem(scanNum-2, 4, item)
-                item = self.scanTable.item(scanNum-2, 4)
+                self.scanTable.setItem(scanNum-1, 4, item)
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
-                item.setText(qtc.QCoreApplication.translate("MainWindow", str(self.freqMax)))
+                item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
                 self.scanTable.resizeColumnsToContents()
-                self.freqMaxBox.append(self.freqMax)
+                self.freqMaxBox.append(freqMax)
                 self.scanTable.setColumnCount(5)
 
+                scanNum = scanNum + 1
+
+        self.radioBtns[0].setChecked(True)
         # MERGE: should the following lines be here or not???
         #        #Add a scan row here 
         #
@@ -1399,6 +1381,9 @@ class MainWindow(qtw.QMainWindow):
         channelGroups = channel_map.channel_groupings(self.configLayer, self.configHeadboard)
         scanListText = ""
         scanNum = 1
+        for i, btn in enumerate(self.radioBtns):
+            if btn.isChecked():
+                scanNum = i
         
         for channels in channelGroups:
 
