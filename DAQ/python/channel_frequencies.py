@@ -1,3 +1,6 @@
+import numpy as np
+from scipy import optimize
+
 class PhysicalWire():
     """A physical wire that is soldered at both ends."""
     
@@ -288,3 +291,22 @@ def get_range_data_for_channels(wire_layer: str, channel_numbers: list, range_ra
     culled_range_data = cull_range_data(reduced_range_data)
     range_data_with_channel_info = append_channel_info(culled_range_data, channel_numbers)
     return range_data_with_channel_info
+
+def compute_tensions_from_resonances(wire_freqs_expected, freqs_measured):
+    '''Return a list of wire tensions given the expected and measured frequencies in an APA channel. The expected frequencies are to be given as a list of lists of frequencies, with each inner list corresponding to the frequencies associated to a single wire in that APA channel. The order of these inner wire lists determine the order of the returned wire tensions. The expected frequencies must only be given for frequency ranges that have been measured. The measured frequencies are to be given as an overall list of measured frequencies for that APA channel.'''
+
+    NOMINAL_TENSION = 6.5
+
+    def assignment_cost(x):
+        wire_freqs_expected_array = np.array([freq*x[i] for i, freqs in enumerate(wire_freqs_expected) for freq in freqs])
+        wire_freqs_measured_array = np.array([freq for freq in freqs_measured])
+        
+        cost_matrix = np.abs(np.subtract.outer(wire_freqs_expected_array, wire_freqs_measured_array))
+
+        row_index, col_index = optimize.linear_sum_assignment(cost_matrix)
+
+        return cost_matrix[row_index, col_index].sum()
+
+    val = optimize.dual_annealing(assignment_cost, ((0.7, 1.5),)*len(wire_freqs_expected), seed=3)
+
+    return (val.x**2 * NOMINAL_TENSION).tolist()
