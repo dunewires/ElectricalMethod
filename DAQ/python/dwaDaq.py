@@ -1,6 +1,5 @@
 # FIXME/TODO:
 # * AUTO-SCAN items
-#   + Disable "Start next scan" button until user has "configured scan list"
 #   + After all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
 #   + Suggestion: the "Wires" column in the AUTO scan confit table should just list the numbers, not an array of strings...
 #     and should be left-justified
@@ -1323,9 +1322,6 @@ class MainWindow(qtw.QMainWindow):
             self._scanButtonDisable()
             self._setScanButtonAction('ABORT')
 
-            # BUG: user can click Start Scan even before configuring a scan.
-            # FIX: don't enable the Start Scan button until configuring has been done
-            # Question: are the scan config files supposed to be written to ./config/ when user presses "Configure Scan List"?
             for i, btn in enumerate(self.radioBtns):
                 if btn.isChecked():
                     #logging.info("Changing color of row "+str(i))
@@ -2427,21 +2423,12 @@ class MainWindow(qtw.QMainWindow):
                 #
                 print(f'self.scanType = {self.scanType}')
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
-
-                    # BUG: if a user selects a different radio button during a scan this will fail!
-                    # Should keep track of which radio button was selected at the time the scan was initiated
-                    # and change the color of *that* row.
-                    for i, btn in enumerate(self.radioBtns):
-                        if btn.isChecked():
-                            #logging.info("Changing color of row "+str(i))
-                            for c in range(0, self.scanTable.columnCount()):
-                                self.scanTable.item(i,c).setBackground(qtg.QColor(3,205,0))
-                            if len(self.radioBtns)>(i+1):
+                    for c in range(0, self.scanTable.columnCount()):
+                        self.scanTable.item(self.btnNum,c).setBackground(qtg.QColor(3,205,0))
+                    if len(self.radioBtns)>(i+1):
                                 self.nextBtn = i+1
-                            else: 
-                                self.nextBtn = 0
-                        else:
-                            pass
+                    else: 
+                        self.nextBtn = 0
                     item = qtw.QRadioButton(self.scanTable)
                     self.scanTable.setCellWidget(self.nextBtn, 0, item)
                     item.setChecked(True)
@@ -2563,6 +2550,9 @@ class MainWindow(qtw.QMainWindow):
             for scb in self.scanCtrlButtons:
                 scb.setStyleSheet("background-color : red")
                 scb.setText("Abort Scan")
+                for i, btn in enumerate(self.radioBtns):
+                    if btn.isChecked(): 
+                        self.btnNum = i
         else:
             print("HUH? should never get here...")
             return
