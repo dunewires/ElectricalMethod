@@ -932,8 +932,6 @@ class MainWindow(qtw.QMainWindow):
 
         self.radioBtns[0].setChecked(True)
 
-        self.startScan()
-
     def _configurePlots(self):
         self.chanViewMain = 0  # which channel to show large for V(t) data
         self.chanViewMainAmpl = 0  # which channel to show large for A(f) data
