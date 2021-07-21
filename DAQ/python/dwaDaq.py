@@ -1368,7 +1368,7 @@ class MainWindow(qtw.QMainWindow):
 
         self.configMeasuredBy = self.measuredByLineEdit.text()
         self.configStage = self.configStageComboBox.currentText()
-        self.configApaUuid = self.configApaUuid.text()
+        self.configApaUuid = self.configApaUuidLineEdit.text()
         self.configLayer = self.configLayerComboBox.currentText()
         self.configHeadboard = self.configHeadboardSpinBox.value()
         self.configApaSide = self.SideComboBox.currentText()
@@ -1390,12 +1390,14 @@ class MainWindow(qtw.QMainWindow):
         else: pass
 
         scanIndex = -1
+        logging.info(self.radioBtns)
         for i, btn in enumerate(self.radioBtns):
+            logging.info(btn.isChecked())
             if btn.isChecked():
                 scanIndex = i
         if scanIndex < 0: return
 
-        rd = self.range_data_list[i]
+        rd = self.range_data_list[scanIndex]
         self.wires = rd["wires"]
         channels = rd["channels"]
         self.freqMin = float(rd["range"][0])
@@ -1941,30 +1943,31 @@ class MainWindow(qtw.QMainWindow):
         # Load sietch credentials #FIXME still using James's credentials
         # FIXME: values like 'measuredBy' and 'dwaUuid' etc should be pulled from the .json amplitude file
         sietch = SietchConnect("sietch.creds")
-        for ch in [1, 2, 3, 4]: # Loop over wire numbers in scan
-            resonance_result = {
-                "componentUuid":"b9fe4600-706c-11eb-93b0-6183ed4cabef",
-                "formId": "wire_resonance_measurement",
-                "formName": "Wire Resonance Measurement",
-                "data": {
-                    "versionDaq": "1.1",
-                    "dwaUuid": self.configApaUuid,
-                    "versionFirmware": "1.1",
-                    "site": "Harvard",
-                    "measuredBy": self.configMeasuredBy,
-                    "productionStage": self.configStage,
-                    "side": self.configApaSide,
-                    "layer": self.configLayer,
-                    "wires": {
-                    },
-                    "channel": {
-                        str(ch): [73.5, 84.6]
-                    },
-                    "saveAsDraft": True,
-                    "submit": True
-                },
-            }
-            dbid = sietch.api('/test',resonance_result)
+        for dwaCh, ch in enumerate(self.apaChannels): # Loop over wire numbers in scan
+            for w in self.wires:
+                wire_ch = channel_map.wire_to_apa_channel(self.configLayer, w)
+                if wire_ch == ch:
+                    resonance_result = {
+                        "componentUuid":"b9fe4600-706c-11eb-93b0-6183ed4cabef",
+                        "formId": "wire_resonance_measurement",
+                        "formName": "Wire Resonance Measurement",
+                        "data": {
+                            "versionDaq": "1.1",
+                            "dwaUuid": self.configApaUuid,
+                            "versionFirmware": "1.1",
+                            "site": "Harvard",
+                            "measuredBy": self.configMeasuredBy,
+                            "productionStage": self.configStage,
+                            "side": self.configApaSide,
+                            "layer": self.configLayer,
+                            "wires": {
+                                str(w): self.resonantFreqs[dwaCh]
+                            },
+                            "saveAsDraft": True,
+                            "submit": True
+                        },
+                    }
+                    dbid = sietch.api('/test',resonance_result)
 
 
     @pyqtSlot()

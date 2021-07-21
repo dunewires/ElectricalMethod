@@ -224,7 +224,7 @@ def wire_range_data(wire_freq_data, range_radius = 0.15):
         i = closest_index_to(wire_freq_data[w],70)
         f = wire_freq_data[w][i]
         f_range = [round(f*(1-range_radius),2), round(f*(1+range_radius),2)]
-        range_data.append({"wires": [w], "range": f_range})
+        range_data.append({"wires": [int(w)], "range": f_range})
     return range_data
 
 def combine_range_data(range_data_a, range_data_b):
