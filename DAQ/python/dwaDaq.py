@@ -932,6 +932,8 @@ class MainWindow(qtw.QMainWindow):
 
         self.radioBtns[0].setChecked(True)
 
+        self.startScan()
+
     def _configurePlots(self):
         self.chanViewMain = 0  # which channel to show large for V(t) data
         self.chanViewMainAmpl = 0  # which channel to show large for A(f) data
@@ -1398,8 +1400,9 @@ class MainWindow(qtw.QMainWindow):
         channels = rd["channels"]
         self.freqMin = float(rd["range"][0])
         self.freqMax = float(rd["range"][1])
-        logging.info("freqMin")
-        logging.info(self.freqMin*16)
+        logging.info(rd)
+        logging.info(self.wires)
+        logging.info(channels)
         self.wires.sort(key = int)
 
         fpgaConfig = config_generator.configure_default()
@@ -1426,15 +1429,13 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
         fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
         
-        logging.info("fpgaConfig")
-        logging.info(fpgaConfig)
 
         #sorting apa channels list to follow increasing order of dwa channels
         dwaChannels = []
         for i in range(0,len(channels)):
             dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
         apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
-
+        logging.info(apaChannels)
         dataConfig = {"channels": apaChannels, "wires": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
         "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
 
@@ -1947,13 +1948,13 @@ class MainWindow(qtw.QMainWindow):
                 "formName": "Wire Resonance Measurement",
                 "data": {
                     "versionDaq": "1.1",
-                    "dwaUuid": "1",
+                    "dwaUuid": self.configApaUuid,
                     "versionFirmware": "1.1",
                     "site": "Harvard",
-                    "measuredBy": 'someone',
-                    "productionStage": "[dropdown]",
-                    "side": "A",
-                    "layer": "V",
+                    "measuredBy": self.configMeasuredBy,
+                    "productionStage": self.configStage,
+                    "side": self.configApaSide,
+                    "layer": self.configLayer,
                     "wires": {
                     },
                     "channel": {
