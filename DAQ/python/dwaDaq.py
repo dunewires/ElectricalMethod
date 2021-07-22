@@ -359,7 +359,6 @@ class MainWindow(qtw.QMainWindow):
         # Load the UI (built in Qt Designer)
         uic.loadUi(DAQ_UI_FILE, self)
         self.configFileContents.setReadOnly(True)
-
         self.scanCtrlButtons = [self.btnScanCtrl, self.btnScanCtrlAdv]
         self.scanType = None
         self._scanButtonDisable()
@@ -877,7 +876,7 @@ class MainWindow(qtw.QMainWindow):
 
         channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
         scanNum = 1
-        self.radioBtns = [] #list of radio button names 
+        self.radioBtns = [] #list of radio button names
         self.freqMinBox = [] 
         self.freqMaxBox = [] #these are lists to hold the boxes for these values in the table, that way they can be looped later on
         self.range_data_list = []
@@ -1315,32 +1314,28 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot()
     def startScanThread(self):
-        if len(self.radioBtns)>0:
-            print("User has requested a new AUTO scan (DWA is IDLE")
-            self.scanType = ScanType.AUTO
+        print("User has requested a new AUTO scan (DWA is IDLE")
+        self.scanType = ScanType.AUTO
 
-            self._scanButtonDisable()
-            self._setScanButtonAction('ABORT')
+        self._scanButtonDisable()
+        self._setScanButtonAction('ABORT')
 
-            for i, btn in enumerate(self.radioBtns):
-                if btn.isChecked():
-                    #logging.info("Changing color of row "+str(i))
-                    for c in range(0, self.scanTable.columnCount()):
-                        self.scanTable.item(i,c).setBackground(qtg.QColor(255,140,0))
-                else:
-                    #logging.info("Row "+str(i)+"has not been selected")
-                    pass
+        for i, btn in enumerate(self.radioBtns):
+            if btn.isChecked():
+                #logging.info("Changing color of row "+str(i))
+                for c in range(0, self.scanTable.columnCount()):
+                    self.scanTable.item(i,c).setBackground(qtg.QColor(255,140,0))
+            else:
+                #logging.info("Row "+str(i)+"has not been selected")
+                pass
     
-            # Pass the function to execute
-            worker = Worker(self.startScan)  # could pass args/kwargs too..
-            #worker.signals.result.connect(self.printOutput)
-            worker.signals.finished.connect(self.startScanThreadComplete)
+        # Pass the function to execute
+        worker = Worker(self.startScan)  # could pass args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.startScanThreadComplete)
 
-            # execute
-            self.threadPool.start(worker)
-        else:
-            print("Please configure scans first")
-            logging.info("Please configure scans first")
+        # execute
+        self.threadPool.start(worker)
 
 
     @pyqtSlot()
@@ -1476,7 +1471,7 @@ class MainWindow(qtw.QMainWindow):
             logging.warning("  Directory already exists: [{}]".format(self.dataDir))
         
         self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
-        self.scanRunDataDir = os.path.join(self.dataDir, "_" + self.configLayer + "_" + self.configApaSide + 
+        self.scanRunDataDir = os.path.join(self.dataDir, self.configLayer + "_" + self.configApaSide + 
         "_" + str(self.configHeadboard) + "_" + str(self.wires) + "_" + self.timeString)
         os.makedirs(self.scanRunDataDir)
      
@@ -2427,10 +2422,10 @@ class MainWindow(qtw.QMainWindow):
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
                     for c in range(0, self.scanTable.columnCount()):
                         self.scanTable.item(self.btnNum,c).setBackground(qtg.QColor(3,205,0))
-                    if len(self.radioBtns)>(i+1):
-                                self.nextBtn = i+1
-                    else: 
-                        self.nextBtn = 0
+                        if len(self.radioBtns)>(c+1):
+                            self.nextBtn = c+1
+                        else: 
+                            self.nextBtn = 0
                     item = qtw.QRadioButton(self.scanTable)
                     self.scanTable.setCellWidget(self.nextBtn, 0, item)
                     item.setChecked(True)
@@ -2582,8 +2577,11 @@ class MainWindow(qtw.QMainWindow):
         self._scanButtonEnable(state=False)
             
     def _scanButtonEnable(self, state=True):
-        for scb in self.scanCtrlButtons:
-            scb.setEnabled(state)
+        if state==True and self.scanTable.rowCount()>0:
+            self.btnScanCtrl.setEnabled(True)
+        else:
+            self.btnScanCtrl.setEnabled(False)
+        self.btnScanCtrlAdv.setEnabled(state)
             
     def updateAmplitudePlots(self):
         # This should only update the plots on the STIMULUS tab
