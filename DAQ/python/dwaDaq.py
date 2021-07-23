@@ -1471,6 +1471,7 @@ class MainWindow(qtw.QMainWindow):
             logging.warning("  Directory already exists: [{}]".format(self.dataDir))
         
         self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        self.wires = "-".join([str(w) for w in self.wires])
         self.scanRunDataDir = os.path.join(self.dataDir, self.configLayer + "_" + self.configApaSide + 
         "_" + str(self.configHeadboard) + "_" + str(self.wires) + "_" + self.timeString)
         os.makedirs(self.scanRunDataDir)
