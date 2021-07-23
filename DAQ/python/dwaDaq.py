@@ -1968,7 +1968,7 @@ class MainWindow(qtw.QMainWindow):
         scanId = self.evtVwr_runName_val.text()
         print(f'scanId = {scanId}')
 
-        fileroot = 'scanData/'+self.evtVwr_runName_val.text()+'/'
+        fileroot = 'scanData/'+scanId+'/'
 
 
         wireDataFilenames = [ f'{scanId}_{nn:02d}.txt' for nn in range(N_DWA_CHANS) ]
@@ -2122,7 +2122,7 @@ class MainWindow(qtw.QMainWindow):
     def _loadAmpData(self):
         #ampFilename = "DWANUM_HEADBOARDNUM_LAYER_"+self.ampDataFilename.text()+".json"
         #ampFilename = os.path.join(self.scanRunDataDir, ampFilename)
-        ampFilename = self.ampDataFilename.text()
+        ampFilename = os.path.join(self.scanDataDir, self.ampDataFilename.text(), "amplitudeData.json")
         print(f"ampFilename = {ampFilename}")
         self.ampDataActiveLabel.setText(ampFilename)
         # read in the json file
@@ -2135,7 +2135,10 @@ class MainWindow(qtw.QMainWindow):
             self.ampData[reg.value]['ampl'] = data[str(reg.value)]['ampl']
             self.curves['resRawFit'][reg].setData(self.ampData[reg.value]['freq'],
                                                   self.ampData[reg.value]['ampl'])
-        
+        configFile = os.path.join(self.scanDataDir, self.ampDataFilename.text(), "dwaConfig.ini")
+        with open(configFile) as fh:
+            loadedConfig = dcf.DwaConfigFile(configFile, sections=['FPGA','Database'])
+
     def _loadConfigFile(self, updateGui=True):
         #updateGui function no longer works with left column  and original textbox removed 
         # try to read the requested file
@@ -2263,7 +2266,7 @@ class MainWindow(qtw.QMainWindow):
         #def getUniqueFileroot():
         #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
         print("_makeOutputFilenames()")
-        froot = os.path.join(self.scanRunDataDir, self.timeString)
+        froot = os.path.join(self.scanRunDataDir, "rawData")
         self.logger.info(f"fileroot = {froot}")
         # create new output filenames
         self.fnOfReg = {}  # file names for output. Keys are 2-digit hex string (e.g. '03' or 'FF'). values are filenames
@@ -2271,7 +2274,7 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers_all:
             self.fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
         self.logger.info(f"self.fnOfReg = {self.fnOfReg}")
-        self.fnOfAmpData = os.path.join(self.scanRunDataDir, "DWANUM_HEADBOARDNUM_LAYER_"+self.timeString+".json") # FIXME: get the DWANUM HEADBOARDNUM and LAYER from user input
+        self.fnOfAmpData = os.path.join(self.scanRunDataDir, "amplitudeData.json") 
         self.logger.info(f"self.fnOfAmpData = {self.fnOfAmpData}") 
 
     def startUdpReceiver(self, newdata_callback):
