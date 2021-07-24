@@ -2581,11 +2581,8 @@ class MainWindow(qtw.QMainWindow):
         self._scanButtonEnable(state=False)
             
     def _scanButtonEnable(self, state=True):
-        if state==True and self.scanTable.rowCount()>0:
-            self.btnScanCtrl.setEnabled(True)
-        else:
-            self.btnScanCtrl.setEnabled(False)
-        self.btnScanCtrlAdv.setEnabled(state)
+        for scb in self.scanCtrlButtons:
+            scb.setEnabled(state)
             
     def updateAmplitudePlots(self):
         # This should only update the plots on the STIMULUS tab
