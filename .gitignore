@@ -3,6 +3,7 @@ firmware/source/sdk/.metadata/
 firmware/source/sdk/.sdk/
 DAQ/python/udpData/*
 DAQ/python/test/udpData/*
+DAQ/python/scanData/*
 DAQ/python/test/data/*
 vivado*.jou
 vivado*.str
