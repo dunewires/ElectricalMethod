@@ -2127,7 +2127,7 @@ class MainWindow(qtw.QMainWindow):
     def _loadAmpData(self):
         #ampFilename = "DWANUM_HEADBOARDNUM_LAYER_"+self.ampDataFilename.text()+".json"
         #ampFilename = os.path.join(self.scanRunDataDir, ampFilename)
-        ampFilename = os.path.join(self.scanDataDir, self.ampDataFilename.text(), "amplitudeData.json")
+        ampFilename = os.path.join(self.ampDataFilename.text(), "amplitudeData.json")
         print(f"ampFilename = {ampFilename}")
         self.ampDataActiveLabel.setText(ampFilename)
         # read in the json file
@@ -2140,7 +2140,7 @@ class MainWindow(qtw.QMainWindow):
             self.ampData[reg.value]['ampl'] = data[str(reg.value)]['ampl']
             self.curves['resRawFit'][reg].setData(self.ampData[reg.value]['freq'],
                                                   self.ampData[reg.value]['ampl'])
-        configFile = os.path.join(self.scanDataDir, self.ampDataFilename.text(), "dwaConfig.ini")
+        configFile = os.path.join(self.ampDataFilename.text(), "dwaConfig.ini")
         with open(configFile) as fh:
             self.loadedConfigFile = dcf.DwaConfigFile(configFile, sections=['FPGA','Database'])
             self.loadedConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
@@ -2281,8 +2281,9 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers_all:
             self.fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
         self.logger.info(f"self.fnOfReg = {self.fnOfReg}")
-        self.fnOfAmpData = os.path.join(self.scanRunDataDir, "amplitudeData.json") 
-        self.logger.info(f"self.fnOfAmpData = {self.fnOfAmpData}") 
+        self.fnOfAmpData = os.path.join(self.scanRunDataDir, "amplitudeData.json")
+        self.run = self.scanRunDataDir
+        self.logger.info(f"self.fnOfAmpData = {self.run}") 
 
     def startUdpReceiver(self, newdata_callback):
         # initiate a DWA acquisition
@@ -2432,8 +2433,8 @@ class MainWindow(qtw.QMainWindow):
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
                     for c in range(0, self.scanTable.columnCount()):
                         self.scanTable.item(self.btnNum,c).setBackground(qtg.QColor(3,205,0))
-                        if len(self.radioBtns)>(c+1):
-                            self.nextBtn = c+1
+                        if len(self.radioBtns)>(self.btnNum+1):
+                            self.nextBtn = self.btnNum+1
                         else: 
                             self.nextBtn = 0
                     item = qtw.QRadioButton(self.scanTable)
@@ -2684,7 +2685,7 @@ class MainWindow(qtw.QMainWindow):
             self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
 
         # Set the amplitude filename to the most recent run
-        self.ampDataFilename.setText(self.fnOfAmpData)
+        self.ampDataFilename.setText(self.run)
         
         # "load" that file
         self.ampDataFilenameEnter()
