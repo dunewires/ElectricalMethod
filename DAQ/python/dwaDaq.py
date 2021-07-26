@@ -930,6 +930,10 @@ class MainWindow(qtw.QMainWindow):
                 scanNum = scanNum + 1
 
         self.radioBtns[0].setChecked(True)
+        #need to enable the start button, but should only happen when connected to the dwa
+        if self.enableScanButtonTemp and (self.dwaControllerState == State.IDLE):
+            self.enableScanButtonTemp = False
+            self._scanButtonEnable()
 
     def _configurePlots(self):
         self.chanViewMain = 0  # which channel to show large for V(t) data
@@ -2578,11 +2582,24 @@ class MainWindow(qtw.QMainWindow):
             self.btnScanCtrlAdv.clicked.connect(self.abortScan)
         
     def _scanButtonDisable(self):
-        self._scanButtonEnable(state=False)
+        #self._scanButtonEnable(state=False)
+        self.btnScanCtrl.setEnabled(False)
+        self.btnScanCtrlAdv.setEnabled(False)
             
-    def _scanButtonEnable(self, state=True):
-        for scb in self.scanCtrlButtons:
-            scb.setEnabled(state)
+    def _scanButtonEnable(self):
+        #for scb in self.scanCtrlButtons:
+            #scb.setEnabled(state)
+        try:
+            self.radioBtns
+        except:
+            self.btnScanCtrl.setEnabled(False)
+            logging.info("error occurred, no radio buttons")
+        else:
+            if len(self.radioBtns)>0:
+                self.btnScanCtrl.setEnabled(True)
+            else: 
+                self.btnScanCtrl.setEnabled(False)
+        self.btnScanCtrlAdv(True)
             
     def updateAmplitudePlots(self):
         # This should only update the plots on the STIMULUS tab
