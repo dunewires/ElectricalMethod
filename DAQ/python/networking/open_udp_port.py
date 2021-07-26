@@ -19,4 +19,4 @@ local_ip_address = socket.gethostbyname(socket.gethostname())
 
 service.AddPortMapping(NewRemoteHost='', NewExternalPort=6008, NewProtocol='UDP', NewInternalPort=6008, NewInternalClient=local_ip_address, NewEnabled=1, NewPortMappingDescription='DWA', NewLeaseDuration=0)
 
-print(f'UDP port 6008 opened on {local_ip_address}')
+print(f'UDP port 6008 opened for {local_ip_address}')
