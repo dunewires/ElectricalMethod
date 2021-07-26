@@ -1941,9 +1941,9 @@ class MainWindow(qtw.QMainWindow):
         # Load sietch credentials #FIXME still using James's credentials
         # FIXME: values like 'measuredBy' and 'dwaUuid' etc should be pulled from the .json amplitude file
         sietch = SietchConnect("sietch.creds")
-        for dwaCh, ch in enumerate(self.apaChannels): # Loop over wire numbers in scan
+        for dwaCh, ch in enumerate(self.loadedDatabaseConfig["channels"]): # Loop over wire numbers in scan
             for w in self.wires:
-                wire_ch = channel_map.wire_to_apa_channel(self.configLayer, w)
+                wire_ch = channel_map.wire_to_apa_channel(self.loadedDatabaseConfig["layer"], w)
                 if wire_ch == ch:
                     resonance_result = {
                         "componentUuid":"b9fe4600-706c-11eb-93b0-6183ed4cabef",
@@ -1951,13 +1951,13 @@ class MainWindow(qtw.QMainWindow):
                         "formName": "Wire Resonance Measurement",
                         "data": {
                             "versionDaq": "1.1",
-                            "dwaUuid": self.configApaUuid,
+                            "dwaUuid": self.loadedDatabaseConfig["apaUuid"],
                             "versionFirmware": "1.1",
                             "site": "Harvard",
-                            "measuredBy": self.configMeasuredBy,
-                            "productionStage": self.configStage,
-                            "side": self.configApaSide,
-                            "layer": self.configLayer,
+                            "measuredBy": self.loadedDatabaseConfig["measuredBy"],
+                            "productionStage": self.loadedDatabaseConfig["stage"],
+                            "side": self.loadedDatabaseConfig["side"],
+                            "layer": self.loadedDatabaseConfig["layer"],
                             "wires": {
                                 str(w): self.resonantFreqs[dwaCh]
                             },
@@ -2142,7 +2142,9 @@ class MainWindow(qtw.QMainWindow):
                                                   self.ampData[reg.value]['ampl'])
         configFile = os.path.join(self.scanDataDir, self.ampDataFilename.text(), "dwaConfig.ini")
         with open(configFile) as fh:
-            loadedConfig = dcf.DwaConfigFile(configFile, sections=['FPGA','Database'])
+            self.loadedConfigFile = dcf.DwaConfigFile(configFile, sections=['FPGA','Database'])
+            self.loadedConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
+            self.loadedDatabaseConfig = self.loadedConfigFile.getConfigDict(section='Database')
 
     def _loadConfigFile(self, updateGui=True):
         #updateGui function no longer works with left column  and original textbox removed 
