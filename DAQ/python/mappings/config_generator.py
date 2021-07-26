@@ -77,7 +77,7 @@ def configure_scan_frequencies(stim_freq_min, stim_freq_max, stim_freq_step=1/16
             'stimFreqStep': format(int(stim_freq_step * unit_factor), '06X')}
 
 
-def configure_wait_times(stim_time_initial=2, stim_time=0.1):
+def configure_wait_times(stim_time_initial=2, stim_time=0.5):
     '''Return a dictionary of configuration values for the initial and subsequent stimulus wait times given input time values in seconds.'''
     
     unit_factor = 1/2.56e-6

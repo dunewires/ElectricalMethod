@@ -1398,17 +1398,13 @@ class MainWindow(qtw.QMainWindow):
         rd = self.range_data_list[scanIndex]
         self.wires = rd["wires"]
         channels = rd["channels"]
-        self.freqMin = float(rd["range"][0])
-        self.freqMax = float(rd["range"][1])
-        logging.info(rd)
-        logging.info(self.wires)
-        logging.info(channels)
+        #self.freqMin = float(rd["range"][0])
+        #self.freqMax = float(rd["range"][1])
+
         self.wires.sort(key = int)
 
         fpgaConfig = config_generator.configure_default()
         
-        if advFss: fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
-        else: pass
         fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
 
         fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
@@ -1416,18 +1412,15 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_fixed_frequency())
 
         if advInitDelay: 
-            if advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
-            else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
+           if advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
+           else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
         elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advStimTime))
-        else: pass
 
         if advAmplitude: 
             fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, stim_mag=int(advAmplitude)))
-        else: pass
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
-        fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
         
 
         #sorting apa channels list to follow increasing order of dwa channels
@@ -1435,28 +1428,23 @@ class MainWindow(qtw.QMainWindow):
         for i in range(0,len(channels)):
             dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
         apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
-        logging.info(apaChannels)
+
         dataConfig = {"channels": apaChannels, "wires": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
         "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
 
         self._loadDaqConfig()
 
         self.combinedConfig = {"FPGA": fpgaConfig, "Database": dataConfig, "DAQ": self.daqConfig}
-
         
-        self.freqMax = float(self.scanTable.item(scanIndex+1, 4).text())
-        fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
+        self.freqMax = float(self.scanTable.item(scanIndex, 4).text())
+        self.freqMin = float(self.scanTable.item(scanIndex, 3).text())
+
         if advFss: 
             fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
         else: 
             fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax))
 
-        self.freqMin = float(self.scanTable.item(scanIndex+1, 3).text())
         fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
-        if advFss: 
-            fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
-        else: 
-            fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax))
 
         self.makeScanOutputDir()
         config_generator.write_config(self.combinedConfig, 'dwaConfig.ini', self.scanRunDataDir) #self.configFileDir
