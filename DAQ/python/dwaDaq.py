@@ -604,7 +604,7 @@ class MainWindow(qtw.QMainWindow):
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensions)
         # Config Tab
-        self.btnConfigureScans.clicked.connect(self.configureScans)
+        self.btnConfigureScans.clicked.connect(self.singleOrAllScans)
         self.configStageComboBox.addItem("DWA Development")
         self.configStageComboBox.addItem("Winding")
         self.configStageComboBox.addItem("Post-Winding")
@@ -869,6 +869,88 @@ class MainWindow(qtw.QMainWindow):
 
     def hexString(self, val):
         return str(hex(int(val))).upper()[2:].zfill(N_DWA_CHANS)
+
+    def singleOrAllScans(self):
+        if self.configRadioAll.isChecked():
+            self.configureScans()
+        elif self.configRadioSingle.isChecked():
+            self.configureSingleScans()
+
+    def configureSingleScans(self):
+        configLayer = self.configLayerComboBox.currentText()
+        configHeadboard = self.configHeadboardSpinBox.value()
+
+        self.radioBtns = [] #list of radio button names
+        self.freqMinBox = [] 
+        self.freqMaxBox = [] #these are lists to hold the boxes for these values in the table, that way they can be looped later on
+        self.range_data_list = []
+
+
+        channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
+        for channels in channelGroups:
+            range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
+            for rd in range_data:
+                self.range_data_list.append(rd)
+                wires = rd["wires"]
+                for wire in wires:
+                    if wire == self.spinBox.value():
+                        valid = True
+                        self.wireNum = wire
+                        freqMin = float(rd["range"][0])
+                        freqMax = float(rd["range"][1])
+
+        try:
+            valid
+        except:
+            logging.info("Please make sure the wire in the spin box is valid")
+            wire = qtw.QMessageBox()
+            wire.setTitle("Check Wire")
+            wire.setText("Please make sure the wire in the spin box is valid")
+            wire.exec_()
+        else:
+            #table with scan detailss
+            self.scanTable.setRowCount(1)
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setVerticalHeaderItem(0, item)
+            #select column...Radio buttons
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setItem(0, 0, item)
+            item = qtw.QRadioButton(self.scanTable)
+            self.scanTable.setCellWidget(0, 0, item)
+            self.radioBtns.append(item)
+            #run number column
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setItem(0, 1, item)
+            item.setTextAlignment(qtc.Qt.AlignHCenter)
+            item.setText(qtc.QCoreApplication.translate("MainWindow", str(1)))
+            self.scanTable.resizeColumnsToContents() 
+            #wires column
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setItem(0, 2, item)
+            item.setTextAlignment(qtc.Qt.AlignHCenter)
+            item.setText(qtc.QCoreApplication.translate("MainWindow", str(self.wireNum)))
+            self.scanTable.resizeColumnsToContents()
+            #freq min column
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setItem(0, 3, item)
+            item.setTextAlignment(qtc.Qt.AlignHCenter)
+            item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMin)))
+            self.scanTable.resizeColumnsToContents()
+            self.freqMinBox.append(freqMin)
+            #freq max column
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setItem(0, 4, item)
+            item.setTextAlignment(qtc.Qt.AlignHCenter)
+            item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
+            self.scanTable.resizeColumnsToContents()
+            self.freqMaxBox.append(freqMax)
+            self.scanTable.setColumnCount(5)
+
+            self.radioBtns[0].setChecked(True)
+            #need to enable the start button, but should only happen when connected to the dwa
+            if self.enableScanButtonTemp and (self.dwaControllerState == State.IDLE):
+                self.enableScanButtonTemp = False
+                self._scanButtonEnable()
 
     def configureScans(self):
         configLayer = self.configLayerComboBox.currentText()
@@ -1395,14 +1477,17 @@ class MainWindow(qtw.QMainWindow):
         if scanIndex < 0: return
 
         rd = self.range_data_list[scanIndex]
-        self.wires = rd["wires"]
+        if self.configRadioSingle.isChecked():
+            self.wires = self.wireNum
+        else:
+            self.wires = rd["wires"]
+            self.wires.sort(key = int)
         channels = rd["channels"]
         self.freqMin = float(rd["range"][0])
         self.freqMax = float(rd["range"][1])
         logging.info(rd)
         logging.info(self.wires)
         logging.info(channels)
-        self.wires.sort(key = int)
 
         fpgaConfig = config_generator.configure_default()
         
@@ -1443,14 +1528,14 @@ class MainWindow(qtw.QMainWindow):
         self.combinedConfig = {"FPGA": fpgaConfig, "Database": dataConfig, "DAQ": self.daqConfig}
 
         
-        self.freqMax = float(self.scanTable.item(scanIndex+1, 4).text())
+        self.freqMax = float(self.scanTable.item(scanIndex, 4).text())
         fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
         if advFss: 
             fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
         else: 
             fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax))
 
-        self.freqMin = float(self.scanTable.item(scanIndex+1, 3).text())
+        self.freqMin = float(self.scanTable.item(scanIndex, 3).text())
         fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
         if advFss: 
             fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
@@ -1475,7 +1560,10 @@ class MainWindow(qtw.QMainWindow):
             logging.warning("  Directory already exists: [{}]".format(self.dataDir))
         
         self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
-        self.wires = "-".join([str(w) for w in self.wires])
+        if self.configRadioSingle.isChecked():
+            pass
+        else:
+            self.wires = "-".join([str(w) for w in self.wires])
         self.scanRunDataDir = os.path.join(self.dataDir, self.configLayer + "_" + self.configApaSide + 
         "_" + str(self.configHeadboard) + "_" + str(self.wires) + "_" + self.timeString)
         os.makedirs(self.scanRunDataDir)
