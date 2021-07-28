@@ -904,7 +904,7 @@ class MainWindow(qtw.QMainWindow):
         except:
             logging.info("Please make sure the wire in the spin box is valid")
             wire = qtw.QMessageBox()
-            wire.setTitle("Check Wire")
+            wire.setWindowTitle("Check Wire")
             wire.setText("Please make sure the wire in the spin box is valid")
             wire.exec_()
         else:
