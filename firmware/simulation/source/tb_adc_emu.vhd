@@ -32,17 +32,17 @@ architecture tb of tb_adc_emu is
   signal led             : std_logic_vector(3 downto 0);
   signal acStimX200_obuf : std_logic := '0';
   signal mainsSquare     : std_logic;
-  signal DAC_SDI         : std_logic := '0';
-  signal DAC_CS_B        : std_logic := '0';
-  signal DAC_LD_B        : std_logic := '0';
-  signal DAC_CLR_B       : std_logic := '0';
-  signal DAC_CLK         : std_logic := '0';
-  signal dpotSdi         : std_logic := '0';
-  signal dpotSdo         : std_logic := '0';
-  signal dpotPr_b        : std_logic := '0';
-  signal dpotCs_b        : std_logic := '0';
-  signal dpotSck         : std_logic := '0';
-  signal dpotShdn_b      : std_logic := '0';
+  signal DAC_SDI         : std_logic                     := '0';
+  signal DAC_CS_B        : std_logic                     := '0';
+  signal DAC_LD_B        : std_logic                     := '0';
+  signal DAC_CLR_B       : std_logic                     := '0';
+  signal DAC_CLK         : std_logic                     := '0';
+  signal dpotSdi         : std_logic                     := '0';
+  signal dpotSdo         : std_logic                     := '0';
+  signal dpotPr_b        : std_logic                     := '0';
+  signal dpotCs_b        : std_logic                     := '0';
+  signal dpotSck         : std_logic                     := '0';
+  signal dpotShdn_b      : std_logic                     := '0';
   signal adcCnv          : std_logic                     := '0';
   signal adcSck          : std_logic                     := '0';
   signal adcDataSerial   : std_logic_vector(3 downto 0)  := (others => '0');
@@ -81,14 +81,15 @@ begin
 
   top_tension_analyzer_1 : entity duneDwa.top_tension_analyzer
     port map (
-      fromDaqReg      => fromDaqReg,
-      toDaqReg        => toDaqReg,
-      dwaClk400       => dwaClk400,
-      dwaClk200       => dwaClk200,
-      dwaClk100       => dwaClk100,
-      dwaClk10        => dwaClk10,
+      fromDaqReg => fromDaqReg,
+      toDaqReg   => toDaqReg,
+      dwaClk400  => dwaClk400,
+      dwaClk333 => '0',
+      dwaClk200 => dwaClk200,
+      dwaClk100 => dwaClk100,
+      dwaClk10  => dwaClk10,
       led             => led,
-      pButton => (others => '0'),
+      pButton         => (others => '0'),
       acStimX200_obuf => acStimX200_obuf,
       mainsSquare     => mainsSquare,
       DAC_SDI         => DAC_SDI,

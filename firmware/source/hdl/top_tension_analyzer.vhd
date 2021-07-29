@@ -167,6 +167,14 @@ architecture STRUCT of top_tension_analyzer is
   signal pktBuildBusy : boolean := false;
   signal freqScanBusy : boolean := false;
 
+  signal pButton_del : SLV_VECTOR_TYPE(1 downto 0)(3 downto 0)       := (others => (others => '0'));
+  signal pBHoldOff   : UNSIGNED_VECTOR_TYPE(1 downto 0)(19 downto 0) := (others => (others => '0'));
+
+  signal pBAbort : std_logic := '0';
+
+  signal scanStatusCnt : unsigned(24 downto 0) := (others => '0');
+  signal netStatusCnt : unsigned(19 downto 0) := (others => '0');
+
   signal
   toDaqReg_headerGenerator,
   toDaqReg_dpotInterface,
@@ -176,16 +184,70 @@ architecture STRUCT of top_tension_analyzer is
   toDaqReg_mainsNoiseCorrection : toDaqRegType;
 
 begin
-  lightsAndButtons : process (dwaClk10)
+  lightsAndButtons : process (dwaClk100)
   begin
-    if rising_edge(dwaClk10) then
-      led(0) <= '0'; -- 0 is off ?
-      led(1) <= '0'; -- 0 is off ?
-      led(2) <= '0'; -- 0 is off ?
+    if rising_edge(dwaClk100) then
+      led(0) <= or(toDaqReg.errors);
       led(3) <= '0'; -- 0 is off ?
+
+      --metastability 
+      pButton_del <= pButton_del(0) & pButton;
+
+      --debounce
+      for pB_i in 3 downto 0 loop
+        -- reset holdoff counter while button is pressed or there is signal bouncing 
+        if pButton_del(1)(pB_i) then
+          pBHoldOff(pB_i) <= (others => '0');
+        -- count until MSb is 1 after button if released, waiting for bounces to settle 
+        elsif pBHoldOff(pB_i)(pBHoldOff(pB_i)'left) = '0' then
+          pBHoldOff(pB_i) <= pBHoldOff(pB_i)+1;
+        end if;
+      end loop;
+
+      -- single pulse for each button press cycle
+      pBAbort <= pButton_del(1)(0) and pBHoldOff(0)(pBHoldOff(0)'left);
+
     end if;
   end process;
 
+
+  genLedScanStatus : process (dwaClk10)
+  begin
+    if rising_edge(dwaClk10) then
+      if scanStatusCnt(24 downto 19) = "100110" then
+        -- we are finished with the current frequency's blink, wait here for the next frequency
+        led(1) <= '1' when freqScanBusy else '0'; -- display scan status
+                                                  -- pulse once each time the ADC sequenced is activated
+        if adcStart then
+          -- scale requested frequency to a time range we can actually see ~ 1.5 sec to 150 ms
+          scanStatusCnt <= (24 => '0', 23 downto 6 => stimFreqReq(17 downto 0), 5 downto 0 => '0');
+        end if;
+
+      else
+        -- when counting, pulse 0 for ~150 ms at the end of each count
+        led(1)        <= '1' when (scanStatusCnt(24 downto 19) < "100011") else '0';
+        scanStatusCnt <= scanStatusCnt + 1;
+      end if;
+    end if;
+  end process genLedScanStatus;
+
+  genLedNetStatus : process (dwaClk10)
+  begin
+    if rising_edge(dwaClk10) then
+      if netStatusCnt  =  (netStatusCnt'range  =>  '1') then
+        -- we are finished with the current TCP read/write blink, wait here for the next
+        led(2) <= fromDaqReg.netStatus(0) and not bool2sl(pktBuildBusy); -- on with tcp address off when packet build busy
+        if fromDaqReg.netStatus(1) then
+          -- scale requested frequency to a time range we can actually see ~ 1.5 sec to 150 ms
+          netStatusCnt <= (others => '0');
+        end if;
+      else
+        -- when counting, pulse 0 for ~150 ms at the end of each count
+        led(2)        <='0';
+        netStatusCnt <= netStatusCnt + 1;
+      end if;
+    end if;
+  end process genLedNetStatus;
 
   BUFR_inst : BUFR
     generic map (
@@ -272,7 +334,7 @@ begin
       -- nPeriod has units of 5ns with specified fixed point
       --acStim_nPeriod_fp6_all  := (x"17d7840000"/ stimFreqReq);
       acStim_nPeriod_fp6_all  := (x"2FAF0800000"/ stimFreqReq);
-      acStim_nPeriod_fp6      <= acStim_nPeriod_fp6_all(30 downto 0);      -- only take what is needed for min 10 HZ stim freq
+      acStim_nPeriod_fp6      <= acStim_nPeriod_fp6_all(30 downto 0); -- only take what is needed for min 10 HZ stim freq
       acStimX200_nPeriod_fxp8 <= (acStim_nPeriod_fp6 & "00") / x"C8"; -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
 
       --  let's start with a fixed conversion 
@@ -411,6 +473,8 @@ begin
       adcStart => adcStart,
       adcBusy  => adcBusy,
 
+      pBAbort => pBAbort,
+
       dwaClk100 => dwaClk100
     );
 
@@ -532,26 +596,27 @@ begin
   --    probe3               => std_logic_vector(acStimX200_nPeriod_fxp8)
   --  );
   --
-  --  vio_ctrl_inst : vio_ctrl
-  --    PORT MAP (
-  --      clk                     => dwaClk100,
-  --      probe_in0               => (others => '0'),
-  --      probe_in1               => (others => '0'),
-  --      probe_in2               => (others => '0'),
-  --      probe_out0              => open,
-  --      probe_out1              => open,
-  --      probe_out2(0)           => vioUpdate,
-  --      probe_out3              => open,
-  --      probe_out4              => open,
-  --      probe_out5              => open,
-  --      probe_out6              => open,
-  --      probe_out7              => open,
-  --      probe_out8              => open,
-  --      probe_out9              => open,
-  --      probe_out10             => open,
-  --      probe_out11(4 downto 2) => msimDumy,
-  --      probe_out11(1 downto 0) => noiseCorrDataSel
-  --    );
+  vio_ctrl_inst : vio_ctrl
+    PORT MAP (
+      clk                    => dwaClk100,
+
+      probe_in0(3 downto 0)  => led,
+      probe_in0(31 downto 4) => (others => '0'),
+      probe_in1              => (others => '0'),
+      probe_in2              => (others => '0'),
+      probe_out0             => open,
+      probe_out1             => open,
+      probe_out2          => open,
+      probe_out3             => open,
+      probe_out4             => open,
+      probe_out5             => open,
+      probe_out6             => open,
+      probe_out7             => open,
+      probe_out8             => open,
+      probe_out9             => open,
+      probe_out10            => open,
+      probe_out11            => open
+    );
 
   toDaqReg.ctrlBusy         <= toDaqReg_wtaController.ctrlBusy;
   toDaqReg.ctrlStateDbg     <= toDaqReg_wtaController.ctrlStateDbg;
