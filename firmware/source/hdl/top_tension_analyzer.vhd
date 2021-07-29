@@ -168,7 +168,7 @@ architecture STRUCT of top_tension_analyzer is
   signal freqScanBusy : boolean := false;
 
   signal pButton_del : SLV_VECTOR_TYPE(1 downto 0)(3 downto 0)       := (others => (others => '0'));
-  signal pBHoldOff   : UNSIGNED_VECTOR_TYPE(1 downto 0)(19 downto 0) := (others => (others => '0'));
+  signal pBHoldOff   : UNSIGNED_VECTOR_TYPE(3 downto 0)(19 downto 0) := (others => (others => '0'));
 
   signal pBAbort : std_logic := '0';
 
