@@ -1110,7 +1110,7 @@ begin
 	fromDaqReg.serNumMemData    <= unsigned(slv_reg50);
 	fromDaqReg.serNum           <= toDaqReg.serNum;
 
-	fromDaqReg.netStatus <= unsigned(slv_reg55(7 downto 0));
+	fromDaqReg.netStatus <= slv_reg55(7 downto 0);
 	-- User logic ends
 
 end arch_imp;
