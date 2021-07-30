@@ -225,7 +225,7 @@ begin
 
       else
         -- when counting, pulse 0 for ~150 ms at the end of each count
-        led(1)        <= '1' when (scanStatusCnt(28 downto 23) < "100011") else '0';
+        led(1)        <= freqScanBusy when (scanStatusCnt(28 downto 23) < "100011") else '0';
         scanStatusCnt <= scanStatusCnt + 1;
       end if;
     end if;

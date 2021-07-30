@@ -41,6 +41,10 @@ void print_app_header() {
 }
 int *ptr = 0xc2000000;
 err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+
+  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
+		 + ((55) << 2)) = 2; //write tcp status bit to PL
+
 	/* do not read the packet if we are not in ESTABLISHED state */
 	if (!p) {
 		tcp_close(tpcb);
@@ -92,11 +96,7 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) 
 
   int regIndex;
 
-  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
-		 + ((55) << 2)) = 3; //write tcp status bit to PL
 
-  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
-		 + ((55) << 2)) = 1; //write tcp status bit to PL
 
   switch (pktType) {
   case 0xFE170000:
@@ -196,6 +196,9 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) 
 
   }
 	pbuf_free(p);
+
+  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
+		 + ((55) << 2)) = 1; //write tcp status bit to PL
 
 	return ERR_OK;
 }
