@@ -358,7 +358,7 @@ proc progFlash {} {
     puts "#                   program flash                           #"
     puts "##################################################################\n"
 
-    source $scriptdir/implementation/progFlash.tcl
+    source $scriptdir/implementation/progFlashV2.tcl
 }
 
 proc writeGdrive {} {
