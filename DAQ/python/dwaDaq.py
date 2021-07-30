@@ -604,7 +604,7 @@ class MainWindow(qtw.QMainWindow):
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensions)
         # Config Tab
-        self.btnConfigureScans.clicked.connect(self.configureScans)
+        self.btnConfigureScans.clicked.connect(self.singleOrAllScans)
         self.configStageComboBox.addItem("DWA Development")
         self.configStageComboBox.addItem("Winding")
         self.configStageComboBox.addItem("Post-Winding")
@@ -870,6 +870,88 @@ class MainWindow(qtw.QMainWindow):
     def hexString(self, val):
         return str(hex(int(val))).upper()[2:].zfill(N_DWA_CHANS)
 
+    def singleOrAllScans(self):
+        if self.configRadioAll.isChecked():
+            self.configureScans()
+        elif self.configRadioSingle.isChecked():
+            self.configureSingleScans()
+
+    def configureSingleScans(self):
+        configLayer = self.configLayerComboBox.currentText()
+        configHeadboard = self.configHeadboardSpinBox.value()
+
+        self.radioBtns = [] #list of radio button names
+        self.freqMinBox = [] 
+        self.freqMaxBox = [] #these are lists to hold the boxes for these values in the table, that way they can be looped later on
+        self.range_data_list = []
+
+
+        channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
+        for channels in channelGroups:
+            range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
+            for rd in range_data:
+                self.range_data_list.append(rd)
+                wires = rd["wires"]
+                for wire in wires:
+                    if wire == self.spinBox.value():
+                        valid = True
+                        self.wireNum = wire
+                        freqMin = float(rd["range"][0])
+                        freqMax = float(rd["range"][1])
+
+        try:
+            valid
+        except:
+            logging.info("Please make sure the wire in the spin box is valid")
+            wire = qtw.QMessageBox()
+            wire.setWindowTitle("Check Wire")
+            wire.setText("Please make sure the wire in the spin box is valid")
+            wire.exec_()
+        else:
+            #table with scan detailss
+            self.scanTable.setRowCount(1)
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setVerticalHeaderItem(0, item)
+            #select column...Radio buttons
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setItem(0, 0, item)
+            item = qtw.QRadioButton(self.scanTable)
+            self.scanTable.setCellWidget(0, 0, item)
+            self.radioBtns.append(item)
+            #run number column
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setItem(0, 1, item)
+            item.setTextAlignment(qtc.Qt.AlignHCenter)
+            item.setText(qtc.QCoreApplication.translate("MainWindow", str(1)))
+            self.scanTable.resizeColumnsToContents() 
+            #wires column
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setItem(0, 2, item)
+            item.setTextAlignment(qtc.Qt.AlignHCenter)
+            item.setText(qtc.QCoreApplication.translate("MainWindow", str(self.wireNum)))
+            self.scanTable.resizeColumnsToContents()
+            #freq min column
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setItem(0, 3, item)
+            item.setTextAlignment(qtc.Qt.AlignHCenter)
+            item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMin)))
+            self.scanTable.resizeColumnsToContents()
+            self.freqMinBox.append(freqMin)
+            #freq max column
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setItem(0, 4, item)
+            item.setTextAlignment(qtc.Qt.AlignHCenter)
+            item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
+            self.scanTable.resizeColumnsToContents()
+            self.freqMaxBox.append(freqMax)
+            self.scanTable.setColumnCount(5)
+
+            self.radioBtns[0].setChecked(True)
+            #need to enable the start button, I think this is sufficient
+            
+            if self.enableScanButtonTemp:
+                self._scanButtonEnable()
+
     def configureScans(self):
         configLayer = self.configLayerComboBox.currentText()
         configHeadboard = self.configHeadboardSpinBox.value()
@@ -930,6 +1012,10 @@ class MainWindow(qtw.QMainWindow):
                 scanNum = scanNum + 1
 
         self.radioBtns[0].setChecked(True)
+        #need to enable the start button, but should only happen when connected to the dwa
+
+        if self.enableScanButtonTemp:
+            self._scanButtonEnable()
 
     def _configurePlots(self):
         self.chanViewMain = 0  # which channel to show large for V(t) data
@@ -1391,10 +1477,12 @@ class MainWindow(qtw.QMainWindow):
         if scanIndex < 0: return
 
         rd = self.range_data_list[scanIndex]
-        self.wires = rd["wires"]
+        if self.configRadioSingle.isChecked():
+            self.wires = self.wireNum
+        else:
+            self.wires = rd["wires"]
+            self.wires.sort(key = int)
         channels = rd["channels"]
-        #self.freqMin = float(rd["range"][0])
-        #self.freqMax = float(rd["range"][1])
 
         self.wires.sort(key = int)
 
@@ -1433,7 +1521,6 @@ class MainWindow(qtw.QMainWindow):
         
         self.freqMax = float(self.scanTable.item(scanIndex, 4).text())
         self.freqMin = float(self.scanTable.item(scanIndex, 3).text())
-
         if advFss: 
             fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
         else: 
@@ -1447,7 +1534,6 @@ class MainWindow(qtw.QMainWindow):
 
         self.runScan()
 
-
     def makeScanOutputDir(self):
         self.scanRunSubDir = "APA_"+str(self.configApaUuid)
         self.dataDir = os.path.join(self.scanDataDir, self.scanRunSubDir)
@@ -1459,7 +1545,10 @@ class MainWindow(qtw.QMainWindow):
             logging.warning("  Directory already exists: [{}]".format(self.dataDir))
         
         self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
-        self.wires = "-".join([str(w) for w in self.wires])
+        if self.configRadioSingle.isChecked():
+            pass
+        else:
+            self.wires = "-".join([str(w) for w in self.wires])
         self.scanRunDataDir = os.path.join(self.dataDir, self.configLayer + "_" + self.configApaSide + 
         "_" + str(self.configHeadboard) + "_" + str(self.wires) + "_" + self.timeString)
         os.makedirs(self.scanRunDataDir)
@@ -1925,9 +2014,9 @@ class MainWindow(qtw.QMainWindow):
         # Load sietch credentials #FIXME still using James's credentials
         # FIXME: values like 'measuredBy' and 'dwaUuid' etc should be pulled from the .json amplitude file
         sietch = SietchConnect("sietch.creds")
-        for dwaCh, ch in enumerate(self.apaChannels): # Loop over wire numbers in scan
+        for dwaCh, ch in enumerate(self.loadedDatabaseConfig["channels"]): # Loop over wire numbers in scan
             for w in self.wires:
-                wire_ch = channel_map.wire_to_apa_channel(self.configLayer, w)
+                wire_ch = channel_map.wire_to_apa_channel(self.loadedDatabaseConfig["layer"], w)
                 if wire_ch == ch:
                     resonance_result = {
                         "componentUuid":"b9fe4600-706c-11eb-93b0-6183ed4cabef",
@@ -1935,13 +2024,13 @@ class MainWindow(qtw.QMainWindow):
                         "formName": "Wire Resonance Measurement",
                         "data": {
                             "versionDaq": "1.1",
-                            "dwaUuid": self.configApaUuid,
+                            "dwaUuid": self.loadedDatabaseConfig["apaUuid"],
                             "versionFirmware": "1.1",
                             "site": "Harvard",
-                            "measuredBy": self.configMeasuredBy,
-                            "productionStage": self.configStage,
-                            "side": self.configApaSide,
-                            "layer": self.configLayer,
+                            "measuredBy": self.loadedDatabaseConfig["measuredBy"],
+                            "productionStage": self.loadedDatabaseConfig["stage"],
+                            "side": self.loadedDatabaseConfig["side"],
+                            "layer": self.loadedDatabaseConfig["layer"],
                             "wires": {
                                 str(w): self.resonantFreqs[dwaCh]
                             },
@@ -2111,7 +2200,7 @@ class MainWindow(qtw.QMainWindow):
     def _loadAmpData(self):
         #ampFilename = "DWANUM_HEADBOARDNUM_LAYER_"+self.ampDataFilename.text()+".json"
         #ampFilename = os.path.join(self.scanRunDataDir, ampFilename)
-        ampFilename = os.path.join(self.scanDataDir, self.ampDataFilename.text(), "amplitudeData.json")
+        ampFilename = os.path.join(self.ampDataFilename.text(), "amplitudeData.json")
         print(f"ampFilename = {ampFilename}")
         self.ampDataActiveLabel.setText(ampFilename)
         # read in the json file
@@ -2124,9 +2213,11 @@ class MainWindow(qtw.QMainWindow):
             self.ampData[reg.value]['ampl'] = data[str(reg.value)]['ampl']
             self.curves['resRawFit'][reg].setData(self.ampData[reg.value]['freq'],
                                                   self.ampData[reg.value]['ampl'])
-        configFile = os.path.join(self.scanDataDir, self.ampDataFilename.text(), "dwaConfig.ini")
+        configFile = os.path.join(self.ampDataFilename.text(), "dwaConfig.ini")
         with open(configFile) as fh:
-            loadedConfig = dcf.DwaConfigFile(configFile, sections=['FPGA','Database'])
+            self.loadedConfigFile = dcf.DwaConfigFile(configFile, sections=['FPGA','Database'])
+            self.loadedConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
+            self.loadedDatabaseConfig = self.loadedConfigFile.getConfigDict(section='Database')
 
     def _loadConfigFile(self, updateGui=True):
         #updateGui function no longer works with left column  and original textbox removed 
@@ -2263,8 +2354,9 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers_all:
             self.fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
         self.logger.info(f"self.fnOfReg = {self.fnOfReg}")
-        self.fnOfAmpData = os.path.join(self.scanRunDataDir, "amplitudeData.json") 
-        self.logger.info(f"self.fnOfAmpData = {self.fnOfAmpData}") 
+        self.fnOfAmpData = os.path.join(self.scanRunDataDir, "amplitudeData.json")
+        self.run = self.scanRunDataDir
+        self.logger.info(f"self.fnOfAmpData = {self.run}") 
 
     def startUdpReceiver(self, newdata_callback):
         # initiate a DWA acquisition
@@ -2414,8 +2506,8 @@ class MainWindow(qtw.QMainWindow):
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
                     for c in range(0, self.scanTable.columnCount()):
                         self.scanTable.item(self.btnNum,c).setBackground(qtg.QColor(3,205,0))
-                        if len(self.radioBtns)>(c+1):
-                            self.nextBtn = c+1
+                        if len(self.radioBtns)>(self.btnNum+1):
+                            self.nextBtn = self.btnNum+1
                         else: 
                             self.nextBtn = 0
                     item = qtw.QRadioButton(self.scanTable)
@@ -2566,11 +2658,22 @@ class MainWindow(qtw.QMainWindow):
             self.btnScanCtrlAdv.clicked.connect(self.abortScan)
         
     def _scanButtonDisable(self):
-        self._scanButtonEnable(state=False)
+        #self._scanButtonEnable(state=False)
+        self.btnScanCtrl.setEnabled(False)
+        self.btnScanCtrlAdv.setEnabled(False)
             
-    def _scanButtonEnable(self, state=True):
-        for scb in self.scanCtrlButtons:
-            scb.setEnabled(state)
+    def _scanButtonEnable(self):
+        #for scb in self.scanCtrlButtons:
+            #scb.setEnabled(state)
+        try:
+            self.radioBtns
+        except:
+            self.btnScanCtrl.setEnabled(False)
+            logging.info("error occurred, no radio buttons")
+        else:
+            if len(self.radioBtns)>0:
+                self.btnScanCtrl.setEnabled(True)
+        self.btnScanCtrlAdv.setEnabled(True)
             
     def updateAmplitudePlots(self):
         # This should only update the plots on the STIMULUS tab
@@ -2653,7 +2756,7 @@ class MainWindow(qtw.QMainWindow):
             self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
 
         # Set the amplitude filename to the most recent run
-        self.ampDataFilename.setText(self.fnOfAmpData)
+        self.ampDataFilename.setText(self.run)
         
         # "load" that file
         self.ampDataFilenameEnter()
