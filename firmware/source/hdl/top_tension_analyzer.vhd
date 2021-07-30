@@ -236,8 +236,8 @@ begin
     if rising_edge(dwaClk10) then
       if netStatusCnt  =  (netStatusCnt'range  =>  '1') then
         -- we are finished with the current TCP read/write blink, wait here for the next
-        led(2) <= fromDaqReg.netStatus(0) and not bool2sl(pktBuildBusy); -- on with tcp address off when packet build busy
-        if fromDaqReg.netStatus(1) then
+        led(2) <= fromDaqReg.netStatus(0); -- on with tcp addr
+        if fromDaqReg.netStatus(1) then -- blink on transaction
           -- scale requested frequency to a time range we can actually see ~ 1.5 sec to 150 ms
           netStatusCnt <= (others => '0');
         end if;
