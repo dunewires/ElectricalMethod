@@ -229,7 +229,7 @@ begin
         scanStatusCnt <= scanStatusCnt + 1;
       end if;
     end if;
-  end process genLedScanStatus;
+  end process;
 
   genLedNetStatus : process (dwaClk100)
   begin
