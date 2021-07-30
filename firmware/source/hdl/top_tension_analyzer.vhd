@@ -19,7 +19,7 @@ entity top_tension_analyzer is
     dwaClk100 : in std_logic;
     dwaClk10  : in std_logic;
 
-    led     : out std_logic_vector(3 downto 0);
+    led     : out std_logic_vector(3 downto 0) := (others  =>  '0');
     pButton : in  std_logic_vector(3 downto 0);
 
     acStimX200_obuf : out std_logic := '0';
@@ -172,8 +172,8 @@ architecture STRUCT of top_tension_analyzer is
 
   signal pBAbort : std_logic := '0';
 
-  signal scanStatusCnt : unsigned(24 downto 0) := (others => '0');
-  signal netStatusCnt : unsigned(19 downto 0) := (others => '0');
+  signal scanStatusCnt : unsigned(28 downto 0) := (others => '0');
+  signal netStatusCnt : unsigned(23 downto 0) := (others => '0');
 
   signal
   toDaqReg_headerGenerator,
@@ -211,29 +211,29 @@ begin
   end process;
 
 
-  genLedScanStatus : process (dwaClk10)
+  genLedScanStatus : process (dwaClk100)
   begin
-    if rising_edge(dwaClk10) then
-      if scanStatusCnt(24 downto 19) = "100110" then
+    if rising_edge(dwaClk100) then
+      if scanStatusCnt(28 downto 23) = "100110" then
         -- we are finished with the current frequency's blink, wait here for the next frequency
         led(1) <= '1' when freqScanBusy else '0'; -- display scan status
                                                   -- pulse once each time the ADC sequenced is activated
         if adcStart then
           -- scale requested frequency to a time range we can actually see ~ 1.5 sec to 150 ms
-          scanStatusCnt <= (24 => '0', 23 downto 6 => stimFreqReq(17 downto 0), 5 downto 0 => '0');
+          scanStatusCnt <= (28 => '0', 27 downto 10 => stimFreqReq(17 downto 0), 9 downto 0 => '0');
         end if;
 
       else
         -- when counting, pulse 0 for ~150 ms at the end of each count
-        led(1)        <= '1' when (scanStatusCnt(24 downto 19) < "100011") else '0';
+        led(1)        <= '1' when (scanStatusCnt(28 downto 23) < "100011") else '0';
         scanStatusCnt <= scanStatusCnt + 1;
       end if;
     end if;
   end process genLedScanStatus;
 
-  genLedNetStatus : process (dwaClk10)
+  genLedNetStatus : process (dwaClk100)
   begin
-    if rising_edge(dwaClk10) then
+    if rising_edge(dwaClk100) then
       if netStatusCnt  =  (netStatusCnt'range  =>  '1') then
         -- we are finished with the current TCP read/write blink, wait here for the next
         led(2) <= fromDaqReg.netStatus(0); -- on with tcp addr
