@@ -37,7 +37,7 @@ int transfer_data() {
 }
 
 void print_app_header() {
-  xil_printf("\n\r\n\r-----DUNE DWA PSV 2021, July 14 ------\n\r");
+  xil_printf("\n\r\n\r-----DUNE DWA PSV 2021, July 29 ------\n\r");
 }
 int *ptr = 0xc2000000;
 err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
@@ -91,6 +91,12 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) 
   // xil_printf("%10x %s\r\n", pktAddr, " pktAddr");
 
   int regIndex;
+
+  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
+		 + ((55) << 2)) = 3; //write tcp status bit to PL
+
+  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
+		 + ((55) << 2)) = 1; //write tcp status bit to PL
 
   switch (pktType) {
   case 0xFE170000:
@@ -248,6 +254,8 @@ int start_application() {
 	tcp_accept(pcb, accept_callback);
 
   xil_printf("Trigger Processor TCP server started @ port %d\n\r", port);
+  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
+		 + ((55) << 2)) = 1; //write tcp status bit to PL
 
   //start_udp(0X8CF77BAB);
 
