@@ -947,11 +947,9 @@ class MainWindow(qtw.QMainWindow):
             self.scanTable.setColumnCount(5)
 
             self.radioBtns[0].setChecked(True)
-            #need to enable the start button, but should only happen when connected to the dwa, the following code was around L2617 to 
-            #nable the buttons I believe so I copied it here
+            #need to enable the start button, I think this is sufficient
             
-            if self.enableScanButtonTemp and (self.dwaControllerState == State.IDLE):
-                self.enableScanButtonTemp = False
+            if self.enableScanButtonTemp:
                 self._scanButtonEnable()
 
     def configureScans(self):
@@ -1016,8 +1014,7 @@ class MainWindow(qtw.QMainWindow):
         self.radioBtns[0].setChecked(True)
         #need to enable the start button, but should only happen when connected to the dwa
 
-        if self.enableScanButtonTemp and (self.dwaControllerState == State.IDLE):
-            self.enableScanButtonTemp = False
+        if self.enableScanButtonTemp:
             self._scanButtonEnable()
 
     def _configurePlots(self):
@@ -2691,8 +2688,6 @@ class MainWindow(qtw.QMainWindow):
         else:
             if len(self.radioBtns)>0:
                 self.btnScanCtrl.setEnabled(True)
-            else: 
-                self.btnScanCtrl.setEnabled(False)
         self.btnScanCtrlAdv.setEnabled(True)
             
     def updateAmplitudePlots(self):
