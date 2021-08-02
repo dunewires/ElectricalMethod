@@ -162,10 +162,10 @@ unsigned int udpMacAddr;
 	netmask.addr = 0;
 #else
 	/* initliaze IP addresses to be used */
-	IP4_ADDR(&ipaddr,  128,	103, 100, 173);
+	IP4_ADDR(&ipaddr,  192,	168, 1, udpMacAddrB[0]);
 //	IP4_ADDR(&ipaddr,  192, 168,   1, 10);
 	IP4_ADDR(&netmask, 255, 255, 255,  0);
-	IP4_ADDR(&gw,      128, 103,   1,  1);
+	IP4_ADDR(&gw,      192, 168, 1,  1);
 //	IP4_ADDR(&gw,      192, 168,   1,  1);
 #endif
 #endif

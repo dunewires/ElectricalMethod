@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Jun  8 17:33:32 2021
+-- Last update : Thu Jul 29 08:30:24 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -123,6 +123,8 @@ package global_def is
         relayUpdate       : boolean;
         relayAutoBreakEna : std_logic;
         useAcStimTrig     : std_logic;
+
+        netStatus : std_logic_vector(7 downto 0);
     end record; -- fromDaqRegType
 
 end global_def;

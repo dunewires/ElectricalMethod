@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Fri Jun 18 15:16:52 2021
+-- Last update : Thu Jul 15 22:19:49 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ entity headerGenerator is
         pktBuildBusy : out boolean;
         freqScanBusy : in  boolean;
 
-        stimPeriodActive  : in unsigned(23 downto 0); -- current period (10ns)
+        stimPeriodActive  : in unsigned(30 downto 0); -- current period (10ns)
         stimPeriodCounter : in unsigned(23 downto 0); -- track how many freqs
                                                       -- have been done in
                                                       -- this run.   FIXME: bits???
@@ -101,7 +101,7 @@ architecture rtl of headerGenerator is
 
     ----------------------------
     ---- Setup for Header C
-    constant nHeadC      : integer                                         := 8; -- # of header words (incl. 2 delimiters)
+    constant nHeadC      : integer                                         := 9; -- # of header words (incl. 2 delimiters)
     constant nHeadCLog   : integer                                         := integer(log2(real(nHeadC +1)));
     signal headCDataList : slv_vector_type(nHeadC-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
@@ -135,7 +135,7 @@ architecture rtl of headerGenerator is
     signal udpCnt_next : unsigned(15 downto 0) := (others => '0');
     signal udpPktCnt   : unsigned(15 downto 0) := (others => '0');
 
-    signal stimPeriodActive_reg  : unsigned(23 downto 0) := (others => '0');
+    signal stimPeriodActive_reg  : unsigned(30 downto 0) := (others => '0');
     signal adcSamplingPeriod_reg : unsigned(23 downto 0) := (others => '0');
 
 begin
@@ -219,8 +219,9 @@ begin
             x"40" & std_logic_vector(stimPeriodCounter),
             --FIXME: the following product can overflow...
             x"41" & std_logic_vector(adcSamplesPerFreq(23 downto 0)),
-            x"42" & std_logic_vector(stimPeriodActive_reg),
             x"43" & std_logic_vector(adcSamplingPeriod_reg),
+            x"52" & x"00" & "0" & std_logic_vector(stimPeriodActive_reg(30 downto 16)),
+            x"53" & x"00" & std_logic_vector(stimPeriodActive_reg(15 downto 0)),
             x"CCCCCCCC",
             x"DDDD" & x"5151" -- FIXME: this shoould be in the genDFrame_s...
     );

@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed May 19 21:54:58 2021
+-- Last update : Thu Jul 29 08:20:36 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -52,6 +52,8 @@ entity wtaController is
 		adcStart : out boolean   := false;
 		adcBusy  : in  std_logic := '0';
 
+		pBAbort  : in  std_logic := '0';
+
 		dwaClk100 : in std_logic := '0'
 	);
 end entity wtaController;
@@ -72,7 +74,7 @@ begin
 	ctrlState_seq : process (dwaClk100)
 	begin
 		if rising_edge(dwaClk100) then
-			scanAbort         <= (scanAbort or fromDaqReg.scanAbort) and freqScanBusy;
+			scanAbort         <= (scanAbort or fromDaqReg.scanAbort or pBAbort = '1') and freqScanBusy;
 			scanDone          <= (freqSet >= fromDaqReg.noiseFreqMax) when noiseReadoutBusy else (freqSet >= fromDaqReg.stimFreqMax);
 			toDaqReg.ctrlBusy <= true;
 			ctrlStart_del     <= fromDaqReg.ctrlStart;

@@ -22,6 +22,7 @@ proc makeBit {} {
     place
     postPlacePhysOpt
     route
+    postRoutePhysOpt
     bitgen
 }
 
@@ -264,9 +265,9 @@ proc postPlacePhysOpt {} {
     global proj_name
 
     puts "\n##################################################################"
-    puts "#                    Post Place Phys Opt   AlternateReplication   #"
+    puts "#                    Post Place Phys Opt   AggressiveExplore   #"
     puts "##################################################################\n"
-    phys_opt_design -directive AlternateReplication
+    phys_opt_design -directive AggressiveExplore
     report_timing_summary -file $proj_dir/${proj_name}_post_place_physopt_tim2.rpt
  
     set WNS [get_property SLACK [get_timing_paths -max_paths 1 -nworst 1 -setup]]
@@ -281,7 +282,7 @@ proc route {} {
     puts "##################################################################"
     puts ""
     # Route Design
-    route_design -directive Explore
+    route_design -directive AggressiveExplore
     report_timing_summary -file $proj_dir/${proj_name}_post_route_tim.rpt
     report_utilization -hierarchical -file $proj_dir/${proj_name}_post_route_util.rpt
     report_route_status -file $proj_dir/${proj_name}_post_route_status.rpt
@@ -306,7 +307,7 @@ proc postRoutePhysOpt {} {
     puts "#                    Post Route Phys Opt    AggressiveExplore                #"
     puts "##################################################################\n"
     phys_opt_design -directive AggressiveExplore
-    report_timing_summary -file $proj_dir/${proj_name}_post_place_physopt_tim1.rpt
+    report_timing_summary -file $proj_dir/${proj_name}_post_route_physopt_tim1.rpt
 
  
     #phys_opt_design -directive AddRetime
@@ -357,7 +358,7 @@ proc progFlash {} {
     puts "#                   program flash                           #"
     puts "##################################################################\n"
 
-    source $scriptdir/implementation/progFlash.tcl
+    source $scriptdir/implementation/progFlashV2.tcl
 }
 
 proc writeGdrive {} {
