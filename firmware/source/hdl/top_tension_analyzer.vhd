@@ -234,17 +234,14 @@ begin
   genLedNetStatus : process (dwaClk100)
   begin
     if rising_edge(dwaClk100) then
-      if netStatusCnt  =  (netStatusCnt'range  =>  '1') then
-        -- we are finished with the current TCP read/write blink, wait here for the next
-        led(2) <= fromDaqReg.netStatus(0); -- on with tcp addr
-        if fromDaqReg.netStatus(1) then -- blink on transaction
-          -- scale requested frequency to a time range we can actually see ~ 1.5 sec to 150 ms
+
+          led(2)        <='1' when and(netStatusCnt) else '0';
+        if not fromDaqReg.netStatus(0) then -- blink on transaction
           netStatusCnt <= (others => '0');
+        elsif netStatusCnt  /=  (netStatusCnt'range  =>  '1') then -- extend pulse ~150ms
+            netStatusCnt <= netStatusCnt + 1;
         end if;
-      else
         -- when counting, pulse 0 for ~150 ms at the end of each count
-        led(2)        <='0';
-        netStatusCnt <= netStatusCnt + 1;
       end if;
     end if;
   end process genLedNetStatus;
@@ -601,7 +598,8 @@ begin
       clk                    => dwaClk100,
 
       probe_in0(3 downto 0)  => led,
-      probe_in0(31 downto 4) => (others => '0'),
+      probe_in0(5 downto 4) => fromDaqReg.netStatus(1 downto 0),
+      probe_in0(31 downto 6) => (others => '0'),
       probe_in1              => (others => '0'),
       probe_in2              => (others => '0'),
       probe_out0             => open,
