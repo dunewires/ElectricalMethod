@@ -418,7 +418,7 @@ class DwaDataParser():
     def _postProcessFreqFrame(self, dd):
         dd['adcSamplingPeriod_sec'] = dd['adcSamplingPeriod']*1e-8
 
-        if 'stimPeriodActive_MSb' in dd:    # Now we use a 78ps clock            
+        if 'stimPeriodActive_MSb' in dd:    # Now we use a 78.125ps clock            
             #print("found new stimFreq")
             #print(f"dd['stimPeriodActive_MSb'] = {dd['stimPeriodActive_MSb']}")
             #print(f"dd['stimPeriodActive_LSb'] = {dd['stimPeriodActive_LSb']}")
