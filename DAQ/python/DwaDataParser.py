@@ -426,7 +426,7 @@ class DwaDataParser():
             # compute the frequency in Hz
             dd['stimPeriodActive'] = (dd['stimPeriodActive_MSb'] << 16) + dd['stimPeriodActive_LSb']
             #dd['stimFreqActive_Hz'] = (1e9/dd['stimPeriodActive'])/2.5 # convert period in 2.5ns to freq in Hz
-            dd['stimFreqActive_Hz'] = (1e12/dd['stimPeriodActive'])/78.0 # convert period in 78ps to freq in Hz
+            dd['stimFreqActive_Hz'] = (1e12/dd['stimPeriodActive'])/78.125 # convert period in 78.125ps to freq in Hz
             #print(f"dd['stimFreqActive_Hz'] = {dd['stimFreqActive_Hz']}")
         else:  # but originally, we used a 10ns clock
             dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodActiveOld'] # convert period in 10ns to freq in Hz
