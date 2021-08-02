@@ -2515,3 +2515,14 @@ con
 09:27:30 INFO  : Result from executing command 'getPlatforms': dwaPsHw|/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/dwaPsHw.xpfm
 09:27:33 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
 16:15:58 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
+11:37:42 INFO  : Launching XSCT server: xsct -n  -interactive /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/temp_xsdb_launch_script.tcl
+11:37:44 INFO  : XSCT server has started successfully.
+11:37:44 INFO  : Successfully done setting XSCT server connection channel  
+11:37:44 INFO  : plnx-install-location is set to ''
+11:37:44 INFO  : Successfully done setting workspace for the tool. 
+11:37:47 INFO  : Platform repository initialization has completed.
+11:37:47 INFO  : Successfully done query RDI_DATADIR 
+11:37:47 INFO  : Registering command handlers for Vitis TCF services
+11:38:06 INFO  : Result from executing command 'getProjects': dwaPsHw
+11:38:06 INFO  : Result from executing command 'getPlatforms': dwaPsHw|/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/dwaPsHw.xpfm
+11:38:09 INFO  : Checking for BSP changes to sync application flags for project 'dwaPsSw'...
