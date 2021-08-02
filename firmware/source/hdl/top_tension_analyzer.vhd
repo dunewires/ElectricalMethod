@@ -241,8 +241,6 @@ begin
         elsif netStatusCnt  /=  (netStatusCnt'range  =>  '1') then -- extend pulse ~150ms
             netStatusCnt <= netStatusCnt + 1;
         end if;
-        -- when counting, pulse 0 for ~150 ms at the end of each count
-      end if;
     end if;
   end process genLedNetStatus;
 
