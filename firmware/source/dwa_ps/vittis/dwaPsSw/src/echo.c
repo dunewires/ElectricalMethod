@@ -94,7 +94,8 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) 
 
   int regIndex;
 
-
+  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
+		 + ((55) << 2)) = 2; //write tcp status bit to PL
 
   switch (pktType) {
   case 0xFE170000:
@@ -193,18 +194,17 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) 
       break;
 
   }
+
+  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
+		 + ((55) << 2)) = 1; //write tcp status bit to PL
+
 	pbuf_free(p);
-
-
 
 	return ERR_OK;
 }
 
 err_t accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err) {
 	static int connection = 1;
-
-	  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
-			 + ((55) << 2)) = 2; //write tcp status bit to PL
 
 	/* set the receive callback for this connection */
 	tcp_recv(newpcb, recv_callback);
@@ -216,8 +216,7 @@ err_t accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err) {
 	/* increment for subsequent accepted connections */
 	connection++;
 
-	  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
-			 + ((55) << 2)) = 1; //write tcp status bit to PL
+
 
 	return ERR_OK;
 }
