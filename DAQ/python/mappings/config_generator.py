@@ -57,17 +57,16 @@ def configure_run_type(auto=1):
 
 def configure_fixed_frequency(stim_freq_req=90):
     '''Return a dictionary of a configuration value for the fixed stimulus frequency given an input frequency value in hertz.'''
-    # TODO change unit_factor to 256 after firmware change
     
-    unit_factor = 16
+    unit_factor = 256
+    
     return {'stimFreqReq': format(int(stim_freq_req * unit_factor), '06X')}
 
 
 def configure_scan_frequencies(stim_freq_min, stim_freq_max, stim_freq_step=1/16):
     '''Return a dictionary of configuration values for the scan stimulus frequencies, i.e. the scan minimum and maximum frequencies and the scan frequency step size, given input frequency values in hertz.'''
-    # TODO change unit_factor to 256 after firmware change
     
-    unit_factor = 16
+    unit_factor = 256
 
     if stim_freq_min > stim_freq_max:
         raise ValueError('Scan minimum frequency is larger than scan maximum frequency.')
@@ -77,7 +76,7 @@ def configure_scan_frequencies(stim_freq_min, stim_freq_max, stim_freq_step=1/16
             'stimFreqStep': format(int(stim_freq_step * unit_factor), '06X')}
 
 
-def configure_wait_times(stim_time_initial=2, stim_time=0.1):
+def configure_wait_times(stim_time_initial=2, stim_time=0.5):
     '''Return a dictionary of configuration values for the initial and subsequent stimulus wait times given input time values in seconds.'''
     
     unit_factor = 1/2.56e-6
