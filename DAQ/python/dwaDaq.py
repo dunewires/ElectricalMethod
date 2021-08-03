@@ -1992,6 +1992,7 @@ class MainWindow(qtw.QMainWindow):
                     # logging.warning("pointers")
                     # logging.warning(json.dumps(pointers,indent=2))
                     # Get list of database ids for the individual wire measurements
+                    logging.info(pointers)
                     recordIds = [x["testId"] for x in pointers]
                     # logging.warning("recordIds")
                     # logging.warning(recordIds)
@@ -2000,7 +2001,7 @@ class MainWindow(qtw.QMainWindow):
                     # logging.warning("resonanceEntries")
                     # logging.warning(json.dumps(resonanceEntries,indent=2))
                     # Extract the list of resonances from the database entries
-                    resonances = [entry["data"]["wires"][str(i)] for i,entry in enumerate(resonanceEntries)]
+                    resonances = [entry["data"]["wires"][str(i)] for i,entry in enumerate(resonanceEntries, start=1)]
                     # logging.warning("resonances")
                     # logging.warning(resonances)
                     # Compute the tension and save it to the table.
@@ -2027,10 +2028,30 @@ class MainWindow(qtw.QMainWindow):
     @pyqtSlot()
     def submitResonances(self):
         # Load sietch credentials #FIXME still using James's credentials
-        # FIXME: values like 'measuredBy' and 'dwaUuid' etc should be pulled from the .json amplitude file
         sietch = SietchConnect("sietch.creds")
-        for dwaCh, ch in enumerate(self.loadedDatabaseConfig["channels"]): # Loop over wire numbers in scan
-            for w in self.wires:
+
+        pointer_lists = {
+            "X": {
+                "A": [{"testId": None}]*900,
+                "B": [{"testId": None}]*900
+            },
+            "U": {
+                "A": [{"testId": None}]*900,
+                "B": [{"testId": None}]*900
+            },
+            "V": {
+                "A": [{"testId": None}]*900,
+                "B": [{"testId": None}]*900
+            },
+            "G": {
+                "A": [{"testId": None}]*900,
+                "B": [{"testId": None}]*900
+            },
+        }
+        
+        pointer_list = [{"testId": None}]*900
+        for dwaCh, ch in enumerate(self.loadedDatabaseConfig["channels"]): # Loop over channels in scan
+            for w in self.loadedDatabaseConfig["channels"]:
                 wire_ch = channel_map.wire_to_apa_channel(self.loadedDatabaseConfig["layer"], w)
                 if wire_ch == ch:
                     resonance_result = {
@@ -2054,7 +2075,22 @@ class MainWindow(qtw.QMainWindow):
                         },
                     }
                     dbid = sietch.api('/test',resonance_result)
+                    pointer_list[w] = {"testId": dbid}
 
+        
+        pointer_lists[self.loadedDatabaseConfig["layer"]][self.loadedDatabaseConfig["side"]] = pointer_list
+        record_result = {
+            "componentUuid":"77e0c450-8863-11eb-8dcd-0242ac130003",
+            "formId": "wire_tension_pointer",
+            "formName": "Wire Tension Pointer Record",
+            "data": {
+                "version": "chris 1.1",
+                "wires": pointer_lists,
+                "saveAsDraft": True,
+                "submit": True
+            }
+        }
+        dbid= sietch.api('/test',record_result)
 
     @pyqtSlot()
     def loadEventData(self):
@@ -2230,9 +2266,10 @@ class MainWindow(qtw.QMainWindow):
                                                   self.ampData[reg.value]['ampl'])
         configFile = os.path.join(self.ampDataFilename.text(), "dwaConfig.ini")
         with open(configFile) as fh:
-            self.loadedConfigFile = dcf.DwaConfigFile(configFile, sections=['FPGA','Database'])
-            self.loadedConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
-            self.loadedDatabaseConfig = self.loadedConfigFile.getConfigDict(section='Database')
+            self.loadedConfigFile = dcf.DwaConfigFile(configFile, sections=['FPGA','DATABASE'])
+            self.loadedDatabaseConfig = self.loadedConfigFile.getConfigDict(section='DATABASE')
+            logging.info("LOADING.......")
+            logging.info(self.loadedDatabaseConfig)
 
     def _loadConfigFile(self, updateGui=True):
         #updateGui function no longer works with left column  and original textbox removed 
