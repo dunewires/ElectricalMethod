@@ -449,7 +449,7 @@ class MainWindow(qtw.QMainWindow):
         # Info about current run
         self.stimFreqMin = 0
         self.stimFreqMax = 0
-        self.dwaControllerState = None
+        #self.dwaControllerState = None
 
         # Socket for UDP connection to FPGA    
         self.sock = None
@@ -614,6 +614,20 @@ class MainWindow(qtw.QMainWindow):
         self.configLayerComboBox.addItem("U")
         self.configLayerComboBox.addItem("V")
         self.configLayerComboBox.addItem("X")
+
+        self.connectLabel.setStyleSheet("color : red")
+        self.connectLabel.setText("DWA is not connected")
+        self.configureLabel.setStyleSheet("color : red")
+        self.configureLabel.setText("Please configure a scan")
+        self.IDLELabel.setStyleSheet("color : red")
+        try:
+            self.connectedToUzed
+        except AttributeError:
+            self.IDLELabel.setText("DWA state --")
+        else:
+            self.IDLELabel.setText("DWA state: "+str(self.dwaControllerState))
+        self.configure = ""
+        self.idle = ""
 
         # Resonance analysis plots
         self.resonanceProcessedDataGLW.scene().sigMouseClicked.connect(self._resProcGraphClicked)
@@ -793,6 +807,7 @@ class MainWindow(qtw.QMainWindow):
             self.btnDwaConnect.setText("Re-connect")
             self.dwaFirmwareDate_val.setText(dateCodeYYMMDD)
             self.enableScanButtonTemp = True
+            self.connectLabel.setText("")
         
         #out = self.uz.readValue('00000012')  # Firmware date code (HHMMSS)
         #print(f"Firmware date code [HHMMSS] = {hex(out[-1])}")
@@ -877,6 +892,8 @@ class MainWindow(qtw.QMainWindow):
             self.configureSingleScans()
 
     def configureSingleScans(self):
+        self.scanTable.clearContents()
+
         configLayer = self.configLayerComboBox.currentText()
         configHeadboard = self.configHeadboardSpinBox.value()
 
@@ -895,17 +912,17 @@ class MainWindow(qtw.QMainWindow):
                 for wire in wires:
                     if wire == self.spinBox.value():
                         valid = True
-                        self.wireNum = wire
+                        self.wireNum = [wire]
                         freqMin = float(rd["range"][0])
                         freqMax = float(rd["range"][1])
 
         try:
             valid
         except:
-            logging.info("Please make sure the wire in the spin box is valid")
+            logging.info("Please make sure the wire in the spin box is valid, and that the wire is not too short")
             wire = qtw.QMessageBox()
             wire.setWindowTitle("Check Wire")
-            wire.setText("Please make sure the wire in the spin box is valid")
+            wire.setText("Please make sure the wire in the spin box is valid, and that the wire is not too short")
             wire.exec_()
         else:
             #table with scan detailss
@@ -948,11 +965,16 @@ class MainWindow(qtw.QMainWindow):
 
             self.radioBtns[0].setChecked(True)
             #need to enable the start button, I think this is sufficient
-            
-            if self.enableScanButtonTemp:
-                self._scanButtonEnable()
+
+            self.configureLabel.setText("")
+            self.configure = True
+
+            self.btnScanCtrl.setEnabled(True)
+            self._scanButtonEnable()
 
     def configureScans(self):
+        self.scanTable.clearContents()
+
         configLayer = self.configLayerComboBox.currentText()
         configHeadboard = self.configHeadboardSpinBox.value()
 
@@ -1012,10 +1034,10 @@ class MainWindow(qtw.QMainWindow):
                 scanNum = scanNum + 1
 
         self.radioBtns[0].setChecked(True)
-        #need to enable the start button, but should only happen when connected to the dwa
 
-        if self.enableScanButtonTemp:
-            self._scanButtonEnable()
+        self.configureLabel.setText("")
+        self.configure = True
+        self._scanButtonEnable()
 
     def _configurePlots(self):
         self.chanViewMain = 0  # which channel to show large for V(t) data
@@ -1482,6 +1504,7 @@ class MainWindow(qtw.QMainWindow):
         else:
             self.wires = rd["wires"]
             self.wires.sort(key = int)
+
         channels = rd["channels"]
 
         self.wires.sort(key = int)
@@ -1511,8 +1534,12 @@ class MainWindow(qtw.QMainWindow):
         for i in range(0,len(channels)):
             dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
         apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
-
-        dataConfig = {"channels": apaChannels, "wires": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+        
+        if self.configRadioSingle.isChecked():
+            dataConfig = {"channels": [apaChannels[0]], "wires": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+        "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
+        else:
+            dataConfig = {"channels": apaChannels, "wires": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
         "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
 
         self._loadDaqConfig()
@@ -1546,7 +1573,7 @@ class MainWindow(qtw.QMainWindow):
         
         self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
         if self.configRadioSingle.isChecked():
-            pass
+            self.wires = self.wires[0]
         else:
             self.wires = "-".join([str(w) for w in self.wires])
         self.scanRunDataDir = os.path.join(self.dataDir, self.configLayer + "_" + self.configApaSide + 
@@ -2635,6 +2662,12 @@ class MainWindow(qtw.QMainWindow):
                 self._scanButtonEnable()
                 
             self.dwaControllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerStateStr']}")
+            if self.dwaControllerState_val.text() == "IDLE":
+                self.IDLELabel.setText("")
+                self.idle = True
+
+            else:
+                self.IDLELabel.setText("DWA state: "+str(dwaControllerState_val.text()))
             self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")
             self.buttonStatus_val.setText(f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
 
@@ -2702,12 +2735,7 @@ class MainWindow(qtw.QMainWindow):
     def _scanButtonEnable(self):
         #for scb in self.scanCtrlButtons:
             #scb.setEnabled(state)
-        try:
-            self.radioBtns
-        except:
-            self.btnScanCtrl.setEnabled(False)
-            logging.info("error occurred, no radio buttons")
-        else:
+        if self.connectedToUzed and self.idle and self.configure:
             if len(self.radioBtns)>0:
                 self.btnScanCtrl.setEnabled(True)
         self.btnScanCtrlAdv.setEnabled(True)
