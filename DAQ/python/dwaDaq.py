@@ -970,8 +970,6 @@ class MainWindow(qtw.QMainWindow):
 
             self.configureLabel.setText("")
             self.configure = True
-
-            self.btnScanCtrl.setEnabled(True)
             self._scanButtonEnable()
 
     def configureScans(self):
