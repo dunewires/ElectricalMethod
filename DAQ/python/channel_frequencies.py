@@ -312,6 +312,11 @@ def compute_tensions_from_resonances(wire_freqs_expected, freqs_measured):
     return (val.x**2 * NOMINAL_TENSION).tolist()
 
 def get_expected_resonances(wire_layer, channel, thresh = 1000.):
+    '''
+    Return a pair of lists
+    List 1: A list of the wires associated with a channel
+    List 2: A list of lists, with each sublist at index i corresponding to the resonances of the wire at index i of List 1. 
+    '''
     freqs = wire_frequencies_from_channels(wire_layer, [channel])
     freqs_in_range = {}
     for w in freqs:
@@ -322,74 +327,6 @@ def get_expected_resonances(wire_layer, channel, thresh = 1000.):
                 else:
                     freqs_in_range[w] = [res]
  
-    return [w for w in freqs_in_range], [freqs_in_range[w] for w in freqs_in_range]
-
-def get_measured_resonances(layer_data, wire_layer, channel, thresh = 1000.):
-    wires, _ = get_expected_resonances(wire_layer, channel, thresh)
-    # Do we have all the scans we need?
-    measured_resonances = []
-    for w in wires: 
-        if w not in layer_data.keys(): return []
-        measured_resonances.append(layer_data[w])
-    return measured_resonances
-
-def get_layer_data(sietch, tension_frame_uuid, side, wire_layer):
-    mostRecentPointerTableLookup = ""
-    try:
-        mostRecentPointerTableLookup = sietch.api("/search/test?limit=1", {
-            "formId": "wire_tension_pointer", 
-            "componentUuid": tension_frame_uuid,
-            # "layer": layer
-        })
-    except:
-        # No pointer table found for UUID
-        # TODO: Make popup message
-        return
-    
-
-    if mostRecentPointerTableLookup:
-        mostRecentPointerTableDBid = mostRecentPointerTableLookup[0]["_id"]
-        # Get table from database
-        pointerTable = sietch.api("/test/"+mostRecentPointerTableDBid)
-        # Lookup table found, loop over layers
-        wirePointersAllLayers = pointerTable["data"]["wires"]
-        
-        if wire_layer not in wirePointersAllLayers.keys():
-            # TODO: Make popup message
-            print("No pointer table found for layer "+wire_layer+".")
-            return
-        
-        wirePointersForLayer = wirePointersAllLayers[wire_layer]   
-         
-        # logging.warning("wirePointersForLayer")
-        # logging.warning(json.dumps(wirePointersForLayer,indent=2))
-        # Separate the A and B sides
-        pointers = wirePointersForLayer[side]
-        # logging.warning("pointers")
-        # logging.warning(json.dumps(pointers,indent=2))
-        # Get list of database ids for the individual wire measurements
-        recordIds = [x["testId"] for x in pointers]
-        # logging.warning("recordIds")
-        # logging.warning(recordIds)
-        # Get database entries for the individual wire resonance measurements
-        resonanceEntries = sietch.api("/test/getBulk",recordIds) #[allResonanceEntries[x] for x in recordIds]
-        # logging.warning("resonanceEntries")
-        # logging.warning(json.dumps(resonanceEntries,indent=2))
-        # Extract the list of resonances from the database entries
-        resonanceDictionaries = [entry["data"]["wires"] for entry in resonanceEntries]
-        layer_data = {}
-        for d in resonanceDictionaries:
-            for w in d.keys():
-                layer_data[w] = d[w]
-        return layer_data
-
-def get_tension_frame_uuid_from_apa_uuid(sietch, apa_uuid):
-    tension_frames_metadata = sietch.api("/search/component", {
-        "type":"Tension Frame",
-    })
-    for t in tension_frames_metadata:
-        tension_frame_data = sietch.api("/component/"+t["componentUuid"])
-        if tension_frame_data["data"]["apa"] == apa_uuid: return t["componentUuid"]
-    return None
+    return [int(w) for w in freqs_in_range], [freqs_in_range[w] for w in freqs_in_range]
 
 
