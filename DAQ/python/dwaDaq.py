@@ -1,4 +1,8 @@
 # FIXME/TODO:
+# * Run status "min", "max" and "step" should come from Run Header (not from CONFIG file)
+# * "LEDs" for HV and AC
+# * Print DWA connected / not connected in the left-hand side
+# * "Advanced" tab: not all items show (below the "config file contents" text area)
 # * AUTO-SCAN items
 #   + After all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
 #   + Suggestion: the "Wires" column in the AUTO scan confit table should just list the numbers, not an array of strings...
