@@ -92,9 +92,11 @@ import DwaMicrozed as duz
 from SietchConnect import SietchConnect
 
 sys.path.append('./mappings')
+sys.path.append('./database')
 import config_generator
 import channel_map
 import channel_frequencies
+import database_functions
 import ChannelMapping
 
 DWA_DAQ_VERSION = "X.X.X"
@@ -1966,71 +1968,26 @@ class MainWindow(qtw.QMainWindow):
         # Load sietch credentials #FIXME still using James's credentials
         sietch = SietchConnect("sietch.creds")
         # Get APA UUID from text box
-        pointerTableApaUuid = self.pointerTableApaUuid.text()
-        # Get most recent pointer table for this layer
-        mostRecentPointerTableLookup = ""
-        try:
-            mostRecentPointerTableLookup = sietch.api("/search/test?limit=1", {
-                "formId": "wire_tension_pointer", 
-                "componentUuid": pointerTableApaUuid,
-                # "layer": layer
-            })
-        except:
-            # No pointer table found for UUID
-            self.configFileContents.setPlainText("Invalid UUID")
-        
+        apaUuid = self.pointerTableApaUuid.text()
+        # Get tension frame UUID
+        tensionFrameUuid = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, apaUuid)
 
-        if mostRecentPointerTableLookup:
-            # logging.warning("mostRecentPointerTableLookup")
-            # logging.warning(json.dumps(mostRecentPointerTableLookup,indent=2))
-            # Get database id for this pointer table
-            mostRecentPointerTableDBid = mostRecentPointerTableLookup[0]["_id"]
-            # logging.warning("APA Uuid:")
-            # logging.warning(pointerTableApaUuid)
-            # Get table from database
-            pointerTable = sietch.api("/test/"+mostRecentPointerTableDBid)
-            # Lookup table found, loop over layers
-            wirePointersAllLayers = pointerTable["data"]["wires"]
-            for layer in ["G", "U", "V", "X"]:
-                if layer in wirePointersAllLayers.keys():
-                    wirePointersForLayer = wirePointersAllLayers[layer]
-                else:
-                    logging.warning("No pointer table found for layer "+layer+".")
-                    continue      
+        for layer in ["X"]: #, "U", "V", "G"]:
+            for side in ["A"]: #, "B"]:
+                layer_data = database_functions.get_layer_data(sietch, tensionFrameUuid, side, layer)
+                for ch in range(1, 8):
+                    wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
+                    measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
+                    mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)        
+                    for i,w in enumerate(wires):
+                        self.tensionData[layer+side][w-1] = mapped[i]
 
-                for side in ["A", "B"]:          
-                    # logging.warning("wirePointersForLayer")
-                    # logging.warning(json.dumps(wirePointersForLayer,indent=2))
-                    # Separate the A and B sides
-                    pointers = wirePointersForLayer[side]
-                    # logging.warning("pointers")
-                    # logging.warning(json.dumps(pointers,indent=2))
-                    # Get list of database ids for the individual wire measurements
-                    recordIds = [x["testId"] for x in pointers]
-                    # logging.warning("recordIds")
-                    # logging.warning(recordIds)
-                    # Get database entries for the individual wire resonance measurements
-                    resonanceEntries = sietch.api("/test/getBulk",recordIds) #[allResonanceEntries[x] for x in recordIds]
-                    # logging.warning("resonanceEntries")
-                    # logging.warning(json.dumps(resonanceEntries,indent=2))
-                    # Extract the list of resonances from the database entries
-                    resonances = [entry["data"]["wires"][str(i)] for i,entry in enumerate(resonanceEntries)]
-                    # logging.warning("resonances")
-                    # logging.warning(resonances)
-                    # Compute the tension and save it to the table.
-                    # FIXME: currently this is done is a very dumb way with no logic to which resonances get picked (just uses the first resonance).
-                    for i, res in enumerate(resonances):
-                        if len(res)>0:
-                            self.tensionData[layer+side][i] = 4*1.16e-4*1.15**2*res[0]**2/3.2
-
-                        
-                    # FIXME: this should only happen once -- in _makeCurves()
-                    # Create the scatter plot and add it to the view
-                    scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
-                    self.tensionPlots[layer][side].addItem(scatter)
-                    pos = [{'pos': [i,self.tensionData[layer+side][i]]} for i in range(len(self.tensionData[layer+side]))]
-                    scatter.setData(pos)
-                    #self.curves['tension']['TofWireNum'][layer+side].setData(pos)
+                # FIXME: this should only happen once -- in _makeCurves()
+                # Create the scatter plot and add it to the view
+                scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
+                self.tensionPlots[layer][side].addItem(scatter)
+                pos = [{'pos': [i,self.tensionData[layer+side][i]]} for i in range(len(self.tensionData[layer+side]))]
+                scatter.setData(pos)
 
         self.tensionTableModel = TensionTableModel(self.tensionData)
         self.tensionTableView.setModel(self.tensionTableModel)
@@ -2041,10 +1998,30 @@ class MainWindow(qtw.QMainWindow):
     @pyqtSlot()
     def submitResonances(self):
         # Load sietch credentials #FIXME still using James's credentials
-        # FIXME: values like 'measuredBy' and 'dwaUuid' etc should be pulled from the .json amplitude file
         sietch = SietchConnect("sietch.creds")
-        for dwaCh, ch in enumerate(self.loadedDatabaseConfig["channels"]): # Loop over wire numbers in scan
-            for w in self.wires:
+
+        pointer_lists = {
+            "X": {
+                "A": [{"testId": None}]*900,
+                "B": [{"testId": None}]*900
+            },
+            "U": {
+                "A": [{"testId": None}]*900,
+                "B": [{"testId": None}]*900
+            },
+            "V": {
+                "A": [{"testId": None}]*900,
+                "B": [{"testId": None}]*900
+            },
+            "G": {
+                "A": [{"testId": None}]*900,
+                "B": [{"testId": None}]*900
+            },
+        }
+        
+        pointer_list = [{"testId": None}]*900
+        for dwaCh, ch in enumerate(self.loadedDatabaseConfig["channels"]): # Loop over channels in scan
+            for w in self.loadedDatabaseConfig["channels"]:
                 wire_ch = channel_map.wire_to_apa_channel(self.loadedDatabaseConfig["layer"], w)
                 if wire_ch == ch:
                     resonance_result = {
@@ -2068,7 +2045,22 @@ class MainWindow(qtw.QMainWindow):
                         },
                     }
                     dbid = sietch.api('/test',resonance_result)
+                    pointer_list[w] = {"testId": dbid}
 
+        
+        pointer_lists[self.loadedDatabaseConfig["layer"]][self.loadedDatabaseConfig["side"]] = pointer_list
+        record_result = {
+            "componentUuid":"77e0c450-8863-11eb-8dcd-0242ac130003",
+            "formId": "wire_tension_pointer",
+            "formName": "Wire Tension Pointer Record",
+            "data": {
+                "version": "chris 1.1",
+                "wires": pointer_lists,
+                "saveAsDraft": True,
+                "submit": True
+            }
+        }
+        dbid= sietch.api('/test',record_result)
 
     @pyqtSlot()
     def loadEventData(self):
@@ -2244,9 +2236,10 @@ class MainWindow(qtw.QMainWindow):
                                                   self.ampData[reg.value]['ampl'])
         configFile = os.path.join(self.ampDataFilename.text(), "dwaConfig.ini")
         with open(configFile) as fh:
-            self.loadedConfigFile = dcf.DwaConfigFile(configFile, sections=['FPGA','Database'])
-            self.loadedConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
-            self.loadedDatabaseConfig = self.loadedConfigFile.getConfigDict(section='Database')
+            self.loadedConfigFile = dcf.DwaConfigFile(configFile, sections=['FPGA','DATABASE'])
+            self.loadedDatabaseConfig = self.loadedConfigFile.getConfigDict(section='DATABASE')
+            logging.info("LOADING.......")
+            logging.info(self.loadedDatabaseConfig)
 
     def _loadConfigFile(self, updateGui=True):
         #updateGui function no longer works with left column  and original textbox removed 

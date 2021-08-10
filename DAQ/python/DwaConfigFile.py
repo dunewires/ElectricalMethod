@@ -1,9 +1,10 @@
 import configparser
 import string
+import ast
 #import logging
 #logger = logging.getLogger(__name__)
 
-SECTIONS = ["FPGA","DAQ", "Database"]
+SECTIONS = ["FPGA","DAQ", "DATABASE"]
 
 class DwaConfigFile():
 
@@ -51,7 +52,7 @@ class DwaConfigFile():
                                      "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq",
                                      "relayWireTop", "relayWireBot", "relayBusTop", "relayBusBot",
                                      ]
-        self.validOptions["Database"] = ["wires", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side", "channels"]
+        self.validOptions["DATABASE"] = ["wires", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side", "channels"]
 
         self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose", "client_IP"]
 
@@ -249,6 +250,10 @@ class DwaConfigFile():
             self.config['DAQ']['statusPeriod'] = f"{int(self.config['DAQ']['statusPeriodSec'] / 2.56e-6):08X}"
             #statusPeriod_sec = int(self.config['DAQ']['statusPeriodSec'], base)*2.56e-6  # convert to seconds
             self.config['DAQ']['verbose'] = int(self.config['DAQ']['verbose'])
+
+        if 'DATABASE' in self.sections:
+            self.config['DATABASE']['channels'] =  ast.literal_eval(self.config['DATABASE']['channels'])
+            self.config['DATABASE']['wires'] =  ast.literal_eval(self.config['DATABASE']['wires'])
         
     def getConfigDict(self, section=None):
         if section == None:

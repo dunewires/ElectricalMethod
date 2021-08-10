@@ -310,3 +310,23 @@ def compute_tensions_from_resonances(wire_freqs_expected, freqs_measured):
     val = optimize.dual_annealing(assignment_cost, ((0.7, 1.5),)*len(wire_freqs_expected), seed=3)
 
     return (val.x**2 * NOMINAL_TENSION).tolist()
+
+def get_expected_resonances(wire_layer, channel, thresh = 1000.):
+    '''
+    Return a pair of lists
+    List 1: A list of the wires associated with a channel
+    List 2: A list of lists, with each sublist at index i corresponding to the resonances of the wire at index i of List 1. 
+    '''
+    freqs = wire_frequencies_from_channels(wire_layer, [channel])
+    freqs_in_range = {}
+    for w in freqs:
+        for res in freqs[w]:
+            if res<thresh:
+                if w in freqs_in_range.keys():
+                    freqs_in_range[w].append(res)
+                else:
+                    freqs_in_range[w] = [res]
+ 
+    return [int(w) for w in freqs_in_range], [freqs_in_range[w] for w in freqs_in_range]
+
+
