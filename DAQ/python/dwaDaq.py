@@ -64,6 +64,7 @@ import sys
 import logging
 import json
 import platform
+import shutil
 
 from functools import partial
 from enum import Enum, IntEnum
@@ -633,6 +634,7 @@ class MainWindow(qtw.QMainWindow):
         else:
             self.IDLELabel.setText("DWA state: "+str(self.dwaControllerState))
         self.configure = ""
+        self.connectedToUzed = ""
         self.idle = ""
 
         # Resonance analysis plots
@@ -814,6 +816,7 @@ class MainWindow(qtw.QMainWindow):
             self.dwaFirmwareDate_val.setText(dateCodeYYMMDD)
             self.enableScanButtonTemp = True
             self.connectLabel.setText("")
+            self._scanButtonEnable()
         
         #out = self.uz.readValue('00000012')  # Firmware date code (HHMMSS)
         #print(f"Firmware date code [HHMMSS] = {hex(out[-1])}")
@@ -974,6 +977,7 @@ class MainWindow(qtw.QMainWindow):
 
             self.configureLabel.setText("")
             self.configure = True
+            self.connectedToUzed = ""
             self._scanButtonEnable()
 
     def configureScans(self):
@@ -1041,6 +1045,7 @@ class MainWindow(qtw.QMainWindow):
 
         self.configureLabel.setText("")
         self.configure = True
+        self.connectedToUzed = ""
         self._scanButtonEnable()
 
     def _configurePlots(self):
@@ -1503,13 +1508,20 @@ class MainWindow(qtw.QMainWindow):
         if scanIndex < 0: return
 
         rd = self.range_data_list[scanIndex]
+        channels = rd["channels"]
+        #sorting apa channels list to follow increasing order of dwa channels
+        dwaChannels = []
+        for i in range(0,len(channels)):
+            dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
+        apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
+
         if self.configRadioSingle.isChecked():
             self.wires = self.wireNum
+            channels = [apaChannels[0]]
         else:
             self.wires = rd["wires"]
             self.wires.sort(key = int)
 
-        channels = rd["channels"]
 
         self.wires.sort(key = int)
 
@@ -1531,13 +1543,6 @@ class MainWindow(qtw.QMainWindow):
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
-        
-
-        #sorting apa channels list to follow increasing order of dwa channels
-        dwaChannels = []
-        for i in range(0,len(channels)):
-            dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
-        apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
         
         if self.configRadioSingle.isChecked():
             dataConfig = {"channels": [apaChannels[0]], "wires": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
@@ -1586,7 +1591,7 @@ class MainWindow(qtw.QMainWindow):
      
     def startScanAdv(self):
         self.configFile = self.configFileName.text()
-        self.advScanDir = "./customConfig/"
+        self.advScanDir = './customConfig/'
         try:
             os.makedirs(self.advScanDir)
             logging.info("  Directory did not exist...made {}".format(self.advScanDir))
@@ -1595,7 +1600,7 @@ class MainWindow(qtw.QMainWindow):
             logging.warning("  Directory already exists: [{}]".format(self.advScanDir))
             #if there is text in the ApaUuid section then that directory is where the custom config scan is saved, otherwise 
             #it is saved in teh customConfig directory
-        self.configApaUuid = self.configApaUuid.text() #does not work without this line for some reason
+        self.configApaUuid = self.configApaUuidLineEdit.text() #does not work without this line for some reason
         if self.configApaUuid:
             self.scanRunSubDir = "APA_"+str(self.configApaUuid)
             self.dataDir = os.path.join(self.scanDataDir, self.scanRunSubDir)
@@ -1605,9 +1610,14 @@ class MainWindow(qtw.QMainWindow):
                 print("  Directory did not exist...made {}".format(self.dataDir))
             except FileExistsError:
                 logging.warning("  Directory already exists: [{}]".format(self.dataDir))
-                os.makedirs(os.path.join(self.dataDir, self.configFile+"_"+self.configApaUuid))
+            self.scanRunDataDir = os.path.join(self.dataDir, self.configFile[:-4]+"_"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S"))
+            os.makedirs(self.scanRunDataDir)
+            #putting the config file used for the scan in the scan directory
+            shutil.copy(os.path.join(self.advScanDir, self.configFile), os.path.join(self.scanRunDataDir, self.configFile))
         else:
-            os.makedirs(os.path.join(self.advScanDir, self.configFile+"_"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S")))
+            self.scanRunDataDir = os.path.join(self.advScanDir, self.configFile[:-4]+"_"+datetime.datetime.now().strftime("%Y%m%dT%H%M%S"))
+            os.makedirs(self.scanRunDataDir)
+            shutil.copy(os.path.join(self.advScanDir, self.configFile), os.path.join(self.scanRunDataDir, self.configFile))
 
         self.runScan()
         
@@ -2248,15 +2258,12 @@ class MainWindow(qtw.QMainWindow):
         # if not found, display error message
        
         print("=== _loadConfigFile ===")
-        for i, btn in enumerate(self.radioBtns):
-            if btn.isChecked():
-                if not self.configFileName.text():
-                    configFileToOpen = os.path.join(self.scanRunDataDir, "dwaConfig.ini")
-                else:
-                    configFileToOpen = os.path.join("config/", self.configFileName.text())
-                    #I'm not even sure if this is needed at this point
-            else:
-                pass
+
+        if self.currentViewStim == 1:
+            self.configFile = os.path.join(self.advScanDir, self.configFileName.text())
+        elif self.currentViewStim == 0:
+            self.configFile = os.path.join(self.scanRunDataDir, "dwaConfig.ini")
+
         print(f"   self.configFile = {self.configFile}")
         validConfigFilename = False
         try:
@@ -2528,6 +2535,9 @@ class MainWindow(qtw.QMainWindow):
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
                     for c in range(0, self.scanTable.columnCount()):
                         self.scanTable.item(self.btnNum,c).setBackground(qtg.QColor(3,205,0))
+                        for i, btn in enumerate(self.radioBtns):
+                            if btn.isChecked(): 
+                                self.btnNum = i
                         if len(self.radioBtns)>(self.btnNum+1):
                             self.nextBtn = self.btnNum+1
                         else: 
@@ -2623,6 +2633,7 @@ class MainWindow(qtw.QMainWindow):
             if self.dwaControllerState_val.text() == "IDLE":
                 self.IDLELabel.setText("")
                 self.idle = True
+                self._scanButtonEnable()
 
             else:
                 self.IDLELabel.setText("DWA state: "+str(dwaControllerState_val.text()))
@@ -2659,9 +2670,6 @@ class MainWindow(qtw.QMainWindow):
             for scb in self.scanCtrlButtons:
                 scb.setStyleSheet("background-color : red")
                 scb.setText("Abort Scan")
-                for i, btn in enumerate(self.radioBtns):
-                    if btn.isChecked(): 
-                        self.btnNum = i
         else:
             print("HUH? should never get here...")
             return
@@ -2696,7 +2704,8 @@ class MainWindow(qtw.QMainWindow):
         if self.connectedToUzed and self.idle and self.configure:
             if len(self.radioBtns)>0:
                 self.btnScanCtrl.setEnabled(True)
-        self.btnScanCtrlAdv.setEnabled(True)
+        if self.connectedToUzed and self.idle:
+            self.btnScanCtrlAdv.setEnabled(True)
             
     def updateAmplitudePlots(self):
         # This should only update the plots on the STIMULUS tab
