@@ -98,7 +98,6 @@ import config_generator
 import channel_map
 import channel_frequencies
 import database_functions
-import ChannelMapping
 
 DWA_DAQ_VERSION = "X.X.X"
 #
