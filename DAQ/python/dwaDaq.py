@@ -1,7 +1,5 @@
 # FIXME/TODO:
-# * Run status "min", "max" and "step" should come from Run Header (not from CONFIG file)
 # * "LEDs" for HV and AC
-# * Print DWA connected / not connected in the left-hand side
 # * "Advanced" tab: not all items show (below the "config file contents" text area)
 # * AUTO-SCAN items
 #   + After all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
@@ -9,15 +7,12 @@
 #     and should be left-justified
 #   + "All wires" and "Single wire" should be in the same "radio group" and
 #   + also search "BUG:" for a couple other things
-# * on "Connect"
-#   + verify connection by reading something from the FPGA
-#   + get FPGA datecode and display in GUI (Issue #23)
 # * remove self.oldDataFormat -- it's not actually used (is it?)
 # * after scan ends, update the V(t) plots with the last set of data
 # * Update GUI process to protect against missing end of run frame.
 #   Can listen for STATUS frame. If DAQ things a run is active but then sees STATUS=IDLE,
 #   then trigger end of run sequence
-#   the wire number spinBox should be disabled unless "Single Wire" is selected
+# * The wire number spinBox should be disabled unless "Single Wire" is selected
 # * When clicking to add f0 line -- use "hover" width for tolerance (instead of a hardcoded # of pixels)
 #   or just check to see if any of the InfiniteLines are in "hover" mode. If so, don't add a new line
 # * Add validator() to QLineEdits (e.g. for resonance fits)
