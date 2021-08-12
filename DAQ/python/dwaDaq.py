@@ -2458,7 +2458,7 @@ class MainWindow(qtw.QMainWindow):
                         self._clearResonanceFits()
                         if self.verbose > 0:
                             logger.info(self.fnOfReg)
-                
+
                 # write data to file by register
                 reg = self.dwaDataParser.dwaPayload[ddp.Frame.UDP]['Register_ID_hexStr']
                 # Don't write status frames to disk
@@ -2515,12 +2515,26 @@ class MainWindow(qtw.QMainWindow):
                 self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.3f}")
                 self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
 
+                # open up files for printing phase information
+                self.phaseFiles = {}
+                for reg in self.registers:
+                    self.phaseFiles[reg] = open(f'phase{reg}.dat', 'w')
+                    self.phaseFiles[reg].write("# Freq[Hz] tan(phase)\n")
+
+                print("\n\n\n")
+                print(f"self.phaseFiles = {self.phaseFiles}")
+                print("\n\n\n")
+                    
             #if end of scan...
             elif udpDict[ddp.Frame.RUN]['runStatus'] == SCAN_END:
                 print("\n\n SCAN IS DONE!!!")
 
                 self.saveAmplitudeData()  # do this first to avoid data loss
 
+                # save/close phase files
+                for reg in self.registers:
+                    self.phaseFiles[reg].close()
+                
                 # FIXME: shouldn't really change button state or controller state via
                 # RUN end frame. Should only do this from STATUS frame...
                 print("\nScan button disable\n")
@@ -2610,6 +2624,9 @@ class MainWindow(qtw.QMainWindow):
                 if regId == self.chanViewMain:
                     self.curvesFit['chan']['main'].setData(tfit, yfit)
 
+            tanphase = C/B
+            self.phaseFiles[reg].write(f'{freq_Hz} {tanphase}\n')
+                    
             # Update A(f) plots
             # During scan, only update plots in the STIMULUS tab.
             if self.currentViewStage == MainView.STIMULUS:
