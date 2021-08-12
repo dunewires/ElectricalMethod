@@ -125,6 +125,13 @@ GUI_Y_OFFSET = 0 #FIXME: remove this!
 SCAN_START = 1
 SCAN_END = 0
 
+APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Storage", "Installation"]
+APA_LAYERS = ["G", "U", "V", "X"]
+APA_SIDES = ["A", "B"]
+
+DATABASE_FIELDS = ['wires', 'channels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
+
+
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
 #    """ handle logging events -- display them in a text box in the gui"""
@@ -466,11 +473,8 @@ class MainWindow(qtw.QMainWindow):
     # end of __init__ for class MainWindow
 
     def _configureAmps(self):
-        self.ampData = {}  # hold amplitude vs. freq data for a scan
+        self.ampData = {}  # hold amplitude vs. freq data for a scan (and metadata)
         self.resonantFreqs = {}
-        for reg in self.registers:
-            self.ampData[reg.value] = {'freq':[], 'ampl':[]}
-            self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
         self._initResonanceFitLines()
         
         # Set default A(f) peak detection parameters
@@ -580,11 +584,8 @@ class MainWindow(qtw.QMainWindow):
         self.show()
 
     def _configureTensions(self):
-        self.tensionStageComboBox.addItem("DWA Development")
-        self.tensionStageComboBox.addItem("Winding")
-        self.tensionStageComboBox.addItem("Post-Winding")
-        self.tensionStageComboBox.addItem("Storage")
-        self.tensionStageComboBox.addItem("Installation")
+        for stage in APA_TESTING_STAGES:
+            self.tensionStageComboBox.addItem(stage)
         self.tensionData = {
             'XA':[0]*960,
             'XB':[0]*960,
@@ -619,15 +620,10 @@ class MainWindow(qtw.QMainWindow):
         self.btnLoadTensions.clicked.connect(self.loadTensions)
         # Config Tab
         self.btnConfigureScans.clicked.connect(self.singleOrAllScans)
-        self.configStageComboBox.addItem("DWA Development")
-        self.configStageComboBox.addItem("Winding")
-        self.configStageComboBox.addItem("Post-Winding")
-        self.configStageComboBox.addItem("Storage")
-        self.configStageComboBox.addItem("Installation")
-        self.configLayerComboBox.addItem("G")
-        self.configLayerComboBox.addItem("U")
-        self.configLayerComboBox.addItem("V")
-        self.configLayerComboBox.addItem("X")
+        for stage in APA_TESTING_STAGES:
+            self.configStageComboBox.addItem(stage)
+        for layer in APA_LAYERS:
+            self.configLayerComboBox.addItem(layer)
 
         self.connectLabel.setStyleSheet("color : red")
         self.connectLabel.setText("DWA is not connected")
@@ -1105,9 +1101,9 @@ class MainWindow(qtw.QMainWindow):
         # Tension tab
         self.tensionGLW.setBackground('w')
         self.tensionPlots = {}
-        for layer in ["G","U","V","X"]:
+        for layer in APA_LAYERS:
             self.tensionPlots[layer] = {}
-            for side in ["A", "B"]:
+            for side in APA_SIDES:
                 self.tensionPlots[layer][side] = (self.tensionGLW.addPlot())
                 self.tensionPlots[layer][side].setTitle(f'Layer {layer} Side {side}')
             self.tensionGLW.nextRow()
@@ -1429,7 +1425,7 @@ class MainWindow(qtw.QMainWindow):
 
 
     def _loadDaqConfig(self):
-        self.daqConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE, sections=['DAQ'])
+        self.daqConfigFile = dcf.DwaConfigFile(DAQ_CONFIG_FILE)#, sections=['DAQ'])
         self.daqConfig = self.daqConfigFile.getConfigDict(section='DAQ')
 
     @pyqtSlot()
@@ -1628,7 +1624,35 @@ class MainWindow(qtw.QMainWindow):
         shutil.copy(self.configFile, os.path.join(self.scanRunDataDir, 'dwaConfig.ini'))
 
         self.runScan()
-        
+
+
+    def _setScanMetadata(self):
+        # FIXME: rename... really this is used to set metadata in the A(f) .json file
+        # During the resonance analysis those values are used to determine if data should
+        # be written to database.
+
+        #apaUuid = self.configApaUuidLineEdit.text()
+        #print(f"apaUuid: {apaUuid}")
+
+        dbConfig = self.dwaConfigFile.getConfigDict(section='DATABASE')
+        if dbConfig:
+            print("[DATABASE] section present in config file")
+            print(f"[DATABASE] SECTION: {dbConfig}")
+        else:
+            print("[DATABASE] section not present in config file")
+
+        # If the config file has a valid [DATABASE] section, then user wants to write to the db
+        # If you get this far, then the [DATABASE] section has already been validated, so
+        # just need to check if [DATABASE] exists in the config...
+        # FIXME: does the UUID need to be a "valid"/real DUNE UUID?
+
+        # Pull info from the [DATABASE] section of the config file and pass that along to the A(f) .json file
+        for field in DATABASE_FIELDS:
+            self.ampData[field] = dbConfig[field] if dbConfig else None
+
+        print(f'self.ampData = {self.ampData}')
+            
+            
     def runScan(self):
 
         # runScan() is in a thread...  need to get logger?
@@ -1969,12 +1993,6 @@ class MainWindow(qtw.QMainWindow):
         if ("fnOfAmpData" in self.__dict__):
             # add metadata to ampData before writing to file (this could also be done earlier)
             # FIXME: grab these values from user input
-            self.ampData["dwa_num"] = ""
-            self.ampData["headboard_num"] = ""
-            self.ampData["layer"] = ""
-            self.ampData["user"] = ""
-            self.ampData["location"] = ""
-            self.ampData["stage"] = ""
             with open(self.fnOfAmpData, 'w') as outfile:
                 json.dump(self.ampData, outfile)
             self.logger.info(f"Saved as {self.fnOfAmpData}") 
@@ -2018,24 +2036,30 @@ class MainWindow(qtw.QMainWindow):
         # Load sietch credentials #FIXME still using James's credentials
         sietch = SietchConnect("sietch.creds")
 
-        pointer_lists = {
-            "X": {
-                "A": [{"testId": None}]*900,
-                "B": [{"testId": None}]*900
-            },
-            "U": {
-                "A": [{"testId": None}]*900,
-                "B": [{"testId": None}]*900
-            },
-            "V": {
-                "A": [{"testId": None}]*900,
-                "B": [{"testId": None}]*900
-            },
-            "G": {
-                "A": [{"testId": None}]*900,
-                "B": [{"testId": None}]*900
-            },
-        }
+        pointer_lists = {}
+        for layer in APA_LAYERS:
+            pointer_lists[layer] = {}
+            for side in APA_SIDES:
+                pointer_lists[layer][side] = [{"testId": None}]*900
+                
+        #pointer_lists = {
+        #    "X": {
+        #        "A": [{"testId": None}]*900,
+        #        "B": [{"testId": None}]*900
+        #    },
+        #    "U": {
+        #        "A": [{"testId": None}]*900,
+        #        "B": [{"testId": None}]*900
+        #    },
+        #    "V": {
+        #        "A": [{"testId": None}]*900,
+        #        "B": [{"testId": None}]*900
+        #    },
+        #    "G": {
+        #        "A": [{"testId": None}]*900,
+        #        "B": [{"testId": None}]*900
+        #    },
+        #}
         
         pointer_list = [{"testId": None}]*900
         for dwaCh, ch in enumerate(self.loadedDatabaseConfig["channels"]): # Loop over channels in scan
@@ -2066,7 +2090,7 @@ class MainWindow(qtw.QMainWindow):
                     pointer_list[w] = {"testId": dbid}
 
         
-        pointer_lists[self.loadedDatabaseConfig["layer"]][self.loadedDatabaseConfig["side"]] = pointer_list
+        pointer_lists[self.loadedDatabaseConfig["layer"]][self.loadedDatabaseConfig["side"]] = pointer_list  # BUG? should copy the list not reference it?
         record_result = {
             "componentUuid":"77e0c450-8863-11eb-8dcd-0242ac130003",
             "formId": "wire_tension_pointer",
@@ -2239,13 +2263,16 @@ class MainWindow(qtw.QMainWindow):
     def _loadAmpData(self):
         #ampFilename = "DWANUM_HEADBOARDNUM_LAYER_"+self.ampDataFilename.text()+".json"
         #ampFilename = os.path.join(self.scanRunDataDir, ampFilename)
-        ampFilename = os.path.join(self.ampDataFilename.text(), "amplitudeData.json")
+        #ampFilename = os.path.join(self.ampDataFilename.text(), "amplitudeData.json")
+        ampFilename = self.ampDataFilename.text()
         print(f"ampFilename = {ampFilename}")
         self.ampDataActiveLabel.setText(ampFilename)
         # read in the json file
         # FIXME: add check that the filename exists...
         with open(ampFilename, "r") as fh:
             data = json.load(fh)
+
+            
         for reg in self.registers:
             #print(data[str(reg.value)]['freq'])
             self.ampData[reg.value]['freq'] = data[str(reg.value)]['freq']
@@ -2253,12 +2280,12 @@ class MainWindow(qtw.QMainWindow):
             self.curves['resRawFit'][reg].setData(self.ampData[reg.value]['freq'],
                                                   self.ampData[reg.value]['ampl'])
 
-        configFile = os.path.join(self.ampDataFilename.text(), "dwaConfig.ini")
-        with open(configFile) as fh:
-            self.loadedConfigFile = dcf.DwaConfigFile(configFile, sections=['FPGA','DATABASE'])
-            self.loadedDatabaseConfig = self.loadedConfigFile.getConfigDict(section='DATABASE')
-            logging.info("LOADING.......")
-            logging.info(self.loadedDatabaseConfig)
+        configFile = os.path.join(os.path.dirname(ampFilename), "dwaConfig.ini")
+        #with open(configFile) as fh:
+        #    loadedConfigFile = dcf.DwaConfigFile(configFile, sections=['FPGA','DATABASE'])
+        #    self.loadedDatabaseConfig = loadedConfigFile.getConfigDict(section='DATABASE')
+        #    logging.info("LOADING.......")
+        #    logging.info(self.loadedDatabaseConfig)
 
     def _loadConfigFile(self, updateGui=True):
         #updateGui function no longer works with left column  and original textbox removed 
@@ -2268,6 +2295,7 @@ class MainWindow(qtw.QMainWindow):
        
         print("=== _loadConfigFile ===")
 
+        # FIXME: should probably pass scan type information to _loadConfigFile...
         if self.currentViewStim == StimView.ADVANCED:
             self.configFile = self.configFileName.text()
         elif self.currentViewStim == StimView.CONFIG:
@@ -2290,19 +2318,23 @@ class MainWindow(qtw.QMainWindow):
             return
                 
         # read/parse config file
-        self.dwaConfigFile = dcf.DwaConfigFile(self.configFile, sections=['FPGA'])
-        textToDisplay = self.dwaConfigFile.getRawText()
-        if self.omitComments_cb.isChecked():
-            self.logger.info("cutting out commented lines from config file")
-            lines = textToDisplay.split('\n')
-            lines = [line for line in lines if line.strip()!="" and not line.strip().startswith('#')]
-            textToDisplay = '\n'.join(lines)
+        #self.dwaConfigFile = dcf.DwaConfigFile(self.configFile, sections=['FPGA'])
+        self.dwaConfigFile = dcf.DwaConfigFile(self.configFile)
 
+        
+        #self._setScanMetadata() # FIXME: only here for debugging. Should not be here permanently
+        
         # FIXME: need to find a way to update the GUI in a thread that is not main thread....
         # right now, updating the GUI in a thread causes a crash.
         # see: https://stackoverflow.com/questions/10905981/pyqt-qobject-cannot-create-children-for-a-parent-that-is-in-a-different-thread
         # https://stackoverflow.com/questions/3268073/qobject-cannot-create-children-for-a-parent-that-is-in-a-different-thread
         if updateGui:
+            textToDisplay = self.dwaConfigFile.getRawText()
+            if self.omitComments_cb.isChecked():
+                self.logger.info("cutting out commented lines from config file")
+                lines = textToDisplay.split('\n')
+                lines = [line for line in lines if line.strip()!="" and not line.strip().startswith('#')]
+                textToDisplay = '\n'.join(lines)
             self.configFileContents.setPlainText(textToDisplay)
 
     def _makeWordList(self, udpDataStr):
@@ -2349,10 +2381,12 @@ class MainWindow(qtw.QMainWindow):
 
                 
     def _clearAmplitudeData(self):
+        self.resonantFreqs = {}
         self.ampData = {}
         for reg in self.registers:
             self.ampData[reg] = {'freq':[],  # stim freq in Hz
                                  'ampl':[] } # amplitude in ADC counts
+            self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
 
         # Clear amplitude plots
         plotTypes = ['amplchan', 'amplgrid', 'resRawFit', 'resProcFit']
@@ -2393,8 +2427,8 @@ class MainWindow(qtw.QMainWindow):
             self.fnOfReg['{:02X}'.format(reg.value)] = "{}_{:02X}.txt".format(froot, reg.value)
         self.logger.info(f"self.fnOfReg = {self.fnOfReg}")
         self.fnOfAmpData = os.path.join(self.scanRunDataDir, "amplitudeData.json")
-        self.run = self.scanRunDataDir
-        self.logger.info(f"self.fnOfAmpData = {self.run}") 
+        #self.run = self.scanRunDataDir
+        self.logger.info(f"self.fnOfAmpData = {self.fnOfAmpData}") 
 
     def startUdpReceiver(self, newdata_callback):
         # initiate a DWA acquisition
@@ -2456,6 +2490,7 @@ class MainWindow(qtw.QMainWindow):
                         self._makeOutputFilenames()
                         self._clearAmplitudeData()
                         self._clearResonanceFits()
+                        self._setScanMetadata()
                         if self.verbose > 0:
                             logger.info(self.fnOfReg)
                 
@@ -2797,7 +2832,7 @@ class MainWindow(qtw.QMainWindow):
             self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
 
         # Set the amplitude filename to the most recent run
-        self.ampDataFilename.setText(self.run)
+        self.ampDataFilename.setText(self.fnOfAmpData)
         
         # "load" that file
         self.ampDataFilenameEnter()

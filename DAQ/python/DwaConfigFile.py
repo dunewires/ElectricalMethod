@@ -1,3 +1,19 @@
+# This code needs a clean-up:
+# + a config file can have one or more sections
+# + in some cases, a section is required (e.g. [FPGA] for a scan config, and [DAQ] for a daq config
+# + some sections may be optional (e.g. a scan config file *may* have a [DATABASE] section, and if present, the info there would be used. the scan config *may* also have a [DAQ] section, though that section would always be ignored
+# + so we should specify required and optional sections in the constructor
+# + sections that are not required or optional should be completely ignored
+# + required sections should be read and validated
+# + optional sections, if present, should be read and validated
+
+# Checking for options:
+# + within a section, some options may be required and some may be optional
+# + must ensure that required options are present:
+#     config.has_option(section, option)
+#     https://stackoverflow.com/questions/21057478/python-configparser-checking-existence-of-both-section-and-key-value
+# + must assign default values to optional options that are not present
+
 import configparser
 import string
 import ast
@@ -47,7 +63,6 @@ class DwaConfigFile():
                                      "cyclesPerFreq", "adcSamplesPerCycle",
                                      # "relayMask", "coilDrive",  # v2 only (defunct)
                                      "digipot",
-                                     "client_IP",
                                      "noiseFreqMin", "noiseFreqMax", "noiseFreqStep",
                                      "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq",
                                      "relayWireTop", "relayWireBot", "relayBusTop", "relayBusBot",
@@ -74,6 +89,9 @@ class DwaConfigFile():
         for SEC in self.sections:
             print(f"Parsing section {SEC}")
             self.config[SEC] = {}
+            if not cp.has_section(SEC):
+                print(f"   Skipping this section -- not present in file")
+                continue
             # get a list of keys
             # read in the key=val pairs
             # but only use the valid keys that are listed above
@@ -137,7 +155,12 @@ class DwaConfigFile():
         
         # Check for missing and empty entries
         for SEC in self.sections:
+
             self.invalidEntries[SEC] = {}
+            if not self.config[SEC]:
+                print(f"  skipping validation for [{SEC}] -- not present in config file")
+                continue
+            
             configParams = self.config[SEC].keys()
             for cp in configParams:
                 if self.config[SEC][cp] == None:
@@ -155,7 +178,7 @@ class DwaConfigFile():
                         print(f"  ERROR: empty value: {cp}")
                         self.invalidEntries[SEC][cp] = "Value is empty"
                         
-        if 'FPGA' in self.sections:
+        if self.config['FPGA']:
             # Validate IP address format
             # FIXME: check that format is either: a.b.c.d
             #        or a hex version of that (8 characters, each pair is a number between 0 and 255)
@@ -191,21 +214,41 @@ class DwaConfigFile():
         # Summary: were there any problems?
         self.configIsValid = True
         for SEC in self.sections:
-            print(f"Summary of status of configuration file section {SEC}:")
+            print(f"Summary of status of configuration file section [{SEC}]:")
             if len(self.invalidEntries[SEC]) == 0:
-                print(f"  No errors found in the config file section {SEC}")
+                print(f"  No errors found in the config file section [{SEC}] (or section is missing)")
                 self.sectionIsValid[SEC] = True
             else:
                 self.sectionIsValid[SEC] = False
                 self.configIsValid = False
-                print(f"  Invalid entries in the config file section {SEC}:")
+                print(f"  Invalid entries in the config file section [{SEC}]:")
                 for key, val in self.invalidEntries[SEC].items():
                     print(f"    {key}: {val}")
 
                 
     def postProcess(self):
+        print("\n\n")
+        print(self.config)
+        print("\n\n")
+        self.postProcessFpga()
+        self.postProcessDaq()
+        self.postProcessDatabase()
+        
+    def postProcessDaq(self):
+        if self.config['DAQ']:  # if dict is not empty
+            # convert seconds into a hex string in units of 2.56 microseconds
+            self.config['DAQ']['statusPeriodSec'] = float(self.config['DAQ']['statusPeriodSec'])  # convert string to float
+            self.config['DAQ']['statusPeriod'] = f"{int(self.config['DAQ']['statusPeriodSec'] / 2.56e-6):08X}"
+            #statusPeriod_sec = int(self.config['DAQ']['statusPeriodSec'], base)*2.56e-6  # convert to seconds
+            self.config['DAQ']['verbose'] = int(self.config['DAQ']['verbose'])
 
-        if 'FPGA' in self.sections:
+    def postProcessDatabase(self):
+        if self.config['DATABASE']:  # if dict is not empty
+            self.config['DATABASE']['channels'] =  ast.literal_eval(self.config['DATABASE']['channels'])
+            self.config['DATABASE']['wires'] =  ast.literal_eval(self.config['DATABASE']['wires'])
+
+    def postProcessFpga(self):
+        if self.config['FPGA']: # if dict is not empty
             # Convert to human readable values:
             # Frequencies to Hz:
             freqKeys = ['stimFreqReq', 'stimFreqMin', 'stimFreqMax', 'stimFreqStep']
@@ -244,24 +287,17 @@ class DwaConfigFile():
             self.config['FPGA']["relayWireBot1"] = self.config['FPGA']["relayWireBot"][8:12]
             self.config['FPGA']["relayWireBot0"] = self.config['FPGA']["relayWireBot"][12:]
 
-        if 'DAQ' in self.sections:
-            # convert seconds into a hex string in units of 2.56 microseconds
-            self.config['DAQ']['statusPeriodSec'] = float(self.config['DAQ']['statusPeriodSec'])  # convert string to float
-            self.config['DAQ']['statusPeriod'] = f"{int(self.config['DAQ']['statusPeriodSec'] / 2.56e-6):08X}"
-            #statusPeriod_sec = int(self.config['DAQ']['statusPeriodSec'], base)*2.56e-6  # convert to seconds
-            self.config['DAQ']['verbose'] = int(self.config['DAQ']['verbose'])
 
-        if 'DATABASE' in self.sections:
-            self.config['DATABASE']['channels'] =  ast.literal_eval(self.config['DATABASE']['channels'])
-            self.config['DATABASE']['wires'] =  ast.literal_eval(self.config['DATABASE']['wires'])
-        
+    def getSec(self, section=None):
+        return self.getConfigDict(section)
+            
     def getConfigDict(self, section=None):
         if section == None:
             return self.config
         else:
             section = section.upper()
             if section not in SECTIONS:
-                print(f"ERROR: Invalid section specified: {section}")
+                print(f"WARNING: Requested section does not exist in the config file: {section}")
                 print("Returning empty dictionary")
                 return {}
             return self.config[section]
