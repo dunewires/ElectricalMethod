@@ -170,9 +170,9 @@ architecture STRUCT of top_tension_analyzer is
   signal pButton_del : SLV_VECTOR_TYPE(1 downto 0)(3 downto 0)       := (others => (others => '0'));
   signal pBHoldOff   : UNSIGNED_VECTOR_TYPE(3 downto 0)(19 downto 0) := (others => (others => '0'));
 
-  signal pBAbort : std_logic := '0';
+  signal pButtonClean  : std_logic_vector(3 downto 0) := (others => '0');
 
-  signal scanStatusCnt : unsigned(28 downto 0) := (others => '0');
+  signal scanStatusCnt : unsigned(27 downto 0) := (others => '0');
   signal netStatusCnt : unsigned(23 downto 0) := (others => '0');
 
   signal
@@ -202,10 +202,13 @@ begin
         elsif pBHoldOff(pB_i)(pBHoldOff(pB_i)'left) = '0' then
           pBHoldOff(pB_i) <= pBHoldOff(pB_i)+1;
         end if;
+
+      pButtonClean(pB_i) <= pBHoldOff((pB_i))(pBHoldOff(pB_i)'left);
       end loop;
 
+      toDaqReg.pButton <= pButtonClean;
+
       -- single pulse for each button press cycle
-      pBAbort <= pButton_del(1)(0) and pBHoldOff(0)(pBHoldOff(0)'left);
 
     end if;
   end process;
@@ -214,18 +217,18 @@ begin
   genLedScanStatus : process (dwaClk100)
   begin
     if rising_edge(dwaClk100) then
-      if scanStatusCnt(28 downto 23) = "100110" then
+      if scanStatusCnt(27 downto 22) = "100110" then
         -- we are finished with the current frequency's blink, wait here for the next frequency
         led(1) <= '1' when freqScanBusy else '0'; -- display scan status
                                                   -- pulse once each time the ADC sequenced is activated
         if adcStart then
           -- scale requested frequency to a time range we can actually see ~ 1.5 sec to 150 ms
-          scanStatusCnt <= (28 => '0', 27 downto 10 => stimFreqReq(17 downto 0), 9 downto 0 => '0');
+          scanStatusCnt <= (27 => '0', 26 downto 9 => stimFreqReq(17 downto 0), 8 downto 0 => '0');
         end if;
 
       else
-        -- when counting, pulse 0 for ~150 ms at the end of each count
-        led(1)        <= bool2sl(freqScanBusy) when (scanStatusCnt(28 downto 23) < "100011") else '0';
+        -- when counting, pulse 0 for ~125 ms at the end of each count
+        led(1)        <= bool2sl(freqScanBusy) when (scanStatusCnt(27 downto 22) < "100011") else '0';
         scanStatusCnt <= scanStatusCnt + 1;
       end if;
     end if;
@@ -468,8 +471,6 @@ begin
       adcStart => adcStart,
       adcBusy  => adcBusy,
 
-      pBAbort => pBAbort,
-
       dwaClk100 => dwaClk100
     );
 
@@ -557,7 +558,7 @@ begin
       fromDaqReg => fromDaqReg,
       toDaqReg   => toDaqReg_headerGenerator, -- Keep this one for sim
 
-      pButton  => pButton,
+      pButton  => pButtonClean,
 
       runOdometer => (others => '0'),
 

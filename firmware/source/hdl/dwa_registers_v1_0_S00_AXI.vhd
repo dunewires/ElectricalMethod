@@ -730,7 +730,7 @@ begin
 								end if;
 							end loop;
 
-						when b"110111" => -- reg 54 is pktGenWatchdogPeriod
+						when b"110111" => --  reg 55 is used for PS network status in fromDaq direction, and controller state in toDaq direction
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -1010,8 +1010,10 @@ begin
 				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.statusPeriod);
 			when b"110110" => --reg 54
 				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.pktGenWatchdogPeriod);
-			when b"110111" => --controller state reg 55
+			when b"110111" => --controller state reg 55 for read by daq (read only)  PS net status is used in fromdaq
 				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pktGenStateDbg);
+			when b"111000" => --reg 56 pButton
+				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;
@@ -1110,7 +1112,7 @@ begin
 	fromDaqReg.serNumMemData    <= unsigned(slv_reg50);
 	fromDaqReg.serNum           <= toDaqReg.serNum;
 
-	fromDaqReg.netStatus <= slv_reg55(7 downto 0);
+	fromDaqReg.netStatus <= slv_reg55(7 downto 0); -- also used for controller status in toDaq direction
 	-- User logic ends
 
 end arch_imp;
