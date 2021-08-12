@@ -2039,7 +2039,7 @@ class MainWindow(qtw.QMainWindow):
         
         pointer_list = [{"testId": None}]*900
         for dwaCh, ch in enumerate(self.loadedDatabaseConfig["channels"]): # Loop over channels in scan
-            for w in self.loadedDatabaseConfig["channels"]:
+            for w in self.loadedDatabaseConfig["wires"]:
                 wire_ch = channel_map.wire_to_apa_channel(self.loadedDatabaseConfig["layer"], w)
                 if wire_ch == ch:
                     resonance_result = {
