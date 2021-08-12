@@ -986,7 +986,6 @@ class MainWindow(qtw.QMainWindow):
 
             self.configureLabel.setText("")
             self.configure = True
-            self.connectedToUzed = ""
             self._scanButtonEnable()
 
     def configureScans(self):
@@ -1054,7 +1053,6 @@ class MainWindow(qtw.QMainWindow):
 
         self.configureLabel.setText("")
         self.configure = True
-        self.connectedToUzed = ""
         self._scanButtonEnable()
 
     def _configurePlots(self):
@@ -1517,20 +1515,19 @@ class MainWindow(qtw.QMainWindow):
         if scanIndex < 0: return
 
         rd = self.range_data_list[scanIndex]
-        channels = rd["channels"]
+
+        if self.configRadioSingle.isChecked():
+            self.wires = self.wireNum
+            channels = channel_map.wire_to_apa_channel(self.configLayer, self.wires)
+        else:
+            self.wires = rd["wires"]
+            self.wires.sort(key = int)
+            channels = rd["channels"]
         #sorting apa channels list to follow increasing order of dwa channels
         dwaChannels = []
         for i in range(0,len(channels)):
             dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
         apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
-
-        if self.configRadioSingle.isChecked():
-            self.wires = self.wireNum
-            channels = [apaChannels[0]]
-        else:
-            self.wires = rd["wires"]
-            self.wires.sort(key = int)
-
 
         self.wires.sort(key = int)
 
@@ -1580,21 +1577,21 @@ class MainWindow(qtw.QMainWindow):
         self.runScan()
 
     def makeScanOutputDir(self):
-        self.scanRunSubDir = "APA_"+str(self.configApaUuid)
-        self.dataDir = os.path.join(self.scanDataDir, self.scanRunSubDir)
+        scanRunSubDir = "APA_"+str(self.configApaUuid)
+        dataDir = os.path.join(self.scanDataDir, scanRunSubDir)
         try:
-            os.makedirs(self.dataDir)
-            logging.info("  Directory did not exist...made {}".format(self.dataDir))
-            print("  Directory did not exist...made {}".format(self.dataDir))
+            os.makedirs(dataDir)
+            logging.info("  Directory did not exist...made {}".format(dataDir))
+            print("  Directory did not exist...made {}".format(dataDir))
         except FileExistsError:
-            logging.warning("  Directory already exists: [{}]".format(self.dataDir))
+            logging.warning("  Directory already exists: [{}]".format(dataDir))
         
         self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
         if self.configRadioSingle.isChecked():
             self.wires = self.wires[0]
         else:
             self.wires = "-".join([str(w) for w in self.wires])
-        self.scanRunDataDir = os.path.join(self.dataDir, self.configLayer + "_" + self.configApaSide + 
+        self.scanRunDataDir = os.path.join(dataDir, self.configLayer + "_" + self.configApaSide + 
         "_" + str(self.configHeadboard) + "_" + str(self.wires) + "_" + self.timeString)
         os.makedirs(self.scanRunDataDir)
      
@@ -2542,11 +2539,11 @@ class MainWindow(qtw.QMainWindow):
                 #
                 print(f'self.scanType = {self.scanType}')
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
+                    for i, btn in enumerate(self.radioBtns):
+                        if btn.isChecked(): 
+                            self.btnNum = i
                     for c in range(0, self.scanTable.columnCount()):
                         self.scanTable.item(self.btnNum,c).setBackground(qtg.QColor(3,205,0))
-                        for i, btn in enumerate(self.radioBtns):
-                            if btn.isChecked(): 
-                                self.btnNum = i
                         if len(self.radioBtns)>(self.btnNum+1):
                             self.nextBtn = self.btnNum+1
                         else: 
@@ -2639,13 +2636,13 @@ class MainWindow(qtw.QMainWindow):
                 self._scanButtonEnable()
                 
             self.dwaControllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerStateStr']}")
-            if self.dwaControllerState_val.text() == "IDLE":
+            if udpDict[ddp.Frame.STATUS]['controllerStateStr'] == "IDLE":
                 self.IDLELabel.setText("")
                 self.idle = True
                 self._scanButtonEnable()
 
             else:
-                self.IDLELabel.setText("DWA state: "+str(dwaControllerState_val.text()))
+                pass
             self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")
             self.buttonStatus_val.setText(f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
 
