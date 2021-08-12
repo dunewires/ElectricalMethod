@@ -371,11 +371,13 @@ class MainWindow(qtw.QMainWindow):
         self.scanCtrlButtons = [self.btnScanCtrl, self.btnScanCtrlAdv]
         self.scanType = None
         self._scanButtonDisable()
+        self._submitResonanceButtonDisable()
         self._setScanButtonAction('START')
         self.interScanDelay = INTER_SCAN_DELAY_SEC
         self.dwaConnected_label.setText('Not Connected')
         self.dwaConnected_label.setStyleSheet("color:red")
 
+        
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
         
@@ -2042,25 +2044,6 @@ class MainWindow(qtw.QMainWindow):
             for side in APA_SIDES:
                 pointer_lists[layer][side] = [{"testId": None}]*900
                 
-        #pointer_lists = {
-        #    "X": {
-        #        "A": [{"testId": None}]*900,
-        #        "B": [{"testId": None}]*900
-        #    },
-        #    "U": {
-        #        "A": [{"testId": None}]*900,
-        #        "B": [{"testId": None}]*900
-        #    },
-        #    "V": {
-        #        "A": [{"testId": None}]*900,
-        #        "B": [{"testId": None}]*900
-        #    },
-        #    "G": {
-        #        "A": [{"testId": None}]*900,
-        #        "B": [{"testId": None}]*900
-        #    },
-        #}
-        
         pointer_list = [{"testId": None}]*900
         for dwaCh, ch in enumerate(self.loadedDatabaseConfig["channels"]): # Loop over channels in scan
             for w in self.loadedDatabaseConfig["channels"]:
@@ -2261,9 +2244,6 @@ class MainWindow(qtw.QMainWindow):
         return data
 
     def _loadAmpData(self):
-        #ampFilename = "DWANUM_HEADBOARDNUM_LAYER_"+self.ampDataFilename.text()+".json"
-        #ampFilename = os.path.join(self.scanRunDataDir, ampFilename)
-        #ampFilename = os.path.join(self.ampDataFilename.text(), "amplitudeData.json")
         ampFilename = self.ampDataFilename.text()
         print(f"ampFilename = {ampFilename}")
         self.ampDataActiveLabel.setText(ampFilename)
@@ -2272,21 +2252,25 @@ class MainWindow(qtw.QMainWindow):
         with open(ampFilename, "r") as fh:
             data = json.load(fh)
 
-            
+        self.ampData = {}
         for reg in self.registers:
-            #print(data[str(reg.value)]['freq'])
-            self.ampData[reg.value]['freq'] = data[str(reg.value)]['freq']
-            self.ampData[reg.value]['ampl'] = data[str(reg.value)]['ampl']
+            self.ampData[reg.value] = {'freq':data[str(reg.value)]['freq'],  # stim freq in Hz
+                                       'ampl':data[str(reg.value)]['ampl'] } # amplitude in ADC counts
             self.curves['resRawFit'][reg].setData(self.ampData[reg.value]['freq'],
                                                   self.ampData[reg.value]['ampl'])
 
-        configFile = os.path.join(os.path.dirname(ampFilename), "dwaConfig.ini")
-        #with open(configFile) as fh:
-        #    loadedConfigFile = dcf.DwaConfigFile(configFile, sections=['FPGA','DATABASE'])
-        #    self.loadedDatabaseConfig = loadedConfigFile.getConfigDict(section='DATABASE')
-        #    logging.info("LOADING.......")
-        #    logging.info(self.loadedDatabaseConfig)
+        # Get the Metadata
+        for field in DATABASE_FIELDS:
+            self.ampData[field] = data[field]
 
+        okToLogToDb = False if self.ampData['apaUuid'] is None else True  # KLUGE: may want a different test here
+        print(f'okToLogToDb = {okToLogToDb}')
+        print(f"self.ampData['apaUuid'] = {self.ampData['apaUuid']}")
+        if okToLogToDb:
+            self._submitResonanceButtonEnable()
+        else:
+            self._submitResonanceButtonDisable()
+        
     def _loadConfigFile(self, updateGui=True):
         #updateGui function no longer works with left column  and original textbox removed 
         # try to read the requested file
@@ -2737,11 +2721,17 @@ class MainWindow(qtw.QMainWindow):
             self.btnScanCtrl.clicked.connect(self.abortScan)
             self.btnScanCtrlAdv.clicked.connect(self.abortScan)
         
+    def _submitResonanceButtonDisable(self):
+        self.btnSubmitResonances.setEnabled(False)
+
+    def _submitResonanceButtonEnable(self):
+        self.btnSubmitResonances.setEnabled(True)
+        
     def _scanButtonDisable(self):
         #self._scanButtonEnable(state=False)
         self.btnScanCtrl.setEnabled(False)
         self.btnScanCtrlAdv.setEnabled(False)
-            
+
     def _scanButtonEnable(self):
         #for scb in self.scanCtrlButtons:
             #scb.setEnabled(state)
