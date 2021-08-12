@@ -979,7 +979,21 @@ class MainWindow(qtw.QMainWindow):
             item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
             self.scanTable.resizeColumnsToContents()
             self.freqMaxBox.append(freqMax)
-            self.scanTable.setColumnCount(5)
+            #freq step size column
+            advFss = self.advFssLineEdit.text() # Freq step size
+            if advFss: advFss = float(advFss)
+            else: pass
+            if advFss: 
+                advFss = config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss)['stimFreqStep']
+            else: 
+                advFss= config_generator.configure_scan_frequencies(freqMin, freqMax)['stimFreqStep']
+            item = qtw.QTableWidgetItem()
+            self.scanTable.setItem(0, 5, item)
+            item.setTextAlignment(qtc.Qt.AlignHCenter)
+            item.setText(qtc.QCoreApplication.translate("MainWindow", str(advFss)))
+            self.scanTable.resizeColumnsToContents()
+            self.freqMaxBox.append(freqMax)
+            self.scanTable.setColumnCount(6)
 
             self.radioBtns[0].setChecked(True)
             #need to enable the start button, I think this is sufficient
@@ -1045,7 +1059,22 @@ class MainWindow(qtw.QMainWindow):
                 item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
                 self.scanTable.resizeColumnsToContents()
                 self.freqMaxBox.append(freqMax)
-                self.scanTable.setColumnCount(5)
+                #freq step size column
+                advFss = self.advFssLineEdit.text() # Freq step size
+                if advFss: advFss = float(advFss)
+                else: pass
+                if advFss: 
+                    advFss = config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss)['stimFreqStep']
+                else: 
+                    advFss= config_generator.configure_scan_frequencies(freqMin, freqMax)['stimFreqStep']
+                item = qtw.QTableWidgetItem()
+                self.scanTable.setItem(scanNum-1, 5, item)
+                item.setTextAlignment(qtc.Qt.AlignHCenter)
+                item.setText(qtc.QCoreApplication.translate("MainWindow", str(advFss)))
+                self.scanTable.resizeColumnsToContents()
+                self.freqMaxBox.append(freqMax)
+                self.scanTable.setColumnCount(6)
+
 
                 scanNum = scanNum + 1
 
@@ -1053,6 +1082,7 @@ class MainWindow(qtw.QMainWindow):
 
         self.configureLabel.setText("")
         self.configure = True
+        self.btnScanCtrl.setEnabled(True)
         self._scanButtonEnable()
 
     def _configurePlots(self):
@@ -1550,11 +1580,7 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
         
-        if self.configRadioSingle.isChecked():
-            dataConfig = {"channels": [apaChannels[0]], "wires": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
-        "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
-        else:
-            dataConfig = {"channels": apaChannels, "wires": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+        dataConfig = {"channels": apaChannels, "wires": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
         "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
 
         self._loadDaqConfig()
@@ -1563,11 +1589,9 @@ class MainWindow(qtw.QMainWindow):
         
         self.freqMax = float(self.scanTable.item(scanIndex, 4).text())
         self.freqMin = float(self.scanTable.item(scanIndex, 3).text())
-        if advFss: 
-            fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step=advFss))
-        else: 
-            fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax))
-
+        self.freqStep = self.scanTable.item(scanIndex, 5).text()
+        
+        fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step = int(self.freqStep)/160))
         fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
 
         self.makeScanOutputDir()

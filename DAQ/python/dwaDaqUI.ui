@@ -374,6 +374,21 @@
                  </item>
                  <item row="9" column="1">
                   <widget class="QTableWidget" name="scanTable">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>192</height>
+                    </size>
+                   </property>
+                   <property name="verticalScrollBarPolicy">
+                    <enum>Qt::ScrollBarAlwaysOff</enum>
+                   </property>
+                   <property name="horizontalScrollBarPolicy">
+                    <enum>Qt::ScrollBarAlwaysOff</enum>
+                   </property>
+                   <property name="sizeAdjustPolicy">
+                    <enum>QAbstractScrollArea::AdjustToContents</enum>
+                   </property>
                    <column>
                     <property name="text">
                      <string>Select</string>
@@ -397,6 +412,11 @@
                    <column>
                     <property name="text">
                      <string>Freq Max</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Freq Step Size</string>
                     </property>
                    </column>
                    <column>
