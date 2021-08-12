@@ -129,6 +129,7 @@ APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Storage", 
 APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
 
+# FIXME: these should be read from somewhere else (DwaConfigFile)...
 DATABASE_FIELDS = ['wires', 'channels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
 
 
@@ -2044,10 +2045,11 @@ class MainWindow(qtw.QMainWindow):
             for side in APA_SIDES:
                 pointer_lists[layer][side] = [{"testId": None}]*900
                 
+        #DATABASE_FIELDS = ['wires', 'channels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
         pointer_list = [{"testId": None}]*900
-        for dwaCh, ch in enumerate(self.loadedDatabaseConfig["channels"]): # Loop over channels in scan
-            for w in self.loadedDatabaseConfig["channels"]:
-                wire_ch = channel_map.wire_to_apa_channel(self.loadedDatabaseConfig["layer"], w)
+        for dwaCh, ch in enumerate(self.ampData["channels"]): # Loop over channels in scan
+            for w in self.ampData["channels"]:
+                wire_ch = channel_map.wire_to_apa_channel(self.ampData["layer"], w)
                 if wire_ch == ch:
                     resonance_result = {
                         "componentUuid":"b9fe4600-706c-11eb-93b0-6183ed4cabef",
@@ -2055,13 +2057,13 @@ class MainWindow(qtw.QMainWindow):
                         "formName": "Wire Resonance Measurement",
                         "data": {
                             "versionDaq": "1.1",
-                            "dwaUuid": self.loadedDatabaseConfig["apaUuid"],
+                            "dwaUuid": self.ampData["apaUuid"],
                             "versionFirmware": "1.1",
                             "site": "Harvard",
-                            "measuredBy": self.loadedDatabaseConfig["measuredBy"],
-                            "productionStage": self.loadedDatabaseConfig["stage"],
-                            "side": self.loadedDatabaseConfig["side"],
-                            "layer": self.loadedDatabaseConfig["layer"],
+                            "measuredBy": self.ampData["measuredBy"],
+                            "productionStage": self.ampData["stage"],
+                            "side": self.ampData["side"],
+                            "layer": self.ampData["layer"],
                             "wires": {
                                 str(w): self.resonantFreqs[dwaCh]
                             },
