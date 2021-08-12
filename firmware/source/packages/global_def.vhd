@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Aug 12 14:20:38 2021
+-- Last update : Thu Aug 12 16:47:49 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ package global_def is
         ctrlStateDbg   : unsigned(3 downto 0);
         errors         : unsigned(23 downto 0);
         pktGenStateDbg : unsigned(3 downto 0);
-        pButton : unsigned(3 downto 0);
+        pButton        : std_logic_vector(3 downto 0);
     end record; -- toDaqRegType
 
     type fromDaqRegType is record
