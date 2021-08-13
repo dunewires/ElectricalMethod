@@ -427,7 +427,8 @@ class MainWindow(qtw.QMainWindow):
         self.dwaConnected_label.setText('Not Connected')
         self.dwaConnected_label.setStyleSheet("color:red")
         self.setPushButtonStatusAll([-1]*4)
-                    
+        self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
+        self.runStatusHeading_label.setStyleSheet("font-weight: bold;")
         self.testRecentScanList()
                             
         
