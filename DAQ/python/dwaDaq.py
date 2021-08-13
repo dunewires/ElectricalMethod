@@ -114,7 +114,7 @@ OUTPUT_DIR_SCAN_DATA_ADVANCED = './scanDataAdv/'
 CLOCK_PERIOD_SEC = 1e8
 STIM_VIEW_OFFSET = 0
 #
-UDP_RECV_BUF_SIZE = 2**20 # Bytes (2**20 Bytes is ~1MB)
+UDP_RECV_BUF_SIZE = 4*2**20 # Bytes (2**20 Bytes is ~1MB)
 #
 N_DWA_CHANS = 8
 PUSH_BUTTON_LIST = [1, 2] # PB0 is deprecated
