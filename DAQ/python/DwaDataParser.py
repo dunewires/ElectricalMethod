@@ -54,6 +54,7 @@ class ControllerState(IntEnum):
     # 8  pktBuildFinish_s Wait for the end of run header to be sent 
     #    before we go to the idle state and wait for another scan
 
+N_PUSH_BUTTONS = 4  # there are 4 push buttons whose status is reported
     
 class DwaDataParser():
 
@@ -461,7 +462,8 @@ class DwaDataParser():
             print(f"error: unrecognized controller state: {dd['controllerState']}")
             dd['controllerStateStr'] = 'UNKNOWN'
         #
-        #dd['buttonStatus'] = dd['buttonStatus'][-4:]
+        dd['buttonStatusList'] = [ dd['buttonStatus'][-(n+1)] for n in range(N_PUSH_BUTTONS) ]
+        
         return dd
 
 

@@ -117,6 +117,7 @@ STIM_VIEW_OFFSET = 0
 UDP_RECV_BUF_SIZE = 2**20 # Bytes (2**20 Bytes is ~1MB)
 #
 N_DWA_CHANS = 8
+PUSH_BUTTON_LIST = [1, 2] # PB0 is deprecated
 INTER_SCAN_DELAY_SEC = 2  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
 
 # DEBUGGING FLAGS
@@ -179,8 +180,8 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-#TAB_ACTIVE_MAIN = MainView.STIMULUS
-TAB_ACTIVE_MAIN = MainView.RESONANCE
+TAB_ACTIVE_MAIN = MainView.STIMULUS
+#TAB_ACTIVE_MAIN = MainView.RESONANCE
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -425,7 +426,7 @@ class MainWindow(qtw.QMainWindow):
         self.interScanDelay = INTER_SCAN_DELAY_SEC
         self.dwaConnected_label.setText('Not Connected')
         self.dwaConnected_label.setStyleSheet("color:red")
-
+        self.setPushButtonStatusAll([-1]*4)
                     
         self.testRecentScanList()
                             
@@ -526,6 +527,35 @@ class MainWindow(qtw.QMainWindow):
         
     # end of __init__ for class MainWindow
 
+    def setPushButtonStatusAll(self, buttonVals):
+        # Set all push button GUI elements
+        # buttonVals is a list of integers or bools
+
+        for ii, val in enumerate(buttonVals):
+            self.setPushButtonStatus(ii, val)
+        
+    def setPushButtonStatus(self, buttonId, buttonVal):
+        # Set a single push button GUI element
+        #width = self.dwaPB0Status_label.size().width()
+        #radius = int(width/2)
+        #self.dwaPB0Status.resize(width, width)
+        print(f"setPushButtonStatus: buttonId, buttonVal = {buttonId}, {buttonVal}")
+        if buttonId not in PUSH_BUTTON_LIST:
+            return
+
+        if buttonVal == '0':
+            color = 'red'
+        elif buttonVal == '1':
+            color = 'green'
+        else:
+            color = 'black'
+        #style = f"border: 3px solid {color}; border-radius: {radius}px;"
+        style = f"border: 3px solid {color};"
+        getattr(self, f'dwaPB{buttonId}Status').setStyleSheet(style)
+        #self.dwaPB0Status.setStyleSheet(style)
+        #self.dwaPB1Status.setStyleSheet(style)
+        
+    
     def testRecentScanList(self):
         dummydata = [ {'side':'A',
                        'layer':'G',
@@ -2739,9 +2769,12 @@ class MainWindow(qtw.QMainWindow):
             else:
                 self.IDLELabel.setText("DWA state: "+str(dwaControllerState_val.text()))
             self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")
+
+            # Display the status of the push buttons
             self.buttonStatus_val.setText(f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
+            self.setPushButtonStatusAll(udpDict[ddp.Frame.STATUS]['buttonStatusList'])
 
-
+            
     def disableScanButtonForTime(self, disableDuration):
         """ disableDuration is a time in seconds """
         # CURRENTLY "FAILS" BECAUSE BUTTON IS ENABLED BY IDLE STATE IN STATUS FRAME
