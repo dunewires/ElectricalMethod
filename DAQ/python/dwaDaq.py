@@ -2157,12 +2157,13 @@ class MainWindow(qtw.QMainWindow):
         for layer in ["X", "U", "V", "G"]:
             for side in ["A", "B"]:
                 layer_data = database_functions.get_layer_data(sietch, apaUuid, side, layer, stage)
-                for ch in range(1, 8):
+                channels = [int(ch) for ch in layer_data.keys()]
+                for ch in channels:
                     wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
                     measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
                     mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)        
                     for i,w in enumerate(wires):
-                        self.tensionData[layer+side][w-1] = mapped[i]
+                        self.tensionData[layer+side][int(w)-1] = mapped[i]
 
                 # FIXME: this should only happen once -- in _makeCurves()
                 # Create the scatter plot and add it to the view
