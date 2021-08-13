@@ -2150,7 +2150,7 @@ class MainWindow(qtw.QMainWindow):
         # Get APA UUID from text box
         apaUuid = self.pointerTableApaUuid.text()
         # Get stage
-        stage = self.tensionStageComboBox.getCurrentText()
+        stage = self.tensionStageComboBox.currentText()
         # Get pointer table info
         self.pointerTable = database_functions.get_pointer_table(sietch, apaUuid, stage)
 
