@@ -107,11 +107,14 @@ class DwaMicrozed():
         self._regWrite('00000000', '00000001')
         time.sleep(self.sleepPostWrite)
         self._tcpClose()
+
+    def scanConfig(self, cfg):
+        self.config(cfg)
         
     def config(self, cfg):
         """
         Args:
-            config (dict): dictionary containing configuration parameters
+            config (dict): dictionary containing scan configuration parameters
         
         Returns:
     
@@ -129,7 +132,7 @@ class DwaMicrozed():
         self.setStimParams(cfg)
         self.setMainsSubtraction(cfg)
         self.setRelays(cfg)
-        self.setUdpAddress(cfg["client_IP"])
+        #self.setUdpAddress(cfg["client_IP"])
         self.setDigipots(cfg["digipot"])
     
         self._tcpClose(force=True)

@@ -89,15 +89,15 @@
           </item>
           <item>
            <layout class="QFormLayout" name="formLayout_13">
-            <item row="3" column="0">
-             <widget class="QLabel" name="dwaControllerState_label">
+            <item row="0" column="0">
+             <widget class="QLabel" name="dwaSerialNumber_label">
               <property name="text">
-               <string>State</string>
+               <string>Serial #</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="1">
-             <widget class="QLabel" name="dwaControllerState_val">
+            <item row="0" column="1">
+             <widget class="QLabel" name="dwaSerialNumber_val">
               <property name="text">
                <string>N/A</string>
               </property>
@@ -131,17 +131,31 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="dwaSerialNumber_label">
+            <item row="3" column="0">
+             <widget class="QLabel" name="dwaControllerState_label">
               <property name="text">
-               <string>Serial #</string>
+               <string>State</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="dwaSerialNumber_val">
+            <item row="3" column="1">
+             <widget class="QLabel" name="dwaControllerState_val">
               <property name="text">
                <string>N/A</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="dwaPB1Status">
+              <property name="text">
+               <string>50V</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLabel" name="dwaPB2Status">
+              <property name="text">
+               <string>500V</string>
               </property>
              </widget>
             </item>
@@ -252,7 +266,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -265,7 +279,7 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -857,6 +871,9 @@
             </widget>
            </item>
            <item>
+            <widget class="QTableView" name="recentScansTableView"/>
+           </item>
+           <item>
             <widget class="QWidget" name="widget_3" native="true">
              <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="7,0">
               <item>
@@ -1066,9 +1083,6 @@
               </item>
              </layout>
             </widget>
-           </item>
-           <item>
-            <layout class="QGridLayout" name="gridOfFits_2"/>
            </item>
           </layout>
          </widget>
