@@ -744,6 +744,8 @@ class MainWindow(qtw.QMainWindow):
         for layer in APA_LAYERS:
             self.configLayerComboBox.addItem(layer)
 
+        self.headboardLabel.setText("Connect to headboard #"+str(self.spinBox.value()))
+        self.headboardLabel.setStyleSheet("color : rgb(3,205,0)")
         self.connectLabel.setStyleSheet("color : red")
         self.connectLabel.setText("DWA is not connected")
         self.configureLabel.setStyleSheet("color : red")
@@ -1035,19 +1037,20 @@ class MainWindow(qtw.QMainWindow):
         self.freqMaxBox = [] #these are lists to hold the boxes for these values in the table, that way they can be looped later on
         self.range_data_list = []
 
-
-        channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
-        for channels in channelGroups:
-            range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
-            for rd in range_data:
-                self.range_data_list.append(rd)
-                wires = rd["wires"]
-                for wire in wires:
-                    if wire == self.spinBox.value():
-                        valid = True
-                        self.wireNum = [wire]
-                        freqMin = float(rd["range"][0])
-                        freqMax = float(rd["range"][1])
+        for configHeadboard in range(1,11):
+            channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
+            for channels in channelGroups:
+                range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
+                for rd in range_data:
+                    self.range_data_list.append(rd)
+                    wires = rd["wires"]
+                    for wire in wires:
+                        if wire == self.spinBox.value():
+                            valid = True
+                            self.singleConfigHeadboard = configHeadboard
+                            self.wireNum = [wire]
+                            freqMin = float(rd["range"][0])
+                            freqMax = float(rd["range"][1])
 
         try:
             valid
@@ -1058,6 +1061,7 @@ class MainWindow(qtw.QMainWindow):
             wire.setText("Please make sure the wire in the spin box is valid, and that the wire is not too short")
             wire.exec_()
         else:
+            self.headboardLabel.setText("Connect to headboard #"+str(self.singleConfigHeadboard))
             #table with scan detailss
             self.scanTable.setRowCount(1)
             item = qtw.QTableWidgetItem()
@@ -1197,7 +1201,6 @@ class MainWindow(qtw.QMainWindow):
 
         self.configureLabel.setText("")
         self.configure = True
-        self.btnScanCtrl.setEnabled(True)
         self._scanButtonEnable()
 
     def _configurePlots(self):
@@ -1662,6 +1665,7 @@ class MainWindow(qtw.QMainWindow):
         rd = self.range_data_list[scanIndex]
 
         if self.configRadioSingle.isChecked():
+            self.configHeadboard = self.singleConfigHeadboard
             self.wires = self.wireNum
             channels = channel_map.wire_to_apa_channel(self.configLayer, self.wires)
         else:
