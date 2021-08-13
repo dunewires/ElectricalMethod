@@ -2154,17 +2154,24 @@ class MainWindow(qtw.QMainWindow):
         # Get pointer table info
         self.pointerTable = database_functions.get_pointer_table(sietch, apaUuid, stage)
 
+        
         for layer in ["X", "U", "V", "G"]:
             for side in ["A", "B"]:
+                print(apaUuid, side, layer, stage)
                 layer_data = database_functions.get_layer_data(sietch, apaUuid, side, layer, stage)
                 channels = [int(ch) for ch in layer_data.keys()]
+                print(layer_data)
                 for ch in channels:
+                    print(ch)
                     wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
                     measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
-                    mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)        
-                    for i,w in enumerate(wires):
-                        self.tensionData[layer+side][int(w)-1] = mapped[i]
-
+                    print(expected_frequencies,measured_frequencies)
+                    if len(measured_frequencies) > 0:
+                        mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
+                        for i,w in enumerate(wires):
+                            self.tensionData[layer+side][int(w)-1] = mapped[i]
+                            print(layer+side,str(w),str(mapped[i]))
+                    print("\n")
                 # FIXME: this should only happen once -- in _makeCurves()
                 # Create the scatter plot and add it to the view
                 scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)

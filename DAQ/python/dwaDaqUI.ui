@@ -276,7 +276,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -1355,12 +1355,24 @@
             <rect>
              <x>10</x>
              <y>62</y>
-             <width>131</width>
+             <width>300</width>
              <height>23</height>
             </rect>
            </property>
+           <property name="minimumSize">
+            <size>
+             <width>300</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>300</width>
+             <height>16777215</height>
+            </size>
+           </property>
            <property name="text">
-            <string>Load</string>
+            <string>Fetch Resonances and Compute Tensions</string>
            </property>
           </widget>
           <widget class="QLineEdit" name="pointerTableApaUuid">
@@ -1368,9 +1380,27 @@
             <rect>
              <x>10</x>
              <y>10</y>
-             <width>133</width>
+             <width>300</width>
              <height>20</height>
             </rect>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>300</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>300</width>
+             <height>16777215</height>
+            </size>
            </property>
            <property name="autoFillBackground">
             <bool>false</bool>
@@ -1379,7 +1409,7 @@
             <string/>
            </property>
            <property name="placeholderText">
-            <string>APA Number</string>
+            <string>APA UUID</string>
            </property>
           </widget>
           <widget class="QComboBox" name="tensionStageComboBox">
@@ -1387,9 +1417,21 @@
             <rect>
              <x>10</x>
              <y>36</y>
-             <width>131</width>
+             <width>300</width>
              <height>20</height>
             </rect>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>300</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>300</width>
+             <height>16777215</height>
+            </size>
            </property>
           </widget>
           <widget class="QPushButton" name="btnSubmitTensions">
@@ -1397,9 +1439,21 @@
             <rect>
              <x>10</x>
              <y>640</y>
-             <width>131</width>
+             <width>300</width>
              <height>23</height>
             </rect>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>300</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>300</width>
+             <height>16777215</height>
+            </size>
            </property>
            <property name="text">
             <string>Submit Tensions to DB</string>
@@ -1533,7 +1587,7 @@
      <x>0</x>
      <y>0</y>
      <width>1313</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">

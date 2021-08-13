@@ -2,14 +2,14 @@ import channel_frequencies
 
 def get_measured_resonances(layer_data, wire_layer, channel, thresh = 1000.):
     '''
-    Returns a list the the measured resonances for the givven channel.
+    Returns a list the the measured resonances for the given channel.
     '''
     wires, _ = channel_frequencies.get_expected_resonances(wire_layer, channel, thresh)
     # Do we have all the scans we need?
     measured_resonances = []
     for w in wires: 
-        if w not in layer_data.keys(): return []
-        measured_resonances.append(layer_data[w])
+        if str(w) not in layer_data.keys(): return []
+        measured_resonances.append(layer_data[str(w)])
     non_duplicates = []
     for rl in measured_resonances:
         for r in rl:
