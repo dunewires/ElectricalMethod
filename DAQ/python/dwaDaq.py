@@ -2149,10 +2149,10 @@ class MainWindow(qtw.QMainWindow):
         sietch = SietchConnect("sietch.creds")
         # Get APA UUID from text box
         apaUuid = self.pointerTableApaUuid.text()
-        # Get pointer table info
-        self.pointerTable = database_functions.get_pointer_table(sietch, apaUuid)
         # Get stage
         stage = self.tensionStageComboBox.getCurrentText()
+        # Get pointer table info
+        self.pointerTable = database_functions.get_pointer_table(sietch, apaUuid, stage)
 
         for layer in ["X", "U", "V", "G"]:
             for side in ["A", "B"]:
