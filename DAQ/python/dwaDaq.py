@@ -544,13 +544,16 @@ class MainWindow(qtw.QMainWindow):
             return
 
         if buttonVal == '0':
-            color = 'red'
+            color = 'gray'
+            borderSize = 3
         elif buttonVal == '1':
             color = 'green'
+            borderSize = 3
         else:
             color = 'black'
+            borderSize = 0
         #style = f"border: 3px solid {color}; border-radius: {radius}px;"
-        style = f"border: 3px solid {color};"
+        style = f"border: {borderSize}px solid {color};"
         getattr(self, f'dwaPB{buttonId}Status').setStyleSheet(style)
         #self.dwaPB0Status.setStyleSheet(style)
         #self.dwaPB1Status.setStyleSheet(style)
