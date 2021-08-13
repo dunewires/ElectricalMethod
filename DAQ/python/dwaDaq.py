@@ -2163,7 +2163,6 @@ class MainWindow(qtw.QMainWindow):
                     mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)        
                     for i,w in enumerate(wires):
                         self.tensionData[layer+side][w-1] = mapped[i]
-                        self.tensionData[layer][side][w-1] = mapped[i]
 
                 # FIXME: this should only happen once -- in _makeCurves()
                 # Create the scatter plot and add it to the view
