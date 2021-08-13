@@ -180,8 +180,8 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-TAB_ACTIVE_MAIN = MainView.STIMULUS
-#TAB_ACTIVE_MAIN = MainView.RESONANCE
+#TAB_ACTIVE_MAIN = MainView.STIMULUS
+TAB_ACTIVE_MAIN = MainView.RESONANCE
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -361,6 +361,13 @@ class RecentScansTableModel(qtc.QAbstractTableModel):
         self._data = data    # list of dictionarys. e.g. [ {'submitted':True, 'side':'A', 'layer':'G'...}, {'submitted':False, 'side':'A', 'layer':'V'}, ... ]
         self._hdrs = headers # list of which keys to use from the dict
 
+
+    def append(self, scandict):
+        self._data.append(scandict)
+
+    def pop(self, index=-1):
+        self._data.pop(index)
+        
     def data(self, index, role):
         kk = self._hdrs[index.column()]
         value = self._data[index.row()][kk]
@@ -429,8 +436,9 @@ class MainWindow(qtw.QMainWindow):
         self.setPushButtonStatusAll([-1]*4)
         self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
         self.runStatusHeading_label.setStyleSheet("font-weight: bold;")
-        self.testRecentScanList()
-                            
+        self.initRecentScanList()
+        self.heartPixmaps = [qtg.QPixmap('icons/heart1.png'), qtg.QPixmap('icons/heart3.png')]
+        self.heartval = 0
         
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
@@ -560,7 +568,7 @@ class MainWindow(qtw.QMainWindow):
         #self.dwaPB1Status.setStyleSheet(style)
         
     
-    def testRecentScanList(self):
+    def initRecentScanList(self):
         dummydata = [ {'side':'A',
                        'layer':'G',
                        'wires':[6,8,14,20],
@@ -574,6 +582,7 @@ class MainWindow(qtw.QMainWindow):
                        'submitted':True,
                        },
                      ]
+
         dummyhdrs = ['submitted', 'side', 'layer', 'headboard', 'wires']
         self.recentScansTableModel = RecentScansTableModel(dummydata, dummyhdrs)
         self.recentScansTableView.setModel(self.recentScansTableModel)
@@ -735,6 +744,8 @@ class MainWindow(qtw.QMainWindow):
         for layer in APA_LAYERS:
             self.configLayerComboBox.addItem(layer)
 
+        self.headboardLabel.setText("Connect to headboard #"+str(self.spinBox.value()))
+        self.headboardLabel.setStyleSheet("color : rgb(3,205,0)")
         self.connectLabel.setStyleSheet("color : red")
         self.connectLabel.setText("DWA is not connected")
         self.configureLabel.setStyleSheet("color : red")
@@ -1026,19 +1037,20 @@ class MainWindow(qtw.QMainWindow):
         self.freqMaxBox = [] #these are lists to hold the boxes for these values in the table, that way they can be looped later on
         self.range_data_list = []
 
-
-        channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
-        for channels in channelGroups:
-            range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
-            for rd in range_data:
-                self.range_data_list.append(rd)
-                wires = rd["wires"]
-                for wire in wires:
-                    if wire == self.spinBox.value():
-                        valid = True
-                        self.wireNum = [wire]
-                        freqMin = float(rd["range"][0])
-                        freqMax = float(rd["range"][1])
+        for configHeadboard in range(1,11):
+            channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
+            for channels in channelGroups:
+                range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
+                for rd in range_data:
+                    self.range_data_list.append(rd)
+                    wires = rd["wires"]
+                    for wire in wires:
+                        if wire == self.spinBox.value():
+                            valid = True
+                            self.singleConfigHeadboard = configHeadboard
+                            self.wireNum = [wire]
+                            freqMin = float(rd["range"][0])
+                            freqMax = float(rd["range"][1])
 
         try:
             valid
@@ -1049,6 +1061,7 @@ class MainWindow(qtw.QMainWindow):
             wire.setText("Please make sure the wire in the spin box is valid, and that the wire is not too short")
             wire.exec_()
         else:
+            self.headboardLabel.setText("Connect to headboard #"+str(self.singleConfigHeadboard))
             #table with scan detailss
             self.scanTable.setRowCount(1)
             item = qtw.QTableWidgetItem()
@@ -1188,7 +1201,6 @@ class MainWindow(qtw.QMainWindow):
 
         self.configureLabel.setText("")
         self.configure = True
-        self.btnScanCtrl.setEnabled(True)
         self._scanButtonEnable()
 
     def _configurePlots(self):
@@ -1653,6 +1665,7 @@ class MainWindow(qtw.QMainWindow):
         rd = self.range_data_list[scanIndex]
 
         if self.configRadioSingle.isChecked():
+            self.configHeadboard = self.singleConfigHeadboard
             self.wires = self.wireNum
             channels = channel_map.wire_to_apa_channel(self.configLayer, self.wires)
         else:
@@ -2750,6 +2763,7 @@ class MainWindow(qtw.QMainWindow):
                     self.radioBtns[self.nextBtn]=item
 
                 self.updateAmplitudePlots()
+                self.updateRecentScanList()
                 self.initiateResonanceAnalysis()
                 self.scanType = None
                 
@@ -2822,6 +2836,9 @@ class MainWindow(qtw.QMainWindow):
                 print(f"\n FOUND STATUS FRAME {datetime.datetime.now()}")
                 print(udpDict[ddp.Frame.STATUS])
 
+            # update heart logo
+            self.updateHeartbeatLogo()
+                
             self.dwaControllerState = udpDict[ddp.Frame.STATUS]['controllerState']
 
             if self.dwaControllerState != State.IDLE:
@@ -2845,7 +2862,13 @@ class MainWindow(qtw.QMainWindow):
             self.buttonStatus_val.setText(f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
             self.setPushButtonStatusAll(udpDict[ddp.Frame.STATUS]['buttonStatusList'])
 
-            
+
+    def updateHeartbeatLogo(self):
+        self.heartval = (self.heartval+1) % len(self.heartPixmaps)
+        self.heartbeat_val.setPixmap(self.heartPixmaps[self.heartval])
+        self.heartbeat_val.resize(self.heartPixmaps[self.heartval].width(),
+                                  self.heartPixmaps[self.heartval].height())
+        
     def disableScanButtonForTime(self, disableDuration):
         """ disableDuration is a time in seconds """
         # CURRENTLY "FAILS" BECAUSE BUTTON IS ENABLED BY IDLE STATE IN STATUS FRAME
@@ -3000,10 +3023,23 @@ class MainWindow(qtw.QMainWindow):
 
         # Set the amplitude filename to the most recent run
         self.ampDataFilename.setText(self.fnOfAmpData)
-        
+
         # "load" that file
         self.ampDataFilenameEnter()
 
+    def updateRecentScanList(self):
+        self.recentScansTableModel.append( {'side':'C',
+                                            'layer':'Y',
+                                            'wires':[5, 1, 3],
+                                            'headboard':9,
+                                            'submitted':False,
+                                            }
+                                          )
+        self.recentScansTableModel.layoutChanged.emit()
+        print("\n\n")
+        print(self.recentScansTableModel._data)
+        print("\n\n")
+        
     def runResonanceAnalysis(self):
         # get A(f) data for each channel
         # run peakfinding -- assumes that peak finding parameters are already set
