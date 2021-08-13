@@ -1691,7 +1691,7 @@ class MainWindow(qtw.QMainWindow):
 
         self._loadDaqConfig()
 
-        self.combinedConfig = {"FPGA": fpgaConfig, "Database": dataConfig, "DAQ": self.daqConfig}
+        self.combinedConfig = {"FPGA": fpgaConfig, "DATABASE": dataConfig, "DAQ": self.daqConfig}
         
         self.freqMax = float(self.scanTable.item(scanIndex, 4).text())
         self.freqMin = float(self.scanTable.item(scanIndex, 3).text())

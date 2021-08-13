@@ -307,13 +307,13 @@
                    </property>
                    <property name="minimumSize">
                     <size>
-                     <width>200</width>
+                     <width>250</width>
                      <height>0</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>200</width>
+                     <width>250</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -406,13 +406,13 @@
                        <widget class="QRadioButton" name="configRadioAll">
                         <property name="minimumSize">
                          <size>
-                          <width>155</width>
+                          <width>205</width>
                           <height>0</height>
                          </size>
                         </property>
                         <property name="maximumSize">
                          <size>
-                          <width>155</width>
+                          <width>205</width>
                           <height>16777215</height>
                          </size>
                         </property>
@@ -428,18 +428,18 @@
                        <widget class="QRadioButton" name="configRadioSingle">
                         <property name="minimumSize">
                          <size>
-                          <width>155</width>
+                          <width>205</width>
                           <height>0</height>
                          </size>
                         </property>
                         <property name="maximumSize">
                          <size>
-                          <width>155</width>
+                          <width>205</width>
                           <height>16777215</height>
                          </size>
                         </property>
                         <property name="text">
-                         <string>Single APA wire segment</string>
+                         <string>Single APA wire segment:</string>
                         </property>
                        </widget>
                       </item>
@@ -493,13 +493,13 @@
                   <widget class="QPushButton" name="btnConfigureScans">
                    <property name="minimumSize">
                     <size>
-                     <width>200</width>
+                     <width>250</width>
                      <height>0</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>200</width>
+                     <width>250</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -564,13 +564,13 @@
                     <widget class="QLabel" name="connectLabel">
                      <property name="minimumSize">
                       <size>
-                       <width>200</width>
+                       <width>250</width>
                        <height>0</height>
                       </size>
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>250</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -583,13 +583,13 @@
                     <widget class="QLabel" name="configureLabel">
                      <property name="minimumSize">
                       <size>
-                       <width>200</width>
+                       <width>250</width>
                        <height>0</height>
                       </size>
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>250</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -602,13 +602,13 @@
                     <widget class="QLabel" name="IDLELabel">
                      <property name="minimumSize">
                       <size>
-                       <width>200</width>
+                       <width>250</width>
                        <height>0</height>
                       </size>
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>250</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -630,13 +630,13 @@
                   <widget class="QComboBox" name="configStageComboBox">
                    <property name="minimumSize">
                     <size>
-                     <width>200</width>
+                     <width>250</width>
                      <height>0</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>200</width>
+                     <width>250</width>
                      <height>16777215</height>
                     </size>
                    </property>
@@ -653,13 +653,13 @@
                   <widget class="QLineEdit" name="configApaUuidLineEdit">
                    <property name="minimumSize">
                     <size>
-                     <width>200</width>
+                     <width>250</width>
                      <height>0</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>200</width>
+                     <width>250</width>
                      <height>16777215</height>
                     </size>
                    </property>
