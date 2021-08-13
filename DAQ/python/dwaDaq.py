@@ -2192,6 +2192,7 @@ class MainWindow(qtw.QMainWindow):
         sietch = SietchConnect("sietch.creds")
         pointerTableId = self.pointerTable["_id"]
         apaUuid = self.pointerTable["data"]["apaUuid"]
+        stage = self.pointerTable["stage"]
         wireData = {
             'X': {
                 'A': self.tensionData['XA'],
@@ -2216,7 +2217,7 @@ class MainWindow(qtw.QMainWindow):
             "formId": "Wire Tensions",
             "formName": "Wire Tensions",
             "pointerTableUsed": pointerTableId,
-            "stage": self.ampData["stage"],
+            "stage": stage,
             "data": {
                 "version": "1.1",
                 "apaUuid": apaUuid,
