@@ -20,16 +20,13 @@
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QWidget" name="controls" native="true">
-         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,0,0,0,0,10">
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,0,0,0,10">
           <item>
            <widget class="QPushButton" name="btnDwaConnect">
             <property name="text">
              <string>Connect</string>
             </property>
            </widget>
-          </item>
-          <item>
-           <layout class="QFormLayout" name="formLayout_2"/>
           </item>
           <item>
            <widget class="Line" name="line_2">
@@ -60,6 +57,34 @@
           </item>
           <item>
            <layout class="QFormLayout" name="formLayout_13">
+            <item row="0" column="0">
+             <widget class="QLabel" name="dwaIp_label">
+              <property name="text">
+               <string>DWA IP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="dwaIp_val">
+              <property name="text">
+               <string>N/A</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="clientIp_label">
+              <property name="text">
+               <string>Client IP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="clientIp_val">
+              <property name="text">
+               <string>N/A</string>
+              </property>
+             </widget>
+            </item>
             <item row="2" column="0">
              <widget class="QLabel" name="dwaSerialNumber_label">
               <property name="text">
@@ -130,31 +155,17 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="dwaIp_label">
+            <item row="7" column="0">
+             <widget class="QLabel" name="label">
               <property name="text">
-               <string>DWA IP</string>
+               <string>Heartbeat</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="dwaIp_val">
+            <item row="7" column="1">
+             <widget class="QLabel" name="heartbeat_val">
               <property name="text">
-               <string>N/A</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="clientIp_label">
-              <property name="text">
-               <string>Client IP</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QLabel" name="clientIp_val">
-              <property name="text">
-               <string>N/A</string>
+               <string>*</string>
               </property>
              </widget>
             </item>
