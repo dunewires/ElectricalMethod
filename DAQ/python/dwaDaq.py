@@ -736,6 +736,7 @@ class MainWindow(qtw.QMainWindow):
         self.btnSubmitResonances.clicked.connect(self.submitResonances)
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensions)
+        self.btnSubmitTensions.clicked.connect(self.submitTensions)
         # Config Tab
         self.btnConfigureScans.clicked.connect(self.singleOrAllScans)
         for stage in APA_TESTING_STAGES:
@@ -2144,18 +2145,21 @@ class MainWindow(qtw.QMainWindow):
         sietch = SietchConnect("sietch.creds")
         # Get APA UUID from text box
         apaUuid = self.pointerTableApaUuid.text()
-        # Get tension frame UUID
-        tensionFrameUuid = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, apaUuid)
+        # Get pointer table info
+        self.pointerTable = database_functions.get_pointer_table(sietch, apaUuid)
+        # Get stage
+        stage = self.tensionStageComboBox.getCurrentText()
 
-        for layer in ["X"]: #, "U", "V", "G"]:
-            for side in ["A"]: #, "B"]:
-                layer_data = database_functions.get_layer_data(sietch, tensionFrameUuid, side, layer)
+        for layer in ["X", "U", "V", "G"]:
+            for side in ["A", "B"]:
+                layer_data = database_functions.get_layer_data(sietch, apaUuid, side, layer, stage)
                 for ch in range(1, 8):
                     wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
                     measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
                     mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)        
                     for i,w in enumerate(wires):
                         self.tensionData[layer+side][w-1] = mapped[i]
+                        self.tensionData[layer][side][w-1] = mapped[i]
 
                 # FIXME: this should only happen once -- in _makeCurves()
                 # Create the scatter plot and add it to the view
@@ -2170,6 +2174,48 @@ class MainWindow(qtw.QMainWindow):
         self.tensionTableView.resizeRowsToContents()
 
         #self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
+    
+        
+    def submitTensions(self):
+        # Load sietch credentials #FIXME still using James's credentials
+        sietch = SietchConnect("sietch.creds")
+        pointerTableId = self.pointerTable["_id"]
+        apaUuid = self.pointerTable["data"]["apaUuid"]
+        wireData = {
+            'X': {
+                'A': self.tensionData['XA'],
+                'B': self.tensionData['XB']
+            },
+            'U': {
+                'A': self.tensionData['UA'],
+                'B': self.tensionData['UB']
+            },
+            'V': {
+                'A': self.tensionData['VA'],
+                'B': self.tensionData['VB']
+            },
+            'G': {
+                'A': self.tensionData['GA'],
+                'B': self.tensionData['GB']
+            },
+        }
+        
+        record_result = {
+            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, apaUuid),
+            "formId": "Wire Tensions",
+            "formName": "Wire Tensions",
+            "pointerTableUsed": pointerTableId,
+            "stage": self.ampData["stage"],
+            "data": {
+                "version": "1.1",
+                "apaUuid": apaUuid,
+                "wires": wireData,
+                "saveAsDraft": True,
+                "submit": True
+            }
+        }
+        dbid= sietch.api('/test',record_result)
+    
     @pyqtSlot()
     def submitResonances(self):
         # Load sietch credentials #FIXME still using James's credentials
@@ -2187,7 +2233,7 @@ class MainWindow(qtw.QMainWindow):
                 wire_ch = channel_map.wire_to_apa_channel(self.ampData["layer"], w)
                 if wire_ch == ch:
                     resonance_result = {
-                        "componentUuid":"b9fe4600-706c-11eb-93b0-6183ed4cabef",
+                        "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
                         "formId": "wire_resonance_measurement",
                         "formName": "Wire Resonance Measurement",
                         "data": {
@@ -2212,11 +2258,13 @@ class MainWindow(qtw.QMainWindow):
         
         pointer_lists[self.ampData["layer"]][self.ampData["side"]] = pointer_list  # BUG? should copy the list not reference it?
         record_result = {
-            "componentUuid":"77e0c450-8863-11eb-8dcd-0242ac130003",
+            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
             "formId": "wire_tension_pointer",
             "formName": "Wire Tension Pointer Record",
+            "stage": self.ampData["stage"],
             "data": {
-                "version": "chris 1.1",
+                "version": "1.1",
+                "apaUuid": self.ampData["apaUuid"],
                 "wires": pointer_lists,
                 "saveAsDraft": True,
                 "submit": True
@@ -2224,13 +2272,13 @@ class MainWindow(qtw.QMainWindow):
         }
         dbid= sietch.api('/test',record_result)
 
+
     @pyqtSlot()
     def loadEventData(self):
         scanId = self.evtVwr_runName_val.text()
         print(f'scanId = {scanId}')
 
         fileroot = 'scanData/'+scanId+'/'
-
 
         wireDataFilenames = [ f'{scanId}_{nn:02d}.txt' for nn in range(N_DWA_CHANS) ]
         wireDataFilenames = [ os.path.join(fileroot, ff) for ff in wireDataFilenames ]
@@ -2369,8 +2417,6 @@ class MainWindow(qtw.QMainWindow):
         missingVals = [x for x in range(0,udpCtrs[-1]+1) if x not in udpCtrs]
         print(f"Missing UDP packets: {missingVals}")
         print(f"(may also be missing a packet with value larger than {udpCtrs[-1]})")
-
-        
         
     def _getAllLines(self, fname):
         f = open(fname, "r")
