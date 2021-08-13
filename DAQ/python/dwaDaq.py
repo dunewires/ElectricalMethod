@@ -101,7 +101,9 @@ DWA_CONFIG_FILE = "dwaConfigWC.ini"
 #DWA_CONFIG_FILE = "config/dwaConfig_SP.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 #
-AMP_DATA_FILE   = "test/data/50cm24inch/20210616T203958_amp.json"
+#AMP_DATA_FILE   = "test/data/50cm24inch/20210616T203958_amp.json"
+AMP_DATA_FILE = './scanDataAdv/dwaConfigWC_20210812T112511/amplitudeData.json'
+
 EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
 OUTPUT_DIR_SCAN_DATA = './scanData/'
@@ -177,7 +179,8 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-TAB_ACTIVE_MAIN = MainView.STIMULUS
+#TAB_ACTIVE_MAIN = MainView.STIMULUS
+TAB_ACTIVE_MAIN = MainView.RESONANCE
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -350,6 +353,51 @@ class TensionTableModel(qtc.QAbstractTableModel):
             if orientation == qtc.Qt.Vertical:
                 return str(section+1)
     
+class RecentScansTableModel(qtc.QAbstractTableModel):
+    # See: https://www.learnpyqt.com/tutorials/qtableview-modelviews-numpy-pandas/
+    def __init__(self, data, headers):
+        super(RecentScansTableModel, self).__init__()
+        self._data = data    # list of dictionarys. e.g. [ {'submitted':True, 'side':'A', 'layer':'G'...}, {'submitted':False, 'side':'A', 'layer':'V'}, ... ]
+        self._hdrs = headers # list of which keys to use from the dict
+
+    def data(self, index, role):
+        kk = self._hdrs[index.column()]
+        value = self._data[index.row()][kk]
+
+        if role == qtc.Qt.DisplayRole:
+
+            if isinstance(value, list):
+                return str(value)  # FIXME: may want to change
+
+            if isinstance(value, bool):
+                return ""
+            
+            # default
+            return value
+
+        if role == qtc.Qt.DecorationRole:
+            if isinstance(value, bool):
+                if value:
+                    return qtg.QIcon('icons/check-mark-48.png')
+                return qtg.QIcon('icons/cross-mark-48.png')
+
+        
+    def rowCount(self, index):
+        return len(self._data)
+
+    def columnCount(self, index):
+        # assumes all rows are the same length!
+        return len(self._hdrs)
+
+    def headerData(self, section, orientation, role):
+        if role == qtc.Qt.DisplayRole:
+            if orientation == qtc.Qt.Horizontal:
+                return str(self._hdrs[section])
+            #if orientation == qtc.Qt.Vertical:
+            #    return str(section+1)
+    
+
+
             
 class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -378,6 +426,9 @@ class MainWindow(qtw.QMainWindow):
         self.dwaConnected_label.setText('Not Connected')
         self.dwaConnected_label.setStyleSheet("color:red")
 
+                    
+        self.testRecentScanList()
+                            
         
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
@@ -475,6 +526,27 @@ class MainWindow(qtw.QMainWindow):
         
     # end of __init__ for class MainWindow
 
+    def testRecentScanList(self):
+        dummydata = [ {'side':'A',
+                       'layer':'G',
+                       'wires':[6,8,14,20],
+                       'headboard':5,
+                       'submitted':False,
+                       },
+                      {'side':'B',
+                       'layer':'X',
+                       'wires':[99, 62, 14, 100052],
+                       'headboard':3,
+                       'submitted':True,
+                       },
+                     ]
+        dummyhdrs = ['submitted', 'side', 'layer', 'headboard', 'wires']
+        self.recentScansTableModel = RecentScansTableModel(dummydata, dummyhdrs)
+        self.recentScansTableView.setModel(self.recentScansTableModel)
+        self.recentScansTableView.resizeColumnsToContents()
+        self.recentScansTableView.resizeRowsToContents()
+
+    
     def _configureAmps(self):
         self.ampData = {}  # hold amplitude vs. freq data for a scan (and metadata)
         self.resonantFreqs = {}
@@ -1684,7 +1756,7 @@ class MainWindow(qtw.QMainWindow):
             
         try:
             self.logger.info('======= dwaConfig() ===========')
-            self.uz.config(self.dwaConfigFile.config['FPGA'])
+            self.uz.scanConfig(self.dwaConfigFile.config['FPGA'])
         except:
             self.logger.error("DWA run configuration failed")
             
@@ -2045,7 +2117,6 @@ class MainWindow(qtw.QMainWindow):
             for side in APA_SIDES:
                 pointer_lists[layer][side] = [{"testId": None}]*900
                 
-        #DATABASE_FIELDS = ['wires', 'channels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
         pointer_list = [{"testId": None}]*900
         for dwaCh, ch in enumerate(self.ampData["channels"]): # Loop over channels in scan
             for w in self.ampData["wires"]:
@@ -2075,7 +2146,7 @@ class MainWindow(qtw.QMainWindow):
                     pointer_list[w] = {"testId": dbid}
 
         
-        pointer_lists[self.loadedDatabaseConfig["layer"]][self.loadedDatabaseConfig["side"]] = pointer_list  # BUG? should copy the list not reference it?
+        pointer_lists[self.ampData["layer"]][self.ampData["side"]] = pointer_list  # BUG? should copy the list not reference it?
         record_result = {
             "componentUuid":"77e0c450-8863-11eb-8dcd-0242ac130003",
             "formId": "wire_tension_pointer",

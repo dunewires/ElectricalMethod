@@ -252,7 +252,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -265,7 +265,7 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -857,6 +857,9 @@
             </widget>
            </item>
            <item>
+            <widget class="QTableView" name="recentScansTableView"/>
+           </item>
+           <item>
             <widget class="QWidget" name="widget_3" native="true">
              <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="7,0">
               <item>
@@ -1066,9 +1069,6 @@
               </item>
              </layout>
             </widget>
-           </item>
-           <item>
-            <layout class="QGridLayout" name="gridOfFits_2"/>
            </item>
           </layout>
          </widget>
