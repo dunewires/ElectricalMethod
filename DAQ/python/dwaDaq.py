@@ -539,7 +539,7 @@ class MainWindow(qtw.QMainWindow):
         #width = self.dwaPB0Status_label.size().width()
         #radius = int(width/2)
         #self.dwaPB0Status.resize(width, width)
-        print(f"setPushButtonStatus: buttonId, buttonVal = {buttonId}, {buttonVal}")
+        #print(f"setPushButtonStatus: buttonId, buttonVal = {buttonId}, {buttonVal}")
         if buttonId not in PUSH_BUTTON_LIST:
             return
 
