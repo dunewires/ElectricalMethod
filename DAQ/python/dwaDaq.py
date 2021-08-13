@@ -437,7 +437,7 @@ class MainWindow(qtw.QMainWindow):
         self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
         self.runStatusHeading_label.setStyleSheet("font-weight: bold;")
         self.initRecentScanList()
-        self.heartPixmaps = [qtg.QPixmap('icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
+        self.heartPixmaps = [qtg.QPixmap('icons/heart1.png'), qtg.QPixmap('icons/heart3.png')]
         self.heartval = 0
         
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
