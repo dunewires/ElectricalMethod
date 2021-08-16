@@ -133,7 +133,7 @@ APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
 
 # FIXME: these should be read from somewhere else (DwaConfigFile)...
-DATABASE_FIELDS = ['wires', 'channels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
+DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
 
 
 # Attempt to display logged events in a text window in the GUI
@@ -439,6 +439,7 @@ class MainWindow(qtw.QMainWindow):
         self.initRecentScanList()
         self.heartPixmaps = [qtg.QPixmap('icons/heart1.png'), qtg.QPixmap('icons/heart3.png')]
         self.heartval = 0
+        self.udpListening = False
         
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
@@ -571,23 +572,24 @@ class MainWindow(qtw.QMainWindow):
     def initRecentScanList(self):
         dummydata = [ {'side':'A',
                        'layer':'G',
-                       'wires':[6,8,14,20],
+                       'wireSegments':[6,8,14,20],
                        'headboard':5,
                        'submitted':False,
                        },
                       {'side':'B',
                        'layer':'X',
-                       'wires':[99, 62, 14, 100052],
+                       'wireSegments':[99, 62, 14, 100052],
                        'headboard':3,
                        'submitted':True,
                        },
                      ]
 
-        dummyhdrs = ['submitted', 'side', 'layer', 'headboard', 'wires']
+        dummyhdrs = ['submitted', 'side', 'layer', 'headboard', 'wireSegments']
         self.recentScansTableModel = RecentScansTableModel(dummydata, dummyhdrs)
         self.recentScansTableView.setModel(self.recentScansTableModel)
         self.recentScansTableView.resizeColumnsToContents()
         self.recentScansTableView.resizeRowsToContents()
+        self.recentScansTableView.setMaximumHeight(80)
 
     
     def _configureAmps(self):
@@ -893,12 +895,16 @@ class MainWindow(qtw.QMainWindow):
         #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) #FIXME: this is not necessary
         
         # Start listening for UDP data in a Worker thread
-        self.udpListen()
+        #self.udpListen()
 
     @pyqtSlot()
     def dwaConnect(self):
         # Collect/parse DAQ-related configuration parameters
         # FIXME --- need to read/parse .ini file...
+
+        if not self.udpListening:
+            self.udpListen()
+
         self._loadDaqConfig()
 
         # Set up connection to Microzed
@@ -1043,7 +1049,7 @@ class MainWindow(qtw.QMainWindow):
                 range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
                 for rd in range_data:
                     self.range_data_list.append(rd)
-                    wires = rd["wires"]
+                    wires = rd["wireSegments"]
                     for wire in wires:
                         if wire == self.spinBox.value():
                             valid = True
@@ -1138,7 +1144,7 @@ class MainWindow(qtw.QMainWindow):
             range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
             for rd in range_data:
                 self.range_data_list.append(rd)
-                wires = rd["wires"]
+                wires = rd["wireSegments"]
                 freqMin = float(rd["range"][0])
                 freqMax = float(rd["range"][1])
                 wires.sort(key = int)
@@ -1669,9 +1675,9 @@ class MainWindow(qtw.QMainWindow):
             self.wires = self.wireNum
             channels = channel_map.wire_to_apa_channel(self.configLayer, self.wires)
         else:
-            self.wires = rd["wires"]
+            self.wires = rd["wireSegments"]
             self.wires.sort(key = int)
-            channels = rd["channels"]
+            channels = rd["apaChannels"]
         #sorting apa channels list to follow increasing order of dwa channels
         dwaChannels = []
         for i in range(0,len(channels)):
@@ -1699,13 +1705,11 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
         
-        dataConfig = {"channels": apaChannels, "wires": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+        dataConfig = {"apaChannels": apaChannels, "wireSegments": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
         "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
 
         self._loadDaqConfig()
 
-        self.combinedConfig = {"FPGA": fpgaConfig, "DATABASE": dataConfig, "DAQ": self.daqConfig}
-        
         self.freqMax = float(self.scanTable.item(scanIndex, 4).text())
         self.freqMin = float(self.scanTable.item(scanIndex, 3).text())
         self.freqStep = self.scanTable.item(scanIndex, 5).text()
@@ -1713,6 +1717,8 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step = int(self.freqStep)/160))
         fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
 
+        self.combinedConfig = {"FPGA": fpgaConfig, "DATABASE": dataConfig, "DAQ": self.daqConfig}
+        
         self.makeScanOutputDir()
         config_generator.write_config(self.combinedConfig, 'dwaConfig.ini', self.scanRunDataDir) #self.configFileDir
         self.configFile = os.path.join(self.scanRunDataDir, "dwaConfig.ini")
@@ -2221,7 +2227,7 @@ class MainWindow(qtw.QMainWindow):
             "data": {
                 "version": "1.1",
                 "apaUuid": apaUuid,
-                "wires": wireData,
+                "wireSegments": wireData,
                 "saveAsDraft": True,
                 "submit": True
             }
@@ -2240,8 +2246,8 @@ class MainWindow(qtw.QMainWindow):
                 pointer_lists[layer][side] = [{"testId": None}]*900
                 
         pointer_list = [{"testId": None}]*900
-        for dwaCh, ch in enumerate(self.ampData["channels"]): # Loop over channels in scan
-            for w in self.ampData["wires"]:
+        for dwaCh, ch in enumerate(self.ampData["apaChannels"]): # Loop over channels in scan
+            for w in self.ampData["wireSegments"]:
                 wire_ch = channel_map.wire_to_apa_channel(self.ampData["layer"], w)
                 if wire_ch == ch:
                     resonance_result = {
@@ -2257,7 +2263,7 @@ class MainWindow(qtw.QMainWindow):
                             "productionStage": self.ampData["stage"],
                             "side": self.ampData["side"],
                             "layer": self.ampData["layer"],
-                            "wires": {
+                            "wireSegments": {
                                 str(w): self.resonantFreqs[dwaCh]
                             },
                             "saveAsDraft": True,
@@ -2277,7 +2283,7 @@ class MainWindow(qtw.QMainWindow):
             "data": {
                 "version": "1.1",
                 "apaUuid": self.ampData["apaUuid"],
-                "wires": pointer_lists,
+                "wireSegments": pointer_lists,
                 "saveAsDraft": True,
                 "submit": True
             }
@@ -2622,9 +2628,14 @@ class MainWindow(qtw.QMainWindow):
         logger.setLevel(logging.INFO)
         logger.info("============= startUdpReceiver() ===============")
         print("\n\n ============= startUdpReceiver() ===============\n\n")
+
+        if self.udpListening:
+            return
+
         
         while True:
             try:
+                self.udpListening = True
                 data, addr = self.sock.recvfrom(self.udpBufferSize)
                 if self.verbose > 0:
                     logger.info("")
@@ -2693,11 +2704,12 @@ class MainWindow(qtw.QMainWindow):
                 if self.verbose > 0:
                     logger.info("  UDP Timeout")
                 self.sock.close()
+                self.udpListening = False
                 break
             else:
-                pass
+                self.udpListening = False
             finally:
-                pass
+                self.udpListening = False
 
     def processUdpPayload(self, udpDict):
         # new UDP payload has arrived from DWA.
@@ -2876,6 +2888,7 @@ class MainWindow(qtw.QMainWindow):
         self.heartbeat_val.setPixmap(self.heartPixmaps[self.heartval])
         self.heartbeat_val.resize(self.heartPixmaps[self.heartval].width(),
                                   self.heartPixmaps[self.heartval].height())
+        #self.heartbeat_val.setText(f"{self.heartval}")
         
     def disableScanButtonForTime(self, disableDuration):
         """ disableDuration is a time in seconds """
@@ -3038,7 +3051,7 @@ class MainWindow(qtw.QMainWindow):
     def updateRecentScanList(self):
         self.recentScansTableModel.append( {'side':'C',
                                             'layer':'Y',
-                                            'wires':[5, 1, 3],
+                                            'wireSegments':[5, 1, 3],
                                             'headboard':9,
                                             'submitted':False,
                                             }
