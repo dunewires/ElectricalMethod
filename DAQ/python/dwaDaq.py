@@ -180,8 +180,8 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-#TAB_ACTIVE_MAIN = MainView.STIMULUS
-TAB_ACTIVE_MAIN = MainView.RESONANCE
+TAB_ACTIVE_MAIN = MainView.STIMULUS
+#TAB_ACTIVE_MAIN = MainView.RESONANCE
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -2579,7 +2579,7 @@ class MainWindow(qtw.QMainWindow):
             for reg in self.registers:
                 regId = reg
                 self.curves[ptype][regId].setData([])
-        self.curves['amplgrid']['all'][regId].setData([])
+                self.curves['amplgrid']['all'][reg].setData([])
         self.curves['amplchan']['main'].setData([])
         
         # Set x-ranges for frequency plots so pyqtgraph does not have to autoscale
