@@ -277,7 +277,7 @@ def append_channel_info(culled_range_data, channel_numbers):
     """Adds the list of channels to each range_data dictionary"""
     range_data_with_channel_info = []
     for rangeData in culled_range_data:
-        rangeData["channels"] = channel_numbers
+        rangeData["apaChannels"] = channel_numbers
         range_data_with_channel_info.append(rangeData)
     return range_data_with_channel_info
         
