@@ -216,7 +216,7 @@ def closest_index_to(arr, val):
 
 def wire_range_data(wire_freq_data, range_radius = 0.15):
     """
-    Converts the frequency data into a list of frequency range dictionaries. Ex: {"wires": [23], "range": [60,80]}.
+    Converts the frequency data into a list of frequency range dictionaries. Ex: {"wireSegments": [23], "range": [60,80]}.
     The radius of the range is set by range_radius
     """
     range_data = []
@@ -224,19 +224,19 @@ def wire_range_data(wire_freq_data, range_radius = 0.15):
         i = closest_index_to(wire_freq_data[w],70)
         f = wire_freq_data[w][i]
         f_range = [round(f*(1-range_radius),2), round(f*(1+range_radius),2)]
-        range_data.append({"wires": [int(w)], "range": f_range})
+        range_data.append({"wireSegments": [int(w)], "range": f_range})
     return range_data
 
 def combine_range_data(range_data_a, range_data_b):
     """
     Combine multiple sets of wire_range_data and merge the frequency ranges.
     """
-    wires_a = range_data_a["wires"]
-    wires_b = range_data_b["wires"]
+    wires_a = range_data_a["wireSegments"]
+    wires_b = range_data_b["wireSegments"]
     range_a = range_data_a["range"]
     range_b = range_data_b["range"]
     if (range_a[1] > range_b[0] and range_a[0] < range_b[1]) or (range_b[1] > range_a[0] and range_b[0] < range_a[1]):
-        return [{"wires": wires_a + wires_b,
+        return [{"wireSegments": wires_a + wires_b,
                 "range": [min(range_a[0], range_b[0]), max(range_a[1], range_b[1])]
                 }]
     else: return [range_data_a, range_data_b]
@@ -269,7 +269,7 @@ def cull_range_data(reduced_range_data, thresh = 1000.):
     culled_range_data = []
     for rangeData in reduced_range_data:
         if rangeData["range"][1] <= thresh:
-            rangeData["wires"] = sorted(rangeData["wires"])
+            rangeData["wireSegments"] = sorted(rangeData["wireSegments"])
             culled_range_data.append(rangeData)
     return culled_range_data
 
