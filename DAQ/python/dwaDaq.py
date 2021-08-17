@@ -1675,7 +1675,7 @@ class MainWindow(qtw.QMainWindow):
         #sorting apa channels list to follow increasing order of dwa channels
         dwaChannels = []
         for i in range(0,len(channels)):
-            dwaChannels.append(str(channel_map.wire_relay_to_dwa_channel(channel_map.apa_channel_to_wire_relay(self.configLayer, channels[i]))))
+            dwaChannels.append(str(channel_map.apa_channel_to_dwa_channel(self.configLayer, channels[i])))
         apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
 
         self.wires.sort(key = int)

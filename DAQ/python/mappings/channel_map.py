@@ -82,6 +82,10 @@ def wire_relay_to_dwa_channel(wire_relay: int):
     '''Return the DWA channel from 0 to 7 associated to the given wire relay.'''
     return ((wire_relay - 1) % 16) // 2
 
+def apa_channel_to_dwa_channel(wire_layer: str, apa_channel: int):
+    '''Return the DWA channel from 0 to 7 associated to the given APA channel.'''
+    return wire_relay_to_dwa_channel(apa_channel_to_wire_relay(wire_layer, apa_channel))
+
 def check_valid_headboard_number(wire_layer: int, headboard_number: int):
     '''Make sure that the headboard number is valid.'''
     check_valid_wire_layer(wire_layer)
