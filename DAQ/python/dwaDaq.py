@@ -1,5 +1,12 @@
 # FIXME/TODO:
-# * "LEDs" for HV and AC
+# * Recent scan list: populate with actual data
+#   + need to distinguish "submittable" from "non-submittable" scans
+#   + mechanism to load a scan (from the table)
+#   + mechanism to load a scan that is not listed in the table
+# * LEDs:
+#   + A red one that would light up if there’s any errors reported in the error bits.
+#   + A blue one for scan activity when scan is ongoing for example, or when data is received. Nathan has the hardware one set to be on during a scan, but it turns off for a fraction of a second (maybe 10 ms?), and this happens at a period of 1.5 s at 10 Hz, with a linearly decreasing period as a function of frequency to 150 ms at 1 kHz. It doesn’t have to be that, it could stay on when a scan is happening, say between run frames, or based on the reported DWA status in the heartbeat.
+#   + A green one that would blink when the DAQ is connected to the DWA: it could alternate between on and off every status frame received. The hardware one is currently on when the DWA is connected to the internet and flashes when receiving TCP configuration info. Maybe that could be an additional one (or maybe that’s too many).
 # * "Advanced" tab: not all items show (below the "config file contents" text area)
 # * AUTO-SCAN items
 #   + After all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
@@ -180,8 +187,8 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-TAB_ACTIVE_MAIN = MainView.STIMULUS
-#TAB_ACTIVE_MAIN = MainView.RESONANCE
+#TAB_ACTIVE_MAIN = MainView.STIMULUS
+TAB_ACTIVE_MAIN = MainView.RESONANCE
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -404,7 +411,8 @@ class RecentScansTableModel(qtc.QAbstractTableModel):
             #if orientation == qtc.Qt.Vertical:
             #    return str(section+1)
     
-
+    def getData(self):
+        return self._data
 
             
 class MainWindow(qtw.QMainWindow):
@@ -570,22 +578,57 @@ class MainWindow(qtw.QMainWindow):
         
     
     def initRecentScanList(self):
-        dummydata = [ {'side':'A',
-                       'layer':'G',
-                       'wireSegments':[6,8,14,20],
-                       'headboard':5,
-                       'submitted':False,
-                       },
-                      {'side':'B',
-                       'layer':'X',
-                       'wireSegments':[99, 62, 14, 100052],
-                       'headboard':3,
-                       'submitted':True,
-                       },
-                     ]
+        scanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
+                                          advDir=OUTPUT_DIR_SCAN_DATA_ADVANCED,
+                                          sort=True)
 
-        dummyhdrs = ['submitted', 'side', 'layer', 'headboard', 'wireSegments']
-        self.recentScansTableModel = RecentScansTableModel(dummydata, dummyhdrs)
+        N_RECENT_SCANS = 3 # FIXME: move to top of code...
+        print("\n\n")
+        print(scanDirs[:N_RECENT_SCANS])
+        print("\n\n")
+
+        tabledata = []
+        
+        for sd in scanDirs:
+            ampFilename = os.path.join(sd, 'amplitudeData.json')
+            try:         # Ensure that there is an amplitudeData.json file present!
+                with open(ampFilename, "r") as fh:
+                    data = json.load(fh)
+            except:
+                continue
+            print(f"sd   = {sd}")
+            print(f"side = {data['side']}")
+            tabledata.append( {'scanName':sd,
+                               'side':data['side'],
+                               'layer':data['layer'],
+                               'headboardNum':data['headboardNum'],
+                               'apaUuid':data['apaUuid'],
+                               'stage':data['stage'],
+                               'measuredBy':data['measuredBy'],
+                               'submitted':False,
+                               #'wireSegments':data['wireSegments'],
+                               } )
+            
+            if len(tabledata) == N_RECENT_SCANS:
+                break
+                
+        #dummydata = [ {'side':'A',
+        #               'layer':'G',
+        #               'wireSegments':[6,8,14,20],
+        #               'headboard':5,
+        #               'submitted':False,
+        #               },
+        #              {'side':'B',
+        #               'layer':'X',
+        #               'wireSegments':[99, 62, 14, 100052],
+        #               'headboard':3,
+        #               'submitted':True,
+        #               },
+        #             ]
+
+        #tablehdrs = ['submitted', 'side', 'layer', 'headboard', 'wireSegments']
+        tablehdrs = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy']
+        self.recentScansTableModel = RecentScansTableModel(tabledata, tablehdrs)
         self.recentScansTableView.setModel(self.recentScansTableModel)
         self.recentScansTableView.resizeColumnsToContents()
         self.recentScansTableView.resizeRowsToContents()
@@ -3049,17 +3092,57 @@ class MainWindow(qtw.QMainWindow):
         self.ampDataFilenameEnter()
 
     def updateRecentScanList(self):
-        self.recentScansTableModel.append( {'side':'C',
-                                            'layer':'Y',
-                                            'wireSegments':[5, 1, 3],
-                                            'headboard':9,
-                                            'submitted':False,
-                                            }
-                                          )
-        self.recentScansTableModel.layoutChanged.emit()
-        print("\n\n")
-        print(self.recentScansTableModel._data)
-        print("\n\n")
+        print("\n\n\n")
+        print("updateRecentScanList:")
+
+        allScanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
+                                             advDir=OUTPUT_DIR_SCAN_DATA_ADVANCED,
+                                             sort=True)[0]
+        mostRecentScan = allScanDirs
+        knownScans = [dd['scanName'] for dd in self.recentScansTableModel.getData()]
+
+        scanIsNew = mostRecentScan not in knownScans
+        
+        print(f'mostRecentScan = {mostRecentScan}')
+        print(f'knownScans     = {knownScans}')
+        print(f'scanIsNew      = {scanIsNew}')
+
+        if scanIsNew:
+            ampFilename = os.path.join(mostRecentScan, 'amplitudeData.json')
+            print(f"adding recent scan to list: {mostRecentScan}")
+            try:         # Ensure that there is an amplitudeData.json file present!
+                with open(ampFilename, "r") as fh:
+                    data = json.load(fh)
+                newdata = {'scanName':mostRecentScan,
+                           'side':data['side'],
+                           'layer':data['layer'],
+                           'headboardNum':data['headboardNum'],
+                           'apaUuid':data['apaUuid'],
+                           'stage':data['stage'],
+                           'measuredBy':data['measuredBy'],
+                           'submitted':False,
+                           #'wireSegments':data['wireSegments'],
+                           }
+            except:
+                print("Could not add new scan to list...")
+
+            self.recentScansTableModel.append(newdata)
+            self.recentScansTableModel.layoutChanged.emit()
+            print(self.recentScansTableModel._data)
+                
+        print("\n\n\n")
+        
+        #self.recentScansTableModel.append( {'side':'C',
+        #                                    'layer':'Y',
+        #                                    'wireSegments':[5, 1, 3],
+        #                                    'headboard':9,
+        #                                    'submitted':False,
+        #                                    }
+        #                                  )
+        #self.recentScansTableModel.layoutChanged.emit()
+        #print("\n\n")
+        #print(self.recentScansTableModel._data)
+        #print("\n\n")
         
     def runResonanceAnalysis(self):
         # get A(f) data for each channel
