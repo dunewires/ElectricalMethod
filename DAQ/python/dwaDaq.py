@@ -1,12 +1,17 @@
 # FIXME/TODO:
+#
 # * Recent scan list: populate with actual data
 #   + need to distinguish "submittable" from "non-submittable" scans
 #   + mechanism to load a scan (from the table)
 #   + mechanism to load a scan that is not listed in the table
+#
+# * Add graphic of APA wires to Config tab
+# 
 # * LEDs:
 #   + A red one that would light up if there’s any errors reported in the error bits.
 #   + A blue one for scan activity when scan is ongoing for example, or when data is received. Nathan has the hardware one set to be on during a scan, but it turns off for a fraction of a second (maybe 10 ms?), and this happens at a period of 1.5 s at 10 Hz, with a linearly decreasing period as a function of frequency to 150 ms at 1 kHz. It doesn’t have to be that, it could stay on when a scan is happening, say between run frames, or based on the reported DWA status in the heartbeat.
 #   + A green one that would blink when the DAQ is connected to the DWA: it could alternate between on and off every status frame received. The hardware one is currently on when the DWA is connected to the internet and flashes when receiving TCP configuration info. Maybe that could be an additional one (or maybe that’s too many).
+#
 # * "Advanced" tab: not all items show (below the "config file contents" text area)
 # * AUTO-SCAN items
 #   + After all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
@@ -420,6 +425,7 @@ class MainWindow(qtw.QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         self._initLogging()
+        self._configureOutputs()
 
         ###########################################
         # Define list of registers
@@ -517,8 +523,6 @@ class MainWindow(qtw.QMainWindow):
         self.dwaDataParser = ddp.DwaDataParser()
         # Create placeholder for a config file parser
         self.dwaConfigFile = None
-
-        self._configureOutputs()
 
         self.registerOfVal = {}
         for reg in ddp.Registers:

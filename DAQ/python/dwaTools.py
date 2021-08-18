@@ -78,6 +78,9 @@ def getScanDataFolders(advDir=None, autoDir=None, sort=False):
                 except:
                     pass
 
+    if not scanDirs: # empty list?
+        return scanDirs
+                
     if sort:
         ts = [os.path.basename(fname).split("_")[-1] for fname in scanDirs]  # timestamps (as strings)
         #print("\n\n")
