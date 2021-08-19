@@ -1,10 +1,11 @@
 # FIXME/TODO:
+# * Add scroll-bar to Advanced tab in Stimulus tab:
+#   https://stackoverflow.com/questions/63228003/add-scroll-bar-into-tab-pyqt5
+# 
 # * Replace hard-coded 'amplitudeData.json' string with AMP_DATA_FILE or similar
 # 
-# * Recent scan list: populate with actual data
-#   + need to distinguish "submittable" from "non-submittable" scans
-#   + mechanism to load a scan (from the table)
-#   + mechanism to load a scan that is not listed in the table
+# * Recent scan list: 
+#   + verify "Submitted = Yes" works
 #
 # * Add graphic of APA wires to Config tab
 # 
@@ -2332,9 +2333,35 @@ class MainWindow(qtw.QMainWindow):
             }
         }
         dbid= sietch.api('/test',record_result)
-    
+
+    #BOBOBOBOB
+    def saveResonanceData(self):
+        resData = {}
+
+        # Get resonance frequencies
+        for reg in self.registers:
+            resData[reg.value] = self.resonantFreqs[reg.value]
+
+        # Get fit parameters
+        fitParams = {}
+        fitParams['preprocess'] = self.resFitParams['preprocess']
+        fitParams['find_peaks'] = self.resFitParams['find_peaks']
+        resData['fitParams'] = fitParams
+            
+        try:
+            with open(self.fnOfResData, 'w') as outfile:
+                json.dump(resData, outfile)
+            print(f"Saved resonance data as: {self.fnOfResData}") 
+            self.logger.info(f"Saved as {self.fnOfResData}") 
+        except:
+            self.logger.info(f"Cannot save resonance data")
+
+        
     @pyqtSlot()
     def submitResonances(self):
+
+        self.saveResonanceData()
+
         # Load sietch credentials #FIXME still using James's credentials
         sietch = SietchConnect("sietch.creds")
 
@@ -2398,6 +2425,7 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.setSubmitted(self.recentScansTableModel, Submitted.YES)
         self.recentScansTableModel.layoutChanged.emit()
 
+        
     @pyqtSlot()
     def loadEventData(self):
         scanId = self.evtVwr_runName_val.text()
@@ -2577,7 +2605,10 @@ class MainWindow(qtw.QMainWindow):
             self._submitResonanceButtonEnable()
         else:
             self._submitResonanceButtonDisable()
-        
+
+        self.fnOfResData = ampFilename.replace('amplitudeData.json', 'resonanceData.json')
+
+            
     def _loadConfigFile(self, updateGui=True):
         #updateGui function no longer works with left column  and original textbox removed 
         # try to read the requested file
