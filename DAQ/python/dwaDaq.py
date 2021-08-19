@@ -1646,13 +1646,9 @@ class MainWindow(qtw.QMainWindow):
         # TODO: Make sure inputs can be safely converted to floats
         # TODO: Grab default values if undefined
         if advFss: advFss = float(advFss)
-        else: pass
         if advStimTime: advStimTime = float(advStimTime)
-        else: pass
         if advInitDelay: advInitDelay = float(advInitDelay)
-        else: pass
         if advAmplitude: advAmplitude = float(advAmplitude)
-        else: pass
 
         scanIndex = -1
         logging.info(self.radioBtns)
@@ -1691,7 +1687,7 @@ class MainWindow(qtw.QMainWindow):
         if advInitDelay: 
            if advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
            else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
-        elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advStimTime))
+        elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(stim_time=advStimTime))
 
         if advAmplitude: 
             fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, stim_mag=int(advAmplitude)))
