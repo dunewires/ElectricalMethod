@@ -289,7 +289,7 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -553,7 +553,7 @@
                    </column>
                    <column>
                     <property name="text">
-                     <string>Wire Segments</string>
+                     <string>Wires</string>
                     </property>
                    </column>
                    <column>
@@ -564,11 +564,6 @@
                    <column>
                     <property name="text">
                      <string>Freq Max</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Freq Step Size</string>
                     </property>
                    </column>
                    <column>
@@ -826,6 +821,24 @@
                  <widget class="QPlainTextEdit" name="configFileContents">
                   <property name="enabled">
                    <bool>true</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>200</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>200</height>
+                   </size>
                   </property>
                  </widget>
                 </item>
@@ -1592,7 +1605,7 @@
      <x>0</x>
      <y>0</y>
      <width>1313</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
