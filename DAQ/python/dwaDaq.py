@@ -149,7 +149,7 @@ APA_SIDES = ["A", "B"]
 DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
 
 # Recent scan list 
-SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy']
+SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid']
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
 N_RECENT_SCANS = 2
                                
@@ -439,6 +439,9 @@ class RecentScansTableModel(qtc.QAbstractTableModel):
     def getData(self):
         return self._data
 
+    def setSubmitted(self, index, val):
+        self._data[index]['submitted'] = val
+    
             
 class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -474,6 +477,7 @@ class MainWindow(qtw.QMainWindow):
         self.heartPixmaps = [qtg.QPixmap('icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
         self.heartval = 0
         self.udpListening = False
+        self.recentScanTableRowInUse = None
 
         
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
@@ -1979,10 +1983,11 @@ class MainWindow(qtw.QMainWindow):
             return
 
         print(f"selected row  = {row}")
-        tableRow = self.recentScansTableModel.getData()[row]
-        print(f"selected file = {tableRow['scanName']}")
+        tableRowData = self.recentScansTableModel.getData()[row]
+        print(f"selected file = {tableRowData['scanName']}")
         #scanFilename = './scanDataAdv/dwaConfigWC_20210812T112511/amplitudeData.json' # DUMMY
-        scanFilename = os.path.join(tableRow['scanName'], 'amplitudeData.json')
+        scanFilename = os.path.join(tableRowData['scanName'], 'amplitudeData.json')
+        self.recentScanTableRowInUse = row
         self.loadSavedScanData(scanFilename)
 
     def loadArbitraryScanData(self):
@@ -2002,6 +2007,7 @@ class MainWindow(qtw.QMainWindow):
             self.insertScanIntoScanList(scanDir, row=row, submitted=Submitted.UNKNOWN)
             # and highlight the newly inserted row in the table
             self.recentScansTableView.selectRow(row)
+            self.recentScanTableRowInUse = 0
             
             self.loadSavedScanData(scanFilename)
 
@@ -2332,6 +2338,12 @@ class MainWindow(qtw.QMainWindow):
         # Load sietch credentials #FIXME still using James's credentials
         sietch = SietchConnect("sietch.creds")
 
+
+        print(f"sietch = {sietch}")
+        print(f"self.ampData['apaUuid'] = {self.ampData['apaUuid']}")
+        out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"])
+        print(f"out = {out}")
+
         pointer_lists = {}
         for layer in APA_LAYERS:
             pointer_lists[layer] = {}
@@ -2383,6 +2395,8 @@ class MainWindow(qtw.QMainWindow):
         }
         dbid= sietch.api('/test',record_result)
 
+        self.recentScansTableView.setSubmitted(self.recentScansTableModel, Submitted.YES)
+        self.recentScansTableModel.layoutChanged.emit()
 
     @pyqtSlot()
     def loadEventData(self):
@@ -2771,7 +2785,7 @@ class MainWindow(qtw.QMainWindow):
                             logger.info("New run detected... creating new filenames")
                         self._makeOutputFilenames()
                         self._clearAmplitudeData()
-                        self._clearResonanceFits()
+                        #self._clearResonanceFits()
                         self._setScanMetadata()
                         if self.verbose > 0:
                             logger.info(self.fnOfReg)
