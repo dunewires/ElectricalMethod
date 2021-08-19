@@ -74,6 +74,7 @@ import logging
 import json
 import platform
 import shutil
+import copy
 
 from functools import partial
 from enum import Enum, IntEnum
@@ -2334,19 +2335,17 @@ class MainWindow(qtw.QMainWindow):
         }
         dbid= sietch.api('/test',record_result)
 
-    #BOBOBOBOB
     def saveResonanceData(self):
         resData = {}
 
-        # Get resonance frequencies
+        # Get the actual resonance frequencies (perhaps obtained with manual intervention)
+        finalResonances = {}
         for reg in self.registers:
-            resData[reg.value] = self.resonantFreqs[reg.value]
-
-        # Get fit parameters
-        fitParams = {}
-        fitParams['preprocess'] = self.resFitParams['preprocess']
-        fitParams['find_peaks'] = self.resFitParams['find_peaks']
-        resData['fitParams'] = fitParams
+            finalResonances[reg.value] = self.resonantFreqs[reg.value]
+        resData['resonances'] = finalResonances
+            
+        # Get fit parameters and algorithm-determined resonances
+        resData['fit'] = self.resFitToLog
             
         try:
             with open(self.fnOfResData, 'w') as outfile:
@@ -3315,7 +3314,15 @@ class MainWindow(qtw.QMainWindow):
 
             # Store the resonant *frequencies* and then update the GUI based on that
             self.resonantFreqs[reg.value] = peakFreqs[:]
-            
+
+        # Keep track of the fitted resonances, as determined by the peak-finding algorithm
+        # Used only for outputting to resonanceData.json
+        self.resFitToLog = {}
+        self.resFitToLog['preprocess'] = copy.deepcopy(self.resFitParams['preprocess'])
+        self.resFitToLog['find_peaks'] = copy.deepcopy(self.resFitParams['find_peaks'])
+        self.resFitToLog['resonances'] = {}
+        for reg in self.registers:
+            self.resFitToLog['resonances'][reg.value] = self.resonantFreqs[reg.value][:]
         
     def resFreqUpdateDisplay(self, chan=None):
         """ 
