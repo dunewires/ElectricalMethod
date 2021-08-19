@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1313</width>
-    <height>1055</height>
+    <height>1071</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -289,7 +289,7 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -727,48 +727,12 @@
                 <property name="fieldGrowthPolicy">
                  <enum>QFormLayout::ExpandingFieldsGrow</enum>
                 </property>
-                <item row="11" column="1">
-                 <layout class="QHBoxLayout" name="horizontalLayout_10"/>
-                </item>
-                <item row="15" column="1">
-                 <widget class="QLineEdit" name="advAmplitudeLineEdit"/>
-                </item>
-                <item row="15" column="0">
-                 <widget class="QLabel" name="label_15">
+                <item row="0" column="0">
+                 <widget class="QPushButton" name="btnScanCtrlAdv">
                   <property name="text">
-                   <string>Amplitude</string>
+                   <string>Start Scan</string>
                   </property>
                  </widget>
-                </item>
-                <item row="14" column="0">
-                 <widget class="QLabel" name="label_14">
-                  <property name="text">
-                   <string>Initialization delay(s)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="14" column="1">
-                 <widget class="QLineEdit" name="advInitDelayLineEdit"/>
-                </item>
-                <item row="13" column="0">
-                 <widget class="QLabel" name="label_13">
-                  <property name="text">
-                   <string>Stimulation time (s)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="13" column="1">
-                 <widget class="QLineEdit" name="advStimTimeLineEdit"/>
-                </item>
-                <item row="12" column="0">
-                 <widget class="QLabel" name="label_12">
-                  <property name="text">
-                   <string>Frequency step size</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="12" column="1">
-                 <widget class="QLineEdit" name="advFssLineEdit"/>
                 </item>
                 <item row="1" column="0">
                  <widget class="QLabel" name="configFileName_label">
@@ -838,10 +802,46 @@
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="0">
-                 <widget class="QPushButton" name="btnScanCtrlAdv">
+                <item row="11" column="1">
+                 <layout class="QHBoxLayout" name="horizontalLayout_10"/>
+                </item>
+                <item row="14" column="0">
+                 <widget class="QLabel" name="label_14">
                   <property name="text">
-                   <string>Start Scan</string>
+                   <string>Initialization delay(s)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="14" column="1">
+                 <widget class="QLineEdit" name="advInitDelayLineEdit"/>
+                </item>
+                <item row="15" column="0">
+                 <widget class="QLabel" name="label_15">
+                  <property name="text">
+                   <string>Amplitude</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="15" column="1">
+                 <widget class="QLineEdit" name="advAmplitudeLineEdit"/>
+                </item>
+                <item row="13" column="1">
+                 <widget class="QLineEdit" name="advStimTimeLineEdit"/>
+                </item>
+                <item row="13" column="0">
+                 <widget class="QLabel" name="label_13">
+                  <property name="text">
+                   <string>Stimulation time (s)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="12" column="1">
+                 <widget class="QLineEdit" name="advFssLineEdit"/>
+                </item>
+                <item row="12" column="0">
+                 <widget class="QLabel" name="label_12">
+                  <property name="text">
+                   <string>Frequency step size</string>
                   </property>
                  </widget>
                 </item>
@@ -1034,42 +1034,6 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_12">
            <item>
-            <widget class="QWidget" name="widget_2" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_4">
-              <item>
-               <widget class="QPushButton" name="pb_ampDataLoad">
-                <property name="text">
-                 <string>Load A(f) data</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="ampDataFilename"/>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QWidget" name="widget_5" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="1,10">
-              <item>
-               <widget class="QLabel" name="label_7">
-                <property name="text">
-                 <string>Currently viewing:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="ampDataActiveLabel">
-                <property name="text">
-                 <string>N/A</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
             <widget class="QLabel" name="label_5">
              <property name="text">
               <string>Recent Scans</string>
@@ -1085,6 +1049,52 @@
               </sizepolicy>
              </property>
             </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_18">
+             <item>
+              <widget class="QPushButton" name="pb_scanDataSelectedLoad">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>1</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Load selected scan</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pb_scanDataLoad">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>1</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Load other scan</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="ampDataActiveLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>5</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Current:</string>
+               </property>
+               <property name="textInteractionFlags">
+                <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <widget class="QWidget" name="widget_3" native="true">
