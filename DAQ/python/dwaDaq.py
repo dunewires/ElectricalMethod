@@ -1,9 +1,15 @@
 # FIXME/TODO:
 # * Add scroll-bar to Advanced tab in Stimulus tab:
 #   https://stackoverflow.com/questions/63228003/add-scroll-bar-into-tab-pyqt5
+#   [was:] "Advanced" tab: not all items show (below the "config file contents" text area)
 # 
 # * Replace hard-coded 'amplitudeData.json' string with AMP_DATA_FILE or similar
+#   same for 'resonanceData.json'
 # 
+# * after scan ends, update the V(t) plots with the last set of data
+# * after scan ends, disable all relays but do this in a thread and have the "thread end" signal trigger the
+#   re-activation of the "Start Scan" buttons
+#
 # * Recent scan list: 
 #   + verify "Submitted = Yes" works
 #
@@ -14,7 +20,6 @@
 #   + A blue one for scan activity when scan is ongoing for example, or when data is received. Nathan has the hardware one set to be on during a scan, but it turns off for a fraction of a second (maybe 10 ms?), and this happens at a period of 1.5 s at 10 Hz, with a linearly decreasing period as a function of frequency to 150 ms at 1 kHz. It doesn’t have to be that, it could stay on when a scan is happening, say between run frames, or based on the reported DWA status in the heartbeat.
 #   + A green one that would blink when the DAQ is connected to the DWA: it could alternate between on and off every status frame received. The hardware one is currently on when the DWA is connected to the internet and flashes when receiving TCP configuration info. Maybe that could be an additional one (or maybe that’s too many).
 #
-# * "Advanced" tab: not all items show (below the "config file contents" text area)
 # * AUTO-SCAN items
 #   + After all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
 #   + Suggestion: the "Wires" column in the AUTO scan confit table should just list the numbers, not an array of strings...
@@ -22,7 +27,6 @@
 #   + "All wires" and "Single wire" should be in the same "radio group" and
 #   + also search "BUG:" for a couple other things
 # * remove self.oldDataFormat -- it's not actually used (is it?)
-# * after scan ends, update the V(t) plots with the last set of data
 # * Update GUI process to protect against missing end of run frame.
 #   Can listen for STATUS frame. If DAQ things a run is active but then sees STATUS=IDLE,
 #   then trigger end of run sequence
