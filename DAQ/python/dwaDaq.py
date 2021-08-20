@@ -2218,7 +2218,7 @@ class MainWindow(qtw.QMainWindow):
         if self.chanViewMainAmpl != chan:
             x, y = self.curves['amplchan'][chan].getData()
             self.curves['amplchan']['main'].setData(x, y)
-            self.pw_amplchan_main.setTitle("DWA Chan: {} APA Chan: {}".format(chan, self.apaChannels[chan]))
+            self.pw_amplchan_main.setTitle(chan)
             self.chanViewMainAmpl = chan
         
     @pyqtSlot(int)
