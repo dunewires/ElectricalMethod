@@ -54,6 +54,7 @@ class ControllerState(IntEnum):
     # 8  pktBuildFinish_s Wait for the end of run header to be sent 
     #    before we go to the idle state and wait for another scan
 
+N_PUSH_BUTTONS = 4  # there are 4 push buttons whose status is reported
     
 class DwaDataParser():
 
@@ -128,12 +129,15 @@ class DwaDataParser():
         self.frameKeys[Frame.FREQ]["11"] = "Register_ID_Freq"  #  8bit
         self.frameKeys[Frame.FREQ]["40"] = "stimPeriodCounter" # 24bit 
         self.frameKeys[Frame.FREQ]["41"] = "adcSamplesPerFreq" # 24bit
-        self.frameKeys[Frame.FREQ]["42"] = "stimPeriodActive"  # 24bit (currently-used stimulus period)
+        self.frameKeys[Frame.FREQ]["42"] = "stimPeriodActiveOld"  # 24bit (currently-used stimulus period)
         self.frameKeys[Frame.FREQ]["43"] = "adcSamplingPeriod" # 24bit
+        self.frameKeys[Frame.FREQ]["52"] = "stimPeriodActive_MSb"  # 16bit (16MSb of currently-used stimulus period)
+        self.frameKeys[Frame.FREQ]["53"] = "stimPeriodActive_LSb"  # 16bit (16LSb of currently-used stimulus period)
         #
         # ADC Data Frame entries
         # N/A
         #
+        self.frameKeys[Frame.STATUS]["61"] = "unknown"
         self.frameKeys[Frame.STATUS]["62"] = "controllerState"
         self.frameKeys[Frame.STATUS]["63"] = "statusErrorBits"
         self.frameKeys[Frame.STATUS]["64"] = "buttonStatus"
@@ -173,10 +177,10 @@ class DwaDataParser():
             "firmwareIdDate_24LSb": self._parseInfoLineAsInt,
             "firmwareIdHash_16MSb": self._parseInfoLineAsInt,
             "firmwareIdHash_16LSb": self._parseInfoLineAsInt,
-            "stimFreqReq": self._parseInfoLineAsInt,
-            "stimFreqMin": self._parseInfoLineAsInt,
-            "stimFreqMax": self._parseInfoLineAsInt,
-            "stimFreqStep": self._parseInfoLineAsInt,
+            "stimFreqReq": self._parseStimFreqLine,
+            "stimFreqMin": self._parseStimFreqLine,
+            "stimFreqMax": self._parseStimFreqLine,
+            "stimFreqStep": self._parseStimFreqLine,
             "cyclesPerFreq": self._parseInfoLineAsInt,
             "adcSamplesPerCycle": self._parseInfoLineAsInt,
             "stimMag": self._parseInfoLineAsInt,
@@ -213,8 +217,10 @@ class DwaDataParser():
             "Register_ID_Freq": self._parseInfoLineAsInt,
             "stimPeriodCounter":self._parseInfoLineAsInt,
             "adcSamplesPerFreq": self._parseInfoLineAsInt,
-            "stimPeriodActive": self._parseInfoLineAsInt,
+            "stimPeriodActiveOld": self._parseInfoLineAsInt,
             "adcSamplingPeriod":self._parseInfoLineAsInt,
+            "stimPeriodActive_MSb": self._parseInfoLineAsInt,
+            "stimPeriodActive_LSb": self._parseInfoLineAsInt,
             # Defunct (FIXME: remove?)
             "DWA_Ctrl": self._parseInfoLineAsInt,
             #"relayMask_16MSb"
@@ -226,6 +232,7 @@ class DwaDataParser():
             #"UNHANDLED_LINES": self._parseUnknownInfoLine  # do this if a key is not recognized...
             #
             # STATUS frame keys
+            "unknown":self._parseInfoLineAsInt,
             "controllerState":self._parseInfoLineAsInt,
             "statusErrorBits":self._parseInfoLineAsBits,
             "buttonStatus":self._parseInfoLineAsBits,
@@ -295,7 +302,16 @@ class DwaDataParser():
         val = int(infoLine[2:],hexBase)
         errorBitString = f'{val:0>24b}'
         return errorBitString
-    
+
+    def _parseStimFreqLine(self, infoLine):
+        # The 16 MSb give the integer portion of the freq in Hz.
+        # The 8 LSb give the fractional portion of the freq in 1/256 Hz. 
+        # e.g.  0x000460 corresponds to 4.375 Hz (0x0004 --> 4Hz and 0x60 --> 0.375Hz)
+        hexBase = 16
+        freqHz = int(infoLine[2:6], hexBase) + int(infoLine[6:], hexBase)/256.
+        #print(f'\n\n Parsing stimFreqLine: hexkey, freqHz = {infoLine}, {infoLine[2:6]}, {infoLine[6:]}, {freqHz}')
+        return freqHz
+        
     def _parseUnknownInfoLine(self, infoLine):
         # Fallback parser (for an unidentified key)
         return infoLine
@@ -366,7 +382,7 @@ class DwaDataParser():
         return self._parseGenericFrame(infoLines, Frame.FREQ)
 
     def _parseStatusFrame(self, infoLines):
-        print("\n\n\n STATUS FRAME FOUND!!!!!!")
+        #print("\n\n\n STATUS FRAME FOUND!!!!!!")
         return self._parseGenericFrame(infoLines, Frame.STATUS)
 
     def _parseAdcDataFrame(self, infoLines):
@@ -391,18 +407,31 @@ class DwaDataParser():
         dd['clientIP'] = dwa.hexStrToIpAddressStr(hexStr)
 
         # Convert frequencies to Hz
-        dd['stimFreqMin_Hz'] = dd['stimFreqMin']/16.
-        dd['stimFreqMax_Hz'] = dd['stimFreqMax']/16.
-        dd['stimFreqStep_Hz'] = dd['stimFreqStep']/16.
+        dd['stimFreqMin_Hz'] = dd['stimFreqMin']
+        dd['stimFreqMax_Hz'] = dd['stimFreqMax']
+        dd['stimFreqStep_Hz'] = dd['stimFreqStep']
         return dd
-
+                                                                                 
     def _postProcessUdpFrame(self, dd):
         dd['Register_ID_hexStr'] = '{:02X}'.format(dd['Register_ID'])
         return dd
 
     def _postProcessFreqFrame(self, dd):
-        dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodActive'] # convert period in 10ns to freq in Hz
         dd['adcSamplingPeriod_sec'] = dd['adcSamplingPeriod']*1e-8
+
+        if 'stimPeriodActive_MSb' in dd:    # Now we use a 78.125ps clock            
+            #print("found new stimFreq")
+            #print(f"dd['stimPeriodActive_MSb'] = {dd['stimPeriodActive_MSb']}")
+            #print(f"dd['stimPeriodActive_LSb'] = {dd['stimPeriodActive_LSb']}")
+            # make the period
+            # compute the frequency in Hz
+            dd['stimPeriodActive'] = (dd['stimPeriodActive_MSb'] << 16) + dd['stimPeriodActive_LSb']
+            #dd['stimFreqActive_Hz'] = (1e9/dd['stimPeriodActive'])/2.5 # convert period in 2.5ns to freq in Hz
+            dd['stimFreqActive_Hz'] = (1e12/dd['stimPeriodActive'])/78.125 # convert period in 78.125ps to freq in Hz
+            #print(f"dd['stimFreqActive_Hz'] = {dd['stimFreqActive_Hz']}")
+        else:  # but originally, we used a 10ns clock
+            dd['stimFreqActive_Hz'] = 1e8/dd['stimPeriodActiveOld'] # convert period in 10ns to freq in Hz
+            
         return dd
 
     def _postProcessAdcDataFrame(self, dd):
@@ -433,7 +462,8 @@ class DwaDataParser():
             print(f"error: unrecognized controller state: {dd['controllerState']}")
             dd['controllerStateStr'] = 'UNKNOWN'
         #
-        #dd['buttonStatus'] = dd['buttonStatus'][-4:]
+        dd['buttonStatusList'] = [ dd['buttonStatus'][-(n+1)] for n in range(N_PUSH_BUTTONS) ]
+        
         return dd
 
 

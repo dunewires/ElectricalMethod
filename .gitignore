@@ -3,6 +3,7 @@ firmware/source/sdk/.metadata/
 firmware/source/sdk/.sdk/
 DAQ/python/udpData/*
 DAQ/python/test/udpData/*
+DAQ/python/scanData/*
 DAQ/python/test/data/*
 vivado*.jou
 vivado*.str
@@ -19,4 +20,7 @@ firmware/simulation/compile.log
 firmware/simulation/compile.sh
 firmware/simulation/modelsim_lib/
 firmware/simulation/vsim.wlf
+DAQ/python/logs/*
+DAQ/python/__pycache__/*
+DAQ/python/mappings/__pycache__/*
 /source/dwa_ps/vittis/.metadata/

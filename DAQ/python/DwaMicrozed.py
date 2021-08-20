@@ -1,3 +1,4 @@
+import binascii
 import socket
 import time
 import struct
@@ -18,6 +19,7 @@ class DwaMicrozed():
         self.ip = ip
         self.port = PORT
         self.sock = None
+        self.timeout = 2.0 # seconds
         self.sleepPostWrite = 0.05  # seconds
         self.sleepPostOpen = 0.2   # seconds
         self.closeTcpWhenDone = False
@@ -54,8 +56,11 @@ class DwaMicrozed():
             self.closeTcpWhenDone = True
         
         try:
-            # FIXME: should we ue socket.SOCK_DGRAM instead of SOCK_STREAM?
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # FIXME: should we use socket.SOCK_DGRAM instead of SOCK_STREAM?
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM )
+            self.sock.setblocking(True)  # default should be blocking...
+            self.sock.settimeout(self.timeout)
+            #self.sock.settimeout(None)
         except socket.error:
             print("Failed to create socket")
             self.sock = None
@@ -67,6 +72,7 @@ class DwaMicrozed():
                 print("  self.sock.connect: ")
                 print(f"   self.ip   = {self.ip}")
                 print(f"   self.port = {self.port}")
+                print(f"   self.sock.gettimeout() = {self.sock.gettimeout()}")
             self.sock.connect( (self.ip, self.port) )
         except socket.gaierror:
             print("Hostname could not be resolved. Exiting")
@@ -101,11 +107,14 @@ class DwaMicrozed():
         self._regWrite('00000000', '00000001')
         time.sleep(self.sleepPostWrite)
         self._tcpClose()
+
+    def scanConfig(self, cfg):
+        self.config(cfg)
         
     def config(self, cfg):
         """
         Args:
-            config (dict): dictionary containing configuration parameters
+            config (dict): dictionary containing scan configuration parameters
         
         Returns:
     
@@ -123,7 +132,7 @@ class DwaMicrozed():
         self.setStimParams(cfg)
         self.setMainsSubtraction(cfg)
         self.setRelays(cfg)
-        self.setUdpAddress(cfg["client_IP"])
+        #self.setUdpAddress(cfg["client_IP"])
         self.setDigipots(cfg["digipot"])
     
         self._tcpClose(force=True)
@@ -242,6 +251,26 @@ class DwaMicrozed():
         self._tcpClose()
 
 
+    def disableAllRelays(self):
+        """ set all relays to be inactive (no connection from input to output) """
+        print("DwaMicrozed: disableAllRelays")
+        offState = '0000'
+        relayCfg = {
+            "relayWireBot0":offState,
+            "relayWireBot1":offState,
+            "relayWireBot2":offState,
+            "relayWireBot3":offState,
+            "relayBusBot0":offState,
+            "relayBusBot1":offState,
+            "relayWireTop0":offState,
+            "relayWireTop1":offState,
+            "relayWireTop2":offState,
+            "relayWireTop3":offState,
+            "relayBusTop0":offState,
+            "relayBusTop1":offState
+        }
+        self.setRelays(relayCfg)
+        
     def setRelays(self, cfg):
         # Relays
         #v3 relays.  16bits each relayWireBot(0), ... relayWireBot(3)
@@ -253,7 +282,6 @@ class DwaMicrozed():
         print("Setting v3 relays")
 
         self._tcpOpen(sleep=self.sleepPostOpen)
-        
         self._regWrite('00000020', cfg["relayWireBot0"])
         time.sleep(self.sleepPostWrite)
         self._regWrite('00000021', cfg["relayWireBot1"])
@@ -286,7 +314,7 @@ class DwaMicrozed():
         # This bit just needs to be written and not cleared.
         self._regWrite('00000000', '00000004')
         time.sleep(self.sleepPostWrite)
-        
+
         self._tcpClose()
         
     def setUdpAddress(self, address):
@@ -345,7 +373,15 @@ class DwaMicrozed():
 
         self._tcpClose()
 
-
+    def readValue(self, address):
+        print("====readValue")
+        self._tcpOpen()
+        print("====_regRead")
+        val = self._regRead(address)
+        print(f"val = {val}")
+        print("====_tcpClose()")
+        self._tcpClose()
+        return val
         
     def _regComm(self, payload_header='abcd1234', payload_type=None, 
                    address=None, value=None):
@@ -390,12 +426,14 @@ class DwaMicrozed():
         
         #get reply and print
         if payload_type != 'FE170003':
-            print(self._recvTimeout(timeout=2))
+            #print(self._recvTimeout(timeout=2))
+            return self._recvTimeout(timeout=2)
         
     
     def _regRead(self, address):
-        self._regComm(payload_header='abcd1234', payload_type='FE170001',
-                   address=address)
+        print(f'self.sock = {self.sock}')
+        return self._regComm(payload_header='abcd1234', payload_type='FE170001',
+                             address=address)
     
     def _recvTimeout(self, timeout=2):
         # FIXME: there is not actually a timeout!!!!
