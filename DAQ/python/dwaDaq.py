@@ -1763,7 +1763,7 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
         
-        dataConfig = {"channels": self.apaChannels, "wireSegments": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+        dataConfig = {"apaChannels": self.apaChannels, "wireSegments": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
         "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
 
         self._loadDaqConfig()
