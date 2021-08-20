@@ -67,7 +67,7 @@ class DwaConfigFile():
                                      "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq",
                                      "relayWireTop", "relayWireBot", "relayBusTop", "relayBusBot",
                                      ]
-        self.validOptions["DATABASE"] = ["wires", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side", "channels"]
+        self.validOptions["DATABASE"] = ["wireSegments", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side", "apaChannels"]
 
         self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose", "client_IP"]
 
@@ -244,8 +244,8 @@ class DwaConfigFile():
 
     def postProcessDatabase(self):
         if self.config['DATABASE']:  # if dict is not empty
-            self.config['DATABASE']['channels'] =  ast.literal_eval(self.config['DATABASE']['channels'])
-            self.config['DATABASE']['wires'] =  ast.literal_eval(self.config['DATABASE']['wires'])
+            self.config['DATABASE']['apaChannels'] =  ast.literal_eval(self.config['DATABASE']['apaChannels'])
+            self.config['DATABASE']['wireSegments'] =  ast.literal_eval(self.config['DATABASE']['wireSegments'])
 
     def postProcessFpga(self):
         if self.config['FPGA']: # if dict is not empty
