@@ -133,7 +133,7 @@ APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
 
 # FIXME: these should be read from somewhere else (DwaConfigFile)...
-DATABASE_FIELDS = ['wires', 'channels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
+DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
 
 
 # Attempt to display logged events in a text window in the GUI
@@ -1695,7 +1695,7 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
         
-        dataConfig = {"channels": apaChannels, "wires": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+        dataConfig = {"channels": apaChannels, "wireSegments": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
         "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
 
         self._loadDaqConfig()
@@ -2236,8 +2236,8 @@ class MainWindow(qtw.QMainWindow):
                 pointer_lists[layer][side] = [{"testId": None}]*900
                 
         pointer_list = [{"testId": None}]*900
-        for dwaCh, ch in enumerate(self.ampData["channels"]): # Loop over channels in scan
-            for w in self.ampData["wires"]:
+        for dwaCh, ch in enumerate(self.ampData["apaChannels"]): # Loop over channels in scan
+            for w in self.ampData["wireSegments"]:
                 wire_ch = channel_map.wire_to_apa_channel(self.ampData["layer"], w)
                 if wire_ch == ch:
                     resonance_result = {
