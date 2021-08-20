@@ -292,8 +292,8 @@ def get_range_data_for_channels(wire_layer: str, channel_numbers: list, range_ra
     range_data_with_channel_info = append_channel_info(culled_range_data, channel_numbers)
     return range_data_with_channel_info
 
-def compute_tensions_from_resonances(wire_freqs_expected, freqs_measured):
-    '''Return a list of wire tensions given the expected and measured frequencies in an APA channel. The expected frequencies are to be given as a list of lists of frequencies, with each inner list corresponding to the frequencies associated to a single wire in that APA channel. The order of these inner wire lists determine the order of the returned wire tensions. The expected frequencies must only be given for frequency ranges that have been measured. The measured frequencies are to be given as an overall list of measured frequencies for that APA channel.'''
+def compute_tensions_from_resonances(wire_freqs_expected, freqs_measured, tension_tolerance = 0.3):
+    '''Return a list of wire tensions given the expected and measured frequencies in an APA channel. The expected frequencies are to be given as a list of lists of frequencies, with each inner list corresponding to the frequencies associated to a single wire in that APA channel. The order of these inner wire lists determine the order of the returned wire tensions. The expected frequencies must only be given for frequency ranges that have been measured. The measured frequencies are to be given as an overall list of measured frequencies for that APA channel. A tolerance factor determines the upper and lower boundaries of the returned tension values relative to the nominal value.'''
 
     NOMINAL_TENSION = 6.5
 
@@ -307,7 +307,7 @@ def compute_tensions_from_resonances(wire_freqs_expected, freqs_measured):
 
         return cost_matrix[row_index, col_index].sum()
 
-    val = optimize.dual_annealing(assignment_cost, ((0.7, 1.5),)*len(wire_freqs_expected), seed=3)
+    val = optimize.dual_annealing(assignment_cost, (((1-tension_tolerance)**0.5, (1+tension_tolerance)**0.5),)*len(wire_freqs_expected), seed=3)
 
     return (val.x**2 * NOMINAL_TENSION).tolist()
 
