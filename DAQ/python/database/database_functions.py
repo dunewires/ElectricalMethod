@@ -48,7 +48,7 @@ def get_layer_data(sietch, apa_uuid, side, wire_layer, stage):
     # Get table from database
     pointerTable = get_pointer_table(sietch, apa_uuid, stage)
     # Lookup table found, loop over layers
-    wirePointersAllLayers = pointerTable["data"]["wires"]
+    wirePointersAllLayers = pointerTable["data"]["wireSegments"]
     
     if wire_layer not in wirePointersAllLayers.keys():
         # TODO: Make popup message
@@ -67,7 +67,7 @@ def get_layer_data(sietch, apa_uuid, side, wire_layer, stage):
     resonanceEntries = sietch.api("/test/getBulk",recordIds)
     
     # Extract the list of resonances from the database entries
-    resonanceDictionaries = [entry["data"]["wires"] for entry in resonanceEntries]
+    resonanceDictionaries = [entry["data"]["wireSegments"] for entry in resonanceEntries]
     layer_data = {}
     for d in resonanceDictionaries:
         for w in d.keys():
