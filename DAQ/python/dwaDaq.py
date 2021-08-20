@@ -6,12 +6,10 @@
 # * Replace hard-coded 'amplitudeData.json' string with AMP_DATA_FILE or similar
 #   same for 'resonanceData.json'
 # 
-# * after scan ends, update the V(t) plots with the last set of data
-# * after scan ends, disable all relays but do this in a thread and have the "thread end" signal trigger the
-#   re-activation of the "Start Scan" buttons
-#
-# * Recent scan list: 
-#   + verify "Submitted = Yes" works
+# * after scan ends:
+#   + update the V(t) plots with the last set of data
+#   + disable all relays but do this in a thread and have the "thread end" signal trigger the
+#     re-activation of the "Start Scan" buttons
 #
 # * Add graphic of APA wires to Config tab
 # 
