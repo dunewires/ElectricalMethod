@@ -485,6 +485,7 @@ class MainWindow(qtw.QMainWindow):
         self._configureTensions()
 
         # Configure/label plots
+        self.apaChannels = [None]*8
         self._configurePlots()
         
         # make dummy data to display
@@ -1214,13 +1215,13 @@ class MainWindow(qtw.QMainWindow):
             # set background color to white
             # FIXME: clean this up...
             getattr(self, f'pw_grid_{ii}').setBackground('w')
-            getattr(self, f'pw_grid_{ii}').setTitle(ii)
+            getattr(self, f'pw_grid_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
             getattr(self, f'pw_chan_{ii}').setBackground('w')
-            getattr(self, f'pw_chan_{ii}').setTitle(ii)
+            getattr(self, f'pw_chan_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
             getattr(self, f'pw_amplgrid_{ii}').setBackground('w')
-            getattr(self, f'pw_amplgrid_{ii}').setTitle(ii)
+            getattr(self, f'pw_amplgrid_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
             getattr(self, f'pw_amplchan_{ii}').setBackground('w')
-            getattr(self, f'pw_amplchan_{ii}').setTitle(ii)
+            getattr(self, f'pw_amplchan_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
             #getattr(self, f'pw_resfreqfit_{ii}').setBackground('w')
             #getattr(self, f'pw_resfreqfit_{ii}').setTitle(ii)
 
@@ -1666,7 +1667,9 @@ class MainWindow(qtw.QMainWindow):
         dwaChannels = []
         for i in range(0,len(channels)):
             dwaChannels.append(str(channel_map.apa_channel_to_dwa_channel(self.configLayer, channels[i])))
-        apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
+        self.apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
+        # Reconfigure/label plots
+        self._configurePlots()
 
         self.wires.sort(key = int)
 
@@ -1689,7 +1692,7 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
         
-        dataConfig = {"channels": apaChannels, "wireSegments": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
+        dataConfig = {"channels": self.apaChannels, "wireSegments": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
         "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
 
         self._loadDaqConfig()
@@ -2103,7 +2106,7 @@ class MainWindow(qtw.QMainWindow):
         if self.chanViewMainAmpl != chan:
             x, y = self.curves['amplchan'][chan].getData()
             self.curves['amplchan']['main'].setData(x, y)
-            self.pw_amplchan_main.setTitle(chan)
+            self.pw_amplchan_main.setTitle("DWA Chan: {} APA Chan: {}".format(chan, self.apaChannels[chan]))
             self.chanViewMainAmpl = chan
         
     @pyqtSlot(int)
