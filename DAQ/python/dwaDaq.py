@@ -1104,7 +1104,8 @@ class MainWindow(qtw.QMainWindow):
         self.freqMinBox = [] 
         self.freqMaxBox = [] #these are lists to hold the boxes for these values in the table, that way they can be looped later on
         self.range_data_list = []
-
+        #The following loops through the headboards, channels, and wires, to find where the wire the user would to scan is
+        #then it saves important data for the table and scan to variables
         for configHeadboard in range(1,11):
             channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
             for channels in channelGroups:
@@ -1724,7 +1725,8 @@ class MainWindow(qtw.QMainWindow):
         if scanIndex < 0: return
 
         rd = self.range_data_list[scanIndex]
-
+        #need to impliment list of all -1 for channels not being used
+        #this makes it so for a single scan it just lists the one apa channel used, and then sorts all apa channels for an all wire scan
         if self.configRadioSingle.isChecked():
             self.configHeadboard = self.singleConfigHeadboard
             self.wires = self.wireNum
@@ -1736,7 +1738,7 @@ class MainWindow(qtw.QMainWindow):
         #sorting apa channels list to follow increasing order of dwa channels
         dwaChannels = []
         for i in range(0,len(channels)):
-            dwaChannels.append(str(channel_map.apa_channel_to_dwa_channel(self.configLayer, channels[i])))
+            dwaChannels.append(channel_map.apa_channel_to_dwa_channel(self.configLayer, channels[i]))
         apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
 
         self.wires.sort(key = int)
@@ -1765,6 +1767,8 @@ class MainWindow(qtw.QMainWindow):
 
         self._loadDaqConfig()
 
+        self.combinedConfig = {"FPGA": fpgaConfig, "DATABASE": dataConfig, "DAQ": self.daqConfig}
+        #this gets values from the table for scan configurations
         self.freqMax = float(self.scanTable.item(scanIndex, 4).text())
         self.freqMin = float(self.scanTable.item(scanIndex, 3).text())
         self.freqStep = self.scanTable.item(scanIndex, 5).text()
@@ -1791,6 +1795,7 @@ class MainWindow(qtw.QMainWindow):
             logging.warning("  Directory already exists: [{}]".format(dataDir))
         
         self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        #above makes the scan directory for auto scans, below gives the final scan directory its name
         if self.configRadioSingle.isChecked():
             self.wires = self.wires[0]
         else:
@@ -2895,20 +2900,22 @@ class MainWindow(qtw.QMainWindow):
 
                 #
                 print(f'self.scanType = {self.scanType}')
+                #if the scan is auto, then when it finishes and the scan is over this finds what row was scanned and changes it green, 
+                #this also selects the next radio button
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
                     for i, btn in enumerate(self.radioBtns):
                         if btn.isChecked(): 
-                            self.btnNum = i
+                            btnNum = i
                     for c in range(0, self.scanTable.columnCount()):
-                        self.scanTable.item(self.btnNum,c).setBackground(qtg.QColor(3,205,0))
-                        if len(self.radioBtns)>(self.btnNum+1):
-                            self.nextBtn = self.btnNum+1
+                        self.scanTable.item(btnNum,c).setBackground(qtg.QColor(3,205,0))
+                        if len(self.radioBtns)>(btnNum+1):
+                            nextBtn = btnNum+1
                         else: 
-                            self.nextBtn = 0
+                            nextBtn = len(self.radioBtns)
                     item = qtw.QRadioButton(self.scanTable)
-                    self.scanTable.setCellWidget(self.nextBtn, 0, item)
+                    self.scanTable.setCellWidget(nextBtn, 0, item)
                     item.setChecked(True)
-                    self.radioBtns[self.nextBtn]=item
+                    self.radioBtns[nextBtn]=item
 
                 self.updateAmplitudePlots()
                 self.wrapUpStimulusScan()
