@@ -483,7 +483,7 @@ class MainWindow(qtw.QMainWindow):
         self.heartPixmaps = [qtg.QPixmap('icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
         self.heartval = 0
         self.udpListening = False
-        self.recentScanTableRowInUse = None
+        self.recentScansTableRowInUse = None
 
         
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
@@ -1993,7 +1993,7 @@ class MainWindow(qtw.QMainWindow):
         print(f"selected file = {tableRowData['scanName']}")
         #scanFilename = './scanDataAdv/dwaConfigWC_20210812T112511/amplitudeData.json' # DUMMY
         scanFilename = os.path.join(tableRowData['scanName'], 'amplitudeData.json')
-        self.recentScanTableRowInUse = row
+        self.recentScansTableRowInUse = row
         self.loadSavedScanData(scanFilename)
 
     def loadArbitraryScanData(self):
@@ -2013,7 +2013,7 @@ class MainWindow(qtw.QMainWindow):
             self.insertScanIntoScanList(scanDir, row=row, submitted=Submitted.UNKNOWN)
             # and highlight the newly inserted row in the table
             self.recentScansTableView.selectRow(row)
-            self.recentScanTableRowInUse = 0
+            self.recentScansTableRowInUse = 0
             
             self.loadSavedScanData(scanFilename)
 
@@ -2425,9 +2425,8 @@ class MainWindow(qtw.QMainWindow):
         }
         dbid= sietch.api('/test',record_result)
 
-        self.recentScansTableView.setSubmitted(self.recentScansTableModel, Submitted.YES)
+        self.recentScansTableModel.setSubmitted(self.recentScansTableRowInUse, Submitted.YES)
         self.recentScansTableModel.layoutChanged.emit()
-
         
     @pyqtSlot()
     def loadEventData(self):
