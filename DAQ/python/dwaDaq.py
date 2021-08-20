@@ -1742,9 +1742,6 @@ class MainWindow(qtw.QMainWindow):
             dwaChannels.append(channel_map.apa_channel_to_dwa_channel(self.configLayer, channels[i]))
         self.apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
 
-        # Reconfigure/label plots
-        self._configurePlots()
-
         self.wires.sort(key = int)
 
         fpgaConfig = config_generator.configure_default()
