@@ -131,6 +131,7 @@ SCAN_END = 0
 APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Storage", "Installation"]
 APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
+MAX_WIRE_SEGMENT = 1151
 
 # FIXME: these should be read from somewhere else (DwaConfigFile)...
 DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
@@ -705,14 +706,8 @@ class MainWindow(qtw.QMainWindow):
         for stage in APA_TESTING_STAGES:
             self.tensionStageComboBox.addItem(stage)
         self.tensionData = {
-            'XA':[0]*960,
-            'XB':[0]*960,
-            'UA':[0]*960,
-            'UB':[0]*960,
-            'VA':[0]*960,
-            'VB':[0]*960,
-            'GA':[0]*960,
-            'GB':[0]*960,
+            'A':[0]*MAX_WIRE_SEGMENT,
+            'B':[0]*MAX_WIRE_SEGMENT,
         }
         
 
@@ -737,6 +732,8 @@ class MainWindow(qtw.QMainWindow):
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensions)
         self.btnSubmitTensions.clicked.connect(self.submitTensions)
+        for layer in APA_LAYERS:
+            self.tensionLayerComboBox.addItem(layer)
         # Config Tab
         self.btnConfigureScans.clicked.connect(self.singleOrAllScans)
         for stage in APA_TESTING_STAGES:
@@ -1251,12 +1248,9 @@ class MainWindow(qtw.QMainWindow):
         # Tension tab
         self.tensionGLW.setBackground('w')
         self.tensionPlots = {}
-        for layer in APA_LAYERS:
-            self.tensionPlots[layer] = {}
-            for side in APA_SIDES:
-                self.tensionPlots[layer][side] = (self.tensionGLW.addPlot())
-                self.tensionPlots[layer][side].setTitle(f'Layer {layer} Side {side}')
-            self.tensionGLW.nextRow()
+        for side in APA_SIDES:
+            self.tensionPlots[side] = (self.tensionGLW.addPlot())
+            self.tensionPlots[side].setTitle(f'Side {side}')
 
         #self.tensionPlots = {}
         #self.tensionPlots['tensionOfWireNumber'] = self.tensionGLW.addPlot(title="Tensions", labels={'left':"Tension [N]", 'bottom':"Wire number"})
@@ -1267,7 +1261,7 @@ class MainWindow(qtw.QMainWindow):
         # # Create the scatter plot and add it to the view
         # scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
         # self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
-        # pos = [{'pos': [i,self.tensionData["GA"][i]]} for i in range(960)]
+        # pos = [{'pos': [i,self.tensionData["GA"][i]]} for i in range(MAX_WIRE_SEGMENT)]
         # scatter.setData(pos)
         # self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
             
@@ -2144,36 +2138,37 @@ class MainWindow(qtw.QMainWindow):
         # Load sietch credentials #FIXME still using James's credentials
         sietch = SietchConnect("sietch.creds")
         # Get APA UUID from text box
-        apaUuid = self.pointerTableApaUuid.text()
+        apaUuid = self.tensionApaUuid.text()
         # Get stage
         stage = self.tensionStageComboBox.currentText()
         # Get pointer table info
         self.pointerTable = database_functions.get_pointer_table(sietch, apaUuid, stage)
+        # Get selected layer from GUI
+        layer = self.tensionLayerComboBox.currentText()
+        self.tensionLayer = layer
 
-        
-        for layer in ["X", "U", "V", "G"]:
-            for side in ["A", "B"]:
-                print(apaUuid, side, layer, stage)
-                layer_data = database_functions.get_layer_data(sietch, apaUuid, side, layer, stage)
-                channels = [int(ch) for ch in layer_data.keys()]
-                print(layer_data)
-                for ch in channels:
-                    print(ch)
-                    wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
-                    measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
-                    print(expected_frequencies,measured_frequencies)
-                    if len(measured_frequencies) > 0:
-                        mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
-                        for i,w in enumerate(wires):
-                            self.tensionData[layer+side][int(w)-1] = mapped[i]
-                            print(layer+side,str(w),str(mapped[i]))
-                    print("\n")
-                # FIXME: this should only happen once -- in _makeCurves()
-                # Create the scatter plot and add it to the view
-                scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
-                self.tensionPlots[layer][side].addItem(scatter)
-                pos = [{'pos': [i,self.tensionData[layer+side][i]]} for i in range(len(self.tensionData[layer+side]))]
-                scatter.setData(pos)
+        for side in ["A", "B"]:
+            print(apaUuid, side, layer, stage)
+            layer_data = database_functions.get_layer_data(sietch, apaUuid, side, layer, stage)
+            channels = [int(ch) for ch in layer_data.keys()]
+            print(layer_data)
+            for ch in channels:
+                print(ch)
+                wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
+                measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
+                print(expected_frequencies,measured_frequencies)
+                if len(measured_frequencies) > 0:
+                    mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
+                    for i,w in enumerate(wires):
+                        self.tensionData[side][int(w)-1] = mapped[i]
+                        print(side,str(w),str(mapped[i]))
+                print("\n")
+            # FIXME: this should only happen once -- in _makeCurves()
+            # Create the scatter plot and add it to the view
+            scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
+            self.tensionPlots[side].addItem(scatter)
+            pos = [{'pos': [i,self.tensionData[side][i]]} for i in range(len(self.tensionData[side]))]
+            scatter.setData(pos)
 
         self.tensionTableModel = TensionTableModel(self.tensionData)
         self.tensionTableView.setModel(self.tensionTableModel)
@@ -2181,7 +2176,6 @@ class MainWindow(qtw.QMainWindow):
         self.tensionTableView.resizeRowsToContents()
 
         #self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
-    
         
     def submitTensions(self):
         # Load sietch credentials #FIXME still using James's credentials
@@ -2191,22 +2185,23 @@ class MainWindow(qtw.QMainWindow):
         stage = self.pointerTable["stage"]
         wireData = {
             'X': {
-                'A': self.tensionData['XA'],
-                'B': self.tensionData['XB']
+                'A': [],
+                'B': []
             },
             'U': {
-                'A': self.tensionData['UA'],
-                'B': self.tensionData['UB']
+                'A': [],
+                'B': []
             },
             'V': {
-                'A': self.tensionData['VA'],
-                'B': self.tensionData['VB']
+                'A': [],
+                'B': []
             },
             'G': {
-                'A': self.tensionData['GA'],
-                'B': self.tensionData['GB']
+                'A': [],
+                'B': []
             },
         }
+        wireData[self.tensionLayer] = self.tensionData
         
         record_result = {
             "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, apaUuid),
@@ -2233,9 +2228,9 @@ class MainWindow(qtw.QMainWindow):
         for layer in APA_LAYERS:
             pointer_lists[layer] = {}
             for side in APA_SIDES:
-                pointer_lists[layer][side] = [{"testId": None}]*900
+                pointer_lists[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT
                 
-        pointer_list = [{"testId": None}]*900
+        pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT
         for dwaCh, ch in enumerate(self.ampData["apaChannels"]): # Loop over channels in scan
             for w in self.ampData["wireSegments"]:
                 wire_ch = channel_map.wire_to_apa_channel(self.ampData["layer"], w)

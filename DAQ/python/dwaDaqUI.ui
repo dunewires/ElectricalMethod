@@ -276,7 +276,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -289,7 +289,7 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -1314,49 +1314,6 @@
           <attribute name="title">
            <string>Tensions</string>
           </attribute>
-          <widget class="QTabWidget" name="tabWidget_2">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>90</y>
-             <width>1151</width>
-             <height>541</height>
-            </rect>
-           </property>
-           <property name="currentIndex">
-            <number>0</number>
-           </property>
-           <widget class="QWidget" name="tab">
-            <attribute name="title">
-             <string>Table</string>
-            </attribute>
-            <widget class="QTableView" name="tensionTableView">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>10</y>
-               <width>601</width>
-               <height>511</height>
-              </rect>
-             </property>
-            </widget>
-           </widget>
-           <widget class="QWidget" name="tab_2">
-            <attribute name="title">
-             <string>Graphs</string>
-            </attribute>
-            <widget class="GraphicsLayoutWidget" name="tensionGLW">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>10</y>
-               <width>1131</width>
-               <height>521</height>
-              </rect>
-             </property>
-            </widget>
-           </widget>
-          </widget>
           <widget class="QWidget" name="widget_4" native="true">
            <property name="geometry">
             <rect>
@@ -1368,114 +1325,212 @@
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_7"/>
           </widget>
-          <widget class="QPushButton" name="btnLoadTensions">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>62</y>
-             <width>300</width>
-             <height>23</height>
-            </rect>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>300</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>300</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Fetch Resonances and Compute Tensions</string>
-           </property>
-          </widget>
-          <widget class="QLineEdit" name="pointerTableApaUuid">
+          <widget class="QWidget" name="formLayoutWidget">
            <property name="geometry">
             <rect>
              <x>10</x>
              <y>10</y>
-             <width>300</width>
-             <height>20</height>
+             <width>1101</width>
+             <height>721</height>
             </rect>
            </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>300</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>300</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="autoFillBackground">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="placeholderText">
-            <string>APA UUID</string>
-           </property>
-          </widget>
-          <widget class="QComboBox" name="tensionStageComboBox">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>36</y>
-             <width>300</width>
-             <height>20</height>
-            </rect>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>300</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>300</width>
-             <height>16777215</height>
-            </size>
-           </property>
-          </widget>
-          <widget class="QPushButton" name="btnSubmitTensions">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>640</y>
-             <width>300</width>
-             <height>23</height>
-            </rect>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>300</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>300</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Submit Tensions to DB</string>
-           </property>
+           <layout class="QFormLayout" name="formLayout_2">
+            <item row="0" column="0">
+             <widget class="QLabel" name="apaUuidLabel">
+              <property name="text">
+               <string>APA UUID</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="tensionApaUuid">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>300</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>300</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="autoFillBackground">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="placeholderText">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="tensionStageLabel">
+              <property name="text">
+               <string>Stage</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="tensionStageComboBox">
+              <property name="minimumSize">
+               <size>
+                <width>300</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>300</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="tensionLayerLabel">
+              <property name="text">
+               <string>Layer</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QComboBox" name="tensionLayerComboBox">
+              <property name="minimumSize">
+               <size>
+                <width>40</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>40</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QPushButton" name="btnLoadTensions">
+              <property name="minimumSize">
+               <size>
+                <width>300</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>300</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Fetch Resonances and Compute Tensions</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QTabWidget" name="tabWidget_2">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>500</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>500</height>
+               </size>
+              </property>
+              <property name="currentIndex">
+               <number>1</number>
+              </property>
+              <widget class="QWidget" name="tab">
+               <attribute name="title">
+                <string>Table</string>
+               </attribute>
+               <widget class="QTableView" name="tensionTableView">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>10</y>
+                  <width>601</width>
+                  <height>400</height>
+                 </rect>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>400</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>400</height>
+                 </size>
+                </property>
+               </widget>
+              </widget>
+              <widget class="QWidget" name="tab_2">
+               <attribute name="title">
+                <string>Graphs</string>
+               </attribute>
+               <widget class="GraphicsLayoutWidget" name="tensionGLW">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>10</y>
+                  <width>900</width>
+                  <height>400</height>
+                 </rect>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>900</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>900</width>
+                  <height>400</height>
+                 </size>
+                </property>
+               </widget>
+              </widget>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QPushButton" name="btnSubmitTensions">
+              <property name="minimumSize">
+               <size>
+                <width>300</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>300</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Submit Tensions to DB</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </widget>
          <widget class="QWidget" name="tabLog">
