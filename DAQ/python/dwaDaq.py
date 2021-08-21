@@ -2708,7 +2708,8 @@ class MainWindow(qtw.QMainWindow):
             self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
 
         # Clear amplitude plots
-        plotTypes = ['amplchan', 'amplgrid', 'resRawFit', 'resProcFit']
+        #plotTypes = ['amplchan', 'amplgrid', 'resRawFit', 'resProcFit']
+        plotTypes = ['amplchan', 'amplgrid']
         for ptype in plotTypes:
             for reg in self.registers:
                 regId = reg
