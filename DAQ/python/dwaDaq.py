@@ -625,7 +625,7 @@ class MainWindow(qtw.QMainWindow):
             data['scanName'] = scanDir
             data['submitted'] = submitted
         except:
-            print("Could not add new scan to list (bad json file?) {ampFilename}...")
+            print(f"Could not add new scan to list (bad json file?) {ampFilename}...")
             return entry
 
         for kk in SCAN_LIST_DATA_KEYS: # populate with useful information
