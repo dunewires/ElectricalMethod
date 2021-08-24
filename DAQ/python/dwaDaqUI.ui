@@ -1470,55 +1470,53 @@
               <attribute name="title">
                <string>Table</string>
               </attribute>
-              <widget class="QTableView" name="tensionTableView">
-               <property name="geometry">
-                <rect>
-                 <x>10</x>
-                 <y>10</y>
-                 <width>601</width>
-                 <height>400</height>
-                </rect>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>400</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>400</height>
-                </size>
-               </property>
-              </widget>
+              <layout class="QVBoxLayout" name="verticalLayout_17">
+               <item>
+                <widget class="QTableView" name="tensionTableView">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>400</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>400</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </widget>
              <widget class="QWidget" name="tab_2">
               <attribute name="title">
                <string>Graphs</string>
               </attribute>
-              <widget class="GraphicsLayoutWidget" name="tensionGLW">
-               <property name="geometry">
-                <rect>
-                 <x>10</x>
-                 <y>10</y>
-                 <width>900</width>
-                 <height>400</height>
-                </rect>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>900</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>900</width>
-                 <height>400</height>
-                </size>
-               </property>
-              </widget>
+              <layout class="QVBoxLayout" name="verticalLayout_18">
+               <item>
+                <widget class="GraphicsLayoutWidget" name="tensionGLW">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </widget>
             </widget>
            </item>

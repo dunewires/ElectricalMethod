@@ -125,6 +125,8 @@ DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 #AMP_DATA_FILE   = "test/data/50cm24inch/20210616T203958_amp.json"
 #AMP_DATA_FILE = './scanDataAdv/dwaConfigWC_20210812T112511/amplitudeData.json'
 
+APA_UUID_DUMMY_VAL = 'd976ed20-fc5d-11eb-b6f5-a70e70a44436'
+
 EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
 OUTPUT_DIR_SCAN_DATA = './scanData/'
@@ -207,7 +209,8 @@ class StimView(IntEnum):
 
 
 #TAB_ACTIVE_MAIN = MainView.STIMULUS
-TAB_ACTIVE_MAIN = MainView.RESONANCE
+#TAB_ACTIVE_MAIN = MainView.RESONANCE
+TAB_ACTIVE_MAIN = MainView.TENSION
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -487,7 +490,7 @@ class MainWindow(qtw.QMainWindow):
         self.heartval = 0
         self.udpListening = False
         self.recentScansTableRowInUse = None
-
+        self.tensionApaUuid.setText(APA_UUID_DUMMY_VAL)
         
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
@@ -1310,7 +1313,7 @@ class MainWindow(qtw.QMainWindow):
         chanNum = 0
         #for irow in range(4):
         #    for icol in range(2):
-        for irow in range(3):
+        for irow in range(3):     # fixme: can addPlot(row=, col=)...
             for icol in range(3):
                 if irow == 2 and icol == 2:
                     continue
@@ -1325,9 +1328,26 @@ class MainWindow(qtw.QMainWindow):
         # Tension tab
         self.tensionGLW.setBackground('w')
         self.tensionPlots = {}
-        for side in APA_SIDES:
-            self.tensionPlots[side] = (self.tensionGLW.addPlot())
-            self.tensionPlots[side].setTitle(f'Side {side}')
+
+        self.tensionPlots['tensionOfWireNumber'] = {}  # scatter plot of y=Tension, x=Wire number, one plot per layer per side
+        for icol, layer in enumerate(APA_LAYERS):
+            self.tensionPlots['tensionOfWireNumber'][layer] = {}
+            for irow, side in enumerate(APA_SIDES):
+                labels = None
+                if (irow==1 and icol==0):
+                    labels = {'left':'Tension [N]', 'bottom':'Wire number'}
+                self.tensionPlots['tensionOfWireNumber'][layer][side] = self.tensionGLW.addPlot(row=irow, col=icol,
+                                                                                                title=f'{layer}{side}',
+                                                                                                labels=labels)
+
+        # BOBOBOBOB
+            
+        # can add other kinds of plots here (e.g. histograms)
+
+        
+        #for side in APA_SIDES:
+        #    self.tensionPlots[side] = (self.tensionGLW.addPlot())
+        #    self.tensionPlots[side].setTitle(f'Side {side}')
 
         #self.tensionPlots = {}
         #self.tensionPlots['tensionOfWireNumber'] = self.tensionGLW.addPlot(title="Tensions", labels={'left':"Tension [N]", 'bottom':"Wire number"})
@@ -1359,7 +1379,7 @@ class MainWindow(qtw.QMainWindow):
     def _makeDummyData(self):
         # V(t)
         self.dummyData = {}  
-        xx = np.linspace(0, 2*np.pi, 100)
+        xx = np.linspace(0, 2*np.pi, 32)
         for ii in range(9):
             self.dummyData[ii] = {'x':xx[:],
                                   'y':np.sin(xx[:]*(ii+1))
@@ -1372,7 +1392,7 @@ class MainWindow(qtw.QMainWindow):
                                       'y':xx[:]*ii+1
             }
 
-        xx = np.arange(1000)  # wire numbers
+        xx = np.arange(200)  # wire numbers
         mu = 6.50 # Newtons
         sigma = 0.5 # Newtons
         tt = np.random.normal(mu, sigma, len(xx)) # wire tensions (Newtons)
@@ -1424,11 +1444,11 @@ class MainWindow(qtw.QMainWindow):
             # V(t) plots
             self.curvesFit['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([], pen=fitPen)
             self.curvesFit['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([], pen=fitPen)
-            self.curves['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([], symbol='o', symbolSize=2,
+            self.curves['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([], symbol='o', symbolSize=4,
                                                                             symbolBrush=vtAllPlotColors[loc],
                                                                             symbolPen=vtAllPlotColors[loc],
                                                                             pen=None)
-            self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([], symbol='o', symbolSize=2,
+            self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([], symbol='o', symbolSize=4,
                                                                             symbolBrush=vtAllPlotColors[loc],
                                                                             symbolPen=vtAllPlotColors[loc],
                                                                             pen=None)
@@ -1451,17 +1471,22 @@ class MainWindow(qtw.QMainWindow):
             
         # add in the main window, too (large view of V(t) for a single channel)
         self.curvesFit['chan']['main'] = getattr(self, f'pw_chan_main').plot([], pen=fitPen)
-        self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
+        self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([], symbol='o', symbolSize=4, symbolBrush='k', symbolPen='k', pen=None)
 
         # add in the main window, too (large view of A(f) for a single channel)
         self.curves['amplchan']['main'] = getattr(self, f'pw_amplchan_main').plot([], symbol='o', symbolSize=3, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
 
         # Tension
-        #self.curves['tension']['TofWireNum'] = {}
-        #tensionPen = pg.mkPen(width=5, color='r')
-        #for layer in ["G","U","V","X"]:
-        #    for side in ["A","B"]:
-        #        self.curves['tension']['TofWireNum'][layer+side] = pg.ScatterPlotItem(pen=tensionPen, symbol='o', size=1)
+        self.curves['tension']['tensionOfWireNumber'] = {}
+        tensionPen = pg.mkPen(width=5, color='r')
+        tensionSymbolBrush = pg.mkBrush('r')
+        tensionSymbolPen = pg.mkPen(width=1, color=qtg.QColor('gray'))
+        tensionSymbolSize = 5
+        for layer in APA_LAYERS:
+            self.curves['tension']['tensionOfWireNumber'][layer] = {}
+            for side in APA_SIDES:
+                self.curves['tension']['tensionOfWireNumber'][layer][side] = self.tensionPlots['tensionOfWireNumber'][layer][side].plot([], pen=None, symbolBrush=tensionSymbolBrush, symbolPen=tensionSymbolPen, symbolSize=tensionSymbolSize)
+        #[layer+side] = pg.ScatterPlotItem(pen=tensionPen, symbol='o', size=1)
         
         ### Tension information
         ###self.curves['tension']['tensionOfWireNumber'] = self.tensionPlots['tensionOfWireNumber'].plot([], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
@@ -1527,8 +1552,10 @@ class MainWindow(qtw.QMainWindow):
 
     def _plotDummyTension(self):
         pass
-        #self.curves['tension']['tensionOfWireNumber'].setData(self.dummyDataTension['x'],
-                                                              #self.dummyDataTension['y'])
+        #for layer in APA_LAYERS:
+        #    for side in APA_SIDES:
+        #        self.curves['tension']['tensionOfWireNumber'][layer][side].setData(self.dummyDataTension['x'],
+        #                                                                           self.dummyDataTension['y'])
             
     def _keyboardShortcuts(self):
         print("Setting up keyboard shortcuts")
@@ -2279,12 +2306,15 @@ class MainWindow(qtw.QMainWindow):
             channels = [int(ch) for ch in layer_data.keys()]
             print("layer_data")
             print(layer_data)
+            if not layer_data:
+                print(f"layer_data is empty... skipping layer, side = {layer}, {side}")
+                continue
             for ch in channels:
                 print(f"ch: {ch}")
                 wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
                 measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
-                print("expected_frequencies: {expected_frequencies}")
-                print("measured_frequencies: {measured_frequencies}")
+                print(f"expected_frequencies: {expected_frequencies}")
+                print(f"measured_frequencies: {measured_frequencies}")
                 #print(expected_frequencies,measured_frequencies)
                 if len(measured_frequencies) > 0:
                     mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
@@ -2292,19 +2322,20 @@ class MainWindow(qtw.QMainWindow):
                         self.tensionData[side][int(w)-1] = mapped[i]
                         print(side,str(w),str(mapped[i]))
                 print("\n")
+            self.curves['tension']['tensionOfWireNumber'][layer][side].setData( self.tensionData[side] )
             # FIXME: this should only happen once -- in _makeCurves()
             # Create the scatter plot and add it to the view
-            scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
-            self.tensionPlots[side].addItem(scatter)
-            pos = [{'pos': [i,self.tensionData[side][i]]} for i in range(len(self.tensionData[side]))]
-            scatter.setData(pos)
+            #scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
+            #self.tensionPlots[side].addItem(scatter)
+            #pos = [{'pos': [i,self.tensionData[side][i]]} for i in range(len(self.tensionData[side]))]
+            #scatter.setData(pos)
 
+        # FIXME: model and view should only be made once (and then updated). See Recent Scan List for example
         self.tensionTableModel = TensionTableModel(self.tensionData)
         self.tensionTableView.setModel(self.tensionTableModel)
         self.tensionTableView.resizeColumnsToContents()
         self.tensionTableView.resizeRowsToContents()
 
-        #self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
         
     def submitTensions(self):
         # Load sietch credentials #FIXME still using James's credentials
