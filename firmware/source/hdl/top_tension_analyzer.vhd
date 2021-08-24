@@ -175,7 +175,7 @@ architecture STRUCT of top_tension_analyzer is
   signal scanStatusCnt : unsigned(27 downto 0) := (others => '0');
   signal netStatusCnt  : unsigned(23 downto 0) := (others => '0');
 
-  signal mCDelayCount :unsigned(8 downto 0) := (others  => '0');
+  signal mCDelayCount :unsigned(7 downto 0) := (others  => '0');
   signal mCDelayReset :std_logic := '1';
 
   signal
