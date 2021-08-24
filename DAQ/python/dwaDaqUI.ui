@@ -276,7 +276,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -841,7 +841,7 @@
                  </widget>
                 </item>
                 <item row="15" column="1">
-                 <widget class="QLineEdit" name="advAmplitudeLineEdit"/>
+                 <widget class="QLineEdit" name="advStimAmplitudeLineEdit"/>
                 </item>
                 <item row="13" column="1">
                  <widget class="QLineEdit" name="advStimTimeLineEdit"/>

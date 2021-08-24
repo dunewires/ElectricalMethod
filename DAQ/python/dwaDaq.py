@@ -1,8 +1,6 @@
 # FIXME/TODO:
 # * Add indication that TCP/IP communication is underway during start of scan configuration (otherwise GUI just sits idle...)
 # 
-# * udpate advAmplitude to be advStimAmplitude (vs. DigipotAmplitude)
-# 
 # * Add scroll-bar to Advanced tab in Stimulus tab:
 #   https://stackoverflow.com/questions/63228003/add-scroll-bar-into-tab-pyqt5
 #   [was:] "Advanced" tab: not all items show (below the "config file contents" text area)
@@ -1739,7 +1737,7 @@ class MainWindow(qtw.QMainWindow):
         advFss = self.advFssLineEdit.text() # Freq step size
         advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
         advInitDelay = self.advInitDelayLineEdit.text() # Init delay
-        advAmplitude = self.advAmplitudeLineEdit.text() # Amplitude
+        advStimAmplitude = self.advStimAmplitudeLineEdit.text() # Amplitude
         advDigipotAmplitude = self.advDigipotAmplitudeLineEdit.text() # Digipot amplitude
         
         # TODO: Make sure inputs can be safely converted to floats
@@ -1747,7 +1745,7 @@ class MainWindow(qtw.QMainWindow):
         if advFss: advFss = float(advFss)
         if advStimTime: advStimTime = float(advStimTime)
         if advInitDelay: advInitDelay = float(advInitDelay)
-        if advAmplitude: advAmplitude = float(advAmplitude)
+        if advStimAmplitude: advStimAmplitude = float(advStimAmplitude)
         if advDigipotAmplitude: advDigipotAmplitude = float(advDigipotAmplitude)
 
         scanIndex = -1
@@ -1790,8 +1788,8 @@ class MainWindow(qtw.QMainWindow):
            else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
         elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(stim_time=advStimTime))
 
-        if advAmplitude: 
-            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, stim_mag=int(advAmplitude)))
+        if advStimAmplitude: 
+            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, stim_mag=int(advStimAmplitude)))
             
         if advDigipotAmplitude: 
             fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, digipot=int(advDigipotAmplitude)))
