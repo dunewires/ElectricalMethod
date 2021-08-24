@@ -172,6 +172,7 @@ SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum'
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
 N_RECENT_SCANS = 2
 
+TENSION_TABLE_HDRS = [f'{LL}{SS}' for LL in APA_LAYERS for SS in APA_SIDES]   #['GA','GB','UA','UB','VA','VB','XA','XB']
 TENSION_SPEC = 6.5 # Newtons
 TENSION_SPEC_MIN = TENSION_SPEC-1.0
 TENSION_SPEC_MAX = TENSION_SPEC+1.0
@@ -380,22 +381,36 @@ class Worker(qtc.QRunnable):
 
 class TensionTableModel(qtc.QAbstractTableModel):
     # See: https://www.learnpyqt.com/tutorials/qtableview-modelviews-numpy-pandas/
-    def __init__(self, data):
+    def __init__(self, data, headers, maxWireSegments):
         super(TensionTableModel, self).__init__()
         self._data = data
-
+        self._hdrs = headers
+        self._max_wire_segs = maxWireSegments      # use MAX_WIRE_SEGMENTS = {'G':481, 'U':1151, 'V': 1151, 'X': 480}
+        self.nrows = max(self._max_wire_segs.values())  # will not change
+        
     def data(self, index, role):
-        kk = list(sorted(self._data.keys()))[index.column()]
-        val =  self._data[kk][index.row()]
+        hdr = self._hdrs[index.column()]   # e.g. 'UA'
+        layer = hdr[0]  # e.g. 'U'
+        side  = hdr[1]  # e.g. 'A'
+        if index.row() > (self._max_wire_segs[layer]-1):   # not all apa layers have same number of wire segments
+            val = None
+        else:
+            val = self._data[layer][side][index.row()]
+        #kk = list(sorted(self._data.keys()))[index.column()]
+        #val =  self._data[kk][index.row()]
         if role == qtc.Qt.DisplayRole:
-            if val is np.nan:
+            if val is np.nan:   # valid wire segment, but not yet measured
+                return ""
+            elif val is None:   # not a valid wire segment for this layer
                 return ""
             else:
                 return f'{val:.3f}'
 
         if role == qtc.Qt.BackgroundRole:
-            if val is np.nan:
+            if val is np.nan:   # not yet measured, so use the default cell color (white)
                 return
+            elif val is None:   # not a valid wire segment for this layer
+                return qtg.QColor('black')
             elif val < TENSION_SPEC_MIN:
                 return TENSION_LOW_COLOR
             elif val > TENSION_SPEC_MAX:
@@ -404,19 +419,24 @@ class TensionTableModel(qtc.QAbstractTableModel):
                 return TENSION_GOOD_COLOR
 
     def rowCount(self, index):
-        return len(self._data[list(self._data.keys())[0]])
+        return self.nrows
+        #return len(self._data[list(self._data.keys())[0]])
 
     def columnCount(self, index):
-        # assumes all rows are the same length!
-        return len(self._data.keys())
+        return len(self._hdrs)
+        #return len(self._data.keys())
 
     def setData(self, dd):
         self._data = dd  # FIXME: do we need deepcopy?
+
+    def setLayerData(self, layer, dd):
+        self._data[layer] = dd  # FIXME: do we need deepcopy?
     
     def headerData(self, section, orientation, role):
         if role == qtc.Qt.DisplayRole:
             if orientation == qtc.Qt.Horizontal:
-                return str(sorted(self._data.keys())[section])
+                return self._hdrs[section]
+                #return str(sorted(self._data.keys())[section])
             if orientation == qtc.Qt.Vertical:
                 return str(section+1)
     
@@ -696,7 +716,7 @@ class MainWindow(qtw.QMainWindow):
         #    'A':[np.nan]*MAX_WIRE_SEGMENT,
         #    'B':[np.nan]*MAX_WIRE_SEGMENT,
         #}
-        self.tensionTableModel = TensionTableModel(self.tensionData)
+        self.tensionTableModel = TensionTableModel(self.tensionData, TENSION_TABLE_HDRS, MAX_WIRE_SEGMENTS)
         self.tensionTableView.setModel(self.tensionTableModel)
         self.tensionTableView.resizeColumnsToContents()
         self.tensionTableView.resizeRowsToContents()
@@ -1543,6 +1563,9 @@ class MainWindow(qtw.QMainWindow):
         tensionSymbolBrush = pg.mkBrush('r')
         tensionSymbolPen = pg.mkPen(width=1, color=qtg.QColor('gray'))
         tensionSymbolSize = 5
+        for layer in APA_LAYERS:
+            self.curves['tension']['tensionOfWireNumber'][layer] = {}
+            for side in APA_SIDES:
                 self.curves['tension']['tensionOfWireNumber'][layer][side] = self.tensionPlots['tensionOfWireNumber'][layer][side].plot([], pen=None, symbolBrush=tensionSymbolBrush, symbolPen=tensionSymbolPen, symbolSize=tensionSymbolSize)
         #[layer+side] = pg.ScatterPlotItem(pen=tensionPen, symbol='o', size=1)
         
@@ -2379,10 +2402,11 @@ class MainWindow(qtw.QMainWindow):
                 if len(measured_frequencies) > 0:
                     mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
                     for i,w in enumerate(wires):
-                        self.tensionData[side][int(w)-1] = mapped[i]
+                        #self.tensionData[side][int(w)-1] = mapped[i]
+                        self.tensionData[layer][side][int(w)-1] = mapped[i]
                         print(side,str(w),str(mapped[i]))
                 print("\n")
-            self.curves['tension']['tensionOfWireNumber'][layer][side].setData( self.tensionData[side] )
+            self.curves['tension']['tensionOfWireNumber'][layer][side].setData( self.tensionData[layer][side] )
             # FIXME: this should only happen once -- in _makeCurves()
             # Create the scatter plot and add it to the view
             #scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
@@ -2394,10 +2418,11 @@ class MainWindow(qtw.QMainWindow):
         # FIXME: is this the best way to push new tension data into the model?
         #  No... we want to have data for all layers...
         #  Also, we should push data into the model and then update the plots and table from the model!
-        self.tensionTableModel.setData(self.tensionData)
+        self.tensionTableModel.setLayerData(self.tensionLayer, self.tensionData[self.tensionLayer])
         #self.tensionTableView.resizeRowsToContents()
         self.tensionTableModel.layoutChanged.emit()
-        self.tensionTableView.resizeColumnsToContents()  # probably don't need?
+        self.tensionTableView.resizeColumnsToContents()  
+        self.tensionTableView.resizeRowsToContents()  
         
     def submitTensions(self):
         # Load sietch credentials #FIXME still using James's credentials
@@ -2423,7 +2448,10 @@ class MainWindow(qtw.QMainWindow):
                 'B': []
             },
         }
-        wireData[self.tensionLayer] = self.tensionData
+        # possible BUG: do you really want to submit empty values for all layers except this one?
+        # also FIXME: why not just use self.tensionData[self.tensionLayer]?
+        # also AMBIGUOUS: which tensions is the user submitting to db? All the ones visible in the GUI?
+        wireData[self.tensionLayer] = self.tensionData[self.tensionLayer]  # BUG: may need deepcopy here?
         
         record_result = {
             "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, apaUuid),
