@@ -1709,13 +1709,15 @@ class MainWindow(qtw.QMainWindow):
         advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
         advInitDelay = self.advInitDelayLineEdit.text() # Init delay
         advAmplitude = self.advAmplitudeLineEdit.text() # Amplitude
-
+        advDigipotAmplitude = self.advDigipotAmplitudeLineEdit.text() # Digipot amplitude
+        
         # TODO: Make sure inputs can be safely converted to floats
         # TODO: Grab default values if undefined
         if advFss: advFss = float(advFss)
         if advStimTime: advStimTime = float(advStimTime)
         if advInitDelay: advInitDelay = float(advInitDelay)
         if advAmplitude: advAmplitude = float(advAmplitude)
+        if advDigipotAmplitude: advDigipotAmplitude = float(advDigipotAmplitude)
 
         scanIndex = -1
         logging.info(self.radioBtns)
@@ -1759,6 +1761,9 @@ class MainWindow(qtw.QMainWindow):
 
         if advAmplitude: 
             fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, stim_mag=int(advAmplitude)))
+            
+        if advDigipotAmplitude: 
+            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, digipot=int(advDigipotAmplitude)))
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))

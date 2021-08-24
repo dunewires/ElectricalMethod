@@ -276,7 +276,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -836,7 +836,7 @@
                 <item row="15" column="0">
                  <widget class="QLabel" name="label_15">
                   <property name="text">
-                   <string>Amplitude</string>
+                   <string>Stimulus Amplitude</string>
                   </property>
                  </widget>
                 </item>
@@ -862,6 +862,16 @@
                    <string>Frequency step size</string>
                   </property>
                  </widget>
+                </item>
+                <item row="16" column="0">
+                 <widget class="QLabel" name="label_7">
+                  <property name="text">
+                   <string>Digipot Amplitude</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="16" column="1">
+                 <widget class="QLineEdit" name="advDigipotAmplitudeLineEdit"/>
                 </item>
                </layout>
               </widget>
