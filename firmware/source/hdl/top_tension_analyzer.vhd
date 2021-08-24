@@ -175,6 +175,9 @@ architecture STRUCT of top_tension_analyzer is
   signal scanStatusCnt : unsigned(27 downto 0) := (others => '0');
   signal netStatusCnt  : unsigned(23 downto 0) := (others => '0');
 
+  signal mCDelayCount :unsigned(7 downto 0) := (others  => '0');
+  signal mCDelayReset :std_logic := '1';
+
   signal
   toDaqReg_headerGenerator,
   toDaqReg_dpotInterface,
@@ -238,7 +241,7 @@ begin
   begin
     if rising_edge(dwaClk100) then
 
-          led(2)        <='1' when and(netStatusCnt) else '0';
+      led(2) <= '1' when and(netStatusCnt) else '0';
       if not fromDaqReg.netStatus(0) then -- blink on transaction
         netStatusCnt <= (others => '0');
       elsif netStatusCnt /= (netStatusCnt'range => '1') then -- extend pulse ~150ms
@@ -315,25 +318,39 @@ begin
 
   -- convert requested stim frequency to number of 100Mhz clocks
   -- move this to the processor!
-  compute_n_periods : process (dwaClk10)
+  compute_n_periods : process (dwaClk100)
     variable acStim_nPeriod_fp6_all : unsigned(43 downto 0 );
     variable adcCnv_nCnv_all        : unsigned(39 downto 0 );
 
   begin
-    if rising_edge(dwaClk10) then
+    if rising_edge(dwaClk100) then
       if fromDaqReg.auto then
         stimFreqReq   <= ctrlFreqSet;
         acStim_enable <= ctrl_acStim_enable;
+        mCDelayReset  <= '0' when stimFreqReq = ctrlFreqSet else '1'; -- reset multicycle delay counter
       else
         stimFreqReq   <= fromDaqReg.stimFreqReq;
         acStim_enable <= '1';
+        mCDelayReset  <= '0' when stimFreqReq = fromDaqReg.stimFreqReq else '1'; -- reset multicycle delay counter
+      end if;
+
+      if mCDelayReset then
+        mCDelayCount <= x"00";
+      elsif mCDelayCount /= x"FF" then -- stop at 0xFF
+        mCDelayCount <= mCDelayCount +1;
       end if;
 
       -- nPeriod has units of 5ns with specified fixed point
       --acStim_nPeriod_fp6_all  := (x"17d7840000"/ stimFreqReq);
       acStim_nPeriod_fp6_all := (x"2FAF0800000"/ stimFreqReq);
+
+      -- division using combintorial logic is not so great ... but it works with a few clock cycles
+      if mCDelayCount = x"0E" then -- latch division after 150 ns
         acStim_nPeriod_fp6 <= acStim_nPeriod_fp6_all(30 downto 0); -- only take what is needed for min 10 HZ stim freq
+      elsif mCDelayCount = x"1D"then 
         acStimX200_nPeriod_fxp8 <= (acStim_nPeriod_fp6 & "00") / x"C8"; -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
+      end if;
+
 
       --  let's start with a fixed conversion 
       -- temp shift left ~8 samples per cycle
