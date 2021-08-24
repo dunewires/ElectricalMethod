@@ -52,6 +52,15 @@ proc setupEnv {} {
     puts "\n##################################################################"
     puts "#                    setupEnv                                         #"
     puts "##################################################################\n"
+ 
+    global scriptdir
+    global firmware_dir
+    global proj_sources_dir
+    global target
+    global fsbl_elf
+    global lwip_elf
+    global boot_bin
+    global hardware_loc
 
  ##select configuration   
     set target "dune"
@@ -74,7 +83,6 @@ proc setupProj {} {
     puts "##################################################################\n"
 
 
-    setupEnv
 
     #Script Configuration
     set synth 0
@@ -96,8 +104,7 @@ proc setupProj {} {
     global hardware_loc
 
     #set location of compiled soruce for flash
-
-
+    setupEnv
 
         #set top_module "top_tension_analyzer"
         set top_module "dwa_ps_pl_top"
