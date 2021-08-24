@@ -15,7 +15,7 @@ proc makeBit {} {
     puts "#                    Run Selected Implementation Processes       #"
     puts "##################################################################\n"
 
-    setup
+    setupProj
     readSource
     synth
     opt
@@ -45,11 +45,36 @@ proc rePlace {} {
    # bitgen
 }
 
-proc setup {} {
+
+
+proc setupEnv {} {
 
     puts "\n##################################################################"
-    puts "#                    Setup                                         #"
+    puts "#                    setupEnv                                         #"
     puts "##################################################################\n"
+
+ ##select configuration   
+    set target "dune"
+
+    set scriptdir [pwd]
+    set firmware_dir $scriptdir/../
+    set proj_sources_dir $firmware_dir/source/
+    #set fsbl_elf $proj_sources_dir/sdk/dwaFsbl/Debug/dwaFsbl.elf
+    #set lwip_elf $proj_sources_dir/sdk/lwip_ref/Release/lwip_ref.elf
+    set fsbl_elf $proj_sources_dir/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/boot/fsbl.elf
+    set lwip_elf $proj_sources_dir/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+    set boot_bin $firmware_dir/flash/BOOT.bin
+    set hardware_loc TCP:127.0.0.1:3124
+}
+
+proc setupProj {} {
+
+    puts "\n##################################################################"
+    puts "#                    setupProj                                         #"
+    puts "##################################################################\n"
+
+
+    setupEnv
 
     #Script Configuration
     set synth 0
@@ -72,12 +97,6 @@ proc setup {} {
 
     #set location of compiled soruce for flash
 
- ##select configuration   
-    set target "dune"
-
-    set scriptdir [pwd]
-    set firmware_dir $scriptdir/../
-    set proj_sources_dir $firmware_dir/source/
 
 
         #set top_module "top_tension_analyzer"
@@ -97,12 +116,7 @@ proc setup {} {
     set post_route_wns xxx
     set proj_dir $firmware_dir/vivadoProjects/$proj_name
    
-    #set fsbl_elf $proj_sources_dir/sdk/dwaFsbl/Debug/dwaFsbl.elf
-    #set lwip_elf $proj_sources_dir/sdk/lwip_ref/Release/lwip_ref.elf
-    set fsbl_elf $proj_sources_dir/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/boot/fsbl.elf
-    set lwip_elf $proj_sources_dir/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
-    set boot_bin $firmware_dir/flash/BOOT.bin
-    set hardware_loc TCP:127.0.0.1:3124
+
     puts "Target: $target"
     puts "FPGA Part: $part"
     puts "Scripts Directory:  $scriptdir"
@@ -348,7 +362,7 @@ proc bitgen {} {
 }
 
 proc progFlash {} {
-    setup
+    setupEnv
     global fsbl_elf
     global boot_bin
     global hardware_loc
