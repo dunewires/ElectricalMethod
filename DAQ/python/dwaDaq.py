@@ -161,8 +161,7 @@ SCAN_END = 0
 APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Storage", "Installation"]
 APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
-#MAX_WIRE_SEGMENT = 1151
-MAX_WIRE_SEGMENTS = {'G':481, 'U':1151, 'V': 1151, 'X': 480}
+MAX_WIRE_SEGMENT = 1151
 
 # FIXME: these should be read from somewhere else (DwaConfigFile)...
 DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
@@ -679,23 +678,10 @@ class MainWindow(qtw.QMainWindow):
         return entry
 
     def initTensionTable(self):
-        self.tensionData = {}
-        for layer in APA_LAYERS:
-            self.tensionData[layer] = {}
-            for side in APA_SIDES:
-                self.tensionData[layer][side] = [np.nan]*MAX_WIRE_SEGMENTS[layer]
-
-        #tensionData looks like:
-        #  {'X':{'A':[...], 'B':[...]},
-        #   'U':{'A':[...], 'B':[...]},
-        #   'V':{'A':[...], 'B':[...]},
-        #   'G':{'A':[...], 'B':[...]}
-        #  }
-                
-        #self.tensionData = {
-        #    'A':[np.nan]*MAX_WIRE_SEGMENT,
-        #    'B':[np.nan]*MAX_WIRE_SEGMENT,
-        #}
+        self.tensionData = {
+            'A':[np.nan]*MAX_WIRE_SEGMENT,
+            'B':[np.nan]*MAX_WIRE_SEGMENT,
+        }
         self.tensionTableModel = TensionTableModel(self.tensionData)
         self.tensionTableView.setModel(self.tensionTableModel)
         self.tensionTableView.resizeColumnsToContents()
@@ -1543,6 +1529,9 @@ class MainWindow(qtw.QMainWindow):
         tensionSymbolBrush = pg.mkBrush('r')
         tensionSymbolPen = pg.mkPen(width=1, color=qtg.QColor('gray'))
         tensionSymbolSize = 5
+        for layer in APA_LAYERS:
+            self.curves['tension']['tensionOfWireNumber'][layer] = {}
+            for side in APA_SIDES:
                 self.curves['tension']['tensionOfWireNumber'][layer][side] = self.tensionPlots['tensionOfWireNumber'][layer][side].plot([], pen=None, symbolBrush=tensionSymbolBrush, symbolPen=tensionSymbolPen, symbolSize=tensionSymbolSize)
         #[layer+side] = pg.ScatterPlotItem(pen=tensionPen, symbol='o', size=1)
         
