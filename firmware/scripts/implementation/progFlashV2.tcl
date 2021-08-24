@@ -8,7 +8,7 @@
 #set flashOfst 0x00c00000
 
 open_hw_manager
-connect_hw_server -url 127.0.0.1:3124 -allow_non_jtag
+connect_hw_server -url 127.0.0.1:3121 -allow_non_jtag
  ## t #jeff
     current_hw_target [get_hw_targets */xilinx_tcf/Xilinx/00001c726cd801]
     set_property PARAM.FREQUENCY 6000000 [get_hw_targets */xilinx_tcf/Xilinx/00001c726cd801]
