@@ -213,9 +213,9 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-#TAB_ACTIVE_MAIN = MainView.STIMULUS
+TAB_ACTIVE_MAIN = MainView.STIMULUS
 #TAB_ACTIVE_MAIN = MainView.RESONANCE
-TAB_ACTIVE_MAIN = MainView.TENSION
+#TAB_ACTIVE_MAIN = MainView.TENSION
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -646,6 +646,8 @@ class MainWindow(qtw.QMainWindow):
             entry[kk] = None
             
         ampFilename = os.path.join(scanDir, 'amplitudeData.json')
+        print("generateScanListEntry()")
+        print(f"  ampFilename = {ampFilename}")
         try:         # Ensure that there is an amplitudeData.json file present!
             with open(ampFilename, "r") as fh:
                 data = json.load(fh)
@@ -658,7 +660,12 @@ class MainWindow(qtw.QMainWindow):
             return entry
 
         for kk in SCAN_LIST_DATA_KEYS: # populate with useful information
-            entry[kk] = data[kk]
+            try:
+                entry[kk] = data[kk]
+            except:
+                print(f"key [{kk}] missing")
+                print(f"cannot add scan to list: {ampFilename}")
+                return entry
         return entry
 
     def initTensionTable(self):
@@ -702,7 +709,7 @@ class MainWindow(qtw.QMainWindow):
         
     def _configureAmps(self):
         self.ampData = {}  # hold amplitude vs. freq data for a scan (and metadata)
-        self.resonantFreqs = {}
+        self.resonantFreqs = {}  
         self._initResonanceFitLines()
         
         # Set default A(f) peak detection parameters
@@ -2309,6 +2316,8 @@ class MainWindow(qtw.QMainWindow):
         if ("fnOfAmpData" in self.__dict__):
             # add metadata to ampData before writing to file (this could also be done earlier)
             # FIXME: grab these values from user input
+            print("\n\nsaveAmplitudeData()")
+            print(self.ampData)
             with open(self.fnOfAmpData, 'w') as outfile:
                 json.dump(self.ampData, outfile)
             self.logger.info(f"Saved as {self.fnOfAmpData}") 
@@ -2726,9 +2735,6 @@ class MainWindow(qtw.QMainWindow):
         #self.dwaConfigFile = dcf.DwaConfigFile(self.configFile, sections=['FPGA'])
         self.dwaConfigFile = dcf.DwaConfigFile(self.configFile)
 
-        
-        #self._setScanMetadata() # FIXME: only here for debugging. Should not be here permanently
-        
         # FIXME: need to find a way to update the GUI in a thread that is not main thread....
         # right now, updating the GUI in a thread causes a crash.
         # see: https://stackoverflow.com/questions/10905981/pyqt-qobject-cannot-create-children-for-a-parent-that-is-in-a-different-thread
@@ -2786,8 +2792,8 @@ class MainWindow(qtw.QMainWindow):
 
                 
     def _clearAmplitudeData(self):
-        self.resonantFreqs = {}
-        self.ampData = {}
+        self.resonantFreqs = {}  # FIXME: this should not go here... should happen when A(f) data is loaded...
+        self.ampData = {}        # FIXME: shouldn't really reset the dict like this...
         for reg in self.registers:
             self.ampData[reg] = {'freq':[],  # stim freq in Hz
                                  'ampl':[] } # amplitude in ADC counts
@@ -2810,9 +2816,10 @@ class MainWindow(qtw.QMainWindow):
         for ptype in plotTypes:
             for ii in range(N_DWA_CHANS):
                 getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
+                getattr(self, f'pw_{ptype}_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
         self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
         self.pw_amplchan_main.setXRange(runFreqMin, runFreqMax)
-            
+
         #self.registerOfVal = {}
         #for reg in ddp.Registers:
         #    self.registerOfVal[reg.value] = reg
@@ -2834,6 +2841,7 @@ class MainWindow(qtw.QMainWindow):
         self.logger.info(f"self.fnOfReg = {self.fnOfReg}")
         self.fnOfAmpData = os.path.join(self.scanRunDataDir, "amplitudeData.json")
         #self.run = self.scanRunDataDir
+        print(f"self.fnOfAmpData = {self.fnOfAmpData}") 
         self.logger.info(f"self.fnOfAmpData = {self.fnOfAmpData}") 
 
     def startUdpReceiver(self, newdata_callback):
@@ -2884,6 +2892,8 @@ class MainWindow(qtw.QMainWindow):
                         logger.info(f'self.dwaDataParser.dwaPayload = {self.dwaDataParser.dwaPayload}')
 
                 # FIXME: this should go into processUdpPayload() !!!
+                # Since this is happening in a separate thread from the GUI
+                # you cannot edit/modify GUI elements here...
                 # If there is a run frame with no '77' key, or if this is a run start frame
                 # then this is a new run, so need to clear plots and create new filenames
                 if ddp.Frame.RUN in self.dwaDataParser.dwaPayload:
@@ -2899,9 +2909,7 @@ class MainWindow(qtw.QMainWindow):
                         if self.verbose > 0:
                             logger.info("New run detected... creating new filenames")
                         self._makeOutputFilenames()
-                        self._clearAmplitudeData()
-                        #self._clearResonanceFits()
-                        self._setScanMetadata()
+                        #self._clearAmplitudeData()  # cannot go here (in non-GUI thread)
                         if self.verbose > 0:
                             logger.info(self.fnOfReg)
                 
@@ -2912,8 +2920,8 @@ class MainWindow(qtw.QMainWindow):
                 if reg != statusFrameReg:
                     if self.verbose > 0:
                         print(f"reg = {reg}")
-                        print(f"self.fnOfReg: {self.fnOfReg}")
-                        logger.info(f"self.fnOfReg: {self.fnOfReg}")
+                        #print(f"self.fnOfReg: {self.fnOfReg}")
+                        #logger.info(f"self.fnOfReg: {self.fnOfReg}")
                     with open(self.fnOfReg[reg], 'a') as regFH:
                         for item in dataStrings:
                             regFH.write(f'{item}\n')
@@ -2962,6 +2970,11 @@ class MainWindow(qtw.QMainWindow):
                 self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.3f}")
                 self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
 
+                self._clearAmplitudeData() 
+                self._setScanMetadata()    # must come after clearAmplitudeData
+                print("\n\nSCAN START")
+                print(f"self.ampData = {self.ampData}")
+                
             #if end of scan...
             elif udpDict[ddp.Frame.RUN]['runStatus'] == SCAN_END:
                 print("\n\n SCAN IS DONE!!!")

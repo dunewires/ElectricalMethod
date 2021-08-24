@@ -10,6 +10,12 @@
     <height>1071</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>60</width>
+    <height>0</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>DWA: DUNE Wire Analyzer</string>
   </property>
@@ -289,7 +295,7 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -341,7 +347,7 @@
                   <widget class="QComboBox" name="SideComboBox">
                    <property name="minimumSize">
                     <size>
-                     <width>40</width>
+                     <width>60</width>
                      <height>0</height>
                     </size>
                    </property>
@@ -374,7 +380,7 @@
                   <widget class="QComboBox" name="configLayerComboBox">
                    <property name="minimumSize">
                     <size>
-                     <width>40</width>
+                     <width>60</width>
                      <height>0</height>
                     </size>
                    </property>
@@ -680,6 +686,9 @@
                      <width>250</width>
                      <height>16777215</height>
                     </size>
+                   </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::StrongFocus</enum>
                    </property>
                   </widget>
                  </item>
