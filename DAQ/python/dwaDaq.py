@@ -1,4 +1,13 @@
 # FIXME/TODO:
+# * fix the event viewer (directory structure has changed)
+# * may need progress bars (or other indicator) for long processes such as:
+#   - submit to db
+#   - fetch resonances to compute tension
+# * May need to thread some processes:
+#   - dB actions (submit/read)
+#   - end of scan actions (disable relays TCP/IP comm)
+#   - abort run
+#
 # * Add indication that TCP/IP communication is underway during start of scan configuration (otherwise GUI just sits idle...)
 # 
 # * Add scroll-bar to Advanced tab in Stimulus tab:
@@ -152,7 +161,8 @@ SCAN_END = 0
 APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Storage", "Installation"]
 APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
-MAX_WIRE_SEGMENT = 1151
+#MAX_WIRE_SEGMENT = 1151
+MAX_WIRE_SEGMENTS = {'G':481, 'U':1151, 'V': 1151, 'X': 480}
 
 # FIXME: these should be read from somewhere else (DwaConfigFile)...
 DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
@@ -213,9 +223,9 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-TAB_ACTIVE_MAIN = MainView.STIMULUS
+#TAB_ACTIVE_MAIN = MainView.STIMULUS
 #TAB_ACTIVE_MAIN = MainView.RESONANCE
-#TAB_ACTIVE_MAIN = MainView.TENSION
+TAB_ACTIVE_MAIN = MainView.TENSION
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -669,10 +679,23 @@ class MainWindow(qtw.QMainWindow):
         return entry
 
     def initTensionTable(self):
-        self.tensionData = {
-            'A':[np.nan]*MAX_WIRE_SEGMENT,
-            'B':[np.nan]*MAX_WIRE_SEGMENT,
-        }
+        self.tensionData = {}
+        for layer in APA_LAYERS:
+            self.tensionData[layer] = {}
+            for side in APA_SIDES:
+                self.tensionData[layer][side] = [np.nan]*MAX_WIRE_SEGMENTS[layer]
+
+        #tensionData looks like:
+        #  {'X':{'A':[...], 'B':[...]},
+        #   'U':{'A':[...], 'B':[...]},
+        #   'V':{'A':[...], 'B':[...]},
+        #   'G':{'A':[...], 'B':[...]}
+        #  }
+                
+        #self.tensionData = {
+        #    'A':[np.nan]*MAX_WIRE_SEGMENT,
+        #    'B':[np.nan]*MAX_WIRE_SEGMENT,
+        #}
         self.tensionTableModel = TensionTableModel(self.tensionData)
         self.tensionTableView.setModel(self.tensionTableModel)
         self.tensionTableView.resizeColumnsToContents()
@@ -1520,9 +1543,6 @@ class MainWindow(qtw.QMainWindow):
         tensionSymbolBrush = pg.mkBrush('r')
         tensionSymbolPen = pg.mkPen(width=1, color=qtg.QColor('gray'))
         tensionSymbolSize = 5
-        for layer in APA_LAYERS:
-            self.curves['tension']['tensionOfWireNumber'][layer] = {}
-            for side in APA_SIDES:
                 self.curves['tension']['tensionOfWireNumber'][layer][side] = self.tensionPlots['tensionOfWireNumber'][layer][side].plot([], pen=None, symbolBrush=tensionSymbolBrush, symbolPen=tensionSymbolPen, symbolSize=tensionSymbolSize)
         #[layer+side] = pg.ScatterPlotItem(pen=tensionPen, symbol='o', size=1)
         
@@ -2458,7 +2478,6 @@ class MainWindow(qtw.QMainWindow):
 
 
         #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
-        #BOBOBOB
         pointerTable = database_functions.get_pointer_table(sietch, self.ampData['apaUuid'], self.ampData['stage'])
         wirePointersAllLayers = pointerTable["data"]["wireSegments"]
         
