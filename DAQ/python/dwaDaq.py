@@ -1,4 +1,8 @@
 # FIXME/TODO:
+# * Add indication that TCP/IP communication is underway during start of scan configuration (otherwise GUI just sits idle...)
+# 
+# * udpate advAmplitude to be advStimAmplitude (vs. DigipotAmplitude)
+# 
 # * Add scroll-bar to Advanced tab in Stimulus tab:
 #   https://stackoverflow.com/questions/63228003/add-scroll-bar-into-tab-pyqt5
 #   [was:] "Advanced" tab: not all items show (below the "config file contents" text area)
@@ -2255,6 +2259,7 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def loadTensions(self):
+        print("loadTensions()")
         # Load sietch credentials #FIXME still using James's credentials
         sietch = SietchConnect("sietch.creds")
         # Get APA UUID from text box
@@ -2268,15 +2273,19 @@ class MainWindow(qtw.QMainWindow):
         self.tensionLayer = layer
 
         for side in ["A", "B"]:
+            print("apaUuid, side, layer, stage")
             print(apaUuid, side, layer, stage)
             layer_data = database_functions.get_layer_data(sietch, apaUuid, side, layer, stage)
             channels = [int(ch) for ch in layer_data.keys()]
+            print("layer_data")
             print(layer_data)
             for ch in channels:
-                print(ch)
+                print(f"ch: {ch}")
                 wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
                 measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
-                print(expected_frequencies,measured_frequencies)
+                print("expected_frequencies: {expected_frequencies}")
+                print("measured_frequencies: {measured_frequencies}")
+                #print(expected_frequencies,measured_frequencies)
                 if len(measured_frequencies) > 0:
                     mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
                     for i,w in enumerate(wires):
@@ -2374,13 +2383,20 @@ class MainWindow(qtw.QMainWindow):
         out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"])
         print(f"out = {out}")
 
+
+        #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
+        #BOBOBOB
+        pointerTable = database_functions.get_pointer_table(sietch, self.ampData['apaUuid'], self.ampData['stage'])
+        wirePointersAllLayers = pointerTable["data"]["wireSegments"]
+        
         pointer_lists = {}
         for layer in APA_LAYERS:
             pointer_lists[layer] = {}
             for side in APA_SIDES:
-                pointer_lists[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT
+                #pointer_lists[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT # BUG: shouldn't you read from db what's already there?
+                pointer_lists[layer][side] = wirePointersAllLayers[layer][side]
                 
-        pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT
+        #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
         for dwaCh, ch in enumerate(self.ampData["apaChannels"]): # Loop over channels in scan
             for w in self.ampData["wireSegments"]:
                 wire_ch = channel_map.wire_to_apa_channel(self.ampData["layer"], w)
@@ -2406,10 +2422,11 @@ class MainWindow(qtw.QMainWindow):
                         },
                     }
                     dbid = sietch.api('/test',resonance_result)
-                    pointer_list[w] = {"testId": dbid}
+                    pointer_lists[self.ampData['layer']][self.ampData['side']][w] = {"testId": dbid}
+                    #pointer_list[w] = {"testId": dbid}
 
         
-        pointer_lists[self.ampData["layer"]][self.ampData["side"]] = pointer_list  # BUG? should copy the list not reference it?
+        #pointer_lists[self.ampData["layer"]][self.ampData["side"]] = pointer_list  # BUG? should copy the list not reference it?
         record_result = {
             "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
             "formId": "wire_tension_pointer",
