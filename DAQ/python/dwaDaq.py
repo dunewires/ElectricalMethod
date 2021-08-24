@@ -161,7 +161,14 @@ DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUui
 SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid']
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
 N_RECENT_SCANS = 2
-                               
+
+TENSION_SPEC = 6.5 # Newtons
+TENSION_SPEC_MIN = TENSION_SPEC-1.0
+TENSION_SPEC_MAX = TENSION_SPEC+1.0
+TENSION_LOW_COLOR  = qtg.QColor('yellow')
+TENSION_HIGH_COLOR = qtg.QColor('red')
+TENSION_GOOD_COLOR = qtg.QColor('green')
+
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
 #    """ handle logging events -- display them in a text box in the gui"""
@@ -368,9 +375,23 @@ class TensionTableModel(qtc.QAbstractTableModel):
         self._data = data
 
     def data(self, index, role):
+        kk = list(sorted(self._data.keys()))[index.column()]
+        val =  self._data[kk][index.row()]
         if role == qtc.Qt.DisplayRole:
-            kk = list(sorted(self._data.keys()))[index.column()]
-            return self._data[kk][index.row()]
+            if val is np.nan:
+                return ""
+            else:
+                return f'{val:.3f}'
+
+        if role == qtc.Qt.BackgroundRole:
+            if val is np.nan:
+                return
+            elif val < TENSION_SPEC_MIN:
+                return TENSION_LOW_COLOR
+            elif val > TENSION_SPEC_MAX:
+                return TENSION_HIGH_COLOR
+            else:
+                return TENSION_GOOD_COLOR
 
     def rowCount(self, index):
         return len(self._data[list(self._data.keys())[0]])
@@ -379,6 +400,9 @@ class TensionTableModel(qtc.QAbstractTableModel):
         # assumes all rows are the same length!
         return len(self._data.keys())
 
+    def setData(self, dd):
+        self._data = dd  # FIXME: do we need deepcopy?
+    
     def headerData(self, section, orientation, role):
         if role == qtc.Qt.DisplayRole:
             if orientation == qtc.Qt.Horizontal:
@@ -484,10 +508,10 @@ class MainWindow(qtw.QMainWindow):
         self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
         self.runStatusHeading_label.setStyleSheet("font-weight: bold;")
         self.initRecentScanList()
+        self.initTensionTable()
         self.heartPixmaps = [qtg.QPixmap('icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
         self.heartval = 0
         self.udpListening = False
-        self.recentScansTableRowInUse = None
         self.tensionApaUuid.setText(APA_UUID_DUMMY_VAL)
         
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
@@ -530,7 +554,7 @@ class MainWindow(qtw.QMainWindow):
         self._connectSignalsSlots()
         
         # Tension Tab
-        self._configureTensions()
+        self._configureTensionTab()
 
         # Configure/label plots
         self.apaChannels = [None]*8
@@ -636,6 +660,17 @@ class MainWindow(qtw.QMainWindow):
         for kk in SCAN_LIST_DATA_KEYS: # populate with useful information
             entry[kk] = data[kk]
         return entry
+
+    def initTensionTable(self):
+        self.tensionData = {
+            'A':[np.nan]*MAX_WIRE_SEGMENT,
+            'B':[np.nan]*MAX_WIRE_SEGMENT,
+        }
+        self.tensionTableModel = TensionTableModel(self.tensionData)
+        self.tensionTableView.setModel(self.tensionTableModel)
+        self.tensionTableView.resizeColumnsToContents()
+        self.tensionTableView.resizeRowsToContents()
+        
     
     def initRecentScanList(self):
         scanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
@@ -662,6 +697,7 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
         #https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
 
+        self.recentScansTableRowInUse = None
 
         
     def _configureAmps(self):
@@ -775,15 +811,11 @@ class MainWindow(qtw.QMainWindow):
         
         self.show()
 
-    def _configureTensions(self):
+    def _configureTensionTab(self):
         for stage in APA_TESTING_STAGES:
             self.tensionStageComboBox.addItem(stage)
-        self.tensionData = {
-            'A':[0]*MAX_WIRE_SEGMENT,
-            'B':[0]*MAX_WIRE_SEGMENT,
-        }
-        
-
+        for layer in APA_LAYERS:
+            self.tensionLayerComboBox.addItem(layer)
     
     def _connectSignalsSlots(self):
         self.tabWidgetStages.currentChanged.connect(self.tabChangedStage)
@@ -805,8 +837,6 @@ class MainWindow(qtw.QMainWindow):
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensions)
         self.btnSubmitTensions.clicked.connect(self.submitTensions)
-        for layer in APA_LAYERS:
-            self.tensionLayerComboBox.addItem(layer)
         # Config Tab
         self.btnConfigureScans.clicked.connect(self.singleOrAllScans)
         for stage in APA_TESTING_STAGES:
@@ -1337,9 +1367,12 @@ class MainWindow(qtw.QMainWindow):
                 self.tensionPlots['tensionOfWireNumber'][layer][side] = self.tensionGLW.addPlot(row=irow, col=icol,
                                                                                                 title=f'{layer}{side}',
                                                                                                 labels=labels)
+                self.tensionPlots['tensionOfWireNumber'][layer][side].addItem(pg.LinearRegionItem(values=[TENSION_SPEC_MIN,TENSION_SPEC_MAX],
+                                                                                                  orientation='horizontal',
+                                                                                                  movable=False))
+                self.tensionPlots['tensionOfWireNumber'][layer][side].setYRange(3,10)
+        # # tensionSpecRegion = pg.LinearRegionItem(values=self.tensionData["GA"], orientation='horizontal',  movable=False) 
 
-        # BOBOBOBOB
-            
         # can add other kinds of plots here (e.g. histograms)
 
         
@@ -2327,13 +2360,15 @@ class MainWindow(qtw.QMainWindow):
             #self.tensionPlots[side].addItem(scatter)
             #pos = [{'pos': [i,self.tensionData[side][i]]} for i in range(len(self.tensionData[side]))]
             #scatter.setData(pos)
-
-        # FIXME: model and view should only be made once (and then updated). See Recent Scan List for example
-        self.tensionTableModel = TensionTableModel(self.tensionData)
-        self.tensionTableView.setModel(self.tensionTableModel)
-        self.tensionTableView.resizeColumnsToContents()
-        self.tensionTableView.resizeRowsToContents()
-
+            
+        # need to push new data into the tension table model and then alert the view that the data has changed
+        # FIXME: is this the best way to push new tension data into the model?
+        #  No... we want to have data for all layers...
+        #  Also, we should push data into the model and then update the plots and table from the model!
+        self.tensionTableModel.setData(self.tensionData)
+        #self.tensionTableView.resizeRowsToContents()
+        self.tensionTableModel.layoutChanged.emit()
+        self.tensionTableView.resizeColumnsToContents()  # probably don't need?
         
     def submitTensions(self):
         # Load sietch credentials #FIXME still using James's credentials
@@ -3254,6 +3289,7 @@ class MainWindow(qtw.QMainWindow):
 
         self.recentScansTableModel.insert(row, self.generateScanListEntry(scanDir, submitted=submitted))
         self.recentScansTableModel.layoutChanged.emit()
+        self.recentScansTableView.resizeColumnsToContents()
 
 
     # DEFUNCT
