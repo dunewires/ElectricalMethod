@@ -73,7 +73,7 @@ proc setupEnv {} {
     set fsbl_elf $proj_sources_dir/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/boot/fsbl.elf
     set lwip_elf $proj_sources_dir/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
     set boot_bin $firmware_dir/flash/BOOT.bin
-    set hardware_loc TCP:127.0.0.1:3124
+    set hardware_loc TCP:127.0.0.1:3121
 }
 
 proc setupProj {} {
@@ -369,16 +369,16 @@ proc bitgen {} {
 }
 
 proc progFlash {} {
-    setupEnv
+    puts "\n##################################################################"
+    puts "#                   program flash                           #"
+    puts "##################################################################\n"
+
     global fsbl_elf
     global boot_bin
     global hardware_loc
     global scriptdir
 
-    puts "\n##################################################################"
-    puts "#                   program flash                           #"
-    puts "##################################################################\n"
-
+    setupEnv
     source $scriptdir/implementation/progFlashV2.tcl
 }
 
