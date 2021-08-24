@@ -223,9 +223,3 @@ set_false_path -from [get_clocks BB_CLK] -to [get_clocks aclk]
 
 create_clock -period 10.000 -name {dwa_ps_bd_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]} -waveform {0.000 5.000} [get_pins {dwa_ps_bd_i/processing_system7_0/inst/PS7_i/FCLKCLK[0]}]
 
-set_multicycle_path -setup -from [get_pins {top_tension_analyzer_1/stimFreqReq_reg[*]/C}] -to [get_pins {top_tension_analyzer_1/acStim_nPeriod_fp6_reg[*]/D}] 15
-set_multicycle_path -setup -from [get_pins {top_tension_analyzer_1/stimFreqReq_reg[*]*/C}] -to [get_pins {top_tension_analyzer_1/acStim_nPeriod_fp6_reg[*]/D}] 15
-set_multicycle_path -hold -from [get_pins {top_tension_analyzer_1/stimFreqReq_reg[*]/C}] -to [get_pins {top_tension_analyzer_1/acStim_nPeriod_fp6_reg[*]/D}] 14
-set_multicycle_path -hold -from [get_pins {top_tension_analyzer_1/stimFreqReq_reg[*]*/C}] -to [get_pins {top_tension_analyzer_1/acStim_nPeriod_fp6_reg[*]/D}] 14
-
-
