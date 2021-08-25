@@ -1,8 +1,10 @@
 # FIXME/TODO:
 # * fix the event viewer (directory structure has changed)
+#
 # * may need progress bars (or other indicator) for long processes such as:
 #   - submit to db
 #   - fetch resonances to compute tension
+#
 # * May need to thread some processes:
 #   - dB actions (submit/read)
 #   - end of scan actions (disable relays TCP/IP comm)
@@ -18,7 +20,7 @@
 #   same for 'resonanceData.json'
 # 
 # * after scan ends:
-#   + update the V(t) plots with the last set of data
+#   + update the V(t) plots with the last set of data (in process)
 #   + disable all relays but do this in a thread and have the "thread end" signal trigger the
 #     re-activation of the "Start Scan" buttons
 #
@@ -52,6 +54,9 @@
 # * resonance lines could use "span" keyword to draw only the part of the plot that is in the peak
 #   e.g. from "baseline" to peak, as well as peak width, as in final example of:
 #   https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
+# * Single-wire spin-box: "Connect to headboard #" should be updated/defuncted when spinbox changes
+#    (not just when "configure scan list" is pushed)
+# * "Configure scan list" button should be renamed to "Configure single wire scan" if single wire is selected
 # * The new register to set an additional stimulus time for the first sample in the run,  stimTimeInitial,
 #   is a 24 bit register with the same units as the stimulus time, 2.56us, and is at address 0x2C. 
 # * Logging: is generally a mess. many log entries are printed to screen in duplicate...
@@ -222,9 +227,9 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-#TAB_ACTIVE_MAIN = MainView.STIMULUS
+TAB_ACTIVE_MAIN = MainView.STIMULUS
 #TAB_ACTIVE_MAIN = MainView.RESONANCE
-TAB_ACTIVE_MAIN = MainView.TENSION
+#TAB_ACTIVE_MAIN = MainView.TENSION
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -3027,6 +3032,7 @@ class MainWindow(qtw.QMainWindow):
                     self.radioBtns[nextBtn]=item
 
                 self.updateAmplitudePlots()
+                self.updateTimeseriesPlots()
                 self.wrapUpStimulusScan()
                 self.scanType = None
                 
@@ -3205,6 +3211,22 @@ class MainWindow(qtw.QMainWindow):
         if self.connectedToUzed and self.idle:
             self.btnScanCtrlAdv.setEnabled(True)
             
+    def updateTimeseriesPlots(self):
+        # when a scan is done, ensure that the V(t) data shows the last received data
+        # (those plots are not updated unless that tab is active)
+        #
+        ## FIXME: need to keep the last V(t) data in memory (create self.lastTimeSeriesData somewhere...)
+        #pTypes = ['grid', 'chan']
+        #for reg in self.registers:
+        #    regId = reg
+        #    for pt in pTypes:
+        #        self.curves[pt][regId].setData(self.lastTimeseriesData[regId]['times'],
+        #                                       self.lastTimeseriesData[regId]['adcVals'])
+        #    if regId == self.chanViewMain:
+        #        self.curves['chan']['main'].setData(self.lastTimeseriesData[regId]['times'],
+        #                                            self.lastTimeseriesData[regId]['adcVals'])
+        pass
+    
     def updateAmplitudePlots(self):
         # This should only update the plots on the STIMULUS tab
         # other A(f) plots are updated elsewhere
