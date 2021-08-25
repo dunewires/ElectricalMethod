@@ -219,8 +219,8 @@ unsigned int udpMacAddr;
 	if (dhcp_timoutcntr <= 0) {
 		if ((echo_netif->ip_addr.addr) == 0) {
 			xil_printf("DHCP Timeout\r\n");
-			xil_printf("Configuring default IP of 192.168.1.10\r\n");
-			IP4_ADDR(&(echo_netif->ip_addr),  192, 168,   1, 10);
+			xil_printf("Configuring default IP of 192.168.140.70\r\n");
+			IP4_ADDR(&(echo_netif->ip_addr),  192, 168,  140, 70);
 			//IP4_ADDR(&(echo_netif->ip_addr),  128, 103,   100, 173);
 			IP4_ADDR(&(echo_netif->netmask), 255, 255, 255,  0);
 			IP4_ADDR(&(echo_netif->gw),      192, 168,   1,  1);

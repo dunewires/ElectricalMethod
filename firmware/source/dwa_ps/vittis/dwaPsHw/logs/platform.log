@@ -22570,3 +22570,632 @@ TRACE::2021-08-02.11:38:06::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/du
 /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
 
 TRACE::2021-08-02.11:38:06::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:10::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:10::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:10::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:10::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:10::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:10::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:10::SCWPlatform::Do not have an existing db opened. 
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened new HwDB with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWReader::Active system found as  dwaPsHw
+TRACE::2021-08-24.22:19:11::SCWReader::Handling sysconfig dwaPsHw
+TRACE::2021-08-24.22:19:11::SCWDomain::checking for install qemu data   : 
+TRACE::2021-08-24.22:19:11::SCWDomain:: Using the QEMU Data from install at  : /home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/
+TRACE::2021-08-24.22:19:11::SCWDomain:: Using the QEMU args  from install at  : /home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/qemu_args.txt
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWReader::Boot application domain added for zynq_fsbl
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  
+TRACE::2021-08-24.22:19:11::SCWMssOS::No sw design opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::mss exists loading the mss file  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::Opened the sw design from mss  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::Adding the swdes entry /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss with des name system
+TRACE::2021-08-24.22:19:11::SCWMssOS::updating the scw layer about changes
+TRACE::2021-08-24.22:19:11::SCWMssOS::Opened the sw design.  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS:: library already available in sw design:  xilffs:4.4
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS:: library already available in sw design:  xilrsa:1.6
+TRACE::2021-08-24.22:19:11::SCWMssOS::Saving the mss changes /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::Found a swdesign opened with the mssfile.
+TRACE::2021-08-24.22:19:11::SCWMssOS::Completed writemss as part of save.
+TRACE::2021-08-24.22:19:11::SCWMssOS::Commit changes completed.
+TRACE::2021-08-24.22:19:11::SCWReader::Adding prebuilt librarypaths as   
+TRACE::2021-08-24.22:19:11::SCWReader::Adding prebuilt incpaths  as   
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWReader::No isolation master present  
+TRACE::2021-08-24.22:19:11::SCWDomain::checking for install qemu data   : 
+TRACE::2021-08-24.22:19:11::SCWDomain:: Using the QEMU Data from install at  : /home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/
+TRACE::2021-08-24.22:19:11::SCWDomain:: Using the QEMU args  from install at  : /home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/qemu_args.txt
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::No sw design opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::mss exists loading the mss file  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::Opened the sw design from mss  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::Adding the swdes entry /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss with des name system_0
+TRACE::2021-08-24.22:19:11::SCWMssOS::updating the scw layer about changes
+TRACE::2021-08-24.22:19:11::SCWMssOS::Opened the sw design.  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::Saving the mss changes /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::Found a swdesign opened with the mssfile.
+TRACE::2021-08-24.22:19:11::SCWMssOS::Completed writemss as part of save.
+TRACE::2021-08-24.22:19:11::SCWMssOS::Commit changes completed.
+TRACE::2021-08-24.22:19:11::SCWReader::Adding prebuilt librarypaths as   
+TRACE::2021-08-24.22:19:11::SCWReader::Adding prebuilt incpaths  as   
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWReader::No isolation master present  
+TRACE::2021-08-24.22:19:11::SCWDomain::checking for install qemu data   : 
+TRACE::2021-08-24.22:19:11::SCWDomain:: Using the QEMU Data from install at  : /home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/
+TRACE::2021-08-24.22:19:11::SCWDomain:: Using the QEMU args  from install at  : /home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/qemu_args.txt
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::No sw design opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::mss exists loading the mss file  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::Opened the sw design from mss  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::Adding the swdes entry /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss with des name system_1
+TRACE::2021-08-24.22:19:11::SCWMssOS::updating the scw layer about changes
+TRACE::2021-08-24.22:19:11::SCWMssOS::Opened the sw design.  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS:: library already available in sw design:  lwip211:1.3
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::Saving the mss changes /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::Found a swdesign opened with the mssfile.
+TRACE::2021-08-24.22:19:11::SCWMssOS::Completed writemss as part of save.
+TRACE::2021-08-24.22:19:11::SCWMssOS::Commit changes completed.
+TRACE::2021-08-24.22:19:11::SCWReader::Adding prebuilt librarypaths as   
+TRACE::2021-08-24.22:19:11::SCWReader::Adding prebuilt incpaths  as   
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:11::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:11::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:11::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:11::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:11::SCWReader::No isolation master present  
+LOG::2021-08-24.22:19:28::SCWPlatform::Started generating the artifacts platform dwaPsHw
+TRACE::2021-08-24.22:19:28::SCWPlatform::Sanity checking of platform is completed
+LOG::2021-08-24.22:19:28::SCWPlatform::Started generating the artifacts for system configuration dwaPsHw
+LOG::2021-08-24.22:19:28::SCWSystem::Checking the domain zynq_fsbl
+LOG::2021-08-24.22:19:28::SCWSystem::Doing application build for :  zynq_fsbl
+TRACE::2021-08-24.22:19:28::SCWBDomain::Not a forced makefile updation, No changes are present. 
+TRACE::2021-08-24.22:19:28::SCWDomain::Skipping the build for domain :  zynq_fsbl
+LOG::2021-08-24.22:19:28::SCWSystem::Checking the domain standalone_domain
+LOG::2021-08-24.22:19:28::SCWSystem::Not a boot domain 
+LOG::2021-08-24.22:19:28::SCWSystem::Checking the domain standalone_ps7_cortexa9_0
+LOG::2021-08-24.22:19:28::SCWSystem::Not a boot domain 
+LOG::2021-08-24.22:19:28::SCWSystem::Started Processing the domain standalone_domain
+TRACE::2021-08-24.22:19:28::SCWDomain::Generating domain artifcats
+TRACE::2021-08-24.22:19:28::SCWMssOS::Generating standalone artifcats
+TRACE::2021-08-24.22:19:28::SCWMssOS::Copying the qemu file from  /home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/qemu_args.txt To /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/qemu/
+TRACE::2021-08-24.22:19:28::SCWMssOS::Copying the qemu file from  /home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/qemu_args.txt To /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_domain/qemu/
+TRACE::2021-08-24.22:19:28::SCWMssOS:: Copying the user libraries. 
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:28::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:28::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::Completed writing the mss file at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp
+TRACE::2021-08-24.22:19:28::SCWMssOS::Mss edits present, copying mssfile into export location /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::bsp generated is upto date with the mss file. Skipping bsp generation.
+TRACE::2021-08-24.22:19:28::SCWMssOS::BSP is already built. skipping the bsp build ... 
+TRACE::2021-08-24.22:19:28::SCWDomain::Skipping the build for domain :  standalone_domain
+TRACE::2021-08-24.22:19:28::SCWMssOS::skipping the bsp build ... 
+TRACE::2021-08-24.22:19:28::SCWMssOS::Copying to export directory.
+TRACE::2021-08-24.22:19:28::SCWMssOS:: Checking if to create the Supporting Applications
+TRACE::2021-08-24.22:19:28::SCWMssOS:: No Linux domain exists, trying to generate FSBL 
+LOG::2021-08-24.22:19:28::SCWSystem::Completed Processing the domain standalone_domain
+LOG::2021-08-24.22:19:28::SCWSystem::Started Processing the domain standalone_ps7_cortexa9_0
+TRACE::2021-08-24.22:19:28::SCWDomain::Generating domain artifcats
+TRACE::2021-08-24.22:19:28::SCWMssOS::Generating standalone artifcats
+TRACE::2021-08-24.22:19:28::SCWMssOS::Copying the qemu file from  /home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/qemu_args.txt To /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/standalone_ps7_cortexa9_0/qemu/
+TRACE::2021-08-24.22:19:28::SCWMssOS:: Copying the user libraries. 
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:28::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:28::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::Completed writing the mss file at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp
+TRACE::2021-08-24.22:19:28::SCWMssOS::Mss edits present, copying mssfile into export location /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::bsp generated is upto date with the mss file. Skipping bsp generation.
+TRACE::2021-08-24.22:19:28::SCWMssOS::BSP is already built. skipping the bsp build ... 
+TRACE::2021-08-24.22:19:28::SCWDomain::Skipping the build for domain :  standalone_ps7_cortexa9_0
+TRACE::2021-08-24.22:19:28::SCWMssOS::skipping the bsp build ... 
+TRACE::2021-08-24.22:19:28::SCWMssOS::Copying to export directory.
+TRACE::2021-08-24.22:19:28::SCWMssOS:: Checking if to create the Supporting Applications
+TRACE::2021-08-24.22:19:28::SCWMssOS:: No Linux domain exists, trying to generate FSBL 
+LOG::2021-08-24.22:19:28::SCWSystem::Completed Processing the domain standalone_ps7_cortexa9_0
+LOG::2021-08-24.22:19:28::SCWSystem::Completed Processing the sysconfig dwaPsHw
+LOG::2021-08-24.22:19:28::SCWPlatform::Completed generating the artifacts for system configuration dwaPsHw
+TRACE::2021-08-24.22:19:28::SCWPlatform::Started preparing the platform 
+TRACE::2021-08-24.22:19:28::SCWSystem::Writing the bif file for system config dwaPsHw
+TRACE::2021-08-24.22:19:28::SCWSystem::dir created 
+TRACE::2021-08-24.22:19:28::SCWSystem::Writing the bif 
+TRACE::2021-08-24.22:19:28::SCWPlatform::Started writing the spfm file 
+TRACE::2021-08-24.22:19:28::SCWPlatform::Started writing the xpfm file 
+TRACE::2021-08-24.22:19:28::SCWPlatform::Completed generating the platform
+TRACE::2021-08-24.22:19:28::SCWMssOS::Saving the mss changes /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::Found a swdesign opened with the mssfile.
+TRACE::2021-08-24.22:19:28::SCWMssOS::Completed writemss as part of save.
+TRACE::2021-08-24.22:19:28::SCWMssOS::Commit changes completed.
+TRACE::2021-08-24.22:19:28::SCWMssOS::Saving the mss changes /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::Found a swdesign opened with the mssfile.
+TRACE::2021-08-24.22:19:28::SCWMssOS::Completed writemss as part of save.
+TRACE::2021-08-24.22:19:28::SCWMssOS::Commit changes completed.
+TRACE::2021-08-24.22:19:28::SCWMssOS::Saving the mss changes /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::Found a swdesign opened with the mssfile.
+TRACE::2021-08-24.22:19:28::SCWMssOS::Completed writemss as part of save.
+TRACE::2021-08-24.22:19:28::SCWMssOS::Commit changes completed.
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:28::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:28::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:28::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:28::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:28::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:28::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWWriter::formatted JSON is {
+	"platformName":	"dwaPsHw",
+	"sprVersion":	"2.0",
+	"mode":	"gui",
+	"dsaType":	"Fixed",
+	"platformDesc":	"dwaPsHw",
+	"platHandOff":	"/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/dwa_ps_bd_wrapper.xsa",
+	"platIntHandOff":	"<platformDir>/hw/dwa_ps_bd_wrapper.xsa",
+	"deviceType":	"zynq",
+	"platIsPrebuiltAutogen":	"false",
+	"platIsNoBootBsp":	"false",
+	"hasFsblMakeHasChanges":	"false",
+	"hasPmufwMakeHasChanges":	"false",
+	"fsblExtraCompilerFlags":	"-MMD -MP       -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard ",
+	"platPreBuiltFlag":	false,
+	"platformSamplesDir":	"",
+	"platActiveSys":	"dwaPsHw",
+	"systems":	[{
+			"systemName":	"dwaPsHw",
+			"systemDesc":	"dwaPsHw",
+			"sysIsBootAutoGen":	"true",
+			"systemDispName":	"dwaPsHw",
+			"sysActiveDom":	"standalone_ps7_cortexa9_0",
+			"sysDefaultDom":	"standalone_ps7_cortexa9_0",
+			"domains":	[{
+					"domainName":	"zynq_fsbl",
+					"domainDispName":	"zynq_fsbl",
+					"domainDesc":	"FSBL Application BSP - Auto Generated.",
+					"processors":	"ps7_cortexa9_0",
+					"os":	"standalone",
+					"sdxOs":	"standalone",
+					"debugEnable":	"",
+					"domRuntimes":	["cpp"],
+					"swRepo":	"",
+					"mssOsVer":	"7.3",
+					"mssFile":	"",
+					"md5Digest":	"e2302704085fdaa612fa4af68330ff14",
+					"compatibleApp":	"zynq_fsbl",
+					"domType":	"bootDomain",
+					"arch":	"32-bit",
+					"appSettings":	{
+						"appCompilerFlags":	"",
+						"appLinkerFlags":	""
+					},
+					"addedLibs":	["xilffs:4.4", "xilrsa:1.6"],
+					"libOptions":	{
+						"libsContainingOptions":	[]
+					},
+					"prebuiltLibs":	{
+						"prebuiltIncPath":	[],
+						"prebuiltLibPath":	[]
+					},
+					"isolation":	{
+					}
+				}, {
+					"domainName":	"standalone_domain",
+					"domainDispName":	"standalone on ps7_cortexa9_0",
+					"domainDesc":	"standalone_domain",
+					"processors":	"ps7_cortexa9_0",
+					"os":	"standalone",
+					"sdxOs":	"standalone",
+					"qemuArgs":	"/home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/qemu_args.txt",
+					"qemuData":	"/home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/",
+					"debugEnable":	"False",
+					"domRuntimes":	["cpp"],
+					"swRepo":	"",
+					"mssOsVer":	"7.3",
+					"mssFile":	"",
+					"md5Digest":	"72fe371778c1d255cdff710159362891",
+					"compatibleApp":	"",
+					"domType":	"mssDomain",
+					"appSettings":	{
+						"appCompilerFlags":	"",
+						"appLinkerFlags":	""
+					},
+					"addedLibs":	[],
+					"libOptions":	{
+						"libsContainingOptions":	[]
+					},
+					"prebuiltLibs":	{
+						"prebuiltIncPath":	[],
+						"prebuiltLibPath":	[]
+					},
+					"isolation":	{
+					}
+				}, {
+					"domainName":	"standalone_ps7_cortexa9_0",
+					"domainDispName":	"standalone_ps7_cortexa9_0",
+					"domainDesc":	"standalone_ps7_cortexa9_0",
+					"processors":	"ps7_cortexa9_0",
+					"os":	"standalone",
+					"sdxOs":	"standalone",
+					"qemuArgs":	"/home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/qemu_args.txt",
+					"qemuData":	"/home/tools/bulkDrive/Xilinx/Vitis/2020.2/data/emulation/platforms/zynq/sw/a9_standalone/qemu/",
+					"debugEnable":	"False",
+					"domRuntimes":	["cpp"],
+					"swRepo":	"",
+					"mssOsVer":	"7.3",
+					"mssFile":	"",
+					"md5Digest":	"9ace3efb24f1de9c0db0a3fbdcb10b6d",
+					"compatibleApp":	"",
+					"domType":	"mssDomain",
+					"arch":	"32-bit",
+					"appSettings":	{
+						"appCompilerFlags":	"",
+						"appLinkerFlags":	""
+					},
+					"addedLibs":	["lwip211:1.3"],
+					"libOptions":	{
+						"lwip211":	{
+							"dhcp_does_arp_check":	"true",
+							"lwip_dhcp":	"true",
+							"pbuf_pool_size":	"2048",
+							"libOptionNames":	["dhcp_does_arp_check", "lwip_dhcp", "pbuf_pool_size"]
+						},
+						"libsContainingOptions":	["lwip211"]
+					},
+					"prebuiltLibs":	{
+						"prebuiltIncPath":	[],
+						"prebuiltLibPath":	[]
+					},
+					"isolation":	{
+					}
+				}]
+		}]
+}
+KEYINFO::2021-08-24.22:19:28::SCWPlatform::updated the xpfm file.
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:28::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:28::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to open the hw design at /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA given /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA absoulate path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform::DSA directory /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Platform Path /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/hw/dwa_ps_bd_wrapper.xsa
+TRACE::2021-08-24.22:19:28::SCWPlatform:: Unique name xilinx:microzed_7020::0.0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Trying to set the existing hwdb with name dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Opened existing hwdb dwa_ps_bd_wrapper_0
+TRACE::2021-08-24.22:19:28::SCWPlatform::Found the Hw Db part of the input DSA
+TRACE::2021-08-24.22:19:28::SCWMssOS::Checking the sw design at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
+TRACE::2021-08-24.22:19:28::SCWMssOS::DEBUG:  swdes dump  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_domain/bsp/system.mss|system_0||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss|system_1||
+/home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/zynq_fsbl/zynq_fsbl_bsp/system.mss|system||
+
+TRACE::2021-08-24.22:19:28::SCWMssOS::Sw design exists and opened at  /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/dwa_ps/vittis/dwaPsHw/ps7_cortexa9_0/standalone_ps7_cortexa9_0/bsp/system.mss
