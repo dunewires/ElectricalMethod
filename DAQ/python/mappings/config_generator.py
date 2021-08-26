@@ -243,7 +243,7 @@ def configure_relays(wire_layer: str, apa_channels: list, *,
     for bus_relays in bus_relays_bottom_and_top:
         concatenated_bus_relays = 0
         for relay in bus_relays:
-            concatenated_bus_relays |= 1<<(relay-1)
+            concatenated_bus_relays |= 1<<(int(relay)-1)
         concatenated_bus_relays_bottom_and_top.append(concatenated_bus_relays)
     #print(f'concatenated_bus_relays_bottom_and_top = {concatenated_bus_relays_bottom_and_top}')
 
