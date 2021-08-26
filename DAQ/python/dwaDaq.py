@@ -1,4 +1,6 @@
 # FIXME/TODO:
+# * In automated scan, the config file gets a "statusPeriod" field, but it should only have statusPeriodSec
+# 
 # * fix the event viewer (directory structure has changed)
 #
 # * may need progress bars (or other indicator) for long processes such as:
@@ -1799,8 +1801,8 @@ class MainWindow(qtw.QMainWindow):
         if advFss: advFss = float(advFss)
         if advStimTime: advStimTime = float(advStimTime)
         if advInitDelay: advInitDelay = float(advInitDelay)
-        if advStimAmplitude: advStimAmplitude = float(advStimAmplitude)
-        if advDigipotAmplitude: advDigipotAmplitude = float(advDigipotAmplitude)
+        if advStimAmplitude: advStimAmplitude = float(advStimAmplitude) # BUG: should accept hex string, no?
+        if advDigipotAmplitude: advDigipotAmplitude = float(advDigipotAmplitude)  # BUG: should accept hex string, no?
 
         scanIndex = -1
         logging.info(self.radioBtns)
@@ -1831,6 +1833,7 @@ class MainWindow(qtw.QMainWindow):
 
         fpgaConfig = config_generator.configure_default()
         
+        #print(f"self.configLayer, channels = {self.configLayer}, {channels}")
         fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
 
         fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
@@ -1850,6 +1853,7 @@ class MainWindow(qtw.QMainWindow):
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
+        #print(f'\n\nAfter Relays:\n  fpgaConfig: {fpgaConfig}')
         
         dataConfig = {"apaChannels": self.apaChannels, "wireSegments": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
         "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
@@ -2828,8 +2832,12 @@ class MainWindow(qtw.QMainWindow):
         plotTypes = ['amplgrid', 'amplchan']
         for ptype in plotTypes:
             for ii in range(N_DWA_CHANS):
+                try:
+                    apaChan = self.apaChannels[ii]
+                except:
+                    apaChan = None
                 getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
-                getattr(self, f'pw_{ptype}_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
+                getattr(self, f'pw_{ptype}_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, apaChan))
         self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
         self.pw_amplchan_main.setXRange(runFreqMin, runFreqMax)
 

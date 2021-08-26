@@ -150,14 +150,14 @@
             <item row="6" column="0">
              <widget class="QLabel" name="dwaPB1Status">
               <property name="text">
-               <string>50V</string>
+               <string>50Vac</string>
               </property>
              </widget>
             </item>
             <item row="6" column="1">
              <widget class="QLabel" name="dwaPB2Status">
               <property name="text">
-               <string>500V</string>
+               <string>500Vdc</string>
               </property>
              </widget>
             </item>

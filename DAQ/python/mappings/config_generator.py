@@ -114,14 +114,22 @@ def configure_relays(wire_layer: str, apa_channels: list, *,
                      relay_wire_top=None, relay_wire_bot=None, relay_bus_top=None, relay_bus_bot=None):
     '''Return a dictionary of configuration values for the relays given a wire layer and the list of APA channels to be read out in that layer. Configuration values can also be provided directly, bypassing the determination based on the wire layer and list of APA channels.'''
 
+    #print('\n\nconfigure_relays:')
+    #print(f'wire_layer, apa_channels = {wire_layer}, {apa_channels}')
+    #print(f'relay_wire_top, relay_wire_bot = {relay_wire_top}, {relay_wire_bot}')
+    #print(f'relay_bus_top, relay_bus_bot   = {relay_bus_top}, {relay_bus_bot}')
+    
     def raise_incompatible_channels(message=''):
         raise ValueError('Trying to configure incompatible APA channels: ' + message)
     
     def fill_wire_relays_bottom_and_top(relays_bottom_and_top, relay):
+        #print('fill_wire_relays_bottom_and_top')
+        #print(f'relay = {relay}')
         if relay <= 64:
             relays_bottom_and_top[0].append(relay)
         else:
             relays_bottom_and_top[1].append(relay-64)
+        #print(f'relays_bottom_and_top = {relays_bottom_and_top}')
 
     wire_layer = check_valid_wire_layer(wire_layer)
 
@@ -134,7 +142,8 @@ def configure_relays(wire_layer: str, apa_channels: list, *,
     board_number = 1
     if len(apa_channels) >= 1:
         board_number = apa_channel_to_board_number(wire_layer, apa_channels[0])
-
+    #print(f'board_number = {board_number}')
+    
     for apa_channel in apa_channels:
         # Check if all APA channels are on a single head board
         if board_number != apa_channel_to_board_number(wire_layer, apa_channel):
@@ -216,18 +225,34 @@ def configure_relays(wire_layer: str, apa_channels: list, *,
     concatenated_wire_relays_bottom_and_top = []
     concatenated_bus_relays_bottom_and_top = []
 
+    #print(f'wire_relays_bottom_and_top = {wire_relays_bottom_and_top}')
     for wire_relays in wire_relays_bottom_and_top:
         concatenated_wire_relays = 0
         for relay in wire_relays:
-            concatenated_wire_relays |= 1<<(relay-1)
+            #print(f'     relay: {relay}')
+            #print(f'     type(relay) = {type(relay)}')
+            #print(f'     1<<(relay-1): {1<<(relay-1)}')
+            #print(f'     int(1)<<(int(relay)-1): {int(1)<<(int(relay)-1)}')
+            concatenated_wire_relays |= 1<<(int(relay)-1)
+            #print(f'     concatenated_wire_relays = {concatenated_wire_relays}')
+
+        #print(f' concatenated_wire_relays = {concatenated_wire_relays}')
         concatenated_wire_relays_bottom_and_top.append(concatenated_wire_relays)
+    #print(f'concatenated_wire_relays_bottom_and_top = {concatenated_wire_relays_bottom_and_top}')
     
     for bus_relays in bus_relays_bottom_and_top:
         concatenated_bus_relays = 0
         for relay in bus_relays:
             concatenated_bus_relays |= 1<<(relay-1)
         concatenated_bus_relays_bottom_and_top.append(concatenated_bus_relays)
+    #print(f'concatenated_bus_relays_bottom_and_top = {concatenated_bus_relays_bottom_and_top}')
 
+    #print(f'relay_wire_bot = {relay_wire_bot}')
+    #print(f'concatenated_wire_relays_bottom_and_top[0] = {concatenated_wire_relays_bottom_and_top[0]}')
+    #print(f'proxy for relayWireBot: ')
+    #print(f'        concatenated_wire_relays_bottom_and_top[0] (dec) = {concatenated_wire_relays_bottom_and_top[0]}')
+    #print(f'        concatenated_wire_relays_bottom_and_top[0] (hex) = {concatenated_wire_relays_bottom_and_top[0]:016X}')
+    
     relay_config = {}
     relay_config['relayWireTop'] = format(concatenated_wire_relays_bottom_and_top[1] if relay_wire_top is None else relay_wire_top, '016X') 
     relay_config['relayWireBot'] = format(concatenated_wire_relays_bottom_and_top[0] if relay_wire_bot is None else relay_wire_bot, '016X')
