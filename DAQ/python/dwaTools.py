@@ -5,8 +5,6 @@
 
 # FIXME: change print() statements to logger statements
 
-import matplotlib.pyplot as plt
-
 import sys
 import string
 import os, errno
@@ -24,6 +22,83 @@ import DwaConfigFile as dcf
 import logging
 logger = logging.getLogger(__name__)
 
+
+def getScanDataFolders(advDir=None, autoDir=None, sort=False):
+    """ return a list of the scan data folder names
+    folder: which parent folder to search in
+    autoDir: what directory to look in for Automated scans
+    advDir: what directory to look in for Advanced scans
+    sort: if True, sort the folder names by timestamp (in the folder name)
+          sorted so most recent folder is first entry in list (reverse sort...)
+    """
+
+    #print(f"autoDir = {autoDir}")
+    #print(f"advDir  = {advDir}")
+    doAuto = True if autoDir is not None else False
+    doAdv  = True if advDir  is not None else False
+
+    #scanType = scanType.upper()
+    #doAuto = True if (scanType == "AUTO" or scanType == "ALL") else False
+    #doAdv  = True if (scanType == "ADVANCED" or scanType == "ALL") else False
+    
+    scanDirs = []
+    
+    if doAdv:
+        # advanced scans are saved in:
+        #    <advDir>/<configfilename>_YYYYMMDDTHHMMSS
+        #  e.g. scanDataAdv/dwaConfigWC_20210812T100338/
+        #for ff in os.scandir(folder):
+        #    flist = glob.glob(folder)
+        #print(flist)
+        for ff in os.scandir(advDir):  # look inside scanDataAdv
+            if not ff.is_dir():
+                continue
+            try:
+                toks = ff.name.split("_")
+                scanDirs.append(os.path.join(advDir, ff.name))
+            except:
+                pass
+                
+    if doAuto:
+        # automated scans are saved in:
+        #    <autoDir>/APA_<UUID>/<LAYER>_<SIDE>_<HEADBOARD>_<list-of-wire-segments>_YYYYMMDDTHHMMS
+        #   e.g. scanData/APA_<UUID>/G_A_1_1-3-5-7-9-11-13-15_20210809T141811/
+        for ff in os.scandir(autoDir):  # look inside scanData
+            if not ff.is_dir():
+                continue
+            if not ff.name.startswith("APA_"):
+                continue
+            #print(f"ff.name = {ff.name}")
+            for fsub in os.scandir(ff):  # look inside APA_<UUID> dir
+                #print(f"    fsub.name = {fsub.name}")
+                try:
+                    toks = fsub.name.split("_")
+                    #print(f"toks = {toks}")
+                    scanDirs.append(os.path.join(autoDir, ff.name, fsub.name))
+                except:
+                    pass
+
+    if not scanDirs: # empty list?
+        return scanDirs
+                
+    if sort:
+        ts = [os.path.basename(fname).split("_")[-1] for fname in scanDirs]  # timestamps (as strings)
+        #print("\n\n")
+        #print("Pre-sorting:")
+        #print(f"  dirs = {scanDirs}")
+        #print(f"    ts = {ts}")
+        #print("\n\n")
+        
+        ts, scanDirs = zip(*sorted(zip(ts, scanDirs)))  # sort both scanDirs and ts using ts
+        ts = list(reversed(ts))
+        scanDirs = list(reversed(scanDirs))
+        #print("Post-sorting:")
+        #print(f"  dirs = {scanDirs}")
+        #print(f"    ts = {ts}")
+        
+    return scanDirs
+    
+    
 def fitSinusoidToTimeseries(yy, dt, freq_Hz):
     angFreq = 2*np.pi*freq_Hz
     tt = np.arange(len(yy)) * dt
@@ -784,7 +859,8 @@ def tcpOpen(verbose=1):
     # FIXME: move HOST to a config file
     # IP Address of microzed board
     ####HOST = '149.130.136.243'     # Wellesley Lab (MAC: 84:2b:2b:97:da:01)
-    #HOST = '140.247.132.37' # NW Lab
+    #HOST = '140.247.132.147'
+    HOST = '192.168.1.10'#home local
     #HOST = '140.247.123.186'     # J156Lab
     HOST = '149.130.136.211' # Wellesley DWA (MAC 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x03)
     PORT = 7

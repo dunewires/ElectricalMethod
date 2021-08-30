@@ -37,10 +37,12 @@ int transfer_data() {
 }
 
 void print_app_header() {
-  xil_printf("\n\r\n\r-----DUNE DWA Interface y ------\n\r");
+  xil_printf("\n\r\n\r-----DUNE DWA PSV 2021, August 24 ------\n\r");
 }
 int *ptr = 0xc2000000;
 err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
+
+
 	/* do not read the packet if we are not in ESTABLISHED state */
 	if (!p) {
 		tcp_close(tpcb);
@@ -91,6 +93,9 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) 
   // xil_printf("%10x %s\r\n", pktAddr, " pktAddr");
 
   int regIndex;
+
+  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
+		 + ((55) << 2)) = 2; //write tcp status bit to PL
 
   switch (pktType) {
   case 0xFE170000:
@@ -179,7 +184,7 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) 
       //xil_printf(" Data:  %x\n\r", pktData);
       //
       *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
-			 + (pktAddr << 2)) = pktData;
+			 + ((pktAddr+wIndex) << 2)) = pktData;
     }
     break;
 
@@ -189,6 +194,10 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) 
       break;
 
   }
+
+  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
+		 + ((55) << 2)) = 1; //write tcp status bit to PL
+
 	pbuf_free(p);
 
 	return ERR_OK;
@@ -206,6 +215,8 @@ err_t accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err) {
 
 	/* increment for subsequent accepted connections */
 	connection++;
+
+
 
 	return ERR_OK;
 }
@@ -248,6 +259,8 @@ int start_application() {
 	tcp_accept(pcb, accept_callback);
 
   xil_printf("Trigger Processor TCP server started @ port %d\n\r", port);
+  *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
+		 + ((55) << 2)) = 1; //write tcp status bit to PL
 
   //start_udp(0X8CF77BAB);
 

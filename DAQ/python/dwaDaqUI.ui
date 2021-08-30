@@ -7,8 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>1313</width>
-    <height>1065</height>
+    <height>1071</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>60</width>
+    <height>0</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>DWA: DUNE Wire Analyzer</string>
@@ -20,7 +26,7 @@
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QWidget" name="controls" native="true">
-         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,0,0,10">
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,0,0,0,10">
           <item>
            <widget class="QPushButton" name="btnDwaConnect">
             <property name="text">
@@ -39,9 +45,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_5">
+           <widget class="QLabel" name="dwaInfoHeading_label">
             <property name="text">
-             <string>DWA Status</string>
+             <string>DWA Info</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -49,18 +55,123 @@
            </widget>
           </item>
           <item>
+           <widget class="QLabel" name="dwaConnected_label">
+            <property name="text">
+             <string>Connected?</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <layout class="QFormLayout" name="formLayout_13">
             <item row="0" column="0">
+             <widget class="QLabel" name="dwaIp_label">
+              <property name="text">
+               <string>DWA IP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="dwaIp_val">
+              <property name="text">
+               <string>N/A</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="clientIp_label">
+              <property name="text">
+               <string>Client IP</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="clientIp_val">
+              <property name="text">
+               <string>N/A</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="dwaSerialNumber_label">
+              <property name="text">
+               <string>Serial #</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="dwaSerialNumber_val">
+              <property name="text">
+               <string>N/A</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="dwaFirmwareDate_label">
+              <property name="text">
+               <string>Firmware</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="dwaFirmwareDate_val">
+              <property name="text">
+               <string>N/A</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="statusFramePeriod_label">
+              <property name="text">
+               <string>Period</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QLabel" name="statusFramePeriod_val">
+              <property name="text">
+               <string>N/A</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
              <widget class="QLabel" name="dwaControllerState_label">
               <property name="text">
                <string>State</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
+            <item row="5" column="1">
              <widget class="QLabel" name="dwaControllerState_val">
               <property name="text">
                <string>N/A</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="dwaPB1Status">
+              <property name="text">
+               <string>50Vac</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QLabel" name="dwaPB2Status">
+              <property name="text">
+               <string>500Vdc</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>Heartbeat</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1">
+             <widget class="QLabel" name="heartbeat_val">
+              <property name="text">
+               <string>*</string>
               </property>
              </widget>
             </item>
@@ -77,7 +188,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label">
+           <widget class="QLabel" name="runStatusHeading_label">
             <property name="text">
              <string>Run Status</string>
             </property>
@@ -179,7 +290,7 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
-            <widget class="QTabWidget" name="tabWidget">
+            <widget class="QTabWidget" name="tabWidgetStim">
              <property name="tabPosition">
               <enum>QTabWidget::North</enum>
              </property>
@@ -192,196 +303,587 @@
               </attribute>
               <layout class="QHBoxLayout" name="horizontalLayout_6">
                <item>
-                <layout class="QVBoxLayout" name="verticalLayout_13">
-                 <item>
-                  <widget class="QPushButton" name="btnScanCtrl">
+                <layout class="QFormLayout" name="formLayout">
+                 <property name="fieldGrowthPolicy">
+                  <enum>QFormLayout::ExpandingFieldsGrow</enum>
+                 </property>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="measure_by_label">
                    <property name="text">
-                    <string>Start Scan</string>
+                    <string>Measured By</string>
                    </property>
                   </widget>
                  </item>
-                 <item>
-                  <layout class="QFormLayout" name="formLayout_2">
-                   <property name="labelAlignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 <item row="2" column="1">
+                  <widget class="QLineEdit" name="measuredByLineEdit">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
                    </property>
-                   <property name="formAlignment">
-                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                   <property name="minimumSize">
+                    <size>
+                     <width>250</width>
+                     <height>0</height>
+                    </size>
                    </property>
-                   <item row="0" column="0">
-                    <widget class="QLabel" name="freqMin_label">
+                   <property name="maximumSize">
+                    <size>
+                     <width>250</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
+                  <widget class="QLabel" name="apaSide">
+                   <property name="text">
+                    <string>Side</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1">
+                  <widget class="QComboBox" name="SideComboBox">
+                   <property name="minimumSize">
+                    <size>
+                     <width>60</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>40</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>A</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>B</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="7" column="0">
+                  <widget class="QLabel" name="layer_label">
+                   <property name="text">
+                    <string>Layer</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="7" column="1">
+                  <widget class="QComboBox" name="configLayerComboBox">
+                   <property name="minimumSize">
+                    <size>
+                     <width>60</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>40</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="9" column="0">
+                  <widget class="QLabel" name="scanTypeLabel">
+                   <property name="text">
+                    <string>Scan type</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="9" column="1">
+                  <widget class="QWidget" name="widget_7" native="true">
+                   <layout class="QHBoxLayout" name="horizontalLayout_16">
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <layout class="QGridLayout" name="gridLayout_3">
+                      <property name="leftMargin">
+                       <number>0</number>
+                      </property>
+                      <item row="0" column="0">
+                       <widget class="QRadioButton" name="configRadioAll">
+                        <property name="minimumSize">
+                         <size>
+                          <width>205</width>
+                          <height>0</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>205</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string>All wires for head board:</string>
+                        </property>
+                        <property name="checked">
+                         <bool>true</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="1">
+                       <widget class="QSpinBox" name="configHeadboardSpinBox">
+                        <property name="minimumSize">
+                         <size>
+                          <width>20</width>
+                          <height>0</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>40</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                        <property name="minimum">
+                         <number>1</number>
+                        </property>
+                        <property name="maximum">
+                         <number>10</number>
+                        </property>
+                        <property name="value">
+                         <number>1</number>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="0">
+                       <widget class="QRadioButton" name="configRadioSingle">
+                        <property name="minimumSize">
+                         <size>
+                          <width>205</width>
+                          <height>0</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>205</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string>Single APA wire segment:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="1">
+                       <widget class="QSpinBox" name="spinBox">
+                        <property name="maximumSize">
+                         <size>
+                          <width>40</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                        <property name="minimum">
+                         <number>1</number>
+                        </property>
+                        <property name="maximum">
+                         <number>100000</number>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="2">
+                       <widget class="QLabel" name="headboardLabel">
+                        <property name="text">
+                         <string>TextLabel</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item row="10" column="1">
+                  <widget class="QPushButton" name="btnConfigureScans">
+                   <property name="minimumSize">
+                    <size>
+                     <width>250</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>250</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>Configure Scan List</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="11" column="0">
+                  <widget class="QLabel" name="scanList_label">
+                   <property name="text">
+                    <string>Scans</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="11" column="1">
+                  <widget class="QTableWidget" name="scanTable">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>400</height>
+                    </size>
+                   </property>
+                   <column>
+                    <property name="text">
+                     <string>Select</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Scan #</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Wires</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Freq Min</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Freq Max</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string/>
+                    </property>
+                   </column>
+                  </widget>
+                 </item>
+                 <item row="12" column="1">
+                  <layout class="QVBoxLayout" name="verticalLayout_2">
+                   <property name="leftMargin">
+                    <number>6</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="connectLabel">
+                     <property name="minimumSize">
+                      <size>
+                       <width>250</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>250</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
                      <property name="text">
-                      <string>Freq Min [Hz]</string>
+                      <string>TextLabel</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="0" column="1">
-                    <widget class="QLabel" name="freqMin_val">
+                   <item>
+                    <widget class="QLabel" name="configureLabel">
+                     <property name="minimumSize">
+                      <size>
+                       <width>250</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>250</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
                      <property name="text">
-                      <string>.....</string>
+                      <string>TextLabel</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="1" column="0">
-                    <widget class="QLabel" name="freqMax_label">
-                     <property name="text">
-                      <string>Freq Max [Hz]</string>
+                   <item>
+                    <widget class="QLabel" name="IDLELabel">
+                     <property name="minimumSize">
+                      <size>
+                       <width>250</width>
+                       <height>0</height>
+                      </size>
                      </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="1">
-                    <widget class="QLabel" name="freqMax_val">
-                     <property name="text">
-                      <string>.....</string>
+                     <property name="maximumSize">
+                      <size>
+                       <width>250</width>
+                       <height>16777215</height>
+                      </size>
                      </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="0">
-                    <widget class="QLabel" name="freqStep_label">
                      <property name="text">
-                      <string>Freq Step [Hz]</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="1">
-                    <widget class="QLabel" name="freqStep_val">
-                     <property name="text">
-                      <string>.....</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="3" column="0">
-                    <widget class="QLabel" name="stimTime_label">
-                     <property name="text">
-                      <string>Stim Time [s]</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="3" column="1">
-                    <widget class="QLabel" name="stimTime_val">
-                     <property name="text">
-                      <string/>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="4" column="0">
-                    <widget class="QLabel" name="cycPerFreq_label">
-                     <property name="text">
-                      <string>Cycles Per Freq [dec]</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="4" column="1">
-                    <widget class="QLabel" name="cycPerFreq_val">
-                     <property name="text">
-                      <string>.....</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="5" column="0">
-                    <widget class="QLabel" name="sampPerCyc_label">
-                     <property name="text">
-                      <string>Samples per cycle [dec]</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="5" column="1">
-                    <widget class="QLabel" name="sampPerCyc_val">
-                     <property name="text">
-                      <string>.....</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="6" column="0">
-                    <widget class="QLabel" name="clientIP_label">
-                     <property name="text">
-                      <string>Client IP</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="6" column="1">
-                    <widget class="QLabel" name="clientIP_val">
-                     <property name="text">
-                      <string>.....</string>
+                      <string>TextLabel</string>
                      </property>
                     </widget>
                    </item>
                   </layout>
                  </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QFormLayout" name="formLayout">
-                 <property name="fieldGrowthPolicy">
-                  <enum>QFormLayout::ExpandingFieldsGrow</enum>
-                 </property>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="configFileName_label">
+                 <item row="13" column="1">
+                  <widget class="QPushButton" name="btnScanCtrl">
                    <property name="text">
-                    <string>Config File:</string>
+                    <string>Start next scan</string>
                    </property>
                   </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="QLineEdit" name="configFileName">
-                   <property name="autoFillBackground">
-                    <bool>false</bool>
+                  <widget class="QComboBox" name="configStageComboBox">
+                   <property name="minimumSize">
+                    <size>
+                     <width>250</width>
+                     <height>0</height>
+                    </size>
                    </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="placeholderText">
-                    <string>Config file name</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="0">
-                  <widget class="QLabel" name="omitComments_label">
-                   <property name="text">
-                    <string>Omit comments:</string>
+                   <property name="maximumSize">
+                    <size>
+                     <width>250</width>
+                     <height>16777215</height>
+                    </size>
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="1">
-                  <widget class="QCheckBox" name="omitComments_cb">
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="stage_label">
                    <property name="text">
-                    <string/>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                   <property name="tristate">
-                    <bool>false</bool>
+                    <string>Stage</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="4" column="0">
-                  <widget class="QLabel" name="configFileContents_label">
-                   <property name="text">
-                    <string>Config file contents:</string>
+                 <item row="3" column="1">
+                  <widget class="QLineEdit" name="configApaUuidLineEdit">
+                   <property name="minimumSize">
+                    <size>
+                     <width>250</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>250</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::StrongFocus</enum>
                    </property>
                   </widget>
                  </item>
-                 <item row="4" column="1">
-                  <widget class="QPlainTextEdit" name="configFileContents"/>
-                 </item>
-                 <item row="5" column="0">
-                  <widget class="QLabel" name="logFilename_label">
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="apaId_label">
                    <property name="text">
-                    <string>Log file:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="5" column="1">
-                  <widget class="QLabel" name="logFilename_val">
-                   <property name="text">
-                    <string>.....</string>
+                    <string>APA UUID</string>
                    </property>
                   </widget>
                  </item>
                 </layout>
                </item>
+               <item>
+                <spacer name="verticalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QGraphicsView" name="graphicsView"/>
+               </item>
               </layout>
+             </widget>
+             <widget class="QWidget" name="tab_3">
+              <attribute name="title">
+               <string>Advanced</string>
+              </attribute>
+              <widget class="QWidget" name="layoutWidget">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>1151</width>
+                 <height>861</height>
+                </rect>
+               </property>
+               <layout class="QFormLayout" name="formLayout_8">
+                <property name="fieldGrowthPolicy">
+                 <enum>QFormLayout::ExpandingFieldsGrow</enum>
+                </property>
+                <item row="0" column="0">
+                 <widget class="QPushButton" name="btnScanCtrlAdv">
+                  <property name="text">
+                   <string>Start Scan</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="configFileName_label">
+                  <property name="text">
+                   <string>Scan config File:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QLineEdit" name="configFileName">
+                  <property name="autoFillBackground">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="placeholderText">
+                   <string>Config file name</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="omitComments_label">
+                  <property name="text">
+                   <string>Omit comments:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QCheckBox" name="omitComments_cb">
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                  <property name="tristate">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QLabel" name="configFileContents_label">
+                  <property name="text">
+                   <string>Config file contents:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QPlainTextEdit" name="configFileContents">
+                  <property name="enabled">
+                   <bool>true</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>200</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>200</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="0">
+                 <widget class="QLabel" name="logFilename_label">
+                  <property name="text">
+                   <string>Log file:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="1">
+                 <widget class="QLabel" name="logFilename_val">
+                  <property name="text">
+                   <string>.....</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="11" column="1">
+                 <layout class="QHBoxLayout" name="horizontalLayout_10"/>
+                </item>
+                <item row="14" column="0">
+                 <widget class="QLabel" name="label_14">
+                  <property name="text">
+                   <string>Initialization delay(s)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="14" column="1">
+                 <widget class="QLineEdit" name="advInitDelayLineEdit"/>
+                </item>
+                <item row="15" column="0">
+                 <widget class="QLabel" name="label_15">
+                  <property name="text">
+                   <string>Stimulus Amplitude</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="15" column="1">
+                 <widget class="QLineEdit" name="advStimAmplitudeLineEdit"/>
+                </item>
+                <item row="13" column="1">
+                 <widget class="QLineEdit" name="advStimTimeLineEdit"/>
+                </item>
+                <item row="13" column="0">
+                 <widget class="QLabel" name="label_13">
+                  <property name="text">
+                   <string>Stimulation time (s)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="12" column="1">
+                 <widget class="QLineEdit" name="advFssLineEdit"/>
+                </item>
+                <item row="12" column="0">
+                 <widget class="QLabel" name="label_12">
+                  <property name="text">
+                   <string>Frequency step size</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="16" column="0">
+                 <widget class="QLabel" name="label_7">
+                  <property name="text">
+                   <string>Digipot Amplitude</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="16" column="1">
+                 <widget class="QLineEdit" name="advDigipotAmplitudeLineEdit"/>
+                </item>
+               </layout>
+              </widget>
              </widget>
              <widget class="QWidget" name="tab_timeseriesGrid">
               <attribute name="title">
@@ -569,40 +1071,67 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_12">
            <item>
-            <widget class="QWidget" name="widget_2" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_4">
-              <item>
-               <widget class="QPushButton" name="pb_ampDataLoad">
-                <property name="text">
-                 <string>Load Scan</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="ampDataFilename"/>
-              </item>
-             </layout>
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Recent Scans</string>
+             </property>
             </widget>
            </item>
            <item>
-            <widget class="QWidget" name="widget_5" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="1,10">
-              <item>
-               <widget class="QLabel" name="label_7">
-                <property name="text">
-                 <string>Currently viewing:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="ampDataActiveLabel">
-                <property name="text">
-                 <string>N/A</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
+            <widget class="QTableView" name="recentScansTableView">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
             </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_18">
+             <item>
+              <widget class="QPushButton" name="pb_scanDataSelectedLoad">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>1</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Load selected scan</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pb_scanDataLoad">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>1</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Load other scan</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="ampDataActiveLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>5</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Current:</string>
+               </property>
+               <property name="textInteractionFlags">
+                <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <widget class="QWidget" name="widget_3" native="true">
@@ -744,21 +1273,7 @@
                  <item>
                   <widget class="QLabel" name="label_9">
                    <property name="text">
-                    <string>Tune Fit Parameters (find_peaks)</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QCheckBox" name="resFitPreDetrend">
-                   <property name="text">
-                    <string>Linear detrend raw A(f)</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="label_12">
-                   <property name="text">
-                    <string>Peak-finding of integrated signal</string>
+                    <string>Tune Fit Parameters</string>
                    </property>
                   </widget>
                  </item>
@@ -767,35 +1282,52 @@
                    <property name="horizontalSpacing">
                     <number>6</number>
                    </property>
-                   <item row="1" column="0">
+                   <item row="1" column="1">
+                    <widget class="QCheckBox" name="resFitPreDetrend">
+                     <property name="text">
+                      <string>Detrend A(f)</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="0">
                     <widget class="QLabel" name="label_8">
                      <property name="text">
                       <string>Baseline poly</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="1" column="1">
+                   <item row="2" column="1">
                     <widget class="QLineEdit" name="resFitBkgPoly"/>
                    </item>
-                   <item row="2" column="0">
+                   <item row="3" column="0">
                     <widget class="QLabel" name="label_10">
                      <property name="text">
                       <string>Width</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="2" column="1">
+                   <item row="3" column="1">
                     <widget class="QLineEdit" name="resFitWidth"/>
                    </item>
-                   <item row="3" column="0">
+                   <item row="4" column="0">
                     <widget class="QLabel" name="label_11">
                      <property name="text">
                       <string>Prominence</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="3" column="1">
+                   <item row="4" column="1">
                     <widget class="QLineEdit" name="resFitProminence"/>
+                   </item>
+                   <item row="5" column="0">
+                    <widget class="QLabel" name="label_16">
+                     <property name="text">
+                      <string>kwargs</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="5" column="1">
+                    <widget class="QLineEdit" name="resFitKwargs"/>
                    </item>
                   </layout>
                  </item>
@@ -812,111 +1344,216 @@
              </layout>
             </widget>
            </item>
-           <item>
-            <layout class="QGridLayout" name="gridOfFits_2"/>
-           </item>
           </layout>
          </widget>
          <widget class="QWidget" name="tabTension">
           <attribute name="title">
            <string>Tensions</string>
           </attribute>
-          <widget class="QTabWidget" name="tabWidget_2">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>100</y>
-             <width>1151</width>
-             <height>561</height>
-            </rect>
-           </property>
-           <property name="currentIndex">
-            <number>0</number>
-           </property>
-           <widget class="QWidget" name="tab">
-            <attribute name="title">
-             <string>Table</string>
-            </attribute>
-            <widget class="QTableView" name="tensionTableView">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>10</y>
-               <width>601</width>
-               <height>511</height>
-              </rect>
+          <layout class="QVBoxLayout" name="verticalLayout_13">
+           <item>
+            <layout class="QFormLayout" name="formLayout_2">
+             <item row="0" column="0">
+              <widget class="QLabel" name="apaUuidLabel">
+               <property name="text">
+                <string>APA UUID</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLineEdit" name="tensionApaUuid">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>300</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>300</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="autoFillBackground">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="tensionStageLabel">
+               <property name="text">
+                <string>Stage</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QComboBox" name="tensionStageComboBox">
+               <property name="minimumSize">
+                <size>
+                 <width>300</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>300</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="tensionLayerLabel">
+               <property name="text">
+                <string>Layer</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QComboBox" name="tensionLayerComboBox">
+               <property name="minimumSize">
+                <size>
+                 <width>80</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>40</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QPushButton" name="btnLoadTensions">
+               <property name="minimumSize">
+                <size>
+                 <width>300</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>300</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Fetch Resonances and Compute Tensions</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QTabWidget" name="tabWidget_2">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>500</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>500</height>
+              </size>
+             </property>
+             <property name="currentIndex">
+              <number>1</number>
+             </property>
+             <widget class="QWidget" name="tab">
+              <attribute name="title">
+               <string>Table</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_17">
+               <item>
+                <widget class="QTableView" name="tensionTableView">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>400</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>400</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_2">
+              <attribute name="title">
+               <string>Graphs</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_18">
+               <item>
+                <widget class="GraphicsLayoutWidget" name="tensionGLW">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btnSubmitTensions">
+             <property name="minimumSize">
+              <size>
+               <width>300</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>300</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Submit Tensions to DB</string>
              </property>
             </widget>
-           </widget>
-           <widget class="QWidget" name="tab_2">
-            <attribute name="title">
-             <string>Graphs</string>
-            </attribute>
-            <widget class="GraphicsLayoutWidget" name="tensionGLW">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>10</y>
-               <width>1131</width>
-               <height>521</height>
-              </rect>
-             </property>
+           </item>
+           <item>
+            <widget class="QWidget" name="widget_4" native="true">
+             <layout class="QHBoxLayout" name="horizontalLayout_7"/>
             </widget>
-           </widget>
-          </widget>
-          <widget class="QWidget" name="widget_4" native="true">
-           <property name="geometry">
-            <rect>
-             <x>9</x>
-             <y>645</y>
-             <width>18</width>
-             <height>18</height>
-            </rect>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_7"/>
-          </widget>
-          <widget class="QPushButton" name="btnLoadTensions">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>62</y>
-             <width>131</width>
-             <height>23</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>Load</string>
-           </property>
-          </widget>
-          <widget class="QLineEdit" name="pointerTableApaUuid">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>10</y>
-             <width>133</width>
-             <height>20</height>
-            </rect>
-           </property>
-           <property name="autoFillBackground">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="placeholderText">
-            <string>APA Number</string>
-           </property>
-          </widget>
-          <widget class="QComboBox" name="tensionStageComboBox">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>36</y>
-             <width>131</width>
-             <height>20</height>
-            </rect>
-           </property>
-          </widget>
+           </item>
+          </layout>
          </widget>
          <widget class="QWidget" name="tabLog">
           <attribute name="title">

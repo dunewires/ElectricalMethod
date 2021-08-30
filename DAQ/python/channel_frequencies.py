@@ -1,3 +1,6 @@
+import numpy as np
+from scipy import optimize
+
 class PhysicalWire():
     """A physical wire that is soldered at both ends."""
     
@@ -151,7 +154,7 @@ def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
         wire_freqs = []
         for length in l_physical_wire_X[channel_number-1].lengths():
             wire_freqs.append(length_to_frequency(length))
-        channel_freqs[f'wire_{len(channel_freqs)+1}'] = wire_freqs
+        channel_freqs[f'{channel_number}'] = wire_freqs
 
     if wire_layer == 'V':
         for index,wire in enumerate(l_physical_wire_V):
@@ -159,7 +162,7 @@ def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
                 wire_freqs = []
                 for length in wire.lengths():
                     wire_freqs.append(length_to_frequency(length))
-                channel_freqs[f'wire_{len(channel_freqs)+1}'] = wire_freqs
+                channel_freqs[f'{index+1}'] = wire_freqs
 
     if wire_layer == 'U':
         for index,wire in enumerate(l_physical_wire_U):
@@ -167,13 +170,13 @@ def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
                 wire_freqs = []
                 for length in wire.lengths():
                     wire_freqs.append(length_to_frequency(length))
-                channel_freqs[f'wire_{len(channel_freqs)+1}'] = wire_freqs
+                channel_freqs[f'{index+1}'] = wire_freqs
     
     if wire_layer == 'G':
         wire_freqs = []
         for length in l_physical_wire_G[channel_number-1].lengths():
             wire_freqs.append(length_to_frequency(length))
-        channel_freqs[f'wire_{len(channel_freqs)+1}'] = wire_freqs
+        channel_freqs[f'{channel_number}'] = wire_freqs
     
     return channel_freqs
 
@@ -192,3 +195,138 @@ def all_apa_frequencies():
         all_freqs['layer_G'][f'channel_{channel_number+1}'] = channel_frequencies_per_wire('G',channel_number+1)
 
     return all_freqs
+
+
+def wire_frequencies_from_channels(wire_layer: str, channel_numbers: list):
+    """Return a dictionary where the keys are the wire numbers for the given channels and the values are their resonance frequency."""
+    allwires = {}
+    for ch in channel_numbers:
+        allwires.update(channel_frequencies_per_wire(wire_layer, ch))
+    return allwires
+
+def closest_index_to(arr, val):
+    """Helper function that returns the the index of arr that contains the value closest to val"""
+    closestVal = 9e9
+    closestInd = 0
+    for i,e in enumerate(arr):
+        if abs(e-val) < closestVal:
+            closestVal = abs(e-val)
+            closestInd = i
+    return closestInd
+
+def wire_range_data(wire_freq_data, range_radius = 0.15):
+    """
+    Converts the frequency data into a list of frequency range dictionaries. Ex: {"wireSegments": [23], "range": [60,80]}.
+    The radius of the range is set by range_radius
+    """
+    range_data = []
+    for w in wire_freq_data:
+        i = closest_index_to(wire_freq_data[w],70)
+        f = wire_freq_data[w][i]
+        f_range = [round(f*(1-range_radius),2), round(f*(1+range_radius),2)]
+        range_data.append({"wireSegments": [int(w)], "range": f_range})
+    return range_data
+
+def combine_range_data(range_data_a, range_data_b):
+    """
+    Combine multiple sets of wire_range_data and merge the frequency ranges.
+    """
+    wires_a = range_data_a["wireSegments"]
+    wires_b = range_data_b["wireSegments"]
+    range_a = range_data_a["range"]
+    range_b = range_data_b["range"]
+    if (range_a[1] > range_b[0] and range_a[0] < range_b[1]) or (range_b[1] > range_a[0] and range_b[0] < range_a[1]):
+        return [{"wireSegments": wires_a + wires_b,
+                "range": [min(range_a[0], range_b[0]), max(range_a[1], range_b[1])]
+                }]
+    else: return [range_data_a, range_data_b]
+        
+
+def reduce_range_data(range_data):
+    """
+    Takes a list of range data dictionaries and keeps combining entries until they have been fully reduced.
+    """
+    if len(range_data)<1: return []
+    reduced_range_data = [range_data[0]]
+    for i, range_data_a in enumerate(range_data):
+        if i == 0: continue
+        # Loop over rangeData in reduced_range_data to try to find a range it combines with
+        overlap_index = -1
+        for j, range_data_b in enumerate(reduced_range_data):
+            combined = combine_range_data(range_data_a, range_data_b)
+            if len(combined) == 1: 
+                overlap_index = j
+        if overlap_index >= 0: # overlap found, combine them
+            reduced_range_data[overlap_index] = combine_range_data(range_data_a, reduced_range_data[overlap_index])[0]
+        else: # no overlap found, add it
+            reduced_range_data.append(range_data_a)
+        
+    return reduced_range_data
+    
+def cull_range_data(reduced_range_data, thresh = 1000.):
+    """Remove entries from the list of range data dictionaries that feature a frequency above threshhold."""
+    # Eliminate frequency ranges from reduced_range_data that cannot be achieved
+    culled_range_data = []
+    for rangeData in reduced_range_data:
+        if rangeData["range"][1] <= thresh:
+            rangeData["wireSegments"] = sorted(rangeData["wireSegments"])
+            culled_range_data.append(rangeData)
+    return culled_range_data
+
+def append_channel_info(culled_range_data, channel_numbers):
+    """Adds the list of channels to each range_data dictionary"""
+    range_data_with_channel_info = []
+    for rangeData in culled_range_data:
+        rangeData["apaChannels"] = channel_numbers
+        range_data_with_channel_info.append(rangeData)
+    return range_data_with_channel_info
+        
+def get_range_data_for_channels(wire_layer: str, channel_numbers: list, range_radius = 0.15):
+    """
+    Produces a full reduced and culled set of frequency range dictionaries for a set of channels.
+    """
+    wire_freq_data = wire_frequencies_from_channels(wire_layer, channel_numbers)
+    range_data = wire_range_data(wire_freq_data, range_radius)
+    reduced_range_data = reduce_range_data(range_data)
+    culled_range_data = cull_range_data(reduced_range_data)
+    range_data_with_channel_info = append_channel_info(culled_range_data, channel_numbers)
+    return range_data_with_channel_info
+
+def compute_tensions_from_resonances(wire_freqs_expected, freqs_measured):
+    '''Return a list of wire tensions given the expected and measured frequencies in an APA channel. The expected frequencies are to be given as a list of lists of frequencies, with each inner list corresponding to the frequencies associated to a single wire in that APA channel. The order of these inner wire lists determine the order of the returned wire tensions. The expected frequencies must only be given for frequency ranges that have been measured. The measured frequencies are to be given as an overall list of measured frequencies for that APA channel.'''
+
+    NOMINAL_TENSION = 6.5
+
+    def assignment_cost(x):
+        wire_freqs_expected_array = np.array([freq*x[i] for i, freqs in enumerate(wire_freqs_expected) for freq in freqs])
+        wire_freqs_measured_array = np.array([freq for freq in freqs_measured])
+        
+        cost_matrix = np.abs(np.subtract.outer(wire_freqs_expected_array, wire_freqs_measured_array))
+
+        row_index, col_index = optimize.linear_sum_assignment(cost_matrix)
+
+        return cost_matrix[row_index, col_index].sum()
+
+    val = optimize.minimize(assignment_cost, (1,)*len(wire_freqs_expected))
+
+    return (val.x**2 * NOMINAL_TENSION).tolist()
+
+def get_expected_resonances(wire_layer, channel, thresh = 1000.):
+    '''
+    Return a pair of lists
+    List 1: A list of the wires associated with a channel
+    List 2: A list of lists, with each sublist at index i corresponding to the resonances of the wire at index i of List 1. 
+    '''
+    freqs = wire_frequencies_from_channels(wire_layer, [channel])
+    freqs_in_range = {}
+    for w in freqs:
+        for res in freqs[w]:
+            if res<thresh:
+                if w in freqs_in_range.keys():
+                    freqs_in_range[w].append(res)
+                else:
+                    freqs_in_range[w] = [res]
+ 
+    return [int(w) for w in freqs_in_range], [freqs_in_range[w] for w in freqs_in_range]
+
+

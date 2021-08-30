@@ -35,3 +35,10 @@ platform clean
 platform generate
 platform generate
 platform generate
+platform generate
+platform generate
+platform generate
+platform generate
+platform generate
+platform active {dwaPsHw}
+platform generate -domains 

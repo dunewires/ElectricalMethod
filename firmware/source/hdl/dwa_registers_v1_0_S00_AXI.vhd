@@ -164,6 +164,7 @@ architecture arch_imp of dwa_registers_v1_0_S00_AXI is
 	signal slv_reg50       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg53       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg54       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg55       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg_rden    : std_logic;
 	signal slv_reg_wren    : std_logic;
 	signal reg_data_out    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
@@ -323,6 +324,7 @@ begin
 				slv_reg50 <= x"BADDBEEF";
 				slv_reg53 <= x"00000000"; -- 00000000 = power up off, 0005F5E1 = 1 sec
 				slv_reg54 <= x"00B2D05E"; -- 30 SEC
+				slv_reg55 <= (others => '0');
 			else
 				loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 				if (slv_reg_wren = '1') then
@@ -727,6 +729,16 @@ begin
 									slv_reg54(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
+
+						when b"110111" => --  reg 55 is used for PS network status in fromDaq direction, and controller state in toDaq direction
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg55(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
+
 							fromDaqReg.serNumMemWrite <= '1'; -- signal dwa this register was updated
 						when others =>
 							slv_reg0  <= slv_reg0;
@@ -778,6 +790,7 @@ begin
 							slv_reg50 <= slv_reg50;
 							slv_reg53 <= slv_reg53;
 							slv_reg54 <= slv_reg54;
+							slv_reg55 <= slv_reg55;
 					end case;
 				end if;
 			end if;
@@ -997,8 +1010,10 @@ begin
 				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.statusPeriod);
 			when b"110110" => --reg 54
 				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.pktGenWatchdogPeriod);
-			when b"110111" => --controller state reg 55
+			when b"110111" => --controller state reg 55 for read by daq (read only)  PS net status is used in fromdaq
 				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pktGenStateDbg);
+			when b"111000" => --reg 56 pButton
+				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;
@@ -1097,6 +1112,7 @@ begin
 	fromDaqReg.serNumMemData    <= unsigned(slv_reg50);
 	fromDaqReg.serNum           <= toDaqReg.serNum;
 
+	fromDaqReg.netStatus <= slv_reg55(7 downto 0); -- also used for controller status in toDaq direction
 	-- User logic ends
 
 end arch_imp;

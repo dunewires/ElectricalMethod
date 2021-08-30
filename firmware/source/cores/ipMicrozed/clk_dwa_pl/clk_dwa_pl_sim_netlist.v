@@ -1,8 +1,8 @@
 // Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2020.2 (lin64) Build 3064766 Wed Nov 18 09:12:47 MST 2020
-// Date        : Wed Mar 24 19:02:24 2021
-// Host        : pc0 running 64-bit CentOS Linux release 8.3.2011
+// Date        : Wed Jul  7 19:33:26 2021
+// Host        : pc0 running 64-bit CentOS Linux release 8.4.2105
 // Command     : write_verilog -force -mode funcsim
 //               /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ipMicrozed/clk_dwa_pl/clk_dwa_pl_sim_netlist.v
 // Design      : clk_dwa_pl
@@ -18,6 +18,7 @@ module clk_dwa_pl
     clk_out2,
     clk_out3,
     clk_out4,
+    clk_out5,
     reset,
     locked,
     clk_in1);
@@ -25,6 +26,7 @@ module clk_dwa_pl
   output clk_out2;
   output clk_out3;
   output clk_out4;
+  output clk_out5;
   input reset;
   output locked;
   input clk_in1;
@@ -34,6 +36,7 @@ module clk_dwa_pl
   wire clk_out2;
   wire clk_out3;
   wire clk_out4;
+  wire clk_out5;
   wire locked;
   wire reset;
 
@@ -43,6 +46,7 @@ module clk_dwa_pl
         .clk_out2(clk_out2),
         .clk_out3(clk_out3),
         .clk_out4(clk_out4),
+        .clk_out5(clk_out5),
         .locked(locked),
         .reset(reset));
 endmodule
@@ -53,6 +57,7 @@ module clk_dwa_pl_clk_dwa_pl_clk_wiz
     clk_out2,
     clk_out3,
     clk_out4,
+    clk_out5,
     reset,
     locked,
     clk_in1);
@@ -60,6 +65,7 @@ module clk_dwa_pl_clk_dwa_pl_clk_wiz
   output clk_out2;
   output clk_out3;
   output clk_out4;
+  output clk_out5;
   input reset;
   output locked;
   input clk_in1;
@@ -74,6 +80,8 @@ module clk_dwa_pl_clk_dwa_pl_clk_wiz
   wire clk_out3_clk_dwa_pl;
   wire clk_out4;
   wire clk_out4_clk_dwa_pl;
+  wire clk_out5;
+  wire clk_out5_clk_dwa_pl;
   wire clkfbout_buf_clk_dwa_pl;
   wire clkfbout_clk_dwa_pl;
   wire locked;
@@ -85,7 +93,6 @@ module clk_dwa_pl_clk_dwa_pl_clk_wiz
   wire NLW_mmcm_adv_inst_CLKOUT1B_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKOUT2B_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKOUT3B_UNCONNECTED;
-  wire NLW_mmcm_adv_inst_CLKOUT4_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED;
   wire NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED;
   wire NLW_mmcm_adv_inst_DRDY_UNCONNECTED;
@@ -117,6 +124,10 @@ module clk_dwa_pl_clk_dwa_pl_clk_wiz
        (.I(clk_out4_clk_dwa_pl),
         .O(clk_out4));
   (* BOX_TYPE = "PRIMITIVE" *) 
+  BUFG clkout5_buf
+       (.I(clk_out5_clk_dwa_pl),
+        .O(clk_out5));
+  (* BOX_TYPE = "PRIMITIVE" *) 
   MMCME2_ADV #(
     .BANDWIDTH("OPTIMIZED"),
     .CLKFBOUT_MULT_F(10.000000),
@@ -128,20 +139,20 @@ module clk_dwa_pl_clk_dwa_pl_clk_wiz
     .CLKOUT0_DUTY_CYCLE(0.500000),
     .CLKOUT0_PHASE(0.000000),
     .CLKOUT0_USE_FINE_PS("FALSE"),
-    .CLKOUT1_DIVIDE(5),
+    .CLKOUT1_DIVIDE(3),
     .CLKOUT1_DUTY_CYCLE(0.500000),
     .CLKOUT1_PHASE(0.000000),
     .CLKOUT1_USE_FINE_PS("FALSE"),
-    .CLKOUT2_DIVIDE(10),
+    .CLKOUT2_DIVIDE(5),
     .CLKOUT2_DUTY_CYCLE(0.500000),
     .CLKOUT2_PHASE(0.000000),
     .CLKOUT2_USE_FINE_PS("FALSE"),
-    .CLKOUT3_DIVIDE(100),
+    .CLKOUT3_DIVIDE(10),
     .CLKOUT3_DUTY_CYCLE(0.500000),
     .CLKOUT3_PHASE(0.000000),
     .CLKOUT3_USE_FINE_PS("FALSE"),
     .CLKOUT4_CASCADE("FALSE"),
-    .CLKOUT4_DIVIDE(1),
+    .CLKOUT4_DIVIDE(100),
     .CLKOUT4_DUTY_CYCLE(0.500000),
     .CLKOUT4_PHASE(0.000000),
     .CLKOUT4_USE_FINE_PS("FALSE"),
@@ -183,7 +194,7 @@ module clk_dwa_pl_clk_dwa_pl_clk_wiz
         .CLKOUT2B(NLW_mmcm_adv_inst_CLKOUT2B_UNCONNECTED),
         .CLKOUT3(clk_out4_clk_dwa_pl),
         .CLKOUT3B(NLW_mmcm_adv_inst_CLKOUT3B_UNCONNECTED),
-        .CLKOUT4(NLW_mmcm_adv_inst_CLKOUT4_UNCONNECTED),
+        .CLKOUT4(clk_out5_clk_dwa_pl),
         .CLKOUT5(NLW_mmcm_adv_inst_CLKOUT5_UNCONNECTED),
         .CLKOUT6(NLW_mmcm_adv_inst_CLKOUT6_UNCONNECTED),
         .DADDR({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),

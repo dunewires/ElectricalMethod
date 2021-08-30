@@ -1,8 +1,9 @@
 import socket
-import nmap
-import getmac
+#import nmap
+#import getmac
 import urllib.request
-
+import os
+import sys
 from channel_map import *
 
 
@@ -59,7 +60,7 @@ def configure_fixed_frequency(stim_freq_req=90):
     '''Return a dictionary of a configuration value for the fixed stimulus frequency given an input frequency value in hertz.'''
     # TODO change unit_factor to 256 after firmware change
     
-    unit_factor = 16
+    unit_factor = 256
     return {'stimFreqReq': format(int(stim_freq_req * unit_factor), '06X')}
 
 
@@ -67,7 +68,7 @@ def configure_scan_frequencies(stim_freq_min, stim_freq_max, stim_freq_step=1/16
     '''Return a dictionary of configuration values for the scan stimulus frequencies, i.e. the scan minimum and maximum frequencies and the scan frequency step size, given input frequency values in hertz.'''
     # TODO change unit_factor to 256 after firmware change
     
-    unit_factor = 16
+    unit_factor = 256
 
     if stim_freq_min > stim_freq_max:
         raise ValueError('Scan minimum frequency is larger than scan maximum frequency.')
@@ -77,7 +78,7 @@ def configure_scan_frequencies(stim_freq_min, stim_freq_max, stim_freq_step=1/16
             'stimFreqStep': format(int(stim_freq_step * unit_factor), '06X')}
 
 
-def configure_wait_times(stim_time_initial=2, stim_time=0.1):
+def configure_wait_times(stim_time_initial=2, stim_time=0.5):
     '''Return a dictionary of configuration values for the initial and subsequent stimulus wait times given input time values in seconds.'''
     
     unit_factor = 1/2.56e-6
@@ -85,14 +86,14 @@ def configure_wait_times(stim_time_initial=2, stim_time=0.1):
             'stimTime': format(int(stim_time * unit_factor), '06X')}
 
 
-def configure_gains(stim_freq_max, *,
+def configure_gains(stim_freq_max: int, *,
                     stim_mag=None, digipot=None):
     '''Return a dictionary of configuration values for the gains of the stimulus amplitude and read-out signals given the scan maximum frequency in hertz. Configuration values can also be provided directly, bypassing the determination based on the scan maximum frequency.'''
 
     digipot_config_single = 0xFF
 
     if stim_freq_max > 200:
-        digipot_config_single -= (stim_freq_max-200)//4
+        digipot_config_single -= int((stim_freq_max-200)//4)
     
     digipot_config = digipot_config_single
     for index in range(7):
@@ -113,14 +114,22 @@ def configure_relays(wire_layer: str, apa_channels: list, *,
                      relay_wire_top=None, relay_wire_bot=None, relay_bus_top=None, relay_bus_bot=None):
     '''Return a dictionary of configuration values for the relays given a wire layer and the list of APA channels to be read out in that layer. Configuration values can also be provided directly, bypassing the determination based on the wire layer and list of APA channels.'''
 
+    #print('\n\nconfigure_relays:')
+    #print(f'wire_layer, apa_channels = {wire_layer}, {apa_channels}')
+    #print(f'relay_wire_top, relay_wire_bot = {relay_wire_top}, {relay_wire_bot}')
+    #print(f'relay_bus_top, relay_bus_bot   = {relay_bus_top}, {relay_bus_bot}')
+    
     def raise_incompatible_channels(message=''):
         raise ValueError('Trying to configure incompatible APA channels: ' + message)
     
     def fill_wire_relays_bottom_and_top(relays_bottom_and_top, relay):
+        #print('fill_wire_relays_bottom_and_top')
+        #print(f'relay = {relay}')
         if relay <= 64:
             relays_bottom_and_top[0].append(relay)
         else:
             relays_bottom_and_top[1].append(relay-64)
+        #print(f'relays_bottom_and_top = {relays_bottom_and_top}')
 
     wire_layer = check_valid_wire_layer(wire_layer)
 
@@ -133,11 +142,12 @@ def configure_relays(wire_layer: str, apa_channels: list, *,
     board_number = 1
     if len(apa_channels) >= 1:
         board_number = apa_channel_to_board_number(wire_layer, apa_channels[0])
-
+    #print(f'board_number = {board_number}')
+    
     for apa_channel in apa_channels:
         # Check if all APA channels are on a single head board
         if board_number != apa_channel_to_board_number(wire_layer, apa_channel):
-            raise_incompatible_channels(' channels are associated to more than one head board.')
+            raise_incompatible_channels(' channels are associated with more than one head board.')
         
         # Add wire signal relays
         fill_wire_relays_bottom_and_top(wire_signal_relays_bottom_and_top,
@@ -215,18 +225,34 @@ def configure_relays(wire_layer: str, apa_channels: list, *,
     concatenated_wire_relays_bottom_and_top = []
     concatenated_bus_relays_bottom_and_top = []
 
+    #print(f'wire_relays_bottom_and_top = {wire_relays_bottom_and_top}')
     for wire_relays in wire_relays_bottom_and_top:
         concatenated_wire_relays = 0
         for relay in wire_relays:
-            concatenated_wire_relays |= 1<<(relay-1)
+            #print(f'     relay: {relay}')
+            #print(f'     type(relay) = {type(relay)}')
+            #print(f'     1<<(relay-1): {1<<(relay-1)}')
+            #print(f'     int(1)<<(int(relay)-1): {int(1)<<(int(relay)-1)}')
+            concatenated_wire_relays |= 1<<(int(relay)-1)
+            #print(f'     concatenated_wire_relays = {concatenated_wire_relays}')
+
+        #print(f' concatenated_wire_relays = {concatenated_wire_relays}')
         concatenated_wire_relays_bottom_and_top.append(concatenated_wire_relays)
+    #print(f'concatenated_wire_relays_bottom_and_top = {concatenated_wire_relays_bottom_and_top}')
     
     for bus_relays in bus_relays_bottom_and_top:
         concatenated_bus_relays = 0
         for relay in bus_relays:
-            concatenated_bus_relays |= 1<<(relay-1)
+            concatenated_bus_relays |= 1<<(int(relay)-1)
         concatenated_bus_relays_bottom_and_top.append(concatenated_bus_relays)
+    #print(f'concatenated_bus_relays_bottom_and_top = {concatenated_bus_relays_bottom_and_top}')
 
+    #print(f'relay_wire_bot = {relay_wire_bot}')
+    #print(f'concatenated_wire_relays_bottom_and_top[0] = {concatenated_wire_relays_bottom_and_top[0]}')
+    #print(f'proxy for relayWireBot: ')
+    #print(f'        concatenated_wire_relays_bottom_and_top[0] (dec) = {concatenated_wire_relays_bottom_and_top[0]}')
+    #print(f'        concatenated_wire_relays_bottom_and_top[0] (hex) = {concatenated_wire_relays_bottom_and_top[0]:016X}')
+    
     relay_config = {}
     relay_config['relayWireTop'] = format(concatenated_wire_relays_bottom_and_top[1] if relay_wire_top is None else relay_wire_top, '016X') 
     relay_config['relayWireBot'] = format(concatenated_wire_relays_bottom_and_top[0] if relay_wire_bot is None else relay_wire_bot, '016X')
@@ -282,12 +308,22 @@ def configure_default():
     '''Return a dictionary with default values for all configuration parameters.'''
     
     configs = configure_ip_addresses(client_ip='192.0.2.254')
-    configs |= configure_run_type()
-    configs |= configure_fixed_frequency()
-    configs |= configure_scan_frequencies(stim_freq_min=99, stim_freq_max=100)
-    configs |= configure_wait_times()
-    configs |= configure_gains(stim_freq_max=100, stim_mag=0xBB8, digipot=0x7766554433221100)
-    configs |= configure_sampling()
-    configs |= configure_relays(wire_layer='X', apa_channels=[])
-    configs |= configure_noise_subtraction(stim_freq_min=99, stim_freq_max=100)
+    configs.update(configure_run_type())
+    configs.update(configure_fixed_frequency())
+    configs.update(configure_scan_frequencies(stim_freq_min=99, stim_freq_max=100))
+    configs.update(configure_wait_times())
+    configs.update(configure_gains(stim_freq_max=100, stim_mag=0xBB8, digipot=0x7766554433221100))
+    configs.update(configure_sampling())
+    configs.update(configure_relays(wire_layer='X', apa_channels=[]))
+    configs.update(configure_noise_subtraction(stim_freq_min=99, stim_freq_max=100))
     return configs
+
+
+def write_config(generated_config, outfilename, subdir="config"):
+    outfilename = os.path.join(subdir, outfilename)
+    with open(outfilename, 'w') as outconfigfile:
+        for header in generated_config.keys():
+            outconfigfile.write("["+header+"]\n")
+            subconfig = generated_config[header]
+            for key in subconfig.keys():
+                outconfigfile.write(key + " = " + str(subconfig[key]) + "\n")

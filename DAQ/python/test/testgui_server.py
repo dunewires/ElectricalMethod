@@ -190,7 +190,7 @@ def sendDummyDataNewHeadersOLD(sock):
     #             'newdata_adc_6.dat', 'newdata_adc_7.dat']
     #filenames = ['data/{}'.format(ff) for ff in filenames]  # prepend subdir
     #fileroot = 'data/fromSebastien/20200813T000904'
-    fileroot = 'data/fromSebastien_20210125T010957/20210125T010957'
+    fileroot = 'udpData/20210401T181109'
     filenames = [f'{fileroot}_FF.txt']
     #freqMin, freqMax = 0, 157
     #freqMin, freqMax = 50, 130
@@ -243,8 +243,8 @@ def sendDummyDataNewHeaders(sock):
     #fileroot = 'data/fromSebastien_20010101/'
     #scanId = '20210125T010957'
 
-    fileroot = 'data/fromSebastien_quickScan/'
-    scanId = '20210224T212726'
+    fileroot = 'udpData/'
+    scanId = '20210401T181109'
     endFrame = False
     #fileroot = 'data/fromSebastien_slowScan/'
     #scanId = '20210224T205700'
