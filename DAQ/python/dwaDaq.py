@@ -1,4 +1,19 @@
 # FIXME/TODO:
+# * In automated scan, the config file gets a "statusPeriod" field, but it should only have statusPeriodSec
+# 
+# * fix the event viewer (directory structure has changed)
+#
+# * may need progress bars (or other indicator) for long processes such as:
+#   - submit to db
+#   - fetch resonances to compute tension
+#
+# * May need to thread some processes:
+#   - dB actions (submit/read)
+#   - end of scan actions (disable relays TCP/IP comm)
+#   - abort run
+#
+# * Add indication that TCP/IP communication is underway during start of scan configuration (otherwise GUI just sits idle...)
+# 
 # * Add scroll-bar to Advanced tab in Stimulus tab:
 #   https://stackoverflow.com/questions/63228003/add-scroll-bar-into-tab-pyqt5
 #   [was:] "Advanced" tab: not all items show (below the "config file contents" text area)
@@ -7,7 +22,7 @@
 #   same for 'resonanceData.json'
 # 
 # * after scan ends:
-#   + update the V(t) plots with the last set of data
+#   + update the V(t) plots with the last set of data (in process)
 #   + disable all relays but do this in a thread and have the "thread end" signal trigger the
 #     re-activation of the "Start Scan" buttons
 #
@@ -41,6 +56,9 @@
 # * resonance lines could use "span" keyword to draw only the part of the plot that is in the peak
 #   e.g. from "baseline" to peak, as well as peak width, as in final example of:
 #   https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
+# * Single-wire spin-box: "Connect to headboard #" should be updated/defuncted when spinbox changes
+#    (not just when "configure scan list" is pushed)
+# * "Configure scan list" button should be renamed to "Configure single wire scan" if single wire is selected
 # * The new register to set an additional stimulus time for the first sample in the run,  stimTimeInitial,
 #   is a 24 bit register with the same units as the stimulus time, 2.56us, and is at address 0x2C. 
 # * Logging: is generally a mess. many log entries are printed to screen in duplicate...
@@ -121,6 +139,8 @@ DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 #AMP_DATA_FILE   = "test/data/50cm24inch/20210616T203958_amp.json"
 #AMP_DATA_FILE = './scanDataAdv/dwaConfigWC_20210812T112511/amplitudeData.json'
 
+APA_UUID_DUMMY_VAL = 'd976ed20-fc5d-11eb-b6f5-a70e70a44436'
+
 EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
 OUTPUT_DIR_SCAN_DATA = './scanData/'
@@ -157,7 +177,14 @@ DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUui
 SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid']
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
 N_RECENT_SCANS = 2
-                               
+
+TENSION_SPEC = 6.5 # Newtons
+TENSION_SPEC_MIN = TENSION_SPEC-1.0
+TENSION_SPEC_MAX = TENSION_SPEC+1.0
+TENSION_LOW_COLOR  = qtg.QColor('yellow')
+TENSION_HIGH_COLOR = qtg.QColor('red')
+TENSION_GOOD_COLOR = qtg.QColor('green')
+
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
 #    """ handle logging events -- display them in a text box in the gui"""
@@ -202,8 +229,9 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-#TAB_ACTIVE_MAIN = MainView.STIMULUS
-TAB_ACTIVE_MAIN = MainView.RESONANCE
+TAB_ACTIVE_MAIN = MainView.STIMULUS
+#TAB_ACTIVE_MAIN = MainView.RESONANCE
+#TAB_ACTIVE_MAIN = MainView.TENSION
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -363,9 +391,23 @@ class TensionTableModel(qtc.QAbstractTableModel):
         self._data = data
 
     def data(self, index, role):
+        kk = list(sorted(self._data.keys()))[index.column()]
+        val =  self._data[kk][index.row()]
         if role == qtc.Qt.DisplayRole:
-            kk = list(sorted(self._data.keys()))[index.column()]
-            return self._data[kk][index.row()]
+            if val is np.nan:
+                return ""
+            else:
+                return f'{val:.3f}'
+
+        if role == qtc.Qt.BackgroundRole:
+            if val is np.nan:
+                return
+            elif val < TENSION_SPEC_MIN:
+                return TENSION_LOW_COLOR
+            elif val > TENSION_SPEC_MAX:
+                return TENSION_HIGH_COLOR
+            else:
+                return TENSION_GOOD_COLOR
 
     def rowCount(self, index):
         return len(self._data[list(self._data.keys())[0]])
@@ -374,6 +416,9 @@ class TensionTableModel(qtc.QAbstractTableModel):
         # assumes all rows are the same length!
         return len(self._data.keys())
 
+    def setData(self, dd):
+        self._data = dd  # FIXME: do we need deepcopy?
+    
     def headerData(self, section, orientation, role):
         if role == qtc.Qt.DisplayRole:
             if orientation == qtc.Qt.Horizontal:
@@ -479,11 +524,11 @@ class MainWindow(qtw.QMainWindow):
         self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
         self.runStatusHeading_label.setStyleSheet("font-weight: bold;")
         self.initRecentScanList()
+        self.initTensionTable()
         self.heartPixmaps = [qtg.QPixmap('icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
         self.heartval = 0
         self.udpListening = False
-        self.recentScansTableRowInUse = None
-
+        self.tensionApaUuid.setText(APA_UUID_DUMMY_VAL)
         
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
@@ -525,7 +570,7 @@ class MainWindow(qtw.QMainWindow):
         self._connectSignalsSlots()
         
         # Tension Tab
-        self._configureTensions()
+        self._configureTensionTab()
 
         # Configure/label plots
         self.apaChannels = [None]*8
@@ -617,6 +662,8 @@ class MainWindow(qtw.QMainWindow):
             entry[kk] = None
             
         ampFilename = os.path.join(scanDir, 'amplitudeData.json')
+        print("generateScanListEntry()")
+        print(f"  ampFilename = {ampFilename}")
         try:         # Ensure that there is an amplitudeData.json file present!
             with open(ampFilename, "r") as fh:
                 data = json.load(fh)
@@ -625,12 +672,28 @@ class MainWindow(qtw.QMainWindow):
             data['scanName'] = scanDir
             data['submitted'] = submitted
         except:
-            print("Could not add new scan to list (bad json file?) {ampFilename}...")
+            print(f"Could not add new scan to list (bad json file?) {ampFilename}...")
             return entry
 
         for kk in SCAN_LIST_DATA_KEYS: # populate with useful information
-            entry[kk] = data[kk]
+            try:
+                entry[kk] = data[kk]
+            except:
+                print(f"key [{kk}] missing")
+                print(f"cannot add scan to list: {ampFilename}")
+                return entry
         return entry
+
+    def initTensionTable(self):
+        self.tensionData = {
+            'A':[np.nan]*MAX_WIRE_SEGMENT,
+            'B':[np.nan]*MAX_WIRE_SEGMENT,
+        }
+        self.tensionTableModel = TensionTableModel(self.tensionData)
+        self.tensionTableView.setModel(self.tensionTableModel)
+        self.tensionTableView.resizeColumnsToContents()
+        self.tensionTableView.resizeRowsToContents()
+        
     
     def initRecentScanList(self):
         scanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
@@ -657,11 +720,12 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
         #https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
 
+        self.recentScansTableRowInUse = None
 
         
     def _configureAmps(self):
         self.ampData = {}  # hold amplitude vs. freq data for a scan (and metadata)
-        self.resonantFreqs = {}
+        self.resonantFreqs = {}  
         self._initResonanceFitLines()
         
         # Set default A(f) peak detection parameters
@@ -770,15 +834,11 @@ class MainWindow(qtw.QMainWindow):
         
         self.show()
 
-    def _configureTensions(self):
+    def _configureTensionTab(self):
         for stage in APA_TESTING_STAGES:
             self.tensionStageComboBox.addItem(stage)
-        self.tensionData = {
-            'A':[0]*MAX_WIRE_SEGMENT,
-            'B':[0]*MAX_WIRE_SEGMENT,
-        }
-        
-
+        for layer in APA_LAYERS:
+            self.tensionLayerComboBox.addItem(layer)
     
     def _connectSignalsSlots(self):
         self.tabWidgetStages.currentChanged.connect(self.tabChangedStage)
@@ -800,8 +860,6 @@ class MainWindow(qtw.QMainWindow):
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensions)
         self.btnSubmitTensions.clicked.connect(self.submitTensions)
-        for layer in APA_LAYERS:
-            self.tensionLayerComboBox.addItem(layer)
         # Config Tab
         self.btnConfigureScans.clicked.connect(self.singleOrAllScans)
         for stage in APA_TESTING_STAGES:
@@ -1306,7 +1364,7 @@ class MainWindow(qtw.QMainWindow):
         chanNum = 0
         #for irow in range(4):
         #    for icol in range(2):
-        for irow in range(3):
+        for irow in range(3):     # fixme: can addPlot(row=, col=)...
             for icol in range(3):
                 if irow == 2 and icol == 2:
                     continue
@@ -1321,9 +1379,29 @@ class MainWindow(qtw.QMainWindow):
         # Tension tab
         self.tensionGLW.setBackground('w')
         self.tensionPlots = {}
-        for side in APA_SIDES:
-            self.tensionPlots[side] = (self.tensionGLW.addPlot())
-            self.tensionPlots[side].setTitle(f'Side {side}')
+
+        self.tensionPlots['tensionOfWireNumber'] = {}  # scatter plot of y=Tension, x=Wire number, one plot per layer per side
+        for icol, layer in enumerate(APA_LAYERS):
+            self.tensionPlots['tensionOfWireNumber'][layer] = {}
+            for irow, side in enumerate(APA_SIDES):
+                labels = None
+                if (irow==1 and icol==0):
+                    labels = {'left':'Tension [N]', 'bottom':'Wire number'}
+                self.tensionPlots['tensionOfWireNumber'][layer][side] = self.tensionGLW.addPlot(row=irow, col=icol,
+                                                                                                title=f'{layer}{side}',
+                                                                                                labels=labels)
+                self.tensionPlots['tensionOfWireNumber'][layer][side].addItem(pg.LinearRegionItem(values=[TENSION_SPEC_MIN,TENSION_SPEC_MAX],
+                                                                                                  orientation='horizontal',
+                                                                                                  movable=False))
+                self.tensionPlots['tensionOfWireNumber'][layer][side].setYRange(3,10)
+        # # tensionSpecRegion = pg.LinearRegionItem(values=self.tensionData["GA"], orientation='horizontal',  movable=False) 
+
+        # can add other kinds of plots here (e.g. histograms)
+
+        
+        #for side in APA_SIDES:
+        #    self.tensionPlots[side] = (self.tensionGLW.addPlot())
+        #    self.tensionPlots[side].setTitle(f'Side {side}')
 
         #self.tensionPlots = {}
         #self.tensionPlots['tensionOfWireNumber'] = self.tensionGLW.addPlot(title="Tensions", labels={'left':"Tension [N]", 'bottom':"Wire number"})
@@ -1355,7 +1433,7 @@ class MainWindow(qtw.QMainWindow):
     def _makeDummyData(self):
         # V(t)
         self.dummyData = {}  
-        xx = np.linspace(0, 2*np.pi, 100)
+        xx = np.linspace(0, 2*np.pi, 32)
         for ii in range(9):
             self.dummyData[ii] = {'x':xx[:],
                                   'y':np.sin(xx[:]*(ii+1))
@@ -1368,7 +1446,7 @@ class MainWindow(qtw.QMainWindow):
                                       'y':xx[:]*ii+1
             }
 
-        xx = np.arange(1000)  # wire numbers
+        xx = np.arange(200)  # wire numbers
         mu = 6.50 # Newtons
         sigma = 0.5 # Newtons
         tt = np.random.normal(mu, sigma, len(xx)) # wire tensions (Newtons)
@@ -1420,11 +1498,11 @@ class MainWindow(qtw.QMainWindow):
             # V(t) plots
             self.curvesFit['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([], pen=fitPen)
             self.curvesFit['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([], pen=fitPen)
-            self.curves['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([], symbol='o', symbolSize=2,
+            self.curves['grid'][loc] = getattr(self, f'pw_grid_{loc}').plot([], symbol='o', symbolSize=4,
                                                                             symbolBrush=vtAllPlotColors[loc],
                                                                             symbolPen=vtAllPlotColors[loc],
                                                                             pen=None)
-            self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([], symbol='o', symbolSize=2,
+            self.curves['chan'][loc] = getattr(self, f'pw_chan_{loc}').plot([], symbol='o', symbolSize=4,
                                                                             symbolBrush=vtAllPlotColors[loc],
                                                                             symbolPen=vtAllPlotColors[loc],
                                                                             pen=None)
@@ -1447,17 +1525,22 @@ class MainWindow(qtw.QMainWindow):
             
         # add in the main window, too (large view of V(t) for a single channel)
         self.curvesFit['chan']['main'] = getattr(self, f'pw_chan_main').plot([], pen=fitPen)
-        self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
+        self.curves['chan']['main'] = getattr(self, f'pw_chan_main').plot([], symbol='o', symbolSize=4, symbolBrush='k', symbolPen='k', pen=None)
 
         # add in the main window, too (large view of A(f) for a single channel)
         self.curves['amplchan']['main'] = getattr(self, f'pw_amplchan_main').plot([], symbol='o', symbolSize=3, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
 
         # Tension
-        #self.curves['tension']['TofWireNum'] = {}
-        #tensionPen = pg.mkPen(width=5, color='r')
-        #for layer in ["G","U","V","X"]:
-        #    for side in ["A","B"]:
-        #        self.curves['tension']['TofWireNum'][layer+side] = pg.ScatterPlotItem(pen=tensionPen, symbol='o', size=1)
+        self.curves['tension']['tensionOfWireNumber'] = {}
+        tensionPen = pg.mkPen(width=5, color='r')
+        tensionSymbolBrush = pg.mkBrush('r')
+        tensionSymbolPen = pg.mkPen(width=1, color=qtg.QColor('gray'))
+        tensionSymbolSize = 5
+        for layer in APA_LAYERS:
+            self.curves['tension']['tensionOfWireNumber'][layer] = {}
+            for side in APA_SIDES:
+                self.curves['tension']['tensionOfWireNumber'][layer][side] = self.tensionPlots['tensionOfWireNumber'][layer][side].plot([], pen=None, symbolBrush=tensionSymbolBrush, symbolPen=tensionSymbolPen, symbolSize=tensionSymbolSize)
+        #[layer+side] = pg.ScatterPlotItem(pen=tensionPen, symbol='o', size=1)
         
         ### Tension information
         ###self.curves['tension']['tensionOfWireNumber'] = self.tensionPlots['tensionOfWireNumber'].plot([], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
@@ -1523,8 +1606,10 @@ class MainWindow(qtw.QMainWindow):
 
     def _plotDummyTension(self):
         pass
-        #self.curves['tension']['tensionOfWireNumber'].setData(self.dummyDataTension['x'],
-                                                              #self.dummyDataTension['y'])
+        #for layer in APA_LAYERS:
+        #    for side in APA_SIDES:
+        #        self.curves['tension']['tensionOfWireNumber'][layer][side].setData(self.dummyDataTension['x'],
+        #                                                                           self.dummyDataTension['y'])
             
     def _keyboardShortcuts(self):
         print("Setting up keyboard shortcuts")
@@ -1708,14 +1793,16 @@ class MainWindow(qtw.QMainWindow):
         advFss = self.advFssLineEdit.text() # Freq step size
         advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
         advInitDelay = self.advInitDelayLineEdit.text() # Init delay
-        advAmplitude = self.advAmplitudeLineEdit.text() # Amplitude
-
+        advStimAmplitude = self.advStimAmplitudeLineEdit.text() # Amplitude
+        advDigipotAmplitude = self.advDigipotAmplitudeLineEdit.text() # Digipot amplitude
+        
         # TODO: Make sure inputs can be safely converted to floats
         # TODO: Grab default values if undefined
         if advFss: advFss = float(advFss)
         if advStimTime: advStimTime = float(advStimTime)
         if advInitDelay: advInitDelay = float(advInitDelay)
-        if advAmplitude: advAmplitude = float(advAmplitude)
+        if advStimAmplitude: advStimAmplitude = float(advStimAmplitude) # BUG: should accept hex string, no?
+        if advDigipotAmplitude: advDigipotAmplitude = float(advDigipotAmplitude)  # BUG: should accept hex string, no?
 
         scanIndex = -1
         logging.info(self.radioBtns)
@@ -1746,6 +1833,7 @@ class MainWindow(qtw.QMainWindow):
 
         fpgaConfig = config_generator.configure_default()
         
+        #print(f"self.configLayer, channels = {self.configLayer}, {channels}")
         fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
 
         fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
@@ -1757,11 +1845,15 @@ class MainWindow(qtw.QMainWindow):
            else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
         elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(stim_time=advStimTime))
 
-        if advAmplitude: 
-            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, stim_mag=int(advAmplitude)))
+        if advStimAmplitude: 
+            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, stim_mag=int(advStimAmplitude)))
+            
+        if advDigipotAmplitude: 
+            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, digipot=int(advDigipotAmplitude)))
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
+        #print(f'\n\nAfter Relays:\n  fpgaConfig: {fpgaConfig}')
         
         dataConfig = {"apaChannels": self.apaChannels, "wireSegments": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
         "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
@@ -2242,6 +2334,8 @@ class MainWindow(qtw.QMainWindow):
         if ("fnOfAmpData" in self.__dict__):
             # add metadata to ampData before writing to file (this could also be done earlier)
             # FIXME: grab these values from user input
+            print("\n\nsaveAmplitudeData()")
+            print(self.ampData)
             with open(self.fnOfAmpData, 'w') as outfile:
                 json.dump(self.ampData, outfile)
             self.logger.info(f"Saved as {self.fnOfAmpData}") 
@@ -2250,6 +2344,7 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def loadTensions(self):
+        print("loadTensions()")
         # Load sietch credentials #FIXME still using James's credentials
         sietch = SietchConnect("sietch.creds")
         # Get APA UUID from text box
@@ -2263,34 +2358,44 @@ class MainWindow(qtw.QMainWindow):
         self.tensionLayer = layer
 
         for side in ["A", "B"]:
+            print("apaUuid, side, layer, stage")
             print(apaUuid, side, layer, stage)
             layer_data = database_functions.get_layer_data(sietch, apaUuid, side, layer, stage)
             channels = [int(ch) for ch in layer_data.keys()]
+            print("layer_data")
             print(layer_data)
+            if not layer_data:
+                print(f"layer_data is empty... skipping layer, side = {layer}, {side}")
+                continue
             for ch in channels:
-                print(ch)
+                print(f"ch: {ch}")
                 wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
                 measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
-                print(expected_frequencies,measured_frequencies)
+                print(f"expected_frequencies: {expected_frequencies}")
+                print(f"measured_frequencies: {measured_frequencies}")
+                #print(expected_frequencies,measured_frequencies)
                 if len(measured_frequencies) > 0:
                     mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
                     for i,w in enumerate(wires):
                         self.tensionData[side][int(w)-1] = mapped[i]
                         print(side,str(w),str(mapped[i]))
                 print("\n")
+            self.curves['tension']['tensionOfWireNumber'][layer][side].setData( self.tensionData[side] )
             # FIXME: this should only happen once -- in _makeCurves()
             # Create the scatter plot and add it to the view
-            scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
-            self.tensionPlots[side].addItem(scatter)
-            pos = [{'pos': [i,self.tensionData[side][i]]} for i in range(len(self.tensionData[side]))]
-            scatter.setData(pos)
-
-        self.tensionTableModel = TensionTableModel(self.tensionData)
-        self.tensionTableView.setModel(self.tensionTableModel)
-        self.tensionTableView.resizeColumnsToContents()
-        self.tensionTableView.resizeRowsToContents()
-
-        #self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
+            #scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
+            #self.tensionPlots[side].addItem(scatter)
+            #pos = [{'pos': [i,self.tensionData[side][i]]} for i in range(len(self.tensionData[side]))]
+            #scatter.setData(pos)
+            
+        # need to push new data into the tension table model and then alert the view that the data has changed
+        # FIXME: is this the best way to push new tension data into the model?
+        #  No... we want to have data for all layers...
+        #  Also, we should push data into the model and then update the plots and table from the model!
+        self.tensionTableModel.setData(self.tensionData)
+        #self.tensionTableView.resizeRowsToContents()
+        self.tensionTableModel.layoutChanged.emit()
+        self.tensionTableView.resizeColumnsToContents()  # probably don't need?
         
     def submitTensions(self):
         # Load sietch credentials #FIXME still using James's credentials
@@ -2369,13 +2474,19 @@ class MainWindow(qtw.QMainWindow):
         out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"])
         print(f"out = {out}")
 
+
+        #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
+        pointerTable = database_functions.get_pointer_table(sietch, self.ampData['apaUuid'], self.ampData['stage'])
+        wirePointersAllLayers = pointerTable["data"]["wireSegments"]
+        
         pointer_lists = {}
         for layer in APA_LAYERS:
             pointer_lists[layer] = {}
             for side in APA_SIDES:
-                pointer_lists[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT
+                #pointer_lists[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT # BUG: shouldn't you read from db what's already there?
+                pointer_lists[layer][side] = wirePointersAllLayers[layer][side]
                 
-        pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT
+        #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
         for dwaCh, ch in enumerate(self.ampData["apaChannels"]): # Loop over channels in scan
             for w in self.ampData["wireSegments"]:
                 wire_ch = channel_map.wire_to_apa_channel(self.ampData["layer"], w)
@@ -2401,10 +2512,11 @@ class MainWindow(qtw.QMainWindow):
                         },
                     }
                     dbid = sietch.api('/test',resonance_result)
-                    pointer_list[w] = {"testId": dbid}
+                    pointer_lists[self.ampData['layer']][self.ampData['side']][w] = {"testId": dbid}
+                    #pointer_list[w] = {"testId": dbid}
 
         
-        pointer_lists[self.ampData["layer"]][self.ampData["side"]] = pointer_list  # BUG? should copy the list not reference it?
+        #pointer_lists[self.ampData["layer"]][self.ampData["side"]] = pointer_list  # BUG? should copy the list not reference it?
         record_result = {
             "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
             "formId": "wire_tension_pointer",
@@ -2640,9 +2752,6 @@ class MainWindow(qtw.QMainWindow):
         #self.dwaConfigFile = dcf.DwaConfigFile(self.configFile, sections=['FPGA'])
         self.dwaConfigFile = dcf.DwaConfigFile(self.configFile)
 
-        
-        #self._setScanMetadata() # FIXME: only here for debugging. Should not be here permanently
-        
         # FIXME: need to find a way to update the GUI in a thread that is not main thread....
         # right now, updating the GUI in a thread causes a crash.
         # see: https://stackoverflow.com/questions/10905981/pyqt-qobject-cannot-create-children-for-a-parent-that-is-in-a-different-thread
@@ -2700,15 +2809,16 @@ class MainWindow(qtw.QMainWindow):
 
                 
     def _clearAmplitudeData(self):
-        self.resonantFreqs = {}
-        self.ampData = {}
+        self.resonantFreqs = {}  # FIXME: this should not go here... should happen when A(f) data is loaded...
+        self.ampData = {}        # FIXME: shouldn't really reset the dict like this...
         for reg in self.registers:
             self.ampData[reg] = {'freq':[],  # stim freq in Hz
                                  'ampl':[] } # amplitude in ADC counts
             self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
 
         # Clear amplitude plots
-        plotTypes = ['amplchan', 'amplgrid', 'resRawFit', 'resProcFit']
+        #plotTypes = ['amplchan', 'amplgrid', 'resRawFit', 'resProcFit']
+        plotTypes = ['amplchan', 'amplgrid']
         for ptype in plotTypes:
             for reg in self.registers:
                 regId = reg
@@ -2722,10 +2832,15 @@ class MainWindow(qtw.QMainWindow):
         plotTypes = ['amplgrid', 'amplchan']
         for ptype in plotTypes:
             for ii in range(N_DWA_CHANS):
+                try:
+                    apaChan = self.apaChannels[ii]
+                except:
+                    apaChan = None
                 getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
+                getattr(self, f'pw_{ptype}_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, apaChan))
         self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
         self.pw_amplchan_main.setXRange(runFreqMin, runFreqMax)
-            
+
         #self.registerOfVal = {}
         #for reg in ddp.Registers:
         #    self.registerOfVal[reg.value] = reg
@@ -2747,6 +2862,7 @@ class MainWindow(qtw.QMainWindow):
         self.logger.info(f"self.fnOfReg = {self.fnOfReg}")
         self.fnOfAmpData = os.path.join(self.scanRunDataDir, "amplitudeData.json")
         #self.run = self.scanRunDataDir
+        print(f"self.fnOfAmpData = {self.fnOfAmpData}") 
         self.logger.info(f"self.fnOfAmpData = {self.fnOfAmpData}") 
 
     def startUdpReceiver(self, newdata_callback):
@@ -2797,6 +2913,8 @@ class MainWindow(qtw.QMainWindow):
                         logger.info(f'self.dwaDataParser.dwaPayload = {self.dwaDataParser.dwaPayload}')
 
                 # FIXME: this should go into processUdpPayload() !!!
+                # Since this is happening in a separate thread from the GUI
+                # you cannot edit/modify GUI elements here...
                 # If there is a run frame with no '77' key, or if this is a run start frame
                 # then this is a new run, so need to clear plots and create new filenames
                 if ddp.Frame.RUN in self.dwaDataParser.dwaPayload:
@@ -2812,9 +2930,7 @@ class MainWindow(qtw.QMainWindow):
                         if self.verbose > 0:
                             logger.info("New run detected... creating new filenames")
                         self._makeOutputFilenames()
-                        self._clearAmplitudeData()
-                        #self._clearResonanceFits()
-                        self._setScanMetadata()
+                        #self._clearAmplitudeData()  # cannot go here (in non-GUI thread)
                         if self.verbose > 0:
                             logger.info(self.fnOfReg)
                 
@@ -2825,8 +2941,8 @@ class MainWindow(qtw.QMainWindow):
                 if reg != statusFrameReg:
                     if self.verbose > 0:
                         print(f"reg = {reg}")
-                        print(f"self.fnOfReg: {self.fnOfReg}")
-                        logger.info(f"self.fnOfReg: {self.fnOfReg}")
+                        #print(f"self.fnOfReg: {self.fnOfReg}")
+                        #logger.info(f"self.fnOfReg: {self.fnOfReg}")
                     with open(self.fnOfReg[reg], 'a') as regFH:
                         for item in dataStrings:
                             regFH.write(f'{item}\n')
@@ -2875,6 +2991,11 @@ class MainWindow(qtw.QMainWindow):
                 self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.3f}")
                 self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
 
+                self._clearAmplitudeData() 
+                self._setScanMetadata()    # must come after clearAmplitudeData
+                print("\n\nSCAN START")
+                print(f"self.ampData = {self.ampData}")
+                
             #if end of scan...
             elif udpDict[ddp.Frame.RUN]['runStatus'] == SCAN_END:
                 print("\n\n SCAN IS DONE!!!")
@@ -2919,6 +3040,7 @@ class MainWindow(qtw.QMainWindow):
                     self.radioBtns[nextBtn]=item
 
                 self.updateAmplitudePlots()
+                self.updateTimeseriesPlots()
                 self.wrapUpStimulusScan()
                 self.scanType = None
                 
@@ -3097,6 +3219,22 @@ class MainWindow(qtw.QMainWindow):
         if self.connectedToUzed and self.idle:
             self.btnScanCtrlAdv.setEnabled(True)
             
+    def updateTimeseriesPlots(self):
+        # when a scan is done, ensure that the V(t) data shows the last received data
+        # (those plots are not updated unless that tab is active)
+        #
+        ## FIXME: need to keep the last V(t) data in memory (create self.lastTimeSeriesData somewhere...)
+        #pTypes = ['grid', 'chan']
+        #for reg in self.registers:
+        #    regId = reg
+        #    for pt in pTypes:
+        #        self.curves[pt][regId].setData(self.lastTimeseriesData[regId]['times'],
+        #                                       self.lastTimeseriesData[regId]['adcVals'])
+        #    if regId == self.chanViewMain:
+        #        self.curves['chan']['main'].setData(self.lastTimeseriesData[regId]['times'],
+        #                                            self.lastTimeseriesData[regId]['adcVals'])
+        pass
+    
     def updateAmplitudePlots(self):
         # This should only update the plots on the STIMULUS tab
         # other A(f) plots are updated elsewhere
@@ -3202,6 +3340,7 @@ class MainWindow(qtw.QMainWindow):
 
         self.recentScansTableModel.insert(row, self.generateScanListEntry(scanDir, submitted=submitted))
         self.recentScansTableModel.layoutChanged.emit()
+        self.recentScansTableView.resizeColumnsToContents()
 
 
     # DEFUNCT
