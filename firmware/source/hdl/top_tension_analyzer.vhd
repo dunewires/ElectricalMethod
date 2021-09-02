@@ -137,12 +137,9 @@ architecture STRUCT of top_tension_analyzer is
 
   signal adcBusy : std_logic := '0';
 
-  signal mainsSquare_del1, mainsSquare_del2 : std_logic := '0';
   signal mainsTrig ,adcReadoutTrig          : std_logic := '0';
 
-  signal mainsTrig_filter : unsigned(17 downto 0);
-
-  signal senseWireData     : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+    signal senseWireData     : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
   signal senseWireDataStrb : std_logic                                   := '0';
 
   signal senseWireMNSData     : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0) := (others => (others => '0'));
@@ -420,27 +417,18 @@ begin
       dwaClk2 => dwaClk2
     );
 
-  -- mains trigger noise filter
-  trigGen : process (dwaClk100)
-  begin
-    if rising_edge(dwaClk100) then
-      mainsSquare_del1 <= mainsSquare;
-      mainsSquare_del2 <= mainsSquare_del1;
-      -- not yet supported by xilinx simulation 
-      -- mainsTrig        <= '1' when mainsTrig_filter = (mainsTrig_filter'left downto 1 => '0', 0 => '1') else '0';
-      if mainsTrig_filter = "00" & x"0001" then
-        mainsTrig <= '1';
-      else
-        mainsTrig <= '0' ;
-      end if;
+-- trigger on  supply mains
+  triggerMains_inst : entity work.triggerMains
+    port map (
 
-      if mainsSquare_del2 = '0' then
-        mainsTrig_filter <= (others => '1');
-      elsif mainsTrig_filter /= (mainsTrig_filter'range => '0') then
-        mainsTrig_filter <= mainsTrig_filter-1;
-      end if;
-    end if;
-  end process;
+      mainsSquare => mainsSquare,
+      stimFreqReq =>  stimFreqReq,
+
+      mainsTrig   => mainsTrig,
+
+      dwaClk100   => dwaClk100
+
+    );
 
   -- stimulus frequency generation via DAC
   dacInterface_inst : entity work.dacInterface

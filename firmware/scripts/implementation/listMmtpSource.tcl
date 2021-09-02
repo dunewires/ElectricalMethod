@@ -10,6 +10,8 @@
 # --------------------------------------------------------------------------
 set dwaVhdl {
     ATLAS_MMTP {$proj_sources_dir/packages/global_def.vhd
+                $proj_sources_dir/packages/trigPhaseDelPack.vhd
+                $proj_sources_dir/hdl/triggerMains.vhd
                 $proj_sources_dir/hdl/wtaController.vhd
                 $proj_sources_dir/hdl/adcReadout.vhd
                 $proj_sources_dir/hdl/dacInterface.vhd
