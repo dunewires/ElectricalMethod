@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu Sep 24 17:35:18 2020
--- Last update : Tue Nov  3 16:40:45 2020
+-- Last update : Thu Sep  9 07:12:21 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -45,12 +45,12 @@ entity mainsNoiseCorrection is
         resetBusy : out boolean := false;
         adcStart  : in  boolean := false;
 
-        senseWireDataStrb : in std_logic := '0';
         senseWireData     : in signed_vector_type(7 downto 0)(15 downto 0);
+        senseWireDataStrb : in std_logic := '0';
 
-        senseWireMNSDataStrb : out std_logic := '0';
         -- we turned the ADC into 15 bits
-        senseWireMNSData : out signed_vector_type(7 downto 0)(14 downto 0);
+        senseWireMNSData     : out signed_vector_type(7 downto 0)(14 downto 0);
+        senseWireMNSDataStrb : out std_logic := '0';
 
         dwaClk100 : in std_logic -- := '0'
     );
@@ -73,13 +73,15 @@ architecture struct of mainsNoiseCorrection is
             rstb_busy : OUT STD_LOGIC
         );
     END COMPONENT;
+    type mnsState_type is (idle_s, );
+    signal mnsState : mnsState_type := idle_s, mnsReady_s, initMem_s, accumMem_s, getNoise0_s, getNoise1_s;
 
     signal cnvPeriodCnt                           : unsigned(23 downto 0) := (others => '0');
     signal cnvCnt                                 : unsigned(7 downto 0)  := (others => '0');
     signal noiseDataEn                            : boolean               := false;
     signal noiseReadoutBusy_del                   : boolean               := false;
     signal resetNoiseData                         : boolean               := false;
-    signal doMns                                  : boolean               := false;
+    signal freqInRange                            : boolean               := false;
     signal mem_rstb, mem_rsta_busy, mem_rstb_busy : std_logic             := '0';
 
     signal senseWireAccDataStrb : std_logic := '0';
@@ -88,43 +90,88 @@ architecture struct of mainsNoiseCorrection is
 
     signal mem_resetABusy, mem_resetBBusy : std_logic_vector(7 downto 0);
 
-    signal freqSetHalfStep : unsigned(23 downto 0); -- current period (10ns)
+    signal freqSetOffset : unsigned(23 downto 0); -- current period (10ns)
 
 begin
-
-    recordNoiseSamples : process (dwaClk100)
+    cntConversions : process (dwaClk100)
     begin
         if rising_edge(dwaClk100) then
-            noiseReadoutBusy_del <= noiseReadoutBusy;
-
-            if noiseReadoutBusy then
-                -- we are collecting noise samples
-                if adcStart then
-                    cnvCnt <= (others => '0');
-                elsif senseWireAccDataStrb then --memory write enable
-                    cnvCnt <= cnvCnt + 1;
-                end if;
-
-            else
-                -- We are interpolating the noise samples
-                -- reset the sampling sequence with the new frequency
-                if adcStart then
-                    cnvCnt       <= (others => '0');
-                    cnvPeriodCnt <= x"000001"; --reset to 1
-                    noiseDataEn  <= false;
-                else
-                    -- wait for first ADC conversion
-                    noiseDataEn <= senseWireDataStrb = '1' or noiseDataEn ;
-                    if (cnvPeriodCnt >= fromDaqReg.noiseSampPer) then
-                        cnvPeriodCnt <= x"000001"; --reset to 1
-                        cnvCnt       <= cnvCnt + 1;
-                    elsif noiseDataEn then
-                        cnvPeriodCnt <= cnvPeriodCnt+1;
-                    end if;
-                end if;
+            if adcStart then
+            elsif senseWireAccDataStrb then --memory write enable
             end if;
         end if;
     end process;
+
+    mnsState_seq : process (dwaClk100)
+    begin
+        if rising_edge(dwaClk100) then
+                        senseWireMNSDataStrb <= '0' ;
+
+            freqInRange <= (freqSetOffset >= fromDaqReg.noiseFreqMin) and
+                (freqSetOffset < fromDaqReg.noiseFreqMax);
+
+            if fromDaqReg.reset then
+                mnsState <= idle_s;
+            else
+                case (mnsState) is
+                    when idle_s =>
+                        senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1);
+                        mnsState <= mnsReady_s when freqInRange else idle_s;
+
+                    when mnsReady_s =>
+                        case (dataSel) is
+                            when "00" =>
+                                senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1);
+                            when "01" =>
+                                senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1) - signed(noiseData(chan_i)(17 downto 3));
+                            when "10" =>
+                                senseWireMNSData(chan_i) <= signed(noiseData(chan_i)(17 downto 3));
+                            when "11" =>
+                                senseWireMNSData(chan_i)(14 downto 13) <= "00";
+                                senseWireMNSData(chan_i)(12 downto 8)  <= signed(freqSetOffset(8 DOWNTO 4));
+                                senseWireMNSData(chan_i)(7 downto 0)   <= signed(cnvCnt);
+                            when others =>
+                                null;
+                        end case;
+                        if not freqInRange then
+                            mnsState <= idle_s;
+                        else
+                            if adcStart then
+                                cnvCnt   <= (others => '0');
+                                mnsState <= initMem_s when noiseReadoutBusy else getNoise0_s;
+                            elsif senseWireDataStrb then
+                                cnvCnt   <= cnvCnt+1;
+                                mnsState <= initMem_s;
+                            end if;
+                        end if;
+
+                    when initMem_s =>
+                        senseWireAccData(chan_i) <= resize(senseWireData(chan_i)(15 downto 1),18);
+                         senseWireAccDataStrb <= senseWireDataStrb;
+                        if senseWireDataStrb then
+                            cnvCnt <= cnvCnt + 1;
+                        end if;
+                        if adcStart then
+                            mnsState <= accumMem_s;
+                        elsif not noiseResetBusy then
+                            mnsState <= idle_s;
+                        end if;
+
+                        senseWireAccData(chan_i) <= resize(senseWireData(chan_i)(15 downto 1),18) + signed(noiseData(chan_i));
+                    when getNoise0_s =>
+                        mnsState <= getNoise1_s;
+
+                    when getNoise1_s =>
+                        mnsState <= mnsReady_s;
+
+                    when others =>
+                        mnsState <= idle_s;
+                        null;
+                end case;
+            end if;
+        end if;
+    end process mnsState_seq;
+
 
     genChMem : for chan_i in 7 downto 0 generate
 
@@ -139,7 +186,7 @@ begin
                 clkb               => dwaClk100,
                 rstb               => mem_rstb,
                 enb                => '1',
-                addrb(12 downto 8) => std_logic_vector(freqSetHalfStep(8 DOWNTO 4)), -- shifting by 4 will give a x16 interpolation
+                addrb(12 downto 8) => std_logic_vector(freqSetOffset(8 DOWNTO 4)), -- shifting by 4 will give a x16 interpolation
                 addrb(7 downto 0)  => std_logic_vector(cnvCnt),
                 doutb              => noiseData(chan_i),
                 rsta_busy          => mem_resetABusy(chan_i),
@@ -151,41 +198,22 @@ begin
         begin
             if rising_edge(dwaClk100) then
                 -- add a half step to go to the closest measured value when reading the nose
-                freqSetHalfStep <= freqSet + fromDaqReg.noiseFreqStep(23 downto 1);
-                -- we only transmit the ADC data with 15 bit precision, drop the LSB here.
-                -- Accumulate the noise samples x8.
+                freqSetOffset <= freqSet + fromDaqReg.noiseFreqStep(23 downto 1); -- offset set frequency by 1/2 step
+                                                                                  -- we only transmit the ADC data with 15 bit precision, drop the LSB here.
+                                                                                  -- Accumulate the noise samples x8.
                 if noiseFirstReadout then
-                    senseWireAccData(chan_i) <= resize(senseWireData(chan_i)(15 downto 1),18);
                 else
-                    senseWireAccData(chan_i) <= resize(senseWireData(chan_i)(15 downto 1),18) + signed(noiseData(chan_i));
                 end if;
 
                 if noiseReadoutBusy then
-                    senseWireAccDataStrb <= senseWireDataStrb;
-                    senseWireMNSDataStrb <= '0' ;
                 else
                     senseWireMNSDataStrb <= senseWireDataStrb;
                     senseWireAccDataStrb <= '0' ;
                 end if;
                 -- divide the x8 accumulated noise samples by 8 and subtract from sense wire samples.
                 -- outside the range just pass along the samples
-                if doMns then
-                    case (dataSel) is
-                        when "00" =>
-                            senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1);
-                        when "01" =>
-                            senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1) - signed(noiseData(chan_i)(17 downto 3));
-                        when "10" =>
-                            senseWireMNSData(chan_i) <= signed(noiseData(chan_i)(17 downto 3));
-                        when "11" =>
-                            senseWireMNSData(chan_i)(14 downto 13) <= "00";
-                            senseWireMNSData(chan_i)(12 downto 8)  <= signed(freqSetHalfStep(8 DOWNTO 4));
-                            senseWireMNSData(chan_i)(7 downto 0)   <= signed(cnvCnt);
-                        when others =>
-                            null;
-                    end case;
+                if freqInRange then
                 else
-                    senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1);
                 end if;
 
             -- don't strobe readout when we are recording noise samples
@@ -207,7 +235,5 @@ begin
     mem_rstb  <= '0';   --bool2sl(noiseReadoutBusy and not noiseReadoutBusy_del);
     resetBusy <= false; --(or(mem_resetABusy) = '1') or (or(mem_resetBBusy) = '1');
                         -- when we are in the specified range of existing noise samples and enabled.
-    doMns <= (freqSetHalfStep >= fromDaqReg.noiseFreqMin) and
-        (freqSetHalfStep < fromDaqReg.noiseFreqMax);
 
 end architecture struct;

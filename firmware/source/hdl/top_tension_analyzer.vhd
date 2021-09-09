@@ -522,11 +522,11 @@ begin
       resetBusy => noiseResetBusy,
       adcStart  => adcStart,
 
-      senseWireDataStrb => senseWireDataStrb,
       senseWireData     => senseWireData,
+      senseWireDataStrb => senseWireDataStrb,
 
-      senseWireMNSDataStrb => senseWireMNSDataStrb,
       senseWireMNSData     => senseWireMNSData,
+      senseWireMNSDataStrb => senseWireMNSDataStrb,
 
       dwaClk100 => dwaClk100
     );
