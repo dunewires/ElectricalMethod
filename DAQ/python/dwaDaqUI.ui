@@ -391,14 +391,14 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="4" column="0">
+                 <item row="5" column="0">
                   <widget class="QLabel" name="apaSide">
                    <property name="text">
                     <string>Side</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="4" column="1">
+                 <item row="5" column="1">
                   <widget class="QComboBox" name="SideComboBox">
                    <property name="minimumSize">
                     <size>
@@ -424,37 +424,14 @@
                    </item>
                   </widget>
                  </item>
-                 <item row="7" column="0">
-                  <widget class="QLabel" name="layer_label">
-                   <property name="text">
-                    <string>Layer</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="7" column="1">
-                  <widget class="QComboBox" name="configLayerComboBox">
-                   <property name="minimumSize">
-                    <size>
-                     <width>60</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>40</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="9" column="0">
+                 <item row="10" column="0">
                   <widget class="QLabel" name="scanTypeLabel">
                    <property name="text">
                     <string>Scan type</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="9" column="1">
+                 <item row="10" column="1">
                   <widget class="QWidget" name="widget_7" native="true">
                    <layout class="QHBoxLayout" name="horizontalLayout_16">
                     <property name="leftMargin">
@@ -568,7 +545,7 @@
                    </layout>
                   </widget>
                  </item>
-                 <item row="10" column="1">
+                 <item row="11" column="1">
                   <widget class="QPushButton" name="btnConfigureScans">
                    <property name="minimumSize">
                     <size>
@@ -587,14 +564,14 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="11" column="0">
+                 <item row="12" column="0">
                   <widget class="QLabel" name="scanList_label">
                    <property name="text">
                     <string>Scans</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="11" column="1">
+                 <item row="12" column="1">
                   <widget class="QTableWidget" name="scanTable">
                    <property name="minimumSize">
                     <size>
@@ -634,7 +611,7 @@
                    </column>
                   </widget>
                  </item>
-                 <item row="12" column="1">
+                 <item row="13" column="1">
                   <layout class="QVBoxLayout" name="verticalLayout_2">
                    <property name="leftMargin">
                     <number>6</number>
@@ -698,10 +675,33 @@
                    </item>
                   </layout>
                  </item>
-                 <item row="13" column="1">
+                 <item row="14" column="1">
                   <widget class="QPushButton" name="btnScanCtrl">
                    <property name="text">
                     <string>Start next scan</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="1">
+                  <widget class="QComboBox" name="configLayerComboBox">
+                   <property name="minimumSize">
+                    <size>
+                     <width>60</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>40</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
+                  <widget class="QLabel" name="layer_label">
+                   <property name="text">
+                    <string>Layer</string>
                    </property>
                   </widget>
                  </item>
@@ -1737,22 +1737,22 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>pw_grid_1</tabstop>
-  <tabstop>configFileContents</tabstop>
-  <tabstop>pw_grid_5</tabstop>
-  <tabstop>pw_grid_7</tabstop>
-  <tabstop>outputText</tabstop>
-  <tabstop>pw_chan_0</tabstop>
-  <tabstop>pw_chan_1</tabstop>
-  <tabstop>pw_chan_2</tabstop>
-  <tabstop>pw_chan_3</tabstop>
-  <tabstop>pw_chan_4</tabstop>
-  <tabstop>pw_chan_5</tabstop>
-  <tabstop>pw_chan_6</tabstop>
-  <tabstop>pw_grid_3</tabstop>
-  <tabstop>pw_grid_6</tabstop>
-  <tabstop>pw_chan_7</tabstop>
-  <tabstop>btnScanCtrlAdv</tabstop>
+  <tabstop>btnDwaConnect</tabstop>
+  <tabstop>tabWidgetStages</tabstop>
+  <tabstop>tabWidgetStim</tabstop>
+  <tabstop>configStageComboBox</tabstop>
+  <tabstop>measuredByLineEdit</tabstop>
+  <tabstop>configApaUuidLineEdit</tabstop>
+  <tabstop>configLayerComboBox</tabstop>
+  <tabstop>SideComboBox</tabstop>
+  <tabstop>configRadioAll</tabstop>
+  <tabstop>configHeadboardSpinBox</tabstop>
+  <tabstop>configRadioSingle</tabstop>
+  <tabstop>spinBox</tabstop>
+  <tabstop>btnConfigureScans</tabstop>
+  <tabstop>scanTable</tabstop>
+  <tabstop>btnScanCtrl</tabstop>
+  <tabstop>graphicsView</tabstop>
   <tabstop>configFileName</tabstop>
   <tabstop>omitComments_cb</tabstop>
   <tabstop>pw_grid_2</tabstop>
@@ -1763,23 +1763,22 @@
   <tabstop>advDigipotAmplitudeLineEdit</tabstop>
   <tabstop>pw_grid_0</tabstop>
   <tabstop>pw_grid_4</tabstop>
-  <tabstop>btnDwaConnect</tabstop>
-  <tabstop>tabWidgetStages</tabstop>
-  <tabstop>tabWidgetStim</tabstop>
-  <tabstop>configStageComboBox</tabstop>
-  <tabstop>measuredByLineEdit</tabstop>
-  <tabstop>configApaUuidLineEdit</tabstop>
-  <tabstop>SideComboBox</tabstop>
-  <tabstop>configLayerComboBox</tabstop>
-  <tabstop>configRadioAll</tabstop>
-  <tabstop>configHeadboardSpinBox</tabstop>
-  <tabstop>configRadioSingle</tabstop>
-  <tabstop>spinBox</tabstop>
-  <tabstop>btnConfigureScans</tabstop>
-  <tabstop>scanTable</tabstop>
-  <tabstop>btnScanCtrl</tabstop>
-  <tabstop>graphicsView</tabstop>
+  <tabstop>pw_grid_1</tabstop>
+  <tabstop>configFileContents</tabstop>
+  <tabstop>pw_grid_5</tabstop>
+  <tabstop>pw_grid_7</tabstop>
+  <tabstop>outputText</tabstop>
+  <tabstop>pw_chan_0</tabstop>
   <tabstop>pw_chan_main</tabstop>
+  <tabstop>pw_chan_3</tabstop>
+  <tabstop>pw_chan_4</tabstop>
+  <tabstop>pw_chan_5</tabstop>
+  <tabstop>pw_chan_6</tabstop>
+  <tabstop>pw_grid_3</tabstop>
+  <tabstop>pw_grid_6</tabstop>
+  <tabstop>pw_chan_7</tabstop>
+  <tabstop>btnScanCtrlAdv</tabstop>
+  <tabstop>pw_chan_2</tabstop>
   <tabstop>pw_amplgrid_0</tabstop>
   <tabstop>pw_amplgrid_2</tabstop>
   <tabstop>pw_amplgrid_1</tabstop>
@@ -1830,6 +1829,7 @@
   <tabstop>evtVwr_runName_val</tabstop>
   <tabstop>evtVwrTabs</tabstop>
   <tabstop>evtVwrPlotsGLW</tabstop>
+  <tabstop>pw_chan_1</tabstop>
  </tabstops>
  <resources/>
  <connections/>
