@@ -181,9 +181,9 @@ N_RECENT_SCANS = 2
 TENSION_SPEC = 6.5 # Newtons
 TENSION_SPEC_MIN = TENSION_SPEC-1.0
 TENSION_SPEC_MAX = TENSION_SPEC+1.0
-TENSION_LOW_COLOR  = qtg.QColor('yellow')
-TENSION_HIGH_COLOR = qtg.QColor('red')
-TENSION_GOOD_COLOR = qtg.QColor('green')
+TENSION_LOW_COLOR  = qtg.QColor(253,253,150)
+TENSION_HIGH_COLOR = qtg.QColor(219,88,86)
+TENSION_GOOD_COLOR = qtg.QColor(178, 251, 165)
 
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
