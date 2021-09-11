@@ -397,7 +397,7 @@ class TensionTableModel(qtc.QAbstractTableModel):
             if val is np.nan:
                 return ""
             else:
-                return f'{val:.3f}'
+                return f'{val:.2f}'
 
         if role == qtc.Qt.BackgroundRole:
             if val is np.nan:
@@ -691,7 +691,7 @@ class MainWindow(qtw.QMainWindow):
         }
         self.tensionTableModel = TensionTableModel(self.tensionData)
         self.tensionTableView.setModel(self.tensionTableModel)
-        self.tensionTableView.resizeColumnsToContents()
+        #self.tensionTableView.resizeColumnsToContents()
         self.tensionTableView.resizeRowsToContents()
         
     
@@ -2395,7 +2395,7 @@ class MainWindow(qtw.QMainWindow):
         self.tensionTableModel.setData(self.tensionData)
         #self.tensionTableView.resizeRowsToContents()
         self.tensionTableModel.layoutChanged.emit()
-        self.tensionTableView.resizeColumnsToContents()  # probably don't need?
+        #self.tensionTableView.resizeColumnsToContents()  # probably don't need?
         
     def submitTensions(self):
         # Load sietch credentials #FIXME still using James's credentials
