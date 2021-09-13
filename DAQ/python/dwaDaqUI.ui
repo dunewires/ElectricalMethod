@@ -282,7 +282,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -1338,9 +1338,23 @@
                   </layout>
                  </item>
                  <item>
+                  <widget class="QLineEdit" name="submitResonanceNoteLineEdit">
+                   <property name="placeholderText">
+                    <string>Submission note...</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QPushButton" name="btnSubmitResonances">
                    <property name="text">
                     <string>Submit Resonances to DB</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="labelResonanceSubmitStatus">
+                   <property name="text">
+                    <string>Resonances have not been submitted</string>
                    </property>
                   </widget>
                  </item>
@@ -1479,7 +1493,7 @@
               </size>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab">
               <attribute name="title">
@@ -1533,6 +1547,31 @@
                </item>
               </layout>
              </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="submitTensionNoteLineEdit">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>300</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>300</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="placeholderText">
+              <string>Submission note...</string>
+             </property>
             </widget>
            </item>
            <item>

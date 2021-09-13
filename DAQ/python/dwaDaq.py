@@ -2106,6 +2106,7 @@ class MainWindow(qtw.QMainWindow):
     def loadSavedScanData(self, filename):
         self._loadAmpData(filename)
         self.runResonanceAnalysis()
+        self.labelResonanceSubmitStatus.setText("Resonances have not been submitted")
 
     @pyqtSlot()
     def _resFreqUserInputText(self):
@@ -2403,6 +2404,7 @@ class MainWindow(qtw.QMainWindow):
         pointerTableId = self.pointerTable["_id"]
         apaUuid = self.pointerTable["data"]["apaUuid"]
         stage = self.pointerTable["stage"]
+        note = self.submitResonanceNoteLineEdit.text()
         wireData = {
             'X': {
                 'A': [],
@@ -2434,7 +2436,8 @@ class MainWindow(qtw.QMainWindow):
                 "apaUuid": apaUuid,
                 "wireSegments": wireData,
                 "saveAsDraft": True,
-                "submit": True
+                "submit": True,
+                "note": note
             }
         }
         dbid= sietch.api('/test',record_result)
@@ -2462,78 +2465,85 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot()
     def submitResonances(self):
+        self.labelResonanceSubmitStatus.setText("Submitting...")
+        try: 
+            self.saveResonanceData()
 
-        self.saveResonanceData()
+            # Load sietch credentials #FIXME still using James's credentials
+            sietch = SietchConnect("sietch.creds")
 
-        # Load sietch credentials #FIXME still using James's credentials
-        sietch = SietchConnect("sietch.creds")
+            note = self.submitResonanceNoteLineEdit.text()
+            
+            print(f"sietch = {sietch}")
+            print(f"self.ampData['apaUuid'] = {self.ampData['apaUuid']}")
+            out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"])
+            print(f"out = {out}")
 
 
-        print(f"sietch = {sietch}")
-        print(f"self.ampData['apaUuid'] = {self.ampData['apaUuid']}")
-        out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"])
-        print(f"out = {out}")
-
-
-        #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
-        pointerTable = database_functions.get_pointer_table(sietch, self.ampData['apaUuid'], self.ampData['stage'])
-        wirePointersAllLayers = pointerTable["data"]["wireSegments"]
-        
-        pointer_lists = {}
-        for layer in APA_LAYERS:
-            pointer_lists[layer] = {}
-            for side in APA_SIDES:
-                #pointer_lists[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT # BUG: shouldn't you read from db what's already there?
-                pointer_lists[layer][side] = wirePointersAllLayers[layer][side]
-                
-        #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
-        for dwaCh, ch in enumerate(self.ampData["apaChannels"]): # Loop over channels in scan
-            for w in self.ampData["wireSegments"]:
-                wire_ch = channel_map.wire_to_apa_channel(self.ampData["layer"], w)
-                if wire_ch == ch:
-                    resonance_result = {
-                        "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
-                        "formId": "wire_resonance_measurement",
-                        "formName": "Wire Resonance Measurement",
-                        "data": {
-                            "versionDaq": "1.1",
-                            "dwaUuid": self.ampData["apaUuid"],
-                            "versionFirmware": "1.1",
-                            "site": "Harvard",
-                            "measuredBy": self.ampData["measuredBy"],
-                            "productionStage": self.ampData["stage"],
-                            "side": self.ampData["side"],
-                            "layer": self.ampData["layer"],
-                            "wireSegments": {
-                                str(w): self.resonantFreqs[dwaCh]
+            #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
+            pointerTable = database_functions.get_pointer_table(sietch, self.ampData['apaUuid'], self.ampData['stage'])
+            wirePointersAllLayers = pointerTable["data"]["wireSegments"]
+            
+            pointer_lists = {}
+            for layer in APA_LAYERS:
+                pointer_lists[layer] = {}
+                for side in APA_SIDES:
+                    #pointer_lists[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT # BUG: shouldn't you read from db what's already there?
+                    pointer_lists[layer][side] = wirePointersAllLayers[layer][side]
+                    
+            #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
+            for dwaCh, ch in enumerate(self.ampData["apaChannels"]): # Loop over channels in scan
+                for w in self.ampData["wireSegments"]:
+                    wire_ch = channel_map.wire_to_apa_channel(self.ampData["layer"], w)
+                    if wire_ch == ch:
+                        resonance_result = {
+                            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
+                            "formId": "wire_resonance_measurement",
+                            "formName": "Wire Resonance Measurement",
+                            "data": {
+                                "versionDaq": "1.1",
+                                "dwaUuid": self.ampData["apaUuid"],
+                                "versionFirmware": "1.1",
+                                "site": "Harvard",
+                                "measuredBy": self.ampData["measuredBy"],
+                                "productionStage": self.ampData["stage"],
+                                "side": self.ampData["side"],
+                                "layer": self.ampData["layer"],
+                                "wireSegments": {
+                                    str(w): self.resonantFreqs[dwaCh]
+                                },
+                                "saveAsDraft": True,
+                                "submit": True,
+                                "note": note
                             },
-                            "saveAsDraft": True,
-                            "submit": True
-                        },
-                    }
-                    dbid = sietch.api('/test',resonance_result)
-                    pointer_lists[self.ampData['layer']][self.ampData['side']][w] = {"testId": dbid}
-                    #pointer_list[w] = {"testId": dbid}
+                        }
+                        dbid = sietch.api('/test',resonance_result)
+                        pointer_lists[self.ampData['layer']][self.ampData['side']][w] = {"testId": dbid}
+                        #pointer_list[w] = {"testId": dbid}
 
-        
-        #pointer_lists[self.ampData["layer"]][self.ampData["side"]] = pointer_list  # BUG? should copy the list not reference it?
-        record_result = {
-            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
-            "formId": "wire_tension_pointer",
-            "formName": "Wire Tension Pointer Record",
-            "stage": self.ampData["stage"],
-            "data": {
-                "version": "1.1",
-                "apaUuid": self.ampData["apaUuid"],
-                "wireSegments": pointer_lists,
-                "saveAsDraft": True,
-                "submit": True
+            
+            #pointer_lists[self.ampData["layer"]][self.ampData["side"]] = pointer_list  # BUG? should copy the list not reference it?
+            record_result = {
+                "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
+                "formId": "wire_tension_pointer",
+                "formName": "Wire Tension Pointer Record",
+                "stage": self.ampData["stage"],
+                "data": {
+                    "version": "1.1",
+                    "apaUuid": self.ampData["apaUuid"],
+                    "wireSegments": pointer_lists,
+                    "saveAsDraft": True,
+                    "submit": True
+                }
             }
-        }
-        dbid= sietch.api('/test',record_result)
+            dbid= sietch.api('/test',record_result)
 
-        self.recentScansTableModel.setSubmitted(self.recentScansTableRowInUse, Submitted.YES)
-        self.recentScansTableModel.layoutChanged.emit()
+            self.recentScansTableModel.setSubmitted(self.recentScansTableRowInUse, Submitted.YES)
+            self.recentScansTableModel.layoutChanged.emit()
+
+            self.labelResonanceSubmitStatus.setText("Submitted!")
+        except:
+            self.labelResonanceSubmitStatus.setText("Error submitting resonances")
         
     @pyqtSlot()
     def loadEventData(self):
