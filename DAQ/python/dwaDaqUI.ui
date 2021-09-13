@@ -1640,6 +1640,13 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_16">
            <item>
+            <widget class="QPushButton" name="evtVwr_openScan_pb">
+             <property name="text">
+              <string>PushButton</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <layout class="QFormLayout" name="formLayout_7">
              <item row="0" column="0">
               <widget class="QLabel" name="evtVwr_runName_label">
@@ -1727,7 +1734,7 @@
      <x>0</x>
      <y>0</y>
      <width>1313</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">

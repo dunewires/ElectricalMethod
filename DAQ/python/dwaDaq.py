@@ -27,7 +27,15 @@
 #     re-activation of the "Start Scan" buttons
 #
 # * Add graphic of APA wires to Config tab
-# 
+#
+# * Filter glitches in A(f) prior to integration. (sigma-clipping and width can work). See e.g. V_A_10_361-363-...
+#
+# * Tension plotting bug -- when you plot a second layer, it replots the first layer's data on the same axes
+#
+# * scan list: directory name is too long! trim off anything before the scanData/ or scanDataAdv/ (if exists)
+#
+# * in resonance fitting plots, show expected location of resonances? (use shaded regions?)
+#
 # * LEDs:
 #   + A red one that would light up if there’s any errors reported in the error bits.
 #   + A blue one for scan activity when scan is ongoing for example, or when data is received. Nathan has the hardware one set to be on during a scan, but it turns off for a fraction of a second (maybe 10 ms?), and this happens at a period of 1.5 s at 10 Hz, with a linearly decreasing period as a function of frequency to 150 ms at 1 kHz. It doesn’t have to be that, it could stay on when a scan is happening, say between run frames, or based on the reported DWA status in the heartbeat.
@@ -232,6 +240,7 @@ class StimView(IntEnum):
 TAB_ACTIVE_MAIN = MainView.STIMULUS
 #TAB_ACTIVE_MAIN = MainView.RESONANCE
 #TAB_ACTIVE_MAIN = MainView.TENSION
+#TAB_ACTIVE_MAIN = MainView.EVTVWR
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -719,9 +728,13 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)  # clicking in cell selects entire row
         self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
         #https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
-
+        self.recentScansTableView.doubleClicked.connect(self.recentScansRowDoubleClicked)
         self.recentScansTableRowInUse = None
 
+    def recentScansRowDoubleClicked(self, mi):
+        print(f"double-clicked row: {mi.row()}")
+        print(f"double-clicked col: {mi.column()}")
+        self.loadRecentScanData()
         
     def _configureAmps(self):
         self.ampData = {}  # hold amplitude vs. freq data for a scan (and metadata)
@@ -967,7 +980,8 @@ class MainWindow(qtw.QMainWindow):
         
     def _configureEventViewer(self):
         self.evtVwr_runName_val.setText(EVT_VWR_TIMESTAMP)
-        self.evtVwr_runName_val.returnPressed.connect(self.loadEventData)
+        self.evtVwr_runName_val.returnPressed.connect(self.loadEventDataOld)
+        self.evtVwr_openScan_pb.clicked.connect(self.loadEventData)
         self.evtVwrPlotsGLW.setBackground('w')
         self.evtVwrPlots = []
         chanNum = 0
@@ -1834,6 +1848,7 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig = config_generator.configure_default()
         
         #print(f"self.configLayer, channels = {self.configLayer}, {channels}")
+        #print(f"  type(channels) = {type(channels)}")
         fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
 
         fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
@@ -2545,8 +2560,11 @@ class MainWindow(qtw.QMainWindow):
         except:
             self.labelResonanceSubmitStatus.setText("Error submitting resonances")
         
-    @pyqtSlot()
     def loadEventData(self):
+        print("got here")
+        
+    @pyqtSlot()
+    def loadEventDataOld(self):
         scanId = self.evtVwr_runName_val.text()
         print(f'scanId = {scanId}')
 
