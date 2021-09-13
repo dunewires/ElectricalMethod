@@ -728,9 +728,13 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)  # clicking in cell selects entire row
         self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
         #https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
-
+        self.recentScansTableView.doubleClicked.connect(self.recentScansRowDoubleClicked)
         self.recentScansTableRowInUse = None
 
+    def recentScansRowDoubleClicked(self, mi):
+        print(f"double-clicked row: {mi.row()}")
+        print(f"double-clicked col: {mi.column()}")
+        self.loadRecentScanData()
         
     def _configureAmps(self):
         self.ampData = {}  # hold amplitude vs. freq data for a scan (and metadata)
