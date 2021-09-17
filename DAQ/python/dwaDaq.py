@@ -176,7 +176,12 @@ SCAN_END = 0
 APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Storage", "Installation"]
 APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
-MAX_WIRE_SEGMENT = 1151
+MAX_WIRE_SEGMENT = {
+    "U": 1151,
+    "V": 1151,
+    "X": 480,
+    "G": 480
+}
 
 # FIXME: these should be read from somewhere else (DwaConfigFile)...
 DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
@@ -694,14 +699,15 @@ class MainWindow(qtw.QMainWindow):
         return entry
 
     def initTensionTable(self):
-        self.tensionData = {
-            'A':[np.nan]*MAX_WIRE_SEGMENT,
-            'B':[np.nan]*MAX_WIRE_SEGMENT,
-        }
-        self.tensionTableModel = TensionTableModel(self.tensionData)
-        self.tensionTableView.setModel(self.tensionTableModel)
-        #self.tensionTableView.resizeColumnsToContents()
-        self.tensionTableView.resizeRowsToContents()
+        print("init")
+        # self.tensionData = {
+        #     'A':[np.nan]*MAX_WIRE_SEGMENT,
+        #     'B':[np.nan]*MAX_WIRE_SEGMENT,
+        # }
+        # self.tensionTableModel = TensionTableModel(self.tensionData)
+        # self.tensionTableView.setModel(self.tensionTableModel)
+        # #self.tensionTableView.resizeColumnsToContents()
+        # self.tensionTableView.resizeRowsToContents()
         
     
     def initRecentScanList(self):
@@ -871,8 +877,8 @@ class MainWindow(qtw.QMainWindow):
         # Resonance Tab
         self.btnSubmitResonances.clicked.connect(self.submitResonances)
         # Tensions tab
-        self.btnLoadTensions.clicked.connect(self.loadTensions)
-        self.btnSubmitTensions.clicked.connect(self.submitTensions)
+        self.btnLoadTensions.clicked.connect(self.loadTensionsThread)
+        self.btnSubmitTensions.clicked.connect(self.submitTensionsThread)
         # Config Tab
         self.btnConfigureScans.clicked.connect(self.singleOrAllScans)
         for stage in APA_TESTING_STAGES:
@@ -1440,6 +1446,12 @@ class MainWindow(qtw.QMainWindow):
 
     def startScanThreadComplete(self):
         print("startScanThread complete!")
+
+    def loadTensionsThreadComplete(self):
+        print("loadTensionsThread complete!")
+
+    def submitTensionsThreadComplete(self):
+        print("submitTensionsThread complete!")
         
     def startScanAdvThreadComplete(self):
         print("startScanAdvThread complete!")
@@ -1771,6 +1783,28 @@ class MainWindow(qtw.QMainWindow):
         worker = Worker(self.startScan)  # could pass args/kwargs too..
         #worker.signals.result.connect(self.printOutput)
         worker.signals.finished.connect(self.startScanThreadComplete)
+
+        # execute
+        self.threadPool.start(worker)
+
+    @pyqtSlot()
+    def loadTensionsThread(self):
+    
+        # Pass the function to execute
+        worker = Worker(self.loadTensions)  # could pass args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.loadTensionsThreadComplete)
+
+        # execute
+        self.threadPool.start(worker)
+
+    @pyqtSlot()
+    def submitTensionsThread(self):
+    
+        # Pass the function to execute
+        worker = Worker(self.submitTensions)  # could pass args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.submitTensionsThreadComplete)
 
         # execute
         self.threadPool.start(worker)
@@ -2361,6 +2395,7 @@ class MainWindow(qtw.QMainWindow):
     @pyqtSlot()
     def loadTensions(self):
         print("loadTensions()")
+
         # Load sietch credentials #FIXME still using James's credentials
         sietch = SietchConnect("sietch.creds")
         # Get APA UUID from text box
@@ -2372,6 +2407,15 @@ class MainWindow(qtw.QMainWindow):
         # Get selected layer from GUI
         layer = self.tensionLayerComboBox.currentText()
         self.tensionLayer = layer
+        # Build dictionary and table
+        self.tensionData = {
+            'A':[np.nan]*MAX_WIRE_SEGMENT[layer],
+            'B':[np.nan]*MAX_WIRE_SEGMENT[layer],
+        }
+        self.tensionTableModel = TensionTableModel(self.tensionData)
+        self.tensionTableView.setModel(self.tensionTableModel)
+        #self.tensionTableView.resizeColumnsToContents()
+        self.tensionTableView.resizeRowsToContents()
 
         for side in ["A", "B"]:
             print("apaUuid, side, layer, stage")
