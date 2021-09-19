@@ -180,7 +180,7 @@ MAX_WIRE_SEGMENT = {
     "U": 1151,
     "V": 1151,
     "X": 480,
-    "G": 480
+    "G": 481
 }
 
 # FIXME: these should be read from somewhere else (DwaConfigFile)...
