@@ -587,7 +587,7 @@ class MainWindow(qtw.QMainWindow):
         self._configureTensionTab()
 
         # Configure/label plots
-        self.apaChannels = [None]*8
+        self.apaChannels = [None]*N_DWA_CHANS
         self._configurePlots()
         
         # make dummy data to display
@@ -993,7 +993,7 @@ class MainWindow(qtw.QMainWindow):
         chanNum = 0
         for irow in range(3):
             for icol in range(3):
-                if chanNum < 8:
+                if chanNum < N_DWA_CHANS:
                     self.evtVwrPlots.append(self.evtVwrPlotsGLW.addPlot())
                     plotTitle = f'V(t) Chan {chanNum}'
                     self.evtVwrPlots[-1].setTitle(plotTitle)
@@ -2880,6 +2880,16 @@ class MainWindow(qtw.QMainWindow):
         self._initResonanceFitLines()
 
                 
+    def _clearTimeseriesData(self):
+        plotTypes = ['grid', 'chan']
+        for ptype in plotTypes:
+            for reg in self.registers:
+                regId = reg
+                self.curves[ptype][regId].setData([])
+                self.curvesFit[ptype][regId].setData([])
+        self.curves['chan']['main'].setData([])
+        self.curvesFit['chan']['main'].setData([])
+        
     def _clearAmplitudeData(self):
         self.resonantFreqs = {}  # FIXME: this should not go here... should happen when A(f) data is loaded...
         self.ampData = {}        # FIXME: shouldn't really reset the dict like this...
@@ -2889,7 +2899,6 @@ class MainWindow(qtw.QMainWindow):
             self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
 
         # Clear amplitude plots
-        #plotTypes = ['amplchan', 'amplgrid', 'resRawFit', 'resProcFit']
         plotTypes = ['amplchan', 'amplgrid']
         for ptype in plotTypes:
             for reg in self.registers:
@@ -3063,6 +3072,7 @@ class MainWindow(qtw.QMainWindow):
                 self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.3f}")
                 self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
 
+                self._clearTimeseriesData()
                 self._clearAmplitudeData() 
                 self._setScanMetadata()    # must come after clearAmplitudeData
                 print("\n\nSCAN START")
@@ -3131,10 +3141,17 @@ class MainWindow(qtw.QMainWindow):
         # Check to see if this is an ADC data transfer:
         if ddp.Frame.ADC_DATA in udpDict:
             self.outputText.appendPlainText("\nFOUND ADC DATA\n")
+            
             # update the relevant plot...
             regId = udpDict[ddp.Frame.FREQ]['Register_ID_Freq']
             self.logger.info(f'regId = {regId}')
             reg = self.registerOfVal[regId]
+
+            # If this DWA channel does not correspond to an actual wire, then don't update
+            # plots in the GUI
+            if self.apaChannels[regId] is None:
+                return
+            
             #self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
             dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
             tt = np.arange(len(udpDict[ddp.Frame.ADC_DATA]['adcSamples']))*dt
