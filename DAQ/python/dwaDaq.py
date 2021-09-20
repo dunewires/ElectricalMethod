@@ -2906,7 +2906,8 @@ class MainWindow(qtw.QMainWindow):
                 self.curves[ptype][regId].setData([])
                 self.curves['amplgrid']['all'][reg].setData([])
         self.curves['amplchan']['main'].setData([])
-        
+
+    def _configureAmplitudePlots(self):
         # Set x-ranges for frequency plots so pyqtgraph does not have to autoscale
         runFreqMin = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMin_Hz'] 
         runFreqMax = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMax_Hz'] 
@@ -2918,7 +2919,9 @@ class MainWindow(qtw.QMainWindow):
                 except:
                     apaChan = None
                 getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
-                getattr(self, f'pw_{ptype}_{ii}').setTitle("{}-{}, DWA Chan: {} APA Chan: {}".format("layer", "side", ii, apaChan))
+                getattr(self, f'pw_{ptype}_{ii}').setTitle("{}-{}, DWA Chan: {} APA Chan: {}".format(self.ampData['layer'],
+                                                                                                     self.ampData['side'],
+                                                                                                     ii, apaChan))
         self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
         self.pw_amplchan_main.setXRange(runFreqMin, runFreqMax)
 
@@ -3075,6 +3078,8 @@ class MainWindow(qtw.QMainWindow):
                 self._clearTimeseriesData()
                 self._clearAmplitudeData() 
                 self._setScanMetadata()    # must come after clearAmplitudeData
+                self._configureAmplitudePlots() # must come after setScanMetadata()
+                
                 print("\n\nSCAN START")
                 print(f"self.ampData = {self.ampData}")
                 
@@ -3149,6 +3154,7 @@ class MainWindow(qtw.QMainWindow):
 
             # If this DWA channel does not correspond to an actual wire, then don't update
             # plots in the GUI
+            print(f" regId = {regId}; self.apaChannels = {self.apaChannels}")
             if (self.scanType == ScanType.AUTO) and (self.apaChannels[regId] is None):
                 return
             
