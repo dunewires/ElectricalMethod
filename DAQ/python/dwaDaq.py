@@ -2918,7 +2918,7 @@ class MainWindow(qtw.QMainWindow):
                 except:
                     apaChan = None
                 getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
-                getattr(self, f'pw_{ptype}_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, apaChan))
+                getattr(self, f'pw_{ptype}_{ii}').setTitle("{}-{}, DWA Chan: {} APA Chan: {}".format("layer", "side", ii, apaChan))
         self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
         self.pw_amplchan_main.setXRange(runFreqMin, runFreqMax)
 
@@ -3149,7 +3149,7 @@ class MainWindow(qtw.QMainWindow):
 
             # If this DWA channel does not correspond to an actual wire, then don't update
             # plots in the GUI
-            if self.apaChannels[regId] is None:
+            if (self.scanType == ScanType.AUTO) and (self.apaChannels[regId] is None):
                 return
             
             #self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
