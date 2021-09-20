@@ -2495,6 +2495,7 @@ class MainWindow(qtw.QMainWindow):
                 "version": "1.1",
                 "apaUuid": apaUuid,
                 "wireSegments": wireData,
+                "wires": wireData,
                 "saveAsDraft": True,
                 "submit": True,
                 "note": note
