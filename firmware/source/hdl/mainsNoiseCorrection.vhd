@@ -35,7 +35,7 @@ entity mainsNoiseCorrection is
         -- records
         fromDaqReg : in  fromDaqRegType;
         toDaqReg   : out toDaqRegType;
-        freqSet    : in  unsigned(23 downto 0); -- current period (10ns)
+        freqSet    : in  unsigned(23 downto 0);
 
         noiseReadoutBusy : in boolean := false;
 
@@ -118,21 +118,23 @@ begin
                     when mnsReady_s =>
                         case (dataSel) is
                             when "00" =>
-                                senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1);
+                                senseWireMNSData(7 downto 0)(14 downto 0) <= senseWireData(7 downto 0)(15 downto 1);
                             when "01" =>
                                 senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1) - signed(memDout(chan_i)(17 downto 3));
                             when "10" =>
                                 senseWireMNSData(chan_i) <= signed(memDout(chan_i)(17 downto 3));
                             when "11" =>
+                                senseWireMNSData(7 downto 0)(14 downto 0) <= (others =>(14 downto 0 => "00" & signed(freqSetOffset(8 DOWNTO 4)) & signed(cnvCnt)));
                                 senseWireMNSData(chan_i)(14 downto 13) <= "00";
                                 senseWireMNSData(chan_i)(12 downto 8)  <= signed(freqSetOffset(8 DOWNTO 4));
                                 senseWireMNSData(chan_i)(7 downto 0)   <= signed(cnvCnt);
                             when others =>
                                 null;
                         end case;
-                        if not freqInRange then
+
+                        if not mnsEnable then -- disable mains subtraction
                             mnsState <= idle_s;
-                        else
+                        else  -- mains subtraction is active
                             if adcStart then
                                 mnsState <= initMem_s when noiseReadoutBusy else getNoiseInitial_s;
                             elsif senseWireDataStrb then
@@ -169,7 +171,6 @@ begin
 
                     when others =>
                         mnsState <= idle_s;
-                        null;
                 end case;
             end if;
         end if;
