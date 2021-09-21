@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu Sep 24 17:35:18 2020
--- Last update : Thu Sep  9 07:12:21 2021
+-- Last update : Tue Sep 21 07:15:17 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -37,13 +37,11 @@ entity mainsNoiseCorrection is
         toDaqReg   : out toDaqRegType;
         freqSet    : in  unsigned(23 downto 0); -- current period (10ns)
 
-        noiseReadoutBusy  : in boolean := false;
-        noiseFirstReadout : in boolean := false;
+        noiseReadoutBusy : in boolean := false;
 
         dataSel : in std_logic_vector(1 downto 0) := (others => '0');
 
-        resetBusy : out boolean := false;
-        adcStart  : in  boolean := false;
+        adcStart : in boolean := false;
 
         senseWireData     : in signed_vector_type(7 downto 0)(15 downto 0);
         senseWireDataStrb : in std_logic := '0';
@@ -74,58 +72,57 @@ architecture struct of mainsNoiseCorrection is
         );
     END COMPONENT;
     type mnsState_type is (idle_s, );
-    signal mnsState : mnsState_type := idle_s, mnsReady_s, initMem_s, accumMem_s, getNoise0_s, getNoise1_s;
+    signal mnsState : mnsState_type := idle_s, mnsReady_s, initMem_s, accumMem_s, getNoiseInitial_s, getNoise_s;
 
-    signal cnvPeriodCnt                           : unsigned(23 downto 0) := (others => '0');
-    signal cnvCnt                                 : unsigned(7 downto 0)  := (others => '0');
-    signal noiseDataEn                            : boolean               := false;
-    signal noiseReadoutBusy_del                   : boolean               := false;
-    signal resetNoiseData                         : boolean               := false;
-    signal freqInRange                            : boolean               := false;
-    signal mem_rstb, mem_rsta_busy, mem_rstb_busy : std_logic             := '0';
+    signal cnvCnt      : unsigned(7 downto 0) := (others => '0');
+    signal noiseDataEn : boolean              := false;
+    signal freqInRange : boolean              := false;
 
-    signal senseWireAccDataStrb : std_logic := '0';
-    signal senseWireAccData     : signed_vector_type(7 downto 0)(17 downto 0);
-    signal noiseData            : slv_vector_type(7 downto 0)(17 downto 0);
-
-    signal mem_resetABusy, mem_resetBBusy : std_logic_vector(7 downto 0);
-
-    signal freqSetOffset : unsigned(23 downto 0); -- current period (10ns)
+    signal memWea  : std_logic := '0';
+    signal memDin  : signed_vector_type(7 downto 0)(17 downto 0);
+    signal memDout : slv_vector_type(7 downto 0)(17 downto 0);
 
 begin
     cntConversions : process (dwaClk100)
     begin
         if rising_edge(dwaClk100) then
-            if adcStart then
-            elsif senseWireAccDataStrb then --memory write enable
+            if adcStart then -- we initiated a new frequency
+                cnvCnt <= (others => '0');
+            elsif senseWireDataStrb or mnsState = getNoiseInitial_s then -- point to the next sample
+                cnvCnt <= cnvCnt+1;
             end if;
         end if;
     end process;
+    memAddr <= freqSet(12 downto 7) std_logic_vector(freqSet(6 downto 0));
 
     mnsState_seq : process (dwaClk100)
     begin
         if rising_edge(dwaClk100) then
-                        senseWireMNSDataStrb <= '0' ;
-
+            senseWireMNSDataStrb <= '0' ;
+            memWea               <= '0';
+            -- keep track of the samples within a single frequency "cnvCnt"
+            -- the default address is set to follow the frequency and conversion number.
+            -- This is only overridden when getting the second noise sample used for interpolation
             freqInRange <= (freqSetOffset >= fromDaqReg.noiseFreqMin) and
                 (freqSetOffset < fromDaqReg.noiseFreqMax);
 
             if fromDaqReg.reset then
                 mnsState <= idle_s;
             else
+
                 case (mnsState) is
                     when idle_s =>
                         senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1);
-                        mnsState <= mnsReady_s when freqInRange else idle_s;
+                        mnsState                 <= mnsReady_s when freqInRange else idle_s;
 
                     when mnsReady_s =>
                         case (dataSel) is
                             when "00" =>
                                 senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1);
                             when "01" =>
-                                senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1) - signed(noiseData(chan_i)(17 downto 3));
+                                senseWireMNSData(chan_i) <= senseWireData(chan_i)(15 downto 1) - signed(memDout(chan_i)(17 downto 3));
                             when "10" =>
-                                senseWireMNSData(chan_i) <= signed(noiseData(chan_i)(17 downto 3));
+                                senseWireMNSData(chan_i) <= signed(memDout(chan_i)(17 downto 3));
                             when "11" =>
                                 senseWireMNSData(chan_i)(14 downto 13) <= "00";
                                 senseWireMNSData(chan_i)(12 downto 8)  <= signed(freqSetOffset(8 DOWNTO 4));
@@ -137,32 +134,38 @@ begin
                             mnsState <= idle_s;
                         else
                             if adcStart then
-                                cnvCnt   <= (others => '0');
-                                mnsState <= initMem_s when noiseReadoutBusy else getNoise0_s;
+                                mnsState <= initMem_s when noiseReadoutBusy else getNoiseInitial_s;
                             elsif senseWireDataStrb then
-                                cnvCnt   <= cnvCnt+1;
-                                mnsState <= initMem_s;
+                                mnsState <= getNoise_s;
                             end if;
                         end if;
 
-                    when initMem_s =>
-                        senseWireAccData(chan_i) <= resize(senseWireData(chan_i)(15 downto 1),18);
-                         senseWireAccDataStrb <= senseWireDataStrb;
-                        if senseWireDataStrb then
-                            cnvCnt <= cnvCnt + 1;
-                        end if;
-                        if adcStart then
+                    when initMem_s =>                                                    -- this is the first time at this frequency's sample
+                        memDin(chan_i) <= resize(senseWireData(chan_i)(15 downto 1),18); -- no accumulation
+                        memWea         <= senseWireDataStrb;
+
+                        if not noiseReadoutBusy then -- path back to the ready state eg in the case of no averaging or an abort
+                            mnsState <= idle_s;
+                        elsif adcStart then -- this is the start of the second set of samples. let's accumulate
                             mnsState <= accumMem_s;
-                        elsif not noiseResetBusy then
+                        end if;
+
+                    when accumMem_s =>
+                        memDin(chan_i) <= resize(senseWireData(chan_i)(15 downto 1),18) + signed(memDout(chan_i));
+                        memWea         <= senseWireDataStrb;
+
+                        if not noiseReadoutBusy then -- path back to the ready state eg we are donw with this frequency or an abort
                             mnsState <= idle_s;
                         end if;
 
-                        senseWireAccData(chan_i) <= resize(senseWireData(chan_i)(15 downto 1),18) + signed(noiseData(chan_i));
-                    when getNoise0_s =>
-                        mnsState <= getNoise1_s;
+                    when getNoiseInitial_s => -- get the first interpolation sample
+                        noise(0)(chan_i) <= signed(memDout(chan_i)(17 downto 3));
+                        -- cnfCnt is incremented in this state to point to next sample. Fill the initial noise filter value
+                        mnsState <= getNoise_s;
 
-                    when getNoise1_s =>
-                        mnsState <= mnsReady_s;
+                    when getNoise_s =>
+                        noise(chan_i) <= noise(0)(chan_i) & signed(memDout(chan_i)(17 downto 3));
+                        mnsState      <= mnsReady_s;
 
                     when others =>
                         mnsState <= idle_s;
@@ -179,61 +182,18 @@ begin
             PORT MAP (
                 clka               => dwaClk100,
                 ena                => '1',
-                wea(0)             => senseWireAccDataStrb,
+                wea(0)             => memWea,
                 addra(12 downto 8) => std_logic_vector(freqSet(8 DOWNTO 4)), -- shifting by 4 will give a x16 interpolation
                 addra(7 downto 0)  => std_logic_vector(cnvCnt),
-                dina               => std_logic_vector(senseWireAccData(chan_i)),
+                dina               => std_logic_vector(memDin(chan_i)),
                 clkb               => dwaClk100,
                 rstb               => mem_rstb,
                 enb                => '1',
                 addrb(12 downto 8) => std_logic_vector(freqSetOffset(8 DOWNTO 4)), -- shifting by 4 will give a x16 interpolation
                 addrb(7 downto 0)  => std_logic_vector(cnvCnt),
-                doutb              => noiseData(chan_i),
+                doutb              => memDout(chan_i),
                 rsta_busy          => mem_resetABusy(chan_i),
                 rstb_busy          => mem_resetBBusy(chan_i)
             );
-
-
-        accSubtractNoise : process (dwaClk100)
-        begin
-            if rising_edge(dwaClk100) then
-                -- add a half step to go to the closest measured value when reading the nose
-                freqSetOffset <= freqSet + fromDaqReg.noiseFreqStep(23 downto 1); -- offset set frequency by 1/2 step
-                                                                                  -- we only transmit the ADC data with 15 bit precision, drop the LSB here.
-                                                                                  -- Accumulate the noise samples x8.
-                if noiseFirstReadout then
-                else
-                end if;
-
-                if noiseReadoutBusy then
-                else
-                    senseWireMNSDataStrb <= senseWireDataStrb;
-                    senseWireAccDataStrb <= '0' ;
-                end if;
-                -- divide the x8 accumulated noise samples by 8 and subtract from sense wire samples.
-                -- outside the range just pass along the samples
-                if freqInRange then
-                else
-                end if;
-
-            -- don't strobe readout when we are recording noise samples
-            --senseWireMNSDataStrb <= senseWireDataStrb;
-            end if;
-        end process;
-    end generate genChMem;
-
-    --   senseWireMNSData(0) <= senseWireData(0)(15 downto 1);
-    --   senseWireMNSData(1) <= signed(noiseData(0)(17 downto 3));
-    --   senseWireMNSData(2) <= senseWireData(1)(15 downto 1);
-    --   senseWireMNSData(3) <= signed(noiseData(1)(17 downto 3));
-    --   senseWireMNSData(4) <= senseWireData(2)(15 downto 1);
-    --   senseWireMNSData(5) <= signed(noiseData(2)(17 downto 3));
-    --   senseWireMNSData(6) <= senseWireData(3)(15 downto 1);
-    --   senseWireMNSData(7) <= signed(noiseData(3)(17 downto 3));
-
-    -- reset at the beginning of the noise recording.
-    mem_rstb  <= '0';   --bool2sl(noiseReadoutBusy and not noiseReadoutBusy_del);
-    resetBusy <= false; --(or(mem_resetABusy) = '1') or (or(mem_resetBBusy) = '1');
-                        -- when we are in the specified range of existing noise samples and enabled.
-
+    end generate;
 end architecture struct;

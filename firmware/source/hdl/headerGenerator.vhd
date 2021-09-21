@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Jul 15 22:19:49 2021
+-- Last update : Mon Sep 20 13:31:11 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -229,7 +229,7 @@ begin
     --STATUS Header
     headEDataList <= ( -- Status frame
             x"EEEE" & std_logic_vector(to_unsigned(nHeadE-2, 16)),
-            --x"61" & x"0000" & x"55",
+            -- push or timeoutx"61" & x"0000" & x"55",
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
             x"63" & std_logic_vector(fromDaqReg.errors),
             x"64" & x"00000" & pButton,
