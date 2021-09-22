@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Aug 12 16:47:49 2021
+-- Last update : Wed Sep 22 14:57:27 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -31,8 +31,10 @@ package global_def is
 
 
     type SLV_VECTOR_TYPE is array (natural range <>) of std_logic_vector;
+    type SLV_VEC_OF_VEC_TYPE is array (natural range <>) of SLV_VECTOR_TYPE;
     type UNSIGNED_VECTOR_TYPE is array (natural range <>) of unsigned;
     type SIGNED_VECTOR_TYPE is array (natural range <>) of signed;
+    type SIGNED_VEC_OF_VEC_TYPE is array (natural range <>) of SIGNED_VECTOR_TYPE;
     type INTEGER_VECTOR_TYPE is array (natural range <>) of integer;
 
     type toDaqRegType is record

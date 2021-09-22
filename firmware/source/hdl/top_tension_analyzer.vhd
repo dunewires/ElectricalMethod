@@ -419,7 +419,7 @@ begin
     );
 
 -- trigger on  supply mains
-  triggerMains_inst : entity work.triggerMains
+  triggerMains_inst : entity duneDwa.triggerMains
     port map (
 
       mainsSquare => mainsSquare,
@@ -432,7 +432,7 @@ begin
     );
 
   -- stimulus frequency generation via DAC
-  dacInterface_inst : entity work.dacInterface
+  dacInterface_inst : entity duneDwa.dacInterface
     port map (
       acStim_mag         => fromDaqReg.stimMag,
       acStim_nPeriod_fp6 => acStim_nPeriod_fp6,
@@ -463,8 +463,6 @@ begin
       acStim_enable => ctrl_acStim_enable,
 
       noiseReadoutBusy  => noiseReadoutBusy,
-      noiseFirstReadout => noiseFirstReadout,
-      noiseResetBusy    => noiseResetBusy,
 
       sendRunHdr  => sendRunHdr,
       sendAdcData => sendAdcData,
@@ -527,11 +525,7 @@ end process dropLsb;
       freqSet => ctrlFreqSet,
 
       noiseReadoutBusy  => noiseReadoutBusy,
-      noiseFirstReadout => noiseFirstReadout,
 
-      dataSel => noiseCorrDataSel,
-
-      resetBusy => noiseResetBusy,
       adcStart  => adcStart,
 
       senseWireData     => senseWireDataDiv2,

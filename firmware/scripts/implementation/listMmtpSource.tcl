@@ -9,7 +9,7 @@
 #                  vhdl sources
 # --------------------------------------------------------------------------
 set dwaVhdl {
-    ATLAS_MMTP {$proj_sources_dir/packages/global_def.vhd
+    duneDwa {$proj_sources_dir/packages/global_def.vhd
                 $proj_sources_dir/packages/trigPhaseDelPack.vhd
                 $proj_sources_dir/hdl/triggerMains.vhd
                 $proj_sources_dir/hdl/wtaController.vhd
@@ -51,7 +51,7 @@ xil_defaultlib {$proj_sources_dir/cores/ipMicrozed/blkMem_mainsAvg/blkMem_mainsA
 }
 
 set SimVhdl {
-    ATLAS_MMTP {$proj_sources_dir/simulation/adc_file_io.vhd
+    duneDwa {$proj_sources_dir/simulation/adc_file_io.vhd
                 $proj_sources_dir/simulation/tb_dwa_file_io.vhd}
 }
 

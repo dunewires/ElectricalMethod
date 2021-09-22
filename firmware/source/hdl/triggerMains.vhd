@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Sep  2 17:08:18 2021
--- Last update : Thu Sep  2 18:39:34 2021
+-- Last update : Wed Sep 22 15:58:04 2021
 -- Platform    : Dune DWA MicroZed
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -21,25 +21,27 @@ use UNISIM.VCOMPONENTS.all;
 -- Custom libraries and packages:
 library duneDwa;
 use duneDwa.global_def.all;
-use duneDwa.trigPhaseDelPack.all;
+use duneDwa.trigPhaseCorr.all;
 
 entity triggerMains is
-	port (
-		mainsSquare : in  std_logic := '0';
-		stimFreqReq : in unsigned(23 downto 0) := (others => '1');
+  port (
+    mainsSquare : in std_logic             := '0';
+    stimFreqReq : in unsigned(23 downto 0) := (others => '1');
 
-		mainsTrig   : out std_logic;
+    mainsTrig : out std_logic;
 
-		dwaClk100   : in  std_logic
+    dwaClk100 : in std_logic
 
-	);
+  );
 end entity triggerMains;
-	signal mainsSquare_del1, mainsSquare_del2 : std_logic := '0';
-  	signal mainsTrig_filter : unsigned(17 downto 0);
-  	signal trigPhaseCnt : unsigned(19 downto 0);
-  	signal stimFreqReqOffset : unsigned(6 downto 0);
-signal mainsTrigStart : std_logic :=  '0';
+
 architecture behav of triggerMains is
+
+  signal mainsSquare_del1, mainsSquare_del2 : std_logic := '0';
+  signal mainsTrig_filter                   : unsigned(17 downto 0);
+  signal trigPhaseCnt                       : unsigned(19 downto 0);
+  signal stimFreqReqOffset                  : unsigned(6 downto 0);
+  signal mainsTrigStart : std_logic := '0';
 
 begin
 
@@ -68,9 +70,9 @@ begin
   begin
     if rising_edge(dwaClk100) then
 
-    -- offset frequencyReq so first value in LUT is 25 Hz 
-    -- lower frequencies wont use the noise subtraction
-     stimFreqReqOffset <= stimFreqReq(6 downto 0) - "0011001";
+      -- offset frequencyReq so first value in LUT is 25 Hz 
+      -- lower frequencies wont use the noise subtraction
+      stimFreqReqOffset <= stimFreqReq(6 downto 0) - "0011001";
 
       if trigPhaseCnt = "00" & x"0001" then
         mainsTrig <= '1';
@@ -79,7 +81,7 @@ begin
       end if;
 
       if mainsTrigStart then
-       -- limit the LUT index to 64 entries 
+        -- limit the LUT index to 64 entries 
         trigPhaseCnt <= trigPhaseDel(to_integer(stimFreqReqOffset(5 downto 0)));
       elsif trigPhaseCnt /= (trigPhaseCnt'range => '0') then
         trigPhaseCnt <= trigPhaseCnt-1;

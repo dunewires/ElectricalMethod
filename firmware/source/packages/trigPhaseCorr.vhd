@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Sep  2 18:38:44 2021
+-- Last update : Wed Sep 22 15:51:36 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ use IEEE.NUMERIC_STD.all;
 library duneDwa;
 use duneDwa.global_def.all;
 
-package trigPhaseDelPack is
+package trigPhaseCorr is
     constant trigPhaseDel : UNSIGNED_VECTOR_TYPE(63 downto 0)(19 downto 0) := (
             x"0CAFE",
             x"0CAFE",
@@ -88,9 +88,9 @@ package trigPhaseDelPack is
             x"0CAFE",
             x"0CAFE"
         );
-end trigPhaseDelPack;
+    
+end trigPhaseCorr;
 
+package body trigPhaseCorr is
 
-package body trigPhaseDelPack is
-
-end trigPhaseDelPack;
+end trigPhaseCorr;
