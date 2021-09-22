@@ -22,8 +22,10 @@ def apa_channel_to_board_channel(wire_layer: str, apa_channel: int):
 
     if wire_layer == 'X':
         board_channel = (apa_channel - 1) % 48 + 1
-    if wire_layer in {'V', 'U'}:
+    if wire_layer == 'V':
         board_channel = (apa_channel - 1) % 40 + 1
+    if wire_layer == 'U':
+        board_channel = 41 - apa_channel_to_board_channel('V', apa_channel)
     if wire_layer == 'G':
         if apa_channel > 49:
             apa_channel -= 49
@@ -41,8 +43,10 @@ def apa_channel_to_board_number(wire_layer: str, apa_channel: int):
 
     if wire_layer == 'X':
         board_number = (apa_channel - 1) // 48 + 1
-    if wire_layer in {'V', 'U'}:
+    if wire_layer == 'V':
         board_number = (apa_channel - 1) // 40 + 1
+    if wire_layer == 'U':
+        board_number = 11 - apa_channel_to_board_number('V', apa_channel)
     if wire_layer == 'G':
         if apa_channel > 49:
             apa_channel -= 49
@@ -99,7 +103,7 @@ def channel_groupings(wire_layer: str, headboard_number: int):
     wire_layer = check_valid_wire_layer(wire_layer)
     headboard_number = check_valid_headboard_number(wire_layer, headboard_number)
 
-    if wire_layer == "U" or wire_layer == "V":
+    if wire_layer == "V":
         return np.array([ \
             np.array([ 1, 3, 5, 7, 9,11,13,15]), \
             np.array([ 2, 4, 6, 8,10,12,14,16]), \
@@ -108,6 +112,16 @@ def channel_groupings(wire_layer: str, headboard_number: int):
             np.array([33,35,37,39]), \
             np.array([34,36,38,40]) \
         ], dtype=object) + (headboard_number - 1)*40
+
+    if wire_layer == "U":
+        return np.array([ \
+            np.array([ 1, 3, 5, 7, 9,11,13,15]), \
+            np.array([ 2, 4, 6, 8,10,12,14,16]), \
+            np.array([17,19,21,23,25,27,29,31]), \
+            np.array([18,20,22,24,26,28,30,32]), \
+            np.array([33,35,37,39]), \
+            np.array([34,36,38,40]) \
+        ], dtype=object) + (10 - headboard_number)*40
 
 
     if wire_layer == "X":
