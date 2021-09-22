@@ -140,6 +140,7 @@ architecture STRUCT of top_tension_analyzer is
   signal mainsTrig ,adcReadoutTrig          : std_logic := '0';
 
     signal senseWireData     : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+    signal senseWireDataDiv2     : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0) := (others => (others => '0'));
   signal senseWireDataStrb : std_logic                                   := '0';
 
   signal senseWireMNSData     : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0) := (others => (others => '0'));
@@ -507,6 +508,17 @@ begin
       dwaClk100 => dwaClk100
     );
 
+dropLsb : process (all)
+begin
+  for adc_i in 7 downto 0 loop
+  -- ADC part is either 16 or 14 bit, 
+  -- in both cases 16 bits are used.
+  -- since we don't need the resolotion of 16 bits, we drop a bit here for conveince later
+    senseWireDataDiv2(adc_i) <= senseWireData(adc_i)(15 downto 1);
+  end loop;
+end process dropLsb;
+
+
   mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
     port map (
       fromDaqReg => fromDaqReg,
@@ -522,7 +534,7 @@ begin
       resetBusy => noiseResetBusy,
       adcStart  => adcStart,
 
-      senseWireData     => senseWireData,
+      senseWireData     => senseWireDataDiv2,
       senseWireDataStrb => senseWireDataStrb,
 
       senseWireMNSData     => senseWireMNSData,
@@ -533,6 +545,7 @@ begin
 
   --for each of the 8 channels
   adcFifoGen : for adc_i in 7 downto 0 generate
+
 
     -- store data for AXI read
     fifoAdcData_ch : fifo_autoDatacollection
