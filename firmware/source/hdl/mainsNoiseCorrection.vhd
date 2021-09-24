@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu Sep 24 17:35:18 2020
--- Last update : Wed Sep 22 16:24:43 2021
+-- Last update : Thu Sep 23 18:21:23 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -109,16 +109,22 @@ architecture struct of mainsNoiseCorrection is
     signal mnsStatePos   : unsigned(3 downto 0); -- debug FSM
     signal noiseAvg8     : signed_vector_type(7 downto 0)(14 downto 0);
     signal noiseAccum    : signed_vector_type(7 downto 0)(17 downto 0);
-    signal vioProbeOut0       : std_logic_vector(31 downto 0) := (others => '0');
+    signal vioProbeOut0  : std_logic_vector(31 downto 0) := (others => '0');
+    signal cnvCntStrb    : std_logic                     := '0';
 
 begin
     cntConversions : process (dwaClk100)
     begin
         if rising_edge(dwaClk100) then
-            if adcStart then -- we initiated a new frequency
-                cnvCnt <= (others => '0');
+            freqInRange <= (freqSet >= fromDaqReg.noiseFreqMin) and
+                (freqSet < fromDaqReg.noiseFreqMax);
+            cnvCntStrb <= '0'; -- using cnvStartStrb will allow 1 clock cycle for the memory dout to update. eg when updating the noise coefficients 
+            if adcStart then   -- we initiated a new frequency
+                cnvCnt     <= (others => '0');
+                cnvCntStrb <= '1';
             elsif (senseWireDataStrb = '1') or (mnsState = getNoiseInitial_s) then -- point to the next sample
-                cnvCnt <= cnvCnt+1;
+                cnvCnt     <= cnvCnt+1;
+                cnvCntStrb <= '1';
             end if;
         end if;
     end process;
@@ -130,99 +136,104 @@ begin
             --default
             senseWireMNSDataStrb <= '0' ;
             memWea               <= '0';
-            freqPtr              <= freqSet(12 downto 7); -- shifting by 7 will give a x128 interpolation, 6 bits for 64 indiviual frequencies
-                                                          -- keep track of the samples within a single frequency "cnvCnt"
-                                                          -- the default address is set to follow the frequency and conversion number.
-                                                          -- This is only overridden when getting the second noiseCorrSamp sample used for interpolation
-            freqInRange <= (freqSet >= fromDaqReg.noiseFreqMin) and
-                (freqSet < fromDaqReg.noiseFreqMax);
+            -- shifting freqSet by 7 will give a x128 interpolation, 6 bits for 64 indiviual frequencies
+            -- keep track of the samples within a single frequency "cnvCnt"
+            -- the default address is set to follow the frequency and conversion number.
+            -- This is only overridden when getting the second noiseCorrSamp sample used for interpolation
+            freqPtr <= freqSet(12 downto 7);
+            case (mnsState) is
 
-            if fromDaqReg.reset then
-                mnsState <= idle_s;
-            else
+                -- all data is passed through
+                when idle_s =>
+                    -- just pass the data through when inactive
+                    senseWireMNSData     <= senseWireData;
+                    senseWireMNSDataStrb <= senseWireDataStrb;
 
-                case (mnsState) is
-                    when idle_s =>
-                        -- just pass the data through when inactive
-                        senseWireMNSData     <= senseWireData;
-                        senseWireMNSDataStrb <= senseWireMNSDataStrb;
-
-                        if noiseReadoutBusy then -- we are gathering noiseCorrSamp samples
-                            if adcStart then
-                                mnsState <= getNoiseInitial_s;
-                            end if;
-                        elsif freqInRange then
-                            mnsState <= mnsActive_s;
+                    if noiseReadoutBusy then -- we are gathering noiseCorrSamp samples
+                        if adcStart then
+                            mnsState <= initMem_s;
                         end if;
+                    elsif freqInRange then -- we have entered the noise region, activate correction
+                        mnsState <= mnsActive_s;
+                    end if;
 
-                    when getNoiseInitial_s =>          -- get the first interpolation sample
-                        noiseCorrSamp(0) <= noiseAvg8; -- 
-                        freqPtr          <= freqPtr+1; -- look ahead to the next frequency
-                                                       -- cnfCnt is incremented in this state to point to next sample. Fill the initial noiseCorrSamp filter value
-                        mnsState <= getNoise_s;
+                -- initialize memory with noise samples before scan starts
+                when initMem_s => -- this is the first time at this frequency's sample
+                    for chan_i in 7 downto 0 loop
+                        memDin(chan_i) <= resize(senseWireData(chan_i),18); -- no accumulation
+                    end loop;
+                    memWea <= senseWireDataStrb;
 
-                    when getNoise_s =>
-                        noiseCorrSamp <= noiseCorrSamp(0) & noiseAvg8;
-                        mnsState      <= mnsActive_s;
-
-                    when mnsActive_s =>
-                        case (vioProbeOut0) is
-                            when x"00000000" =>
-                                senseWireMNSData <= senseWireData;
-                            when x"00000001" =>
-                                for chan_i in 7 downto 0 loop
-                                    senseWireMNSData(chan_i) <= senseWireData(chan_i) - noiseAvg8(chan_i);
-                                end loop;
-                            when x"00000002" =>
-                                for chan_i in 7 downto 0 loop
-                                    senseWireMNSData(chan_i) <= noiseAvg8(chan_i);
-                                end loop;
-                            when x"00000003" =>
-                                for chan_i in 7 downto 0 loop
-                                    senseWireMNSData(chan_i)(14 downto 13) <= "00";
-                                    senseWireMNSData(chan_i)(12 downto 7)  <= signed(freqPtr);
-                                    senseWireMNSData(chan_i)(6 downto 0)   <= signed(cnvCnt);
-                                end loop;
-                            when others =>
-                                null;
-                        end case;
-
-                        if not freqInRange or noiseReadoutBusy then -- disable mains subtraction
-                            mnsState <= idle_s;
-                        else -- mains subtraction is active
-                            if adcStart then
-                                mnsState <= initMem_s when noiseReadoutBusy else getNoiseInitial_s;
-                            elsif senseWireDataStrb then
-                                mnsState <= getNoise_s;
-                            end if;
-                        end if;
-
-                    when initMem_s => -- this is the first time at this frequency's sample
-                        for chan_i in 7 downto 0 loop
-                            memDin(chan_i) <= resize(senseWireData(chan_i),18); -- no accumulation
-                        end loop;
-                        memWea <= senseWireDataStrb;
-
-                        if not noiseReadoutBusy then -- path back to the ready state eg in the case of no averaging or an abort
-                            mnsState <= idle_s;
-                        elsif adcStart then -- this is the start of the second set of samples. let's accumulate
-                            mnsState <= accumMem_s;
-                        end if;
-
-                    when accumMem_s =>
-                        for chan_i in 7 downto 0 loop
-                            memDin(chan_i) <= resize(senseWireData(chan_i),18) + noiseAccum(chan_i);
-                        end loop;
-                        memWea <= senseWireDataStrb;
-
-                        if not noiseReadoutBusy then -- path back to the ready state eg we are donw with this frequency or an abort
-                            mnsState <= idle_s;
-                        end if;
-
-                    when others =>
+                    if not noiseReadoutBusy then -- path back to the ready state eg in the case of no averaging or an abort
                         mnsState <= idle_s;
-                end case;
-            end if;
+                    elsif adcStart then -- this is the start of the second set of samples. let's accumulate
+                        mnsState <= accumMem_s;
+                    end if;
+
+                when accumMem_s =>
+                    for chan_i in 7 downto 0 loop
+                        memDin(chan_i) <= resize(senseWireData(chan_i),18) + noiseAccum(chan_i);
+                    end loop;
+                    memWea <= senseWireDataStrb;
+
+                    if not noiseReadoutBusy then -- path back to the ready state eg we are donw with this frequency or an abort
+                        mnsState <= idle_s;
+                    end if;
+
+                -- frequency scan n noise range
+                when mnsActive_s =>
+                    senseWireMNSDataStrb <= senseWireDataStrb;
+                    case (vioProbeOut0) is
+                        when x"00000000" =>
+                            for chan_i in 7 downto 0 loop
+                                senseWireMNSData(chan_i) <= senseWireData(chan_i) - noiseCorrSamp(0)(chan_i);
+                            end loop;
+                        when x"00000001" =>
+                            senseWireMNSData <= senseWireData;
+                        when x"00000002" =>
+                            for chan_i in 7 downto 0 loop
+                                senseWireMNSData(chan_i) <= noiseAvg8(chan_i);
+                            end loop;
+                        when x"00000003" =>
+                            for chan_i in 7 downto 0 loop
+                                senseWireMNSData(chan_i)(14 downto 13) <= "00";
+                                senseWireMNSData(chan_i)(12 downto 7)  <= signed(freqPtr);
+                                senseWireMNSData(chan_i)(6 downto 0)   <= signed(cnvCnt);
+                            end loop;
+                        when x"00000004" =>
+                            for chan_i in 7 downto 0 loop
+                                senseWireMNSData(chan_i) <= senseWireData(chan_i) - noiseAvg8(chan_i);
+                            end loop;
+                        when x"00000005" =>
+                            for chan_i in 7 downto 0 loop
+                                senseWireMNSData(chan_i) <= senseWireData(chan_i) - noiseCorrSamp(1)(chan_i);
+                            end loop;
+                        when others =>
+                            null;
+                    end case;
+
+                    if not freqInRange or noiseReadoutBusy then -- disable mains subtraction
+                        mnsState <= idle_s;
+                    else                   -- mains subtraction is active, update noise subtraction data BEFORE each sample.
+                        if cnvCntStrb then -- using cnvStartStrb will allow 1 clock cycle for the memory dout to update
+                            mnsState <= getNoiseInitial_s;
+                        end if;
+                    end if;
+
+                when getNoiseInitial_s => -- get the first interpolation sample
+                    noiseCorrSamp <= noiseCorrSamp(0) & noiseAvg8;
+                    freqPtr       <= freqPtr+1; -- look ahead to the next frequency
+                                                -- cnfCnt is incremented in this state to point to next sample. Fill the initial noiseCorrSamp filter value
+                    mnsState <= getNoise_s;
+
+                when getNoise_s =>
+                    noiseCorrSamp <= noiseCorrSamp(0) & noiseAvg8;
+                    mnsState      <= mnsActive_s;
+
+
+                when others =>
+                    mnsState <= idle_s;
+            end case;
         end if;
     end process mnsState_seq;
 
@@ -252,7 +263,7 @@ begin
             probe2(31 downto 18) => (others => '0'),
             probe2(17 downto 0)  => std_logic_vector(noiseAccum(1)),
             probe3(31 downto 30) => (others => '0'),
-            probe3(29 downto 15)  => std_logic_vector(senseWireData(1)),
+            probe3(29 downto 15) => std_logic_vector(senseWireData(1)),
             probe3(14 downto 0)  => std_logic_vector(senseWireMNSData(1))
         );
 
@@ -260,21 +271,21 @@ begin
         PORT MAP (
             clk => dwaClk100,
 
-            probe_in0               => (others => '0'),
-            probe_in1               => (others => '0'),
-            probe_in2               => (others => '0'),
+            probe_in0   => (others => '0'),
+            probe_in1   => (others => '0'),
+            probe_in2   => (others => '0'),
             probe_out0  => vioProbeOut0,
-            probe_out1              => open,
-            probe_out2              => open,
-            probe_out3              => open,
-            probe_out4              => open,
-            probe_out5              => open,
-            probe_out6              => open,
-            probe_out7              => open,
-            probe_out8              => open,
-            probe_out9              => open,
-            probe_out10             => open,
-            probe_out11             => open
+            probe_out1  => open,
+            probe_out2  => open,
+            probe_out3  => open,
+            probe_out4  => open,
+            probe_out5  => open,
+            probe_out6  => open,
+            probe_out7  => open,
+            probe_out8  => open,
+            probe_out9  => open,
+            probe_out10 => open,
+            probe_out11 => open
         );
 
 end architecture struct;
