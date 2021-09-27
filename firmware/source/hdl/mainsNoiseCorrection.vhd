@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu Sep 24 17:35:18 2020
--- Last update : Thu Sep 23 18:21:23 2021
+-- Last update : Mon Sep 27 16:53:54 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ architecture struct of mainsNoiseCorrection is
         );
     END COMPONENT;
 
-    type mnsState_type is (idle_s, mnsActive_s, initMem_s, accumMem_s, getNoiseInitial_s, getNoise_s);
+    type mnsState_type is (idle_s, mnsActive_s, initMem_s, accumMem_s, updateMemDout_s, getNoiseInitial_s, getNoise_s);
     signal mnsState : mnsState_type := idle_s;
 
     signal cnvCnt      : unsigned(6 downto 0) := (others => '0');
@@ -110,30 +110,13 @@ architecture struct of mainsNoiseCorrection is
     signal noiseAvg8     : signed_vector_type(7 downto 0)(14 downto 0);
     signal noiseAccum    : signed_vector_type(7 downto 0)(17 downto 0);
     signal vioProbeOut0  : std_logic_vector(31 downto 0) := (others => '0');
-    signal cnvCntStrb    : std_logic                     := '0';
 
 begin
-    cntConversions : process (dwaClk100)
-    begin
-        if rising_edge(dwaClk100) then
-            freqInRange <= (freqSet >= fromDaqReg.noiseFreqMin) and
-                (freqSet < fromDaqReg.noiseFreqMax);
-            cnvCntStrb <= '0'; -- using cnvStartStrb will allow 1 clock cycle for the memory dout to update. eg when updating the noise coefficients 
-            if adcStart then   -- we initiated a new frequency
-                cnvCnt     <= (others => '0');
-                cnvCntStrb <= '1';
-            elsif (senseWireDataStrb = '1') or (mnsState = getNoiseInitial_s) then -- point to the next sample
-                cnvCnt     <= cnvCnt+1;
-                cnvCntStrb <= '1';
-            end if;
-        end if;
-    end process;
-
     mnsState_seq : process (dwaClk100)
     begin
-
         if rising_edge(dwaClk100) then
             --default
+            freqInRange <= (freqSet >= fromDaqReg.noiseFreqMin) and (freqSet < fromDaqReg.noiseFreqMax);
             senseWireMNSDataStrb <= '0' ;
             memWea               <= '0';
             -- shifting freqSet by 7 will give a x128 interpolation, 6 bits for 64 indiviual frequencies
@@ -151,6 +134,7 @@ begin
 
                     if noiseReadoutBusy then -- we are gathering noiseCorrSamp samples
                         if adcStart then
+                            cnvCnt   <= (others => '0');
                             mnsState <= initMem_s;
                         end if;
                     elsif freqInRange then -- we have entered the noise region, activate correction
@@ -167,7 +151,10 @@ begin
                     if not noiseReadoutBusy then -- path back to the ready state eg in the case of no averaging or an abort
                         mnsState <= idle_s;
                     elsif adcStart then -- this is the start of the second set of samples. let's accumulate
+                        cnvCnt   <= (others => '0');
                         mnsState <= accumMem_s;
+                    elsif memWea then
+                        cnvCnt <= cnvCnt+1; --update address after write
                     end if;
 
                 when accumMem_s =>
@@ -178,6 +165,11 @@ begin
 
                     if not noiseReadoutBusy then -- path back to the ready state eg we are donw with this frequency or an abort
                         mnsState <= idle_s;
+                    elsif adcStart then -- this is the start of the second set of samples. let's accumulate
+                        cnvCnt   <= (others => '0');
+                        mnsState <= accumMem_s;
+                    elsif memWea then
+                        cnvCnt <= cnvCnt+1; --update address after write
                     end if;
 
                 -- frequency scan n noise range
@@ -212,24 +204,28 @@ begin
                             null;
                     end case;
 
-                    if not freqInRange or noiseReadoutBusy then -- disable mains subtraction
+                    if not freqInRange or noiseReadoutBusy then -- path back to the ready state eg we are donw with this frequency or an abort
                         mnsState <= idle_s;
-                    else                   -- mains subtraction is active, update noise subtraction data BEFORE each sample.
-                        if cnvCntStrb then -- using cnvStartStrb will allow 1 clock cycle for the memory dout to update
-                            mnsState <= getNoiseInitial_s;
-                        end if;
+                    elsif adcStart then -- this is the start of the second set of samples. let's accumulate
+                        cnvCnt   <= (others => '0');
+                        mnsState <= updateMemDout_s;
+                    elsif senseWireDataStrb then
+                        cnvCnt   <= cnvCnt+1; --update address after write
+                        mnsState <= updateMemDout_s;
                     end if;
+
+                    -- get noise samples and interpolate before the corresponding sense wire ADC conversion arrives
+                when updateMemDout_s => --wait 1 clock for the noise RAM dout data
+                    mnsState <= getNoiseInitial_s;
 
                 when getNoiseInitial_s => -- get the first interpolation sample
                     noiseCorrSamp <= noiseCorrSamp(0) & noiseAvg8;
                     freqPtr       <= freqPtr+1; -- look ahead to the next frequency
-                                                -- cnfCnt is incremented in this state to point to next sample. Fill the initial noiseCorrSamp filter value
                     mnsState <= getNoise_s;
 
                 when getNoise_s =>
                     noiseCorrSamp <= noiseCorrSamp(0) & noiseAvg8;
                     mnsState      <= mnsActive_s;
-
 
                 when others =>
                     mnsState <= idle_s;

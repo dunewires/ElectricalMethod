@@ -108,7 +108,8 @@ begin
       adcDataSerial   => adcDataSerial,
       adcSrcSyncClk   => adcSrcSyncClk
     );
-
+fromDaqReg.ctrlStateDbg <= toDaqReg.ctrlStateDbg;
+fromDaqReg.errors <= toDaqReg.errors;
 
   adc_dds_io_1 : entity work.adc_dds_io
     port map (

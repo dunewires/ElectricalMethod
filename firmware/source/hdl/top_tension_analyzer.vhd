@@ -113,6 +113,7 @@ architecture STRUCT of top_tension_analyzer is
 
   signal adcCnv_nCnv             : unsigned(15 downto 0) := (others => '0');
   signal adcCnv_nPeriod          : unsigned(23 downto 0) := (others => '0');
+  signal adcCnv_nPeriodNoise          : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriodAuto : unsigned(23 downto 0) := (others => '0');
 
   signal acStim_mag              : unsigned(11 downto 0) := (others => '0');
@@ -352,9 +353,20 @@ begin
 
       --  let's start with a fixed conversion 
       -- temp shift left ~8 samples per cycle
-      -- nPeriod of ADC is still 10 ns. shift additional 1 
-      -- fp1 - 1 , 200 to 100 - 1 ,8 samples per cycle -3 (5 total)
+      -- nPeriod of ADC is shifted acStim period to maintain the samples / cycle
+      -- fp6 - 6 , 200 to 100 - 1 ,8 samples per cycle -3 (10 total)
+
+      --!! future option when in the noise subtraction region we hold the sampling period 
+      -- to improve the results of interpolating between two measured noise samples in between frequencies
+
+      --if inNoiseRange then 
+      --adcCnv_nPeriod <= adcCnv_nPeriodNoise;
+      --else 
       adcCnv_nPeriod <= "000" & acStim_nPeriod_fp6(30 downto 10);
+      --end if;
+      --IF adcCnv_nPeriodNoiseLatch then
+      --adcCnv_nPeriodNoise <= "000" & acStim_nPeriod_fp6(30 downto 10);
+      --end if;
       -- find the number of total canversions for each frequency
       adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
       adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
@@ -486,7 +498,6 @@ begin
 
       adcCnv_nCnv      => adcCnv_nCnv,
       adcCnv_nPeriod   => adcCnv_nPeriod,
-      noiseReadoutBusy => noiseReadoutBusy,
 
       adcStart => adcStart,
       trigger  => adcReadoutTrig, -- temp disable untested adcReadoutTrig,
@@ -642,6 +653,7 @@ end process dropLsb;
   toDaqReg.serNum           <= toDaqReg_serialPromInterface.serNum;
   toDaqReg.serNumMemAddress <= toDaqReg_serialPromInterface.serNumMemAddress;
   toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
+  toDaqReg.errors    <= (others  => '0'); -- all unsigned errors set to 0
 
 end STRUCT;
 

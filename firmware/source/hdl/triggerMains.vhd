@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Sep  2 17:08:18 2021
--- Last update : Wed Sep 22 15:58:04 2021
+-- Last update : Fri Sep 24 15:06:00 2021
 -- Platform    : Dune DWA MicroZed
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -38,9 +38,9 @@ end entity triggerMains;
 architecture behav of triggerMains is
 
   signal mainsSquare_del1, mainsSquare_del2 : std_logic := '0';
-  signal mainsTrig_filter                   : unsigned(17 downto 0);
-  signal trigPhaseCnt                       : unsigned(19 downto 0);
-  signal stimFreqReqOffset                  : unsigned(6 downto 0);
+  signal mainsTrig_filter                   : unsigned(17 downto 0) := (others  => '0');
+  signal trigPhaseCnt                       : unsigned(19 downto 0) := (others  => '0');
+  signal stimFreqReqOffset                  : unsigned(6 downto 0) := (others  => '0');
   signal mainsTrigStart : std_logic := '0';
 
 begin

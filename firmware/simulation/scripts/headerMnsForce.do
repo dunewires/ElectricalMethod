@@ -17,14 +17,16 @@ force -freeze sim:/tb_adc_emu/fromDaqReg.auto TRUE 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.coilDrive 32'h8421aa55 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.fixedPeriod 24'h0F0F0F 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqReq 24'h000100 0
-force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqMin 24'h001F00 0
-force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqMax 24'h001F10 0
-force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqStep 24'h000001 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqMin 24'h030000 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqMax 24'h030200 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimFreqStep 24'h000080 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.cyclesPerFreq 24'h0000008 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.adcSamplesPerCycle 16'h0008 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.stimMag 12'h023 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.clientIp 32'h95828854 0
-force -freeze sim:/tb_adc_emu/fromDaqReg.stimTime 24'h000010 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimTimeInitial 24'h000001 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.noiseBPFSetTime 24'h000001 0
+force -freeze sim:/tb_adc_emu/fromDaqReg.stimTime 24'h000001 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.activeChannels 8'h09 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.relayMask 32'h91817161 0
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(7) 8'h00 0
@@ -48,13 +50,15 @@ force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayWireBot(3) 
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayWireBot(2) 16'hA012 0
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayWireBot(1) 16'hA011 0
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.relayWireBot(0) 16'hA010 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.pktGenWatchdogPeriod 24'hB2D05E 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.statusPeriod 24'h000000 0
 
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.senseWireGain(0) 8'h61 0
 
-force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.noiseFreqMin 24'h0003B0 0 
-force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.noiseFreqMax 24'h000400 0 
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.noiseFreqMin 24'h030000 0 
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.noiseFreqMax 24'h030200 0 
 # 1 Hz
-force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.noiseFreqStep 24'h000010 0 
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.noiseFreqStep 24'h000080 0 
 # 32 samp / cycle @ 60 Hz
 # force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.noiseSampPer 24'h00CB73 0 
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/fromDaqReg.noiseSampPer 24'h000100 0 
@@ -65,14 +69,15 @@ force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fr
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fromDaqReg.serNumMemRead 0 0
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fromDaqReg.serNumMemWrite 0 0
 
-force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/bPClk_nHPeriod 32'h00000505 0
-
 # set reset and start
+# to make the simulation faster, limit the time between conversions
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/adcCnv_nPeriod 24'h00000f 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.reset true 20ns -cancel 30ns
 force -freeze sim:/tb_adc_emu/mainsSquare 0 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.ctrlStart true 100ns -cancel 110ns
 force -freeze sim:/tb_adc_emu/fromDaqReg.relayUpdate true 100ns -cancel 110ns
-force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/mainsTrig 1 0, 0 {10000000 fs} -r 1000ns
+#force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/mainsTrig 1 0, 0 {10000000 fs} -r 1000ns
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/mainsTrig 1 0, 0 {10 ns} -r 5000 ns
 run 500us
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fromDaqReg.serNumMemAddrStrb 1 0
 run 10ns
