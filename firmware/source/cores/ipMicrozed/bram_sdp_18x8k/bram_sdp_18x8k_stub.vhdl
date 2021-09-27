@@ -1,7 +1,7 @@
 -- Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2020.2 (lin64) Build 3064766 Wed Nov 18 09:12:47 MST 2020
--- Date        : Wed Sep 22 08:31:26 2021
+-- Date        : Mon Sep 27 17:17:56 2021
 -- Host        : pc0 running 64-bit CentOS Linux release 8.4.2105
 -- Command     : write_vhdl -force -mode synth_stub
 --               /home/nate/projects/duneWireTension/ElectricalMethod/firmware/source/cores/ipMicrozed/bram_sdp_18x8k/bram_sdp_18x8k_stub.vhdl
