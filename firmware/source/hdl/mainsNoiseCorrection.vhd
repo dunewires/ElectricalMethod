@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu Sep 24 17:35:18 2020
--- Last update : Mon Sep 27 16:53:54 2021
+-- Last update : Mon Sep 27 20:58:34 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -104,20 +104,36 @@ architecture struct of mainsNoiseCorrection is
 
     signal memWea        : std_logic := '0';
     signal memDin        : SIGNED_VECTOR_TYPE(7 downto 0)(17 downto 0);
-    signal noiseCorrSamp : SIGNED_VEC_OF_VEC_TYPE(1 downto 0)(7 downto 0)(14 downto 0);
     signal freqPtr       : unsigned(5 downto 0); -- 64 different frequencies 
     signal mnsStatePos   : unsigned(3 downto 0); -- debug FSM
     signal noiseAvg8     : signed_vector_type(7 downto 0)(14 downto 0);
     signal noiseAccum    : signed_vector_type(7 downto 0)(17 downto 0);
     signal vioProbeOut0  : std_logic_vector(31 downto 0) := (others => '0');
 
+    signal senseWireDataTsel: signed_vector_type(7 downto 0)(14 downto 0);
+
+    signal noiseCorrSamp : SIGNED_VEC_OF_VEC_TYPE(1 downto 0)(7 downto 0)(14 downto 0);
+    signal noiseCorrSampDiff:SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0);
+    signal noiseCorrMult:SIGNED_VECTOR_TYPE(7 downto 0)(22 downto 0);
+    signal noiseCorr:SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0);
+
 begin
+
+-- just for testing have a VIO select data input that is a known constant
+    dataTestMux : process (all)
+    begin
+    for chan_i in 7 downto 0 loop
+        senseWireDataTsel(chan_i) <= signed(freqPtr) & '0' & signed(cnvCnt) & to_signed(chan_i,4) when vioProbeOut0(7 downto 4) = x"1" else senseWireData(chan_i) ;
+        --senseWireDataTsel(chan_i) <= "0" & signed(freqPtr) & signed(cnvCnt(3 downto 0)) & to_signed(chan_i,4);
+    end loop ;
+    end process;
+
     mnsState_seq : process (dwaClk100)
     begin
         if rising_edge(dwaClk100) then
             --default
             freqInRange <= (freqSet >= fromDaqReg.noiseFreqMin) and (freqSet < fromDaqReg.noiseFreqMax);
-            senseWireMNSDataStrb <= '0' ;
+            senseWireMNSDataStrb <= '0';
             memWea               <= '0';
             -- shifting freqSet by 7 will give a x128 interpolation, 6 bits for 64 indiviual frequencies
             -- keep track of the samples within a single frequency "cnvCnt"
@@ -129,7 +145,7 @@ begin
                 -- all data is passed through
                 when idle_s =>
                     -- just pass the data through when inactive
-                    senseWireMNSData     <= senseWireData;
+                    senseWireMNSData     <= senseWireDataTsel;
                     senseWireMNSDataStrb <= senseWireDataStrb;
 
                     if noiseReadoutBusy then -- we are gathering noiseCorrSamp samples
@@ -144,7 +160,7 @@ begin
                 -- initialize memory with noise samples before scan starts
                 when initMem_s => -- this is the first time at this frequency's sample
                     for chan_i in 7 downto 0 loop
-                        memDin(chan_i) <= resize(senseWireData(chan_i),18); -- no accumulation
+                      memDin(chan_i) <= resize(senseWireDataTsel(chan_i),18); -- no accumulation
                     end loop;
                     memWea <= senseWireDataStrb;
 
@@ -159,7 +175,7 @@ begin
 
                 when accumMem_s =>
                     for chan_i in 7 downto 0 loop
-                        memDin(chan_i) <= resize(senseWireData(chan_i),18) + noiseAccum(chan_i);
+                        memDin(chan_i) <= resize(senseWireDataTsel(chan_i),18) + noiseAccum(chan_i);
                     end loop;
                     memWea <= senseWireDataStrb;
 
@@ -175,30 +191,30 @@ begin
                 -- frequency scan n noise range
                 when mnsActive_s =>
                     senseWireMNSDataStrb <= senseWireDataStrb;
-                    case (vioProbeOut0) is
-                        when x"00000000" =>
+                    case (vioProbeOut0(3 downto 0)) is
+                        when x"0" =>
                             for chan_i in 7 downto 0 loop
-                                senseWireMNSData(chan_i) <= senseWireData(chan_i) - noiseCorrSamp(0)(chan_i);
+                                senseWireMNSData(chan_i) <= senseWireDataTsel(chan_i) - noiseCorr(chan_i);
                             end loop;
-                        when x"00000001" =>
-                            senseWireMNSData <= senseWireData;
-                        when x"00000002" =>
+                        when x"1" =>
+                            senseWireMNSData <= senseWireDataTsel;
+                        when x"2" =>
                             for chan_i in 7 downto 0 loop
                                 senseWireMNSData(chan_i) <= noiseAvg8(chan_i);
                             end loop;
-                        when x"00000003" =>
+                        when x"3" =>
                             for chan_i in 7 downto 0 loop
                                 senseWireMNSData(chan_i)(14 downto 13) <= "00";
                                 senseWireMNSData(chan_i)(12 downto 7)  <= signed(freqPtr);
                                 senseWireMNSData(chan_i)(6 downto 0)   <= signed(cnvCnt);
                             end loop;
-                        when x"00000004" =>
+                        when x"4" =>
                             for chan_i in 7 downto 0 loop
-                                senseWireMNSData(chan_i) <= senseWireData(chan_i) - noiseAvg8(chan_i);
+                                senseWireMNSData(chan_i) <= senseWireDataTsel(chan_i) - noiseAvg8(chan_i);
                             end loop;
-                        when x"00000005" =>
+                        when x"5" =>
                             for chan_i in 7 downto 0 loop
-                                senseWireMNSData(chan_i) <= senseWireData(chan_i) - noiseCorrSamp(1)(chan_i);
+                                senseWireMNSData(chan_i) <= senseWireDataTsel(chan_i) - noiseCorrSamp(1)(chan_i);
                             end loop;
                         when others =>
                             null;
@@ -217,14 +233,14 @@ begin
                     -- get noise samples and interpolate before the corresponding sense wire ADC conversion arrives
                 when updateMemDout_s => --wait 1 clock for the noise RAM dout data
                     mnsState <= getNoiseInitial_s;
+                    freqPtr       <= freqPtr+1; -- look ahead to the next frequency, dout will update in 2 clock cycles
 
                 when getNoiseInitial_s => -- get the first interpolation sample
-                    noiseCorrSamp <= noiseCorrSamp(0) & noiseAvg8;
-                    freqPtr       <= freqPtr+1; -- look ahead to the next frequency
+                    noiseCorrSamp <=  noiseAvg8 & noiseCorrSamp(1); -- first sample read is LS, shift right
                     mnsState <= getNoise_s;
 
                 when getNoise_s =>
-                    noiseCorrSamp <= noiseCorrSamp(0) & noiseAvg8;
+                    noiseCorrSamp <=  noiseAvg8 & noiseCorrSamp(1);-- first sample read is LS, shift right
                     mnsState      <= mnsActive_s;
 
                 when others =>
@@ -245,6 +261,16 @@ begin
             );
 
         noiseAvg8(chan_i) <= noiseAccum(chan_i)(17 downto 3); -- take the accumulated samples and divide by 8
+
+    linearInterp : process (dwaClk100)
+    begin
+        if rising_edge(dwaClk100) then
+            noiseCorrSampDiff(chan_i) <= noiseCorrSamp(1)(chan_i) - noiseCorrSamp(0)(chan_i);
+            noiseCorrMult(chan_i) <= noiseCorrSampDiff(chan_i) * signed ('0' & freqSet(6 downto 0)); -- inferred mult requires both be signed, This is the correction between frequency samples
+            noiseCorr(chan_i)  <= noiseCorrSamp(0)(chan_i) + noiseCorrMult(chan_i)(21 downto 7); -- divide by 128 -- 1/2 Hz freq noise step size.  does this need to be parameterized?
+        end if;
+    end process;
+
     end generate;
 
     mnsStatePos <= to_unsigned(mnsState_type'POS(mnsState),mnsStatePos'length);
@@ -259,7 +285,7 @@ begin
             probe2(31 downto 18) => (others => '0'),
             probe2(17 downto 0)  => std_logic_vector(noiseAccum(1)),
             probe3(31 downto 30) => (others => '0'),
-            probe3(29 downto 15) => std_logic_vector(senseWireData(1)),
+            probe3(29 downto 15) => std_logic_vector(senseWireDataTsel(1)),
             probe3(14 downto 0)  => std_logic_vector(senseWireMNSData(1))
         );
 

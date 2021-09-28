@@ -184,28 +184,29 @@ add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReado
 add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv_nPeriod
 add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv_nCnv
 add wave -noupdate -group adcReadout /tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcBusy
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/vioProbeOut0
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/toDaqReg
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSDataStrb
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSData
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataStrb
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireData
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseReadoutBusy
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseAvg8
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseAccum
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/mnsStatePos
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/mnsState
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/memWea
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/memDin
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/fromDaqReg
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/freqSet
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/freqPtr
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/freqInRange
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/dwaClk100
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/cnvCntStrb
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/cnvCnt
-add wave -noupdate -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/adcStart
+add wave -noupdate -expand -group mns -color {Sky Blue} -expand -subitemconfig {/tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(7) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(6) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(5) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(4) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(3) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(2) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(1) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(0) {-color {Sky Blue} -height 17}} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel
+add wave -noupdate -expand -group mns -color {Sky Blue} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataStrb
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/vioProbeOut0
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/toDaqReg
+add wave -noupdate -expand -group mns -color Orange -expand -subitemconfig {/tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSData(7) {-color Orange -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSData(6) {-color Orange -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSData(5) {-color Orange -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSData(4) {-color Orange -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSData(3) {-color Orange -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSData(2) {-color Orange -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSData(1) {-color Orange -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSData(0) {-color Orange -height 17}} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSData
+add wave -noupdate -expand -group mns -color Orange /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireMNSDataStrb
+add wave -noupdate -expand -group mns -color Gray90 -expand -subitemconfig {/tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorr(7) {-color Gray90 -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorr(6) {-color Gray90 -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorr(5) {-color Gray90 -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorr(4) {-color Gray90 -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorr(3) {-color Gray90 -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorr(2) {-color Gray90 -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorr(1) {-color Gray90 -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorr(0) {-color Gray90 -height 17}} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorr
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireData
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseReadoutBusy
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/adcStart
+add wave -noupdate -expand -group mns -color Khaki -format Literal /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/freqInRange
+add wave -noupdate -expand -group mns -color Khaki /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/freqSet
+add wave -noupdate -expand -group mns -color Khaki /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/cnvCnt
+add wave -noupdate -expand -group mns -expand -subitemconfig {/tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp(1) -expand /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp(0) -expand} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp
+add wave -noupdate -expand -group mns -expand /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseAvg8
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseAccum
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/mnsStatePos
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/mnsState
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/memWea
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/memDin
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/fromDaqReg
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/freqPtr
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/dwaClk100
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/toDaqReg.senseWireGain
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/sdi
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/dpotInterface_inst/writeReg
@@ -236,7 +237,7 @@ add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/clk200
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/bPClkPeriodCnt
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/bPClk
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {624060000000 fs} 0}
+WaveRestoreCursors {{Cursor 1} {449043098763 fs} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 208
 configure wave -valuecolwidth 210
@@ -252,4 +253,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits fs
 update
-WaveRestoreZoom {0 fs} {30567177758572 fs}
+WaveRestoreZoom {444014905791 fs} {480854631182 fs}
