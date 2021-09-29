@@ -416,6 +416,8 @@ class TensionTableModel(qtc.QAbstractTableModel):
         if role == qtc.Qt.BackgroundRole:
             if val is np.nan:
                 return
+            if val < 0:
+                return
             elif val < TENSION_SPEC_MIN:
                 return TENSION_LOW_COLOR
             elif val > TENSION_SPEC_MAX:
@@ -2410,8 +2412,8 @@ class MainWindow(qtw.QMainWindow):
         self.tensionLayer = layer
         # Build dictionary and table
         self.tensionData = {
-            'A':[np.nan]*MAX_WIRE_SEGMENT[layer],
-            'B':[np.nan]*MAX_WIRE_SEGMENT[layer],
+            'A':[-1]*MAX_WIRE_SEGMENT[layer],
+            'B':[-1]*MAX_WIRE_SEGMENT[layer],
         }
         self.tensionTableModel = TensionTableModel(self.tensionData)
         self.tensionTableView.setModel(self.tensionTableModel)
@@ -2501,6 +2503,7 @@ class MainWindow(qtw.QMainWindow):
                 "note": note
             }
         }
+        print(record_result)
         dbid= sietch.api('/test',record_result)
 
     def saveResonanceData(self):
