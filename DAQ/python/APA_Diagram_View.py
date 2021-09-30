@@ -24,10 +24,9 @@ class APA_Diagram_View(FigureCanvasQTAgg):
         self.setPlotColors()
         
         self.fig = Figure(figsize=(self._apaWidth/1500, self._apaHeight/1500))
-
         super(APA_Diagram_View, self).__init__(self.fig)
 
-
+        
     def setPlotColors(self):
         self.apaFrameColor = 'black'
         
