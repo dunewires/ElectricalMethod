@@ -1653,18 +1653,12 @@ class MainWindow(qtw.QMainWindow):
         print("\n\n")
         axes = self.apaDiagram_mpl.fig.add_subplot(1,1,1)
         axes.plot([1,2,3],[1,2,3])
-        #self.apaDiagram_mpl.figure.show()
-        #_apaWidth  = 2306.7
-        #_apaHeight = 5997.32
-        #
-        ### PlotWidget version
-        #self.apaDiagram_mpl.setBackground('w')
-        #self.apaDiagram_mpl.setMouseEnabled(x=False, y=False)   # Don't allow zoom/pan via mouse
-        #self.apaDiagram_mpl.setRange(xRange=(0,_apaWidth), yRange=(0,_apaHeight),
-        #                            padding=0, update=True, disableAutoRange=True)
-        #self.apaDiagram_mpl.setAspectLocked(lock=True, ratio=1) # 
-        ##self.apaDiagram_mpl.setLimits(xMin=0, xMax=_apaWidth, yMin=0, yMax=_apaHeight)
-        #
+        _apaWidth  = 2306.7
+        _apaHeight = 5997.32
+        axes.set_xlim([0,_apaWidth])
+        axes.set_ylim([0,_apaHeight])
+        axes.set_aspect('equal')
+        
         #apaAxisPen = pg.mkPen(color="#000000", width=4)     # APA frame
         #apaWirePen = pg.mkPen(color="#FF0000", width=4, style=qtc.Qt.SolidLine)
         #apaWirePenBack = pg.mkPen(color="#FF0000", width=4, style=qtc.Qt.DashLine)
