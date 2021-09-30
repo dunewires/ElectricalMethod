@@ -2629,8 +2629,6 @@ class MainWindow(qtw.QMainWindow):
         #runHeaderFile = os.path.join(fileroot, f'{scanId}_FF.txt')
     
     def loadEventDataViaFileBrowser(self):
-        # BOBOB open file browser
-        print("got here")
         #options = qtw.QFileDialog.Options()
         #options |= qtw.QFileDialog.DontUseNativeDialog
         #scanDir, _ = qtw.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()",
@@ -2735,7 +2733,8 @@ class MainWindow(qtw.QMainWindow):
         self.evtData['stimPeriodUnion'].sort()
         self.evtData['stimPeriodUnion'] = self.evtData['stimPeriodUnion'][::-1]  # reverse the sort
         #print(self.evtData['periodUnion'])
-        self.evtData['freqUnion'] = CLOCK_PERIOD_SEC/self.evtData['stimPeriodUnion']
+        #self.evtData['freqUnion'] = CLOCK_PERIOD_SEC/self.evtData['stimPeriodUnion']
+        self.evtData['freqUnion'] = (1e12/self.evtData['stimPeriodUnion'])/78.125 # convert period in 78.125ps to freq in Hz
         #print(self.evtData['freqUnion'])
         
         # Second pass through the data -- align individual channel data with the master frequency list
