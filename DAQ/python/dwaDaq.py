@@ -1,8 +1,6 @@
 # FIXME/TODO:
 # * In automated scan, the config file gets a "statusPeriod" field, but it should only have statusPeriodSec
 # 
-# * fix the event viewer (directory structure has changed)
-#
 # * may need progress bars (or other indicator) for long processes such as:
 #   - submit to db
 #   - fetch resonances to compute tension
