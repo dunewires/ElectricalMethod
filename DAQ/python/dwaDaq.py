@@ -1708,8 +1708,8 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot()
     def evtVwrChange(self, step=None):
-        print('\n\n\n')
-        print(f"step by {step}")
+        #print('\n\n\n')
+        #print(f"step by {step}")
 
         if self.evtData is None:
             print("No EVENT VIEWER data yet available")
@@ -1723,7 +1723,7 @@ class MainWindow(qtw.QMainWindow):
             idx = nfreq-1
         self.evtData['freqIdx'] = idx
         self.evtData['freqCurrent'] = self.evtData['freqUnion'][self.evtData['freqIdx']] 
-        print('\n\n\n')
+        #print('\n\n\n')
         self.evtVwrUpdatePlots()
         
     def evtVwrUpdatePlots(self, plotAmpl=False):
@@ -2767,9 +2767,9 @@ class MainWindow(qtw.QMainWindow):
                 self.evtData['V(t)_fit'][ichan].append(yfit)
 
         # Update the A(f) and V(t) plots
-        for ichan in range(N_DWA_CHANS):
-            self.evtData['freqIdx'] = 0
-            self.evtData['freqCurrent'] = self.evtData['freqUnion'][self.evtData['freqIdx']] 
+        #for ichan in range(N_DWA_CHANS):
+        self.evtData['freqIdx'] = 0
+        self.evtData['freqCurrent'] = self.evtData['freqUnion'][self.evtData['freqIdx']] 
         self.evtVwrUpdatePlots(plotAmpl=True)
             
         #print("Payload -------------------")
