@@ -881,7 +881,7 @@ class MainWindow(qtw.QMainWindow):
         self.resFitKwargs.editingFinished.connect(self.resFitParameterUpdated)
         #
         # Resonance Tab
-        self.btnSubmitResonances.clicked.connect(self.submitResonances)
+        self.btnSubmitResonances.clicked.connect(self.submitResonancesThread)
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensionsThread)
         self.btnSubmitTensions.clicked.connect(self.submitTensionsThread)
@@ -1453,6 +1453,9 @@ class MainWindow(qtw.QMainWindow):
     def startScanThreadComplete(self):
         print("startScanThread complete!")
 
+    def submitResonancesThreadComplete(self):
+        print("submitResonancesThread complete!")
+
     def loadTensionsThreadComplete(self):
         print("loadTensionsThread complete!")
 
@@ -1789,6 +1792,17 @@ class MainWindow(qtw.QMainWindow):
         worker = Worker(self.startScan)  # could pass args/kwargs too..
         #worker.signals.result.connect(self.printOutput)
         worker.signals.finished.connect(self.startScanThreadComplete)
+
+        # execute
+        self.threadPool.start(worker)
+
+    @pyqtSlot()
+    def submitResonancesThread(self):
+    
+        # Pass the function to execute
+        worker = Worker(self.submitResonances)  # could pass args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.submitResonancesThreadComplete)
 
         # execute
         self.threadPool.start(worker)
