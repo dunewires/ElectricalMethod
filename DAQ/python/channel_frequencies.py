@@ -227,6 +227,21 @@ def wire_range_data(wire_freq_data, range_radius = 0.15):
         range_data.append({"wireSegments": [int(w)], "range": f_range})
     return range_data
 
+
+def wire_range_data_constant(wire_layer: str, wire_freq_data):
+    """
+    Converts the frequency data into a list of frequency range dictionaries. Ex: {"wireSegments": [23], "range": [60,80]}.
+    The range is independant of the wire, and depends only on the layer 
+    """
+    range_data = []
+    for w in wire_freq_data:
+        if wire_layer == "X" or wire_layer == "G":
+            f_range = [67, 90]
+        else:
+            f_range = [50, 250]
+        range_data.append({"wireSegments": [int(w)], "range": f_range})
+    return range_data
+
 def combine_range_data(range_data_a, range_data_b):
     """
     Combine multiple sets of wire_range_data and merge the frequency ranges.
@@ -286,7 +301,8 @@ def get_range_data_for_channels(wire_layer: str, channel_numbers: list, range_ra
     Produces a full reduced and culled set of frequency range dictionaries for a set of channels.
     """
     wire_freq_data = wire_frequencies_from_channels(wire_layer, channel_numbers)
-    range_data = wire_range_data(wire_freq_data, range_radius)
+    #range_data = wire_range_data(wire_freq_data, range_radius) # Swtiched to a constant method where range depends only on the layer
+    range_data = wire_range_data_constant(wire_layer, wire_freq_data)
     reduced_range_data = reduce_range_data(range_data)
     culled_range_data = cull_range_data(reduced_range_data)
     range_data_with_channel_info = append_channel_info(culled_range_data, channel_numbers)
