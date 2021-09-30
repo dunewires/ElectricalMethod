@@ -993,9 +993,9 @@ class MainWindow(qtw.QMainWindow):
         self.resFreqUpdateDisplay()
         
     def _configureEventViewer(self):
-        self.evtVwr_runName_val.setText(EVT_VWR_TIMESTAMP)
-        self.evtVwr_runName_val.returnPressed.connect(self.loadEventDataOld)
-        self.evtVwr_openScan_pb.clicked.connect(self.loadEventData)
+        #self.evtVwr_runName_val.setText(EVT_VWR_TIMESTAMP)
+        #self.evtVwr_runName_val.returnPressed.connect(self.loadEventDataViaName)
+        self.evtVwr_openScan_pb.clicked.connect(self.loadEventDataViaFileBrowser)
         self.evtVwrPlotsGLW.setBackground('w')
         self.evtVwrPlots = []
         chanNum = 0
@@ -2614,20 +2614,42 @@ class MainWindow(qtw.QMainWindow):
             self.labelResonanceSubmitStatus.setText("Submitted!")
         except:
             self.labelResonanceSubmitStatus.setText("Error submitting resonances")
-        
-    def loadEventData(self):
+
+
+
+    #def loadEventDataViaName(self):
+    #    print("cannot load event data this way anymore")
+        #scanId = self.evtVwr_runName_val.text()
+        #print(f'scanId = {scanId}')
+        #
+        #fileroot = 'scanData/'+scanId+'/'
+        #
+        #wireDataFilenames = [ f'{scanId}_{nn:02d}.txt' for nn in range(N_DWA_CHANS) ]
+        #wireDataFilenames = [ os.path.join(fileroot, ff) for ff in wireDataFilenames ]
+        #runHeaderFile = os.path.join(fileroot, f'{scanId}_FF.txt')
+    
+    def loadEventDataViaFileBrowser(self):
+        # BOBOB open file browser
         print("got here")
+        #options = qtw.QFileDialog.Options()
+        #options |= qtw.QFileDialog.DontUseNativeDialog
+        #scanDir, _ = qtw.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()",
+        #"","All Files (*);;JSON Files (*.json)",
+        #                                                  options=options)
+        scanDir = qtw.QFileDialog.getExistingDirectory(self,"Select directory")
+        print("scanDir = {scanDir}")
         
-    @pyqtSlot()
-    def loadEventDataOld(self):
-        scanId = self.evtVwr_runName_val.text()
-        print(f'scanId = {scanId}')
+        validScanDir = True
+        if not scanDir:  # fixme: better check for valid scan
+            validScanDir = False
+        if not validScanDir:
+            print("invalid directory: ignoring request to load event data")
+            print(scanDir)
+            return
 
-        fileroot = 'scanData/'+scanId+'/'
-
-        wireDataFilenames = [ f'{scanId}_{nn:02d}.txt' for nn in range(N_DWA_CHANS) ]
-        wireDataFilenames = [ os.path.join(fileroot, ff) for ff in wireDataFilenames ]
-        runHeaderFile = os.path.join(fileroot, f'{scanId}_FF.txt')
+        wireDataFilenames = [ f'rawData_{nn:02d}.txt' for nn in range(N_DWA_CHANS) ]
+        wireDataFilenames = [ os.path.join(scanDir, ff) for ff in wireDataFilenames ]
+        runHeaderFile = os.path.join(scanDir, f'rawData_FF.txt')
 
         print("Replaying data from the following files: ")
         print(f"  runHeaderFile = {runHeaderFile}")

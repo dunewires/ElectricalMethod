@@ -282,7 +282,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>4</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -1642,27 +1642,9 @@
            <item>
             <widget class="QPushButton" name="evtVwr_openScan_pb">
              <property name="text">
-              <string>PushButton</string>
+              <string>Load scan (select directory)</string>
              </property>
             </widget>
-           </item>
-           <item>
-            <layout class="QFormLayout" name="formLayout_7">
-             <item row="0" column="0">
-              <widget class="QLabel" name="evtVwr_runName_label">
-               <property name="text">
-                <string>Run name:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLineEdit" name="evtVwr_runName_val">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-            </layout>
            </item>
            <item>
             <widget class="QTabWidget" name="evtVwrTabs">
@@ -1872,7 +1854,6 @@
   <tabstop>tensionGLW</tabstop>
   <tabstop>btnSubmitTensions</tabstop>
   <tabstop>logTextBox</tabstop>
-  <tabstop>evtVwr_runName_val</tabstop>
   <tabstop>evtVwrTabs</tabstop>
   <tabstop>evtVwrPlotsGLW</tabstop>
   <tabstop>pw_chan_1</tabstop>
