@@ -1335,11 +1335,11 @@ class MainWindow(qtw.QMainWindow):
                 #freq step size column
                 advFss = self.advFssLineEdit.text() # Freq step size
                 if advFss: advFss = float(advFss)
-                else: pass
-                if advFss: 
-                    advFss = config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss)['stimFreqStep']
-                else: 
-                    advFss= config_generator.configure_scan_frequencies(freqMin, freqMax)['stimFreqStep']
+                else: advFss = 1/16
+                #if advFss: 
+                #    advFss = config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss)['stimFreqStep']
+                #else: 
+                #    advFss= config_generator.configure_scan_frequencies(freqMin, freqMax)['stimFreqStep']
                 item = qtw.QTableWidgetItem()
                 self.scanTable.setItem(scanNum-1, 5, item)
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
@@ -1844,15 +1844,18 @@ class MainWindow(qtw.QMainWindow):
         self.configHeadboard = self.configHeadboardSpinBox.value()
         self.configApaSide = self.SideComboBox.currentText()
 
-        advFss = self.advFssLineEdit.text() # Freq step size
         advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
         advInitDelay = self.advInitDelayLineEdit.text() # Init delay
         advStimAmplitude = self.advStimAmplitudeLineEdit.text() # Amplitude
         advDigipotAmplitude = self.advDigipotAmplitudeLineEdit.text() # Digipot amplitude
         
+        # This gets values from the table for scan configurations
+        freqMax = float(self.scanTable.item(scanIndex, 4).text())
+        freqMin = float(self.scanTable.item(scanIndex, 3).text())
+        freqStep = self.scanTable.item(scanIndex, 5).text()
+        
         # TODO: Make sure inputs can be safely converted to floats
         # TODO: Grab default values if undefined
-        if advFss: advFss = float(advFss)
         if advStimTime: advStimTime = float(advStimTime)
         if advInitDelay: advInitDelay = float(advInitDelay)
         if advStimAmplitude: advStimAmplitude = float(advStimAmplitude) # BUG: should accept hex string, no?
@@ -1902,10 +1905,10 @@ class MainWindow(qtw.QMainWindow):
         elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(stim_time=advStimTime))
 
         if advStimAmplitude: 
-            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, stim_mag=int(advStimAmplitude)))
+            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=int(advStimAmplitude)))
             
         if advDigipotAmplitude: 
-            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, digipot=int(advDigipotAmplitude)))
+            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, digipot=int(advDigipotAmplitude)))
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
@@ -1917,13 +1920,9 @@ class MainWindow(qtw.QMainWindow):
         self._loadDaqConfig()
 
         self.combinedConfig = {"FPGA": fpgaConfig, "DATABASE": dataConfig, "DAQ": self.daqConfig}
-        #this gets values from the table for scan configurations
-        self.freqMax = float(self.scanTable.item(scanIndex, 4).text())
-        self.freqMin = float(self.scanTable.item(scanIndex, 3).text())
-        self.freqStep = self.scanTable.item(scanIndex, 5).text()
         
-        fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step = int(self.freqStep)/160))
-        fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
+        fpgaConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step = freqStep))
+        fpgaConfig.update(config_generator.configure_noise_subtraction(freqMin, freqMax))
 
         self.combinedConfig = {"FPGA": fpgaConfig, "DATABASE": dataConfig, "DAQ": self.daqConfig}
         

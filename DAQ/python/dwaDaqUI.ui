@@ -596,17 +596,17 @@
                    </column>
                    <column>
                     <property name="text">
-                     <string>Freq Min</string>
+                     <string>Freq Min (Hz)</string>
                     </property>
                    </column>
                    <column>
                     <property name="text">
-                     <string>Freq Max</string>
+                     <string>Freq Max (Hz)</string>
                     </property>
                    </column>
                    <column>
                     <property name="text">
-                     <string>Step Size</string>
+                     <string>Step Size (Hz)</string>
                     </property>
                    </column>
                    <column>
@@ -879,7 +879,7 @@
                 <item row="12" column="0">
                  <widget class="QLabel" name="label_12">
                   <property name="text">
-                   <string>Frequency step size</string>
+                   <string>Frequency step size (Hz)</string>
                   </property>
                  </widget>
                 </item>
