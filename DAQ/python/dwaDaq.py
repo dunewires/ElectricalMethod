@@ -545,6 +545,12 @@ class MainWindow(qtw.QMainWindow):
         self.heartval = 0
         self.udpListening = False
         self.tensionApaUuid.setText(APA_UUID_DUMMY_VAL)
+        apaUuidList = ['uuid_test_1', 'uuid_test_2']
+        apaUuidAutocompleter = qtw.QCompleter(apaUuidList)
+        apaUuidAutocompleter.setCaseSensitivity(qtc.Qt.CaseInsensitive)
+        apaUuidAutocompleter.setCompletionMode(qtw.QCompleter.UnfilteredPopupCompletion)
+        self.configApaUuidLineEdit.setCompleter(apaUuidAutocompleter)
+
         
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
@@ -1367,13 +1373,13 @@ class MainWindow(qtw.QMainWindow):
             # set background color to white
             # FIXME: clean this up...
             getattr(self, f'pw_grid_{ii}').setBackground('w')
-            getattr(self, f'pw_grid_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
+            getattr(self, f'pw_grid_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
             getattr(self, f'pw_chan_{ii}').setBackground('w')
-            getattr(self, f'pw_chan_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
+            getattr(self, f'pw_chan_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
             getattr(self, f'pw_amplgrid_{ii}').setBackground('w')
-            getattr(self, f'pw_amplgrid_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
+            getattr(self, f'pw_amplgrid_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
             getattr(self, f'pw_amplchan_{ii}').setBackground('w')
-            getattr(self, f'pw_amplchan_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
+            getattr(self, f'pw_amplchan_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
             #getattr(self, f'pw_resfreqfit_{ii}').setBackground('w')
             #getattr(self, f'pw_resfreqfit_{ii}').setTitle(ii)
 
