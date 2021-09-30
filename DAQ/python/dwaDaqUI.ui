@@ -282,7 +282,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>4</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -301,7 +301,7 @@
               <attribute name="title">
                <string>Config</string>
               </attribute>
-              <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="5,0,2">
                <item>
                 <layout class="QFormLayout" name="formLayout">
                  <property name="fieldGrowthPolicy">
@@ -721,7 +721,7 @@
                 </spacer>
                </item>
                <item>
-                <widget class="QGraphicsView" name="graphicsView"/>
+                <widget class="MplCanvas" name="apaDiagram_mpl" native="true"/>
                </item>
               </layout>
              </widget>
@@ -1763,6 +1763,12 @@
    <extends>QGraphicsView</extends>
    <header>pyqtgraph</header>
   </customwidget>
+  <customwidget>
+   <class>MplCanvas</class>
+   <extends>QWidget</extends>
+   <header>MplCanvas</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>btnDwaConnect</tabstop>
@@ -1780,7 +1786,6 @@
   <tabstop>btnConfigureScans</tabstop>
   <tabstop>scanTable</tabstop>
   <tabstop>btnScanCtrl</tabstop>
-  <tabstop>graphicsView</tabstop>
   <tabstop>configFileName</tabstop>
   <tabstop>omitComments_cb</tabstop>
   <tabstop>pw_grid_2</tabstop>

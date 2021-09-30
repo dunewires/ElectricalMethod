@@ -526,6 +526,7 @@ class MainWindow(qtw.QMainWindow):
         self.registers_all = [item for item in ddp.Registers]  
 
         # Load the UI (built in Qt Designer)
+        # fixme -- should be self.ui = uic.loadUi() and then refer to all GUI elements as self.ui.NAME
         uic.loadUi(DAQ_UI_FILE, self)
         self.configFileContents.setReadOnly(True)
         self.scanCtrlButtons = [self.btnScanCtrl, self.btnScanCtrlAdv]
@@ -614,6 +615,7 @@ class MainWindow(qtw.QMainWindow):
 
         self._configureGUI()
         self._configureMultithreading()
+        self._configureApaDiagram()
 
         ###########################################
         # Create instance of data parser to handle incoming data
@@ -1646,87 +1648,93 @@ class MainWindow(qtw.QMainWindow):
         #                                                                           self.dummyDataTension['y'])
             
     def _configureApaDiagram(self):
-        _apaWidth  = 2306.7
-        _apaHeight = 5997.32
-
-        ## PlotWidget version
-        self.pw_apaDiagram.setBackground('w')
-        self.pw_apaDiagram.setMouseEnabled(x=False, y=False)   # Don't allow zoom/pan via mouse
-        self.pw_apaDiagram.setRange(xRange=(0,_apaWidth), yRange=(0,_apaHeight),
-                                    padding=0, update=True, disableAutoRange=True)
-        self.pw_apaDiagram.setAspectLocked(lock=True, ratio=1) # 
-        #self.pw_apaDiagram.setLimits(xMin=0, xMax=_apaWidth, yMin=0, yMax=_apaHeight)
-
-        apaAxisPen = pg.mkPen(color="#000000", width=4)     # APA frame
-        apaWirePen = pg.mkPen(color="#FF0000", width=4, style=qtc.Qt.SolidLine)
-        apaWirePenBack = pg.mkPen(color="#FF0000", width=4, style=qtc.Qt.DashLine)
-        axes = ['left', 'right', 'bottom', 'top']
-        for ax in axes:
-            self.pw_apaDiagram.getAxis(ax).setPen(apaAxisPen)
-            self.pw_apaDiagram.showAxis(ax)
-
-        apaLines = [1163, 2347, 3531, 4715]
-        for line in apaLines:
-            self.pw_apaDiagram.addLine(y=line, pen=apaAxisPen, movable=False) #, span=[0,_apaWidth])
-        apaBorders = [0,_apaWidth]
-        for line in apaBorders:
-            self.pw_apaDiagram.addLine(x=line, pen=apaAxisPen, movable=False) #, span=[0,_apaWidth])
-
-        #print(f"\n\n VALUE: {self.pw_apaDiagram.mapViewToScene(1000,3000)}\n\n")
-        ticks = [x for x in np.arange(0,_apaWidth+_apaWidth/10, _apaWidth/10)]
-        self.pw_apaDiagram.getAxis('bottom').setTicks([ [(tt, "") for tt in ticks] ])
-        self.pw_apaDiagram.getAxis('bottom').setStyle(tickLength=7)#, stopAxisAtTick=(True,True))
-        self.pw_apaDiagram.getAxis('bottom').setLabel(text='Head boards')
-        for ax in ['right']: #['left','right','top']:
-            self.pw_apaDiagram.getAxis(ax).setTicks([[]])  # Don't show any ticks 
-
-        # Draw a dummy wire line (not accurate values)
-        # FIXME: replace with routine that draws accurately for a given wire/layer/side
-        seg1 = self.pw_apaDiagram.plot(x=[_apaWidth/2,_apaWidth], y=[0,_apaHeight/3], pen=apaWirePen)
-        seg2 = self.pw_apaDiagram.plot(x=[_apaWidth,0], y=[_apaHeight/3, _apaHeight*5/6], pen=apaWirePenBack)
-        seg3 = self.pw_apaDiagram.plot(x=[0,_apaWidth/2.5], y=[_apaHeight*5/6,_apaHeight], pen=apaWirePen)
-
-        ## GLW version
-        ## Requires you to add a GraphicsLayoutWidget in the UI file
-        #_viewScale = 0.01
-        #self.apaDiagramGLW.setBackground('w')
-        #self.apaDiagramGLW.resize(_apaWidth*_viewScale, _apaHeight*_viewScale)
-        #self.apaDiagram = self.apaDiagramGLW.addPlot()
-        #self.apaDiagram.setMouseEnabled(x=False, y=False)   # Don't allow zoom/pan via mouse
-        #self.apaDiagram.disableAutoRange()
-        ##self.apaDiagram.setLimits(xMin=0, xMax=_apaWidth, yMin=0, yMax=_apaHeight)
-        #self.apaDiagram.setAspectLocked(lock=True, ratio=1) # 
-        #self.apaDiagram.setXRange(0, _apaWidth,  padding=0)
-        #self.apaDiagram.setYRange(0, _apaHeight, padding=0)
-        #                                                     
+        print("\n\nself.apaDiagram_mpl.fig")
+        print(self.apaDiagram_mpl.fig)
+        print("\n\n")
+        axes = self.apaDiagram_mpl.fig.add_subplot(1,1,1)
+        axes.plot([1,2,3],[1,2,3])
+        #self.apaDiagram_mpl.figure.show()
+        #_apaWidth  = 2306.7
+        #_apaHeight = 5997.32
+        #
+        ### PlotWidget version
+        #self.apaDiagram_mpl.setBackground('w')
+        #self.apaDiagram_mpl.setMouseEnabled(x=False, y=False)   # Don't allow zoom/pan via mouse
+        #self.apaDiagram_mpl.setRange(xRange=(0,_apaWidth), yRange=(0,_apaHeight),
+        #                            padding=0, update=True, disableAutoRange=True)
+        #self.apaDiagram_mpl.setAspectLocked(lock=True, ratio=1) # 
+        ##self.apaDiagram_mpl.setLimits(xMin=0, xMax=_apaWidth, yMin=0, yMax=_apaHeight)
+        #
         #apaAxisPen = pg.mkPen(color="#000000", width=4)     # APA frame
         #apaWirePen = pg.mkPen(color="#FF0000", width=4, style=qtc.Qt.SolidLine)
         #apaWirePenBack = pg.mkPen(color="#FF0000", width=4, style=qtc.Qt.DashLine)
         #axes = ['left', 'right', 'bottom', 'top']
         #for ax in axes:
-        #    self.apaDiagram.getAxis(ax).setPen(apaAxisPen)
-        #    self.apaDiagram.showAxis(ax)
+        #    self.apaDiagram_mpl.getAxis(ax).setPen(apaAxisPen)
+        #    self.apaDiagram_mpl.showAxis(ax)
         #
         #apaLines = [1163, 2347, 3531, 4715]
         #for line in apaLines:
-        #    self.apaDiagram.addLine(y=line, pen=apaAxisPen, movable=False) #, span=[0,_apaWidth])
+        #    self.apaDiagram_mpl.addLine(y=line, pen=apaAxisPen, movable=False) #, span=[0,_apaWidth])
         #apaBorders = [0,_apaWidth]
         #for line in apaBorders:
-        #    self.apaDiagram.addLine(x=line, pen=apaAxisPen, movable=False) #, span=[0,_apaWidth])
+        #    self.apaDiagram_mpl.addLine(x=line, pen=apaAxisPen, movable=False) #, span=[0,_apaWidth])
         #
-        ##print(f"\n\n VALUE: {self.apaDiagram.mapViewToScene(1000,3000)}\n\n")
+        ##print(f"\n\n VALUE: {self.apaDiagram_mpl.mapViewToScene(1000,3000)}\n\n")
         #ticks = [x for x in np.arange(0,_apaWidth+_apaWidth/10, _apaWidth/10)]
-        #self.apaDiagram.getAxis('bottom').setTicks([ [(tt, "") for tt in ticks] ])
-        #self.apaDiagram.getAxis('bottom').setStyle(tickLength=7)#, stopAxisAtTick=(True,True))
-        #self.apaDiagram.getAxis('bottom').setLabel(text='Head boards')
+        #self.apaDiagram_mpl.getAxis('bottom').setTicks([ [(tt, "") for tt in ticks] ])
+        #self.apaDiagram_mpl.getAxis('bottom').setStyle(tickLength=7)#, stopAxisAtTick=(True,True))
+        #self.apaDiagram_mpl.getAxis('bottom').setLabel(text='Head boards')
         #for ax in ['right']: #['left','right','top']:
-        #    self.apaDiagram.getAxis(ax).setTicks([[]])  # Don't show any ticks 
+        #    self.apaDiagram_mpl.getAxis(ax).setTicks([[]])  # Don't show any ticks 
         #
         ## Draw a dummy wire line (not accurate values)
         ## FIXME: replace with routine that draws accurately for a given wire/layer/side
-        #seg1 = self.apaDiagram.plot(x=[_apaWidth/2,_apaWidth], y=[0,_apaHeight/3], pen=apaWirePen)
-        #seg2 = self.apaDiagram.plot(x=[_apaWidth,0], y=[_apaHeight/3, _apaHeight*5/6], pen=apaWirePenBack)
-        #seg3 = self.apaDiagram.plot(x=[0,_apaWidth/2.5], y=[_apaHeight*5/6,_apaHeight], pen=apaWirePen)
+        #seg1 = self.apaDiagram_mpl.plot(x=[_apaWidth/2,_apaWidth], y=[0,_apaHeight/3], pen=apaWirePen)
+        #seg2 = self.apaDiagram_mpl.plot(x=[_apaWidth,0], y=[_apaHeight/3, _apaHeight*5/6], pen=apaWirePenBack)
+        #seg3 = self.apaDiagram_mpl.plot(x=[0,_apaWidth/2.5], y=[_apaHeight*5/6,_apaHeight], pen=apaWirePen)
+        #
+        ### GLW version
+        ### Requires you to add a GraphicsLayoutWidget in the UI file
+        ##_viewScale = 0.01
+        ##self.apaDiagramGLW.setBackground('w')
+        ##self.apaDiagramGLW.resize(_apaWidth*_viewScale, _apaHeight*_viewScale)
+        ##self.apaDiagram = self.apaDiagramGLW.addPlot()
+        ##self.apaDiagram.setMouseEnabled(x=False, y=False)   # Don't allow zoom/pan via mouse
+        ##self.apaDiagram.disableAutoRange()
+        ###self.apaDiagram.setLimits(xMin=0, xMax=_apaWidth, yMin=0, yMax=_apaHeight)
+        ##self.apaDiagram.setAspectLocked(lock=True, ratio=1) # 
+        ##self.apaDiagram.setXRange(0, _apaWidth,  padding=0)
+        ##self.apaDiagram.setYRange(0, _apaHeight, padding=0)
+        ##                                                     
+        ##apaAxisPen = pg.mkPen(color="#000000", width=4)     # APA frame
+        ##apaWirePen = pg.mkPen(color="#FF0000", width=4, style=qtc.Qt.SolidLine)
+        ##apaWirePenBack = pg.mkPen(color="#FF0000", width=4, style=qtc.Qt.DashLine)
+        ##axes = ['left', 'right', 'bottom', 'top']
+        ##for ax in axes:
+        ##    self.apaDiagram.getAxis(ax).setPen(apaAxisPen)
+        ##    self.apaDiagram.showAxis(ax)
+        ##
+        ##apaLines = [1163, 2347, 3531, 4715]
+        ##for line in apaLines:
+        ##    self.apaDiagram.addLine(y=line, pen=apaAxisPen, movable=False) #, span=[0,_apaWidth])
+        ##apaBorders = [0,_apaWidth]
+        ##for line in apaBorders:
+        ##    self.apaDiagram.addLine(x=line, pen=apaAxisPen, movable=False) #, span=[0,_apaWidth])
+        ##
+        ###print(f"\n\n VALUE: {self.apaDiagram.mapViewToScene(1000,3000)}\n\n")
+        ##ticks = [x for x in np.arange(0,_apaWidth+_apaWidth/10, _apaWidth/10)]
+        ##self.apaDiagram.getAxis('bottom').setTicks([ [(tt, "") for tt in ticks] ])
+        ##self.apaDiagram.getAxis('bottom').setStyle(tickLength=7)#, stopAxisAtTick=(True,True))
+        ##self.apaDiagram.getAxis('bottom').setLabel(text='Head boards')
+        ##for ax in ['right']: #['left','right','top']:
+        ##    self.apaDiagram.getAxis(ax).setTicks([[]])  # Don't show any ticks 
+        ##
+        ### Draw a dummy wire line (not accurate values)
+        ### FIXME: replace with routine that draws accurately for a given wire/layer/side
+        ##seg1 = self.apaDiagram.plot(x=[_apaWidth/2,_apaWidth], y=[0,_apaHeight/3], pen=apaWirePen)
+        ##seg2 = self.apaDiagram.plot(x=[_apaWidth,0], y=[_apaHeight/3, _apaHeight*5/6], pen=apaWirePenBack)
+        ##seg3 = self.apaDiagram.plot(x=[0,_apaWidth/2.5], y=[_apaHeight*5/6,_apaHeight], pen=apaWirePen)
 
     def _keyboardShortcuts(self):
         print("Setting up keyboard shortcuts")
