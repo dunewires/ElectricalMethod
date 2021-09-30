@@ -151,6 +151,8 @@ EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
 OUTPUT_DIR_SCAN_DATA = './scanData/'
 OUTPUT_DIR_SCAN_DATA_ADVANCED = './scanDataAdv/'
+SCAN_OUTPUT_DIRS = [OUTPUT_DIR_SCAN_DATA, OUTPUT_DIR_SCAN_DATA_ADVANCED]
+
 #OUTPUT_DIR_CONFIG = './config/'
 #OUTPUT_DIR_UDP_DATA = './udpData/'
 #OUTPUT_DIR_AMP_DATA = './ampData/'        
@@ -401,6 +403,10 @@ class Worker(qtc.QRunnable):
 #            painter.drawControl(qtw.QStyle.CE_TabBarTabLabel, opt)
 #            painter.restore()
 
+class APA_UUID_List_Model(qtc.QStringListModel):
+    def __init__(self, parent=None):
+        super(APA_UUID_List_Model, self).__init__(parent)
+
 class TensionTableModel(qtc.QAbstractTableModel):
     # See: https://www.learnpyqt.com/tutorials/qtableview-modelviews-numpy-pandas/
     def __init__(self, data):
@@ -548,13 +554,8 @@ class MainWindow(qtw.QMainWindow):
         self.heartval = 0
         self.udpListening = False
         self.tensionApaUuid.setText(APA_UUID_DUMMY_VAL)
-        apaUuidList = ['uuid_test_1', 'uuid_test_2']
-        apaUuidAutocompleter = qtw.QCompleter(apaUuidList)
-        apaUuidAutocompleter.setCaseSensitivity(qtc.Qt.CaseInsensitive)
-        apaUuidAutocompleter.setCompletionMode(qtw.QCompleter.UnfilteredPopupCompletion)
-        self.configApaUuidLineEdit.setCompleter(apaUuidAutocompleter)
-
-        
+        self.initApaUuidSuggestions()
+       
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
         
@@ -709,6 +710,36 @@ class MainWindow(qtw.QMainWindow):
                 return entry
         return entry
 
+    def initApaUuidSuggestions(self):
+
+        # Get list of known APA UUIDs from disk
+        uuids = []
+        with os.scandir(OUTPUT_DIR_SCAN_DATA) as it:  # iterator
+            for entry in it:
+                if entry.is_dir() and os.path.basename(entry.name).startswith('APA_'):
+                    uuids.append(entry.name)
+        print(f'uuids: {uuids}')
+
+        # (should update the list of APA UUIDs during the GUI session)
+        
+        # Store the UUIDs in the model
+        self.apaUuidListModel = APA_UUID_List_Model()
+        self.apaUuidListModel.setStringList(uuids)
+        apaUuidAutocompleter = qtw.QCompleter(caseSensitivity=qtc.Qt.CaseInsensitive,
+                                              completionMode=qtw.QCompleter.UnfilteredPopupCompletion)
+        apaUuidAutocompleter.setModel(self.apaUuidListModel)
+        self.configApaUuidLineEdit.setCompleter(apaUuidAutocompleter)
+
+        # KEEP ME
+        ## When you want to update the autocomplete list, do:
+        #uuids = self.apaUuidListModel.stringList()  # get current list
+        #newUuids = ['james', 'uuid_test_1', 'battat']  # make list of new items
+        #for uu in newUuids:  # only append items that are not yet on the list
+        #    if uu not in uuids:
+        #        uuids.append(uu)
+        #self.apaUuidListModel.setStringList(uuids) # reassign the list
+        ## could also pre-pend (instead of appending)
+        
     def initTensionTable(self):
         print("init")
         # self.tensionData = {
