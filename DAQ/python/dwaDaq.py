@@ -508,7 +508,22 @@ class RecentScansTableModel(qtc.QAbstractTableModel):
     def setSubmitted(self, index, val):
         self._data[index]['submitted'] = val
     
-            
+class APA_Diagram_Model():
+    def __init__(self):
+        print("APA_Diagram_Model")
+        self.signals = APA_Diagram_Signals()
+        self.apaChans = []
+        
+    def addApaChannel(self, wire):
+        self.apaChans.append(wire)
+        self.signals.dataChanged.emit()
+        
+class APA_Diagram_Signals(qtc.QObject):
+    '''
+    Defines the signals available from an APA_Diagram_Model
+    '''
+    dataChanged = qtc.pyqtSignal()
+        
 class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -546,13 +561,15 @@ class MainWindow(qtw.QMainWindow):
         self.heartval = 0
         self.udpListening = False
         self.tensionApaUuid.setText(APA_UUID_DUMMY_VAL)
+        # APA UUID field (fixme: should not be here...)
         apaUuidList = ['uuid_test_1', 'uuid_test_2']
         apaUuidAutocompleter = qtw.QCompleter(apaUuidList)
         apaUuidAutocompleter.setCaseSensitivity(qtc.Qt.CaseInsensitive)
         apaUuidAutocompleter.setCompletionMode(qtw.QCompleter.UnfilteredPopupCompletion)
         self.configApaUuidLineEdit.setCompleter(apaUuidAutocompleter)
+        #
+        self.initAPADiagram()
 
-        
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
         
@@ -751,6 +768,11 @@ class MainWindow(qtw.QMainWindow):
         print(f"double-clicked row: {mi.row()}")
         print(f"double-clicked col: {mi.column()}")
         self.loadRecentScanData()
+
+    def initAPADiagram(self):
+        # APA Diagram / schematic
+        self.apaDiagramModel = APA_Diagram_Model()
+        self.APA_Diagram_View.setModel(self.apaDiagramModel)
         
     def _configureAmps(self):
         self.ampData = {}  # hold amplitude vs. freq data for a scan (and metadata)
@@ -1648,17 +1670,7 @@ class MainWindow(qtw.QMainWindow):
         #                                                                           self.dummyDataTension['y'])
             
     def _configureApaDiagram(self):
-        print("\n\nself.apaDiagram_mpl.fig")
-        print(self.apaDiagram_mpl.fig)
-        print("\n\n")
-        axes = self.apaDiagram_mpl.fig.add_subplot(1,1,1)
-        axes.plot([1,2,3],[1,2,3])
-        _apaWidth  = 2306.7
-        _apaHeight = 5997.32
-        axes.set_xlim([0,_apaWidth])
-        axes.set_ylim([0,_apaHeight])
-        axes.set_aspect('equal')
-        
+        pass
         #apaAxisPen = pg.mkPen(color="#000000", width=4)     # APA frame
         #apaWirePen = pg.mkPen(color="#FF0000", width=4, style=qtc.Qt.SolidLine)
         #apaWirePenBack = pg.mkPen(color="#FF0000", width=4, style=qtc.Qt.DashLine)

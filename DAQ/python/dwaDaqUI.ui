@@ -721,7 +721,7 @@
                 </spacer>
                </item>
                <item>
-                <widget class="MplCanvas" name="apaDiagram_mpl" native="true"/>
+                <widget class="APA_Diagram_View" name="APA_Diagram_View" native="true"/>
                </item>
               </layout>
              </widget>
@@ -1764,9 +1764,9 @@
    <header>pyqtgraph</header>
   </customwidget>
   <customwidget>
-   <class>MplCanvas</class>
+   <class>APA_Diagram_View</class>
    <extends>QWidget</extends>
-   <header>MplCanvas</header>
+   <header>APA_Diagram_View</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
