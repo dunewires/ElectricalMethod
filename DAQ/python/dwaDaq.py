@@ -222,6 +222,11 @@ class State(IntEnum):
 class ScanType(IntEnum):
     CUSTOM = 0 # user-defined custom config file
     AUTO = 1   # auto-generated scan list
+
+SCAN_END_MODE_KEYWORD = 'scanEndMode'
+class ScanEnd(IntEnum):
+    NORMAL  = 0  # scan ended normally
+    ABORTED = 1  # scan ended because user pushed Abort button
     
 class MainView(IntEnum):
     STIMULUS  = 0 # config/V(t)/A(f) [Stimulus view]
@@ -1766,6 +1771,7 @@ class MainWindow(qtw.QMainWindow):
     def abortScan(self):
         print("User has requested a soft abort of this run...")
         print("... this is not yet tested")
+        self.ampData[SCAN_END_MODE_KEYWORD] = ScanEnd.ABORT
         self.uz.abort()
         
     @pyqtSlot()
@@ -2923,6 +2929,7 @@ class MainWindow(qtw.QMainWindow):
     def _clearAmplitudeData(self):
         self.resonantFreqs = {}  # FIXME: this should not go here... should happen when A(f) data is loaded...
         self.ampData = {}        # FIXME: shouldn't really reset the dict like this...
+        self.ampData[SCAN_END_MODE_KEYWORD] = ScanEnd.NORMAL
         for reg in self.registers:
             self.ampData[reg] = {'freq':[],  # stim freq in Hz
                                  'ampl':[] } # amplitude in ADC counts
