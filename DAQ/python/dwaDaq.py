@@ -732,15 +732,12 @@ class MainWindow(qtw.QMainWindow):
         apaUuidAutocompleter.setModel(self.apaUuidListModel)
         self.configApaUuidLineEdit.setCompleter(apaUuidAutocompleter)
 
-        # KEEP ME
-        ## When you want to update the autocomplete list, do:
-        #uuids = self.apaUuidListModel.stringList()  # get current list
-        #newUuids = ['james', 'uuid_test_1', 'battat']  # make list of new items
-        #for uu in newUuids:  # only append items that are not yet on the list
-        #    if uu not in uuids:
-        #        uuids.append(uu)
-        #self.apaUuidListModel.setStringList(uuids) # reassign the list
-        ## could also pre-pend (instead of appending)
+    def updateApaUuidListModel(self):
+        uuids = self.apaUuidListModel.stringList()  # get current list of auto-complete APA UUIDs
+        newUuid = self.configApaUuid # could also use self.configApaUuidLineEdit.text()
+        if newUuid not in uuids:         # if the new UUID not already in the list, then add it
+            uuids.insert(0, newUuid)
+        self.apaUuidListModel.setStringList(uuids)
         
     def initTensionTable(self):
         print("init")
@@ -1897,6 +1894,8 @@ class MainWindow(qtw.QMainWindow):
         self.configHeadboard = self.configHeadboardSpinBox.value()
         self.configApaSide = self.SideComboBox.currentText()
 
+        self.updateApaUuidListModel()  
+        
         advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
         advInitDelay = self.advInitDelayLineEdit.text() # Init delay
         advStimAmplitude = self.advStimAmplitudeLineEdit.text() # Amplitude
