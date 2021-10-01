@@ -719,7 +719,7 @@ class MainWindow(qtw.QMainWindow):
         with os.scandir(OUTPUT_DIR_SCAN_DATA) as it:  # iterator
             for entry in it:
                 if entry.is_dir() and os.path.basename(entry.name).startswith('APA_'):
-                    uuids.append(entry.name)
+                    uuids.append(entry.name[4:])
         print(f'uuids: {uuids}')
 
         # (should update the list of APA UUIDs during the GUI session)
