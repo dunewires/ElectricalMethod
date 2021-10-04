@@ -1912,7 +1912,7 @@ class MainWindow(qtw.QMainWindow):
         # This gets values from the table for scan configurations
         freqMax = float(self.scanTable.item(scanIndex, 4).text())
         freqMin = float(self.scanTable.item(scanIndex, 3).text())
-        freqStep = self.scanTable.item(scanIndex, 5).text()
+        freqStep = float(self.scanTable.item(scanIndex, 5).text())
         
         # TODO: Make sure inputs can be safely converted to floats
         # TODO: Grab default values if undefined
