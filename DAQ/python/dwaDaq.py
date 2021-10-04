@@ -1863,6 +1863,14 @@ class MainWindow(qtw.QMainWindow):
         advStimAmplitude = self.advStimAmplitudeLineEdit.text() # Amplitude
         advDigipotAmplitude = self.advDigipotAmplitudeLineEdit.text() # Digipot amplitude
         
+        scanIndex = -1
+        logging.info(self.radioBtns)
+        for i, btn in enumerate(self.radioBtns):
+            logging.info(btn.isChecked())
+            if btn.isChecked():
+                scanIndex = i
+        if scanIndex < 0: return
+        
         # This gets values from the table for scan configurations
         freqMax = float(self.scanTable.item(scanIndex, 4).text())
         freqMin = float(self.scanTable.item(scanIndex, 3).text())
@@ -1875,13 +1883,6 @@ class MainWindow(qtw.QMainWindow):
         if advStimAmplitude: advStimAmplitude = float(advStimAmplitude) # BUG: should accept hex string, no?
         if advDigipotAmplitude: advDigipotAmplitude = float(advDigipotAmplitude)  # BUG: should accept hex string, no?
 
-        scanIndex = -1
-        logging.info(self.radioBtns)
-        for i, btn in enumerate(self.radioBtns):
-            logging.info(btn.isChecked())
-            if btn.isChecked():
-                scanIndex = i
-        if scanIndex < 0: return
 
         rd = self.range_data_list[scanIndex]
         #need to impliment list of all -1 for channels not being used
