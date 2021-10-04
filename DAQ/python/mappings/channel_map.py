@@ -1,4 +1,3 @@
-
 from channel_frequencies import check_valid_wire_layer
 import numpy as np
 
@@ -22,10 +21,8 @@ def apa_channel_to_board_channel(wire_layer: str, apa_channel: int):
 
     if wire_layer == 'X':
         board_channel = (apa_channel - 1) % 48 + 1
-    if wire_layer == 'V':
+    if wire_layer in {'V', 'U'}:
         board_channel = (apa_channel - 1) % 40 + 1
-    if wire_layer == 'U':
-        board_channel = 41 - apa_channel_to_board_channel('V', apa_channel)
     if wire_layer == 'G':
         if apa_channel > 49:
             apa_channel -= 49
@@ -57,17 +54,21 @@ def apa_channel_to_board_number(wire_layer: str, apa_channel: int):
     return board_number
 
 
-def apa_channel_to_wire_relay(wire_layer: str, apa_channel: int):
-    '''Return the relay wire associated to the given wire layer and APA channel. Wire relays for the bottom relay board are numbered from 1 to 64 and from 65 to 128 for the top relay board.'''
+def apa_channel_to_wire_relay(wire_layer: str, apa_channel: int, is_flex_connection_winderlike: bool = True):
+    '''Return the relay wire associated to the given wire layer and APA channel. Wire relays for the bottom relay board are numbered from 1 to 64 and from 65 to 128 for the top relay board. A boolean specifying if the flex cable hardware connection to the probe board is oriented as for the mechanical support in the winder, True, or as for the installation of the upper APA, False, is required.'''
     
     wire_layer = check_valid_wire_layer(wire_layer)
     
     board_channel = apa_channel_to_board_channel(wire_layer, apa_channel)
 
-    # There is an offset and gap due to wire layers alternating in groups of 8 wire relay.
+    # There is an offset and a gap due to wire layers alternating in groups of 8 wire relays.
     layer_offset = {'X': 0, 'V': 16, 'U': 16, 'G': 0}
-    starting_relay = {'X': 128, 'V': 128, 'U': 1, 'G': 128}
-    direction_of_increase = {'X': -1, 'V': -1, 'U': 1, 'G': -1}
+    if is_flex_connection_winderlike:
+        starting_relay = {'X': 128, 'V': 128, 'U': 1, 'G': 128}
+        direction_of_increase = {'X': -1, 'V': -1, 'U': 1, 'G': -1}
+    else:
+        starting_relay = {'X': 1, 'V': 1, 'U': 128, 'G': 1}
+        direction_of_increase = {'X': 1, 'V': 1, 'U': -1, 'G': 1}
 
     if wire_layer == 'G' and apa_channel <= 49:
         board_channel -= 1
@@ -77,7 +78,10 @@ def apa_channel_to_wire_relay(wire_layer: str, apa_channel: int):
     wire_relay = starting_relay[wire_layer] + direction_of_increase[wire_layer]*channel_offset
 
     if wire_layer == 'G' and apa_channel == 1:
-        wire_relay = 113
+        if is_flex_connection_winderlike:
+            wire_relay = 113
+        else:
+            wire_relay = 16
 
     return wire_relay
 
@@ -86,9 +90,9 @@ def wire_relay_to_dwa_channel(wire_relay: int):
     '''Return the DWA channel from 0 to 7 associated to the given wire relay.'''
     return ((wire_relay - 1) % 16) // 2
 
-def apa_channel_to_dwa_channel(wire_layer: str, apa_channel: int):
-    '''Return the DWA channel from 0 to 7 associated to the given APA channel.'''
-    return wire_relay_to_dwa_channel(apa_channel_to_wire_relay(wire_layer, apa_channel))
+def apa_channel_to_dwa_channel(wire_layer: str, apa_channel: int, is_flex_connection_winderlike: bool = True):
+    '''Return the DWA channel from 0 to 7 associated to the given APA channel, depending on the orientation of the connection between the flex cable and the probe board.'''
+    return wire_relay_to_dwa_channel(apa_channel_to_wire_relay(wire_layer, apa_channel, is_flex_connection_winderlike))
 
 def check_valid_headboard_number(wire_layer: int, headboard_number: int):
     '''Make sure that the headboard number is valid.'''

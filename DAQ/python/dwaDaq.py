@@ -1,4 +1,6 @@
 # FIXME/TODO:
+# * When generating recent scan table in resonance tab on launch, the .DS_STORE subdirs create problems (should ignore)
+# 
 # * In automated scan, the config file gets a "statusPeriod" field, but it should only have statusPeriodSec
 # 
 # * may need progress bars (or other indicator) for long processes such as:
@@ -151,6 +153,8 @@ EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
 OUTPUT_DIR_SCAN_DATA = './scanData/'
 OUTPUT_DIR_SCAN_DATA_ADVANCED = './scanDataAdv/'
+SCAN_OUTPUT_DIRS = [OUTPUT_DIR_SCAN_DATA, OUTPUT_DIR_SCAN_DATA_ADVANCED]
+
 #OUTPUT_DIR_CONFIG = './config/'
 #OUTPUT_DIR_UDP_DATA = './udpData/'
 #OUTPUT_DIR_AMP_DATA = './ampData/'        
@@ -222,6 +226,11 @@ class State(IntEnum):
 class ScanType(IntEnum):
     CUSTOM = 0 # user-defined custom config file
     AUTO = 1   # auto-generated scan list
+
+SCAN_END_MODE_KEYWORD = 'scanEndMode'
+class ScanEnd(IntEnum):
+    NORMAL  = 0  # scan ended normally
+    ABORTED = 1  # scan ended because user pushed Abort button
     
 class MainView(IntEnum):
     STIMULUS  = 0 # config/V(t)/A(f) [Stimulus view]
@@ -396,6 +405,10 @@ class Worker(qtc.QRunnable):
 #            painter.drawControl(qtw.QStyle.CE_TabBarTabLabel, opt)
 #            painter.restore()
 
+class APA_UUID_List_Model(qtc.QStringListModel):
+    def __init__(self, parent=None):
+        super(APA_UUID_List_Model, self).__init__(parent)
+
 class TensionTableModel(qtc.QAbstractTableModel):
     # See: https://www.learnpyqt.com/tutorials/qtableview-modelviews-numpy-pandas/
     def __init__(self, data):
@@ -543,13 +556,8 @@ class MainWindow(qtw.QMainWindow):
         self.heartval = 0
         self.udpListening = False
         self.tensionApaUuid.setText(APA_UUID_DUMMY_VAL)
-        apaUuidList = ['uuid_test_1', 'uuid_test_2']
-        apaUuidAutocompleter = qtw.QCompleter(apaUuidList)
-        apaUuidAutocompleter.setCaseSensitivity(qtc.Qt.CaseInsensitive)
-        apaUuidAutocompleter.setCompletionMode(qtw.QCompleter.UnfilteredPopupCompletion)
-        self.configApaUuidLineEdit.setCompleter(apaUuidAutocompleter)
-
-        
+        self.initApaUuidSuggestions()
+       
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
         
@@ -704,6 +712,33 @@ class MainWindow(qtw.QMainWindow):
                 return entry
         return entry
 
+    def initApaUuidSuggestions(self):
+
+        # Get list of known APA UUIDs from disk
+        uuids = []
+        with os.scandir(OUTPUT_DIR_SCAN_DATA) as it:  # iterator
+            for entry in it:
+                if entry.is_dir() and os.path.basename(entry.name).startswith('APA_'):
+                    uuids.append(entry.name[4:])
+        print(f'uuids: {uuids}')
+
+        # (should update the list of APA UUIDs during the GUI session)
+        
+        # Store the UUIDs in the model
+        self.apaUuidListModel = APA_UUID_List_Model()
+        self.apaUuidListModel.setStringList(uuids)
+        apaUuidAutocompleter = qtw.QCompleter(caseSensitivity=qtc.Qt.CaseInsensitive,
+                                              completionMode=qtw.QCompleter.UnfilteredPopupCompletion)
+        apaUuidAutocompleter.setModel(self.apaUuidListModel)
+        self.configApaUuidLineEdit.setCompleter(apaUuidAutocompleter)
+
+    def updateApaUuidListModel(self):
+        uuids = self.apaUuidListModel.stringList()  # get current list of auto-complete APA UUIDs
+        newUuid = self.configApaUuid # could also use self.configApaUuidLineEdit.text()
+        if newUuid not in uuids:         # if the new UUID not already in the list, then add it
+            uuids.insert(0, newUuid)
+        self.apaUuidListModel.setStringList(uuids)
+        
     def initTensionTable(self):
         print("init")
         # self.tensionData = {
@@ -1769,6 +1804,7 @@ class MainWindow(qtw.QMainWindow):
     def abortScan(self):
         print("User has requested a soft abort of this run...")
         print("... this is not yet tested")
+        self.ampData[SCAN_END_MODE_KEYWORD] = ScanEnd.ABORT
         self.uz.abort()
         
     @pyqtSlot()
@@ -1858,6 +1894,8 @@ class MainWindow(qtw.QMainWindow):
         self.configHeadboard = self.configHeadboardSpinBox.value()
         self.configApaSide = self.SideComboBox.currentText()
 
+        self.updateApaUuidListModel()  
+        
         advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
         advInitDelay = self.advInitDelayLineEdit.text() # Init delay
         advStimAmplitude = self.advStimAmplitudeLineEdit.text() # Amplitude
@@ -2937,6 +2975,7 @@ class MainWindow(qtw.QMainWindow):
     def _clearAmplitudeData(self):
         self.resonantFreqs = {}  # FIXME: this should not go here... should happen when A(f) data is loaded...
         self.ampData = {}        # FIXME: shouldn't really reset the dict like this...
+        self.ampData[SCAN_END_MODE_KEYWORD] = ScanEnd.NORMAL
         for reg in self.registers:
             self.ampData[reg] = {'freq':[],  # stim freq in Hz
                                  'ampl':[] } # amplitude in ADC counts
