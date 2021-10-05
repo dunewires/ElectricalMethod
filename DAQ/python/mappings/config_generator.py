@@ -233,6 +233,10 @@ def configure_noise_subtraction(stim_freq_min, stim_freq_max, *,
 
     noise_sampling_period = 1 / ((NOISE_MAX + NOISE_MIN)/2) / noise_samples_per_freq
 
+    # Force no noise subtraction
+    # TODO: should be removed
+    noise_freq_min = noise_freq_max = 50
+
     return {'noiseFreqMin': format(int(noise_freq_min * unit_factor_freq), '06X'),
             'noiseFreqMax': format(int(noise_freq_max * unit_factor_freq), '06X'),
             'noiseFreqStep': format(int(noise_freq_step * unit_factor_freq), '06X'),
@@ -252,7 +256,7 @@ def configure_default():
     configs.update(configure_gains(stim_freq_max=100, stim_mag=0xBB8, digipot=0x4444444444444444))
     configs.update(configure_sampling())
     configs.update(configure_relays(wire_layer='X', apa_channels=[]))
-    configs.update(configure_noise_subtraction(stim_freq_min=99, stim_freq_max=100, noise_freq_min=50, noise_freq_max=50))
+    configs.update(configure_noise_subtraction(stim_freq_min=99, stim_freq_max=100))
     return configs
 
 
