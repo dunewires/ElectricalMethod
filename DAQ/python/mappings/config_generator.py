@@ -252,7 +252,7 @@ def configure_default():
     configs.update(configure_gains(stim_freq_max=100, stim_mag=0xBB8, digipot=0x4444444444444444))
     configs.update(configure_sampling())
     configs.update(configure_relays(wire_layer='X', apa_channels=[]))
-    configs.update(configure_noise_subtraction(stim_freq_min=99, stim_freq_max=100))
+    configs.update(configure_noise_subtraction(stim_freq_min=99, stim_freq_max=100, noise_freq_min=50, noise_freq_max=50))
     return configs
 
 
