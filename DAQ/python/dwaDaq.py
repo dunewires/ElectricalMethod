@@ -1804,7 +1804,7 @@ class MainWindow(qtw.QMainWindow):
     def abortScan(self):
         print("User has requested a soft abort of this run...")
         print("... this is not yet tested")
-        self.ampData[SCAN_END_MODE_KEYWORD] = ScanEnd.ABORT
+        self.ampData[SCAN_END_MODE_KEYWORD] = ScanEnd.ABORTED
         self.uz.abort()
         
     @pyqtSlot()
