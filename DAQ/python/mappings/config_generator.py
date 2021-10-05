@@ -36,7 +36,7 @@ def configure_scan_frequencies(stim_freq_min, stim_freq_max, stim_freq_step=1/16
             'stimFreqStep': format(int(stim_freq_step * unit_factor), '06X')}
 
 
-def configure_wait_times(stim_time_initial=2, stim_time=0.5):
+def configure_wait_times(stim_time_initial=2, stim_time=0):
     '''Return a dictionary of configuration values for the initial and subsequent stimulus wait times given input time values in seconds.'''
     
     unit_factor = 1/2.56e-6
@@ -249,7 +249,7 @@ def configure_default():
     configs.update(configure_fixed_frequency())
     configs.update(configure_scan_frequencies(stim_freq_min=99, stim_freq_max=100))
     configs.update(configure_wait_times())
-    configs.update(configure_gains(stim_freq_max=100, stim_mag=0xBB8, digipot=0x8888888888888888))
+    configs.update(configure_gains(stim_freq_max=100, stim_mag=0xBB8, digipot=0x4444444444444444))
     configs.update(configure_sampling())
     configs.update(configure_relays(wire_layer='X', apa_channels=[]))
     configs.update(configure_noise_subtraction(stim_freq_min=99, stim_freq_max=100))
