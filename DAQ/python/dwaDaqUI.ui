@@ -307,6 +307,29 @@
                  <property name="fieldGrowthPolicy">
                   <enum>QFormLayout::ExpandingFieldsGrow</enum>
                  </property>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="stage_label">
+                   <property name="text">
+                    <string>Stage</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QComboBox" name="configStageComboBox">
+                   <property name="minimumSize">
+                    <size>
+                     <width>250</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>250</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
                  <item row="2" column="0">
                   <widget class="QLabel" name="measure_by_label">
                    <property name="text">
@@ -336,14 +359,46 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="4" column="0">
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="apaId_label">
+                   <property name="text">
+                    <string>APA UUID</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QLineEdit" name="configApaUuidLineEdit">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>250</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>250</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::StrongFocus</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="0">
                   <widget class="QLabel" name="apaSide">
                    <property name="text">
                     <string>Side</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="4" column="1">
+                 <item row="5" column="1">
                   <widget class="QComboBox" name="SideComboBox">
                    <property name="minimumSize">
                     <size>
@@ -369,37 +424,14 @@
                    </item>
                   </widget>
                  </item>
-                 <item row="7" column="0">
-                  <widget class="QLabel" name="layer_label">
-                   <property name="text">
-                    <string>Layer</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="7" column="1">
-                  <widget class="QComboBox" name="configLayerComboBox">
-                   <property name="minimumSize">
-                    <size>
-                     <width>60</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>40</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="9" column="0">
+                 <item row="10" column="0">
                   <widget class="QLabel" name="scanTypeLabel">
                    <property name="text">
                     <string>Scan type</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="9" column="1">
+                 <item row="10" column="1">
                   <widget class="QWidget" name="widget_7" native="true">
                    <layout class="QHBoxLayout" name="horizontalLayout_16">
                     <property name="leftMargin">
@@ -513,7 +545,7 @@
                    </layout>
                   </widget>
                  </item>
-                 <item row="10" column="1">
+                 <item row="11" column="1">
                   <widget class="QPushButton" name="btnConfigureScans">
                    <property name="minimumSize">
                     <size>
@@ -532,14 +564,14 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="11" column="0">
+                 <item row="12" column="0">
                   <widget class="QLabel" name="scanList_label">
                    <property name="text">
                     <string>Scans</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="11" column="1">
+                 <item row="12" column="1">
                   <widget class="QTableWidget" name="scanTable">
                    <property name="minimumSize">
                     <size>
@@ -564,12 +596,17 @@
                    </column>
                    <column>
                     <property name="text">
-                     <string>Freq Min</string>
+                     <string>Freq Min (Hz)</string>
                     </property>
                    </column>
                    <column>
                     <property name="text">
-                     <string>Freq Max</string>
+                     <string>Freq Max (Hz)</string>
+                    </property>
+                   </column>
+                   <column>
+                    <property name="text">
+                     <string>Step Size (Hz)</string>
                     </property>
                    </column>
                    <column>
@@ -579,7 +616,7 @@
                    </column>
                   </widget>
                  </item>
-                 <item row="12" column="1">
+                 <item row="13" column="1">
                   <layout class="QVBoxLayout" name="verticalLayout_2">
                    <property name="leftMargin">
                     <number>6</number>
@@ -643,59 +680,33 @@
                    </item>
                   </layout>
                  </item>
-                 <item row="13" column="1">
+                 <item row="14" column="1">
                   <widget class="QPushButton" name="btnScanCtrl">
                    <property name="text">
                     <string>Start next scan</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="1" column="1">
-                  <widget class="QComboBox" name="configStageComboBox">
+                 <item row="4" column="1">
+                  <widget class="QComboBox" name="configLayerComboBox">
                    <property name="minimumSize">
                     <size>
-                     <width>250</width>
+                     <width>60</width>
                      <height>0</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>250</width>
+                     <width>40</width>
                      <height>16777215</height>
                     </size>
                    </property>
                   </widget>
                  </item>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="stage_label">
+                 <item row="4" column="0">
+                  <widget class="QLabel" name="layer_label">
                    <property name="text">
-                    <string>Stage</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="QLineEdit" name="configApaUuidLineEdit">
-                   <property name="minimumSize">
-                    <size>
-                     <width>250</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>250</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="focusPolicy">
-                    <enum>Qt::StrongFocus</enum>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="0">
-                  <widget class="QLabel" name="apaId_label">
-                   <property name="text">
-                    <string>APA UUID</string>
+                    <string>Layer</string>
                    </property>
                   </widget>
                  </item>
@@ -868,7 +879,7 @@
                 <item row="12" column="0">
                  <widget class="QLabel" name="label_12">
                   <property name="text">
-                   <string>Frequency step size</string>
+                   <string>Frequency step size (Hz)</string>
                   </property>
                  </widget>
                 </item>
@@ -1332,9 +1343,23 @@
                   </layout>
                  </item>
                  <item>
+                  <widget class="QLineEdit" name="submitResonanceNoteLineEdit">
+                   <property name="placeholderText">
+                    <string>Submission note...</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QPushButton" name="btnSubmitResonances">
                    <property name="text">
                     <string>Submit Resonances to DB</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="labelResonanceSubmitStatus">
+                   <property name="text">
+                    <string>Resonances have not been submitted</string>
                    </property>
                   </widget>
                  </item>
@@ -1473,7 +1498,7 @@
               </size>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab">
               <attribute name="title">
@@ -1527,6 +1552,31 @@
                </item>
               </layout>
              </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="submitTensionNoteLineEdit">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>300</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>300</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="placeholderText">
+              <string>Submission note...</string>
+             </property>
             </widget>
            </item>
            <item>
@@ -1595,22 +1645,11 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_16">
            <item>
-            <layout class="QFormLayout" name="formLayout_7">
-             <item row="0" column="0">
-              <widget class="QLabel" name="evtVwr_runName_label">
-               <property name="text">
-                <string>Run name:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLineEdit" name="evtVwr_runName_val">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-            </layout>
+            <widget class="QPushButton" name="evtVwr_openScan_pb">
+             <property name="text">
+              <string>Load scan (select directory)</string>
+             </property>
+            </widget>
            </item>
            <item>
             <widget class="QTabWidget" name="evtVwrTabs">
@@ -1682,7 +1721,7 @@
      <x>0</x>
      <y>0</y>
      <width>1313</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -1730,6 +1769,100 @@
    <header>pyqtgraph</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>btnDwaConnect</tabstop>
+  <tabstop>tabWidgetStages</tabstop>
+  <tabstop>tabWidgetStim</tabstop>
+  <tabstop>configStageComboBox</tabstop>
+  <tabstop>measuredByLineEdit</tabstop>
+  <tabstop>configApaUuidLineEdit</tabstop>
+  <tabstop>configLayerComboBox</tabstop>
+  <tabstop>SideComboBox</tabstop>
+  <tabstop>configRadioAll</tabstop>
+  <tabstop>configHeadboardSpinBox</tabstop>
+  <tabstop>configRadioSingle</tabstop>
+  <tabstop>spinBox</tabstop>
+  <tabstop>btnConfigureScans</tabstop>
+  <tabstop>scanTable</tabstop>
+  <tabstop>btnScanCtrl</tabstop>
+  <tabstop>graphicsView</tabstop>
+  <tabstop>configFileName</tabstop>
+  <tabstop>omitComments_cb</tabstop>
+  <tabstop>pw_grid_2</tabstop>
+  <tabstop>advInitDelayLineEdit</tabstop>
+  <tabstop>advStimAmplitudeLineEdit</tabstop>
+  <tabstop>advStimTimeLineEdit</tabstop>
+  <tabstop>advFssLineEdit</tabstop>
+  <tabstop>advDigipotAmplitudeLineEdit</tabstop>
+  <tabstop>pw_grid_0</tabstop>
+  <tabstop>pw_grid_4</tabstop>
+  <tabstop>pw_grid_1</tabstop>
+  <tabstop>configFileContents</tabstop>
+  <tabstop>pw_grid_5</tabstop>
+  <tabstop>pw_grid_7</tabstop>
+  <tabstop>outputText</tabstop>
+  <tabstop>pw_chan_0</tabstop>
+  <tabstop>pw_chan_main</tabstop>
+  <tabstop>pw_chan_3</tabstop>
+  <tabstop>pw_chan_4</tabstop>
+  <tabstop>pw_chan_5</tabstop>
+  <tabstop>pw_chan_6</tabstop>
+  <tabstop>pw_grid_3</tabstop>
+  <tabstop>pw_grid_6</tabstop>
+  <tabstop>pw_chan_7</tabstop>
+  <tabstop>btnScanCtrlAdv</tabstop>
+  <tabstop>pw_chan_2</tabstop>
+  <tabstop>pw_amplgrid_0</tabstop>
+  <tabstop>pw_amplgrid_2</tabstop>
+  <tabstop>pw_amplgrid_1</tabstop>
+  <tabstop>pw_amplgrid_3</tabstop>
+  <tabstop>pw_amplgrid_5</tabstop>
+  <tabstop>pw_amplgrid_4</tabstop>
+  <tabstop>pw_amplgrid_6</tabstop>
+  <tabstop>pw_amplgrid_7</tabstop>
+  <tabstop>pw_amplgrid_all</tabstop>
+  <tabstop>pw_amplchan_0</tabstop>
+  <tabstop>pw_amplchan_1</tabstop>
+  <tabstop>pw_amplchan_2</tabstop>
+  <tabstop>pw_amplchan_3</tabstop>
+  <tabstop>pw_amplchan_4</tabstop>
+  <tabstop>pw_amplchan_5</tabstop>
+  <tabstop>pw_amplchan_6</tabstop>
+  <tabstop>pw_amplchan_7</tabstop>
+  <tabstop>pw_amplchan_main</tabstop>
+  <tabstop>recentScansTableView</tabstop>
+  <tabstop>pb_scanDataSelectedLoad</tabstop>
+  <tabstop>pb_scanDataLoad</tabstop>
+  <tabstop>tabResonanceGraphs</tabstop>
+  <tabstop>resonanceRawDataGLW</tabstop>
+  <tabstop>resonanceProcessedDataGLW</tabstop>
+  <tabstop>le_resfreq_val_0</tabstop>
+  <tabstop>le_resfreq_val_1</tabstop>
+  <tabstop>le_resfreq_val_2</tabstop>
+  <tabstop>le_resfreq_val_3</tabstop>
+  <tabstop>le_resfreq_val_4</tabstop>
+  <tabstop>le_resfreq_val_5</tabstop>
+  <tabstop>le_resfreq_val_6</tabstop>
+  <tabstop>le_resfreq_val_7</tabstop>
+  <tabstop>resFitPreDetrend</tabstop>
+  <tabstop>resFitBkgPoly</tabstop>
+  <tabstop>resFitWidth</tabstop>
+  <tabstop>resFitProminence</tabstop>
+  <tabstop>resFitKwargs</tabstop>
+  <tabstop>btnSubmitResonances</tabstop>
+  <tabstop>tensionApaUuid</tabstop>
+  <tabstop>tensionStageComboBox</tabstop>
+  <tabstop>tensionLayerComboBox</tabstop>
+  <tabstop>btnLoadTensions</tabstop>
+  <tabstop>tabWidget_2</tabstop>
+  <tabstop>tensionTableView</tabstop>
+  <tabstop>tensionGLW</tabstop>
+  <tabstop>btnSubmitTensions</tabstop>
+  <tabstop>logTextBox</tabstop>
+  <tabstop>evtVwrTabs</tabstop>
+  <tabstop>evtVwrPlotsGLW</tabstop>
+  <tabstop>pw_chan_1</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

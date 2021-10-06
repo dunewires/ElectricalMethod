@@ -1,8 +1,8 @@
 # FIXME/TODO:
+# * When generating recent scan table in resonance tab on launch, the .DS_STORE subdirs create problems (should ignore)
+# 
 # * In automated scan, the config file gets a "statusPeriod" field, but it should only have statusPeriodSec
 # 
-# * fix the event viewer (directory structure has changed)
-#
 # * may need progress bars (or other indicator) for long processes such as:
 #   - submit to db
 #   - fetch resonances to compute tension
@@ -27,7 +27,15 @@
 #     re-activation of the "Start Scan" buttons
 #
 # * Add graphic of APA wires to Config tab
-# 
+#
+# * Filter glitches in A(f) prior to integration. (sigma-clipping and width can work). See e.g. V_A_10_361-363-...
+#
+# * Tension plotting bug -- when you plot a second layer, it replots the first layer's data on the same axes
+#
+# * scan list: directory name is too long! trim off anything before the scanData/ or scanDataAdv/ (if exists)
+#
+# * in resonance fitting plots, show expected location of resonances? (use shaded regions?)
+#
 # * LEDs:
 #   + A red one that would light up if there’s any errors reported in the error bits.
 #   + A blue one for scan activity when scan is ongoing for example, or when data is received. Nathan has the hardware one set to be on during a scan, but it turns off for a fraction of a second (maybe 10 ms?), and this happens at a period of 1.5 s at 10 Hz, with a linearly decreasing period as a function of frequency to 150 ms at 1 kHz. It doesn’t have to be that, it could stay on when a scan is happening, say between run frames, or based on the reported DWA status in the heartbeat.
@@ -145,6 +153,8 @@ EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
 OUTPUT_DIR_SCAN_DATA = './scanData/'
 OUTPUT_DIR_SCAN_DATA_ADVANCED = './scanDataAdv/'
+SCAN_OUTPUT_DIRS = [OUTPUT_DIR_SCAN_DATA, OUTPUT_DIR_SCAN_DATA_ADVANCED]
+
 #OUTPUT_DIR_CONFIG = './config/'
 #OUTPUT_DIR_UDP_DATA = './udpData/'
 #OUTPUT_DIR_AMP_DATA = './ampData/'        
@@ -168,7 +178,12 @@ SCAN_END = 0
 APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Storage", "Installation"]
 APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
-MAX_WIRE_SEGMENT = 1151
+MAX_WIRE_SEGMENT = {
+    "U": 1151,
+    "V": 1151,
+    "X": 480,
+    "G": 481
+}
 
 # FIXME: these should be read from somewhere else (DwaConfigFile)...
 DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
@@ -181,9 +196,9 @@ N_RECENT_SCANS = 2
 TENSION_SPEC = 6.5 # Newtons
 TENSION_SPEC_MIN = TENSION_SPEC-1.0
 TENSION_SPEC_MAX = TENSION_SPEC+1.0
-TENSION_LOW_COLOR  = qtg.QColor('yellow')
-TENSION_HIGH_COLOR = qtg.QColor('red')
-TENSION_GOOD_COLOR = qtg.QColor('green')
+TENSION_LOW_COLOR  = qtg.QColor(253,253,150)
+TENSION_HIGH_COLOR = qtg.QColor(219,88,86)
+TENSION_GOOD_COLOR = qtg.QColor(178, 251, 165)
 
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
@@ -211,6 +226,11 @@ class State(IntEnum):
 class ScanType(IntEnum):
     CUSTOM = 0 # user-defined custom config file
     AUTO = 1   # auto-generated scan list
+
+SCAN_END_MODE_KEYWORD = 'scanEndMode'
+class ScanEnd(IntEnum):
+    NORMAL  = 0  # scan ended normally
+    ABORTED = 1  # scan ended because user pushed Abort button
     
 class MainView(IntEnum):
     STIMULUS  = 0 # config/V(t)/A(f) [Stimulus view]
@@ -232,6 +252,7 @@ class StimView(IntEnum):
 TAB_ACTIVE_MAIN = MainView.STIMULUS
 #TAB_ACTIVE_MAIN = MainView.RESONANCE
 #TAB_ACTIVE_MAIN = MainView.TENSION
+#TAB_ACTIVE_MAIN = MainView.EVTVWR
 TAB_ACTIVE_STIM = StimView.CONFIG
 
     
@@ -384,6 +405,10 @@ class Worker(qtc.QRunnable):
 #            painter.drawControl(qtw.QStyle.CE_TabBarTabLabel, opt)
 #            painter.restore()
 
+class APA_UUID_List_Model(qtc.QStringListModel):
+    def __init__(self, parent=None):
+        super(APA_UUID_List_Model, self).__init__(parent)
+
 class TensionTableModel(qtc.QAbstractTableModel):
     # See: https://www.learnpyqt.com/tutorials/qtableview-modelviews-numpy-pandas/
     def __init__(self, data):
@@ -397,10 +422,12 @@ class TensionTableModel(qtc.QAbstractTableModel):
             if val is np.nan:
                 return ""
             else:
-                return f'{val:.3f}'
+                return f'{val:.2f}'
 
         if role == qtc.Qt.BackgroundRole:
             if val is np.nan:
+                return
+            if val < 0:
                 return
             elif val < TENSION_SPEC_MIN:
                 return TENSION_LOW_COLOR
@@ -529,7 +556,8 @@ class MainWindow(qtw.QMainWindow):
         self.heartval = 0
         self.udpListening = False
         self.tensionApaUuid.setText(APA_UUID_DUMMY_VAL)
-        
+        self.initApaUuidSuggestions()
+       
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
         
@@ -573,7 +601,7 @@ class MainWindow(qtw.QMainWindow):
         self._configureTensionTab()
 
         # Configure/label plots
-        self.apaChannels = [None]*8
+        self.apaChannels = [None]*N_DWA_CHANS
         self._configurePlots()
         
         # make dummy data to display
@@ -684,15 +712,43 @@ class MainWindow(qtw.QMainWindow):
                 return entry
         return entry
 
+    def initApaUuidSuggestions(self):
+
+        # Get list of known APA UUIDs from disk
+        uuids = []
+        with os.scandir(OUTPUT_DIR_SCAN_DATA) as it:  # iterator
+            for entry in it:
+                if entry.is_dir() and os.path.basename(entry.name).startswith('APA_'):
+                    uuids.append(entry.name[4:])
+        print(f'uuids: {uuids}')
+
+        # (should update the list of APA UUIDs during the GUI session)
+        
+        # Store the UUIDs in the model
+        self.apaUuidListModel = APA_UUID_List_Model()
+        self.apaUuidListModel.setStringList(uuids)
+        apaUuidAutocompleter = qtw.QCompleter(caseSensitivity=qtc.Qt.CaseInsensitive,
+                                              completionMode=qtw.QCompleter.UnfilteredPopupCompletion)
+        apaUuidAutocompleter.setModel(self.apaUuidListModel)
+        self.configApaUuidLineEdit.setCompleter(apaUuidAutocompleter)
+
+    def updateApaUuidListModel(self):
+        uuids = self.apaUuidListModel.stringList()  # get current list of auto-complete APA UUIDs
+        newUuid = self.configApaUuid # could also use self.configApaUuidLineEdit.text()
+        if newUuid not in uuids:         # if the new UUID not already in the list, then add it
+            uuids.insert(0, newUuid)
+        self.apaUuidListModel.setStringList(uuids)
+        
     def initTensionTable(self):
-        self.tensionData = {
-            'A':[np.nan]*MAX_WIRE_SEGMENT,
-            'B':[np.nan]*MAX_WIRE_SEGMENT,
-        }
-        self.tensionTableModel = TensionTableModel(self.tensionData)
-        self.tensionTableView.setModel(self.tensionTableModel)
-        self.tensionTableView.resizeColumnsToContents()
-        self.tensionTableView.resizeRowsToContents()
+        print("init")
+        # self.tensionData = {
+        #     'A':[np.nan]*MAX_WIRE_SEGMENT,
+        #     'B':[np.nan]*MAX_WIRE_SEGMENT,
+        # }
+        # self.tensionTableModel = TensionTableModel(self.tensionData)
+        # self.tensionTableView.setModel(self.tensionTableModel)
+        # #self.tensionTableView.resizeColumnsToContents()
+        # self.tensionTableView.resizeRowsToContents()
         
     
     def initRecentScanList(self):
@@ -719,9 +775,13 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)  # clicking in cell selects entire row
         self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
         #https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
-
+        self.recentScansTableView.doubleClicked.connect(self.recentScansRowDoubleClicked)
         self.recentScansTableRowInUse = None
 
+    def recentScansRowDoubleClicked(self, mi):
+        print(f"double-clicked row: {mi.row()}")
+        print(f"double-clicked col: {mi.column()}")
+        self.loadRecentScanData()
         
     def _configureAmps(self):
         self.ampData = {}  # hold amplitude vs. freq data for a scan (and metadata)
@@ -856,10 +916,10 @@ class MainWindow(qtw.QMainWindow):
         self.resFitKwargs.editingFinished.connect(self.resFitParameterUpdated)
         #
         # Resonance Tab
-        self.btnSubmitResonances.clicked.connect(self.submitResonances)
+        self.btnSubmitResonances.clicked.connect(self.submitResonancesThread)
         # Tensions tab
-        self.btnLoadTensions.clicked.connect(self.loadTensions)
-        self.btnSubmitTensions.clicked.connect(self.submitTensions)
+        self.btnLoadTensions.clicked.connect(self.loadTensionsThread)
+        self.btnSubmitTensions.clicked.connect(self.submitTensionsThread)
         # Config Tab
         self.btnConfigureScans.clicked.connect(self.singleOrAllScans)
         for stage in APA_TESTING_STAGES:
@@ -966,14 +1026,15 @@ class MainWindow(qtw.QMainWindow):
         self.resFreqUpdateDisplay()
         
     def _configureEventViewer(self):
-        self.evtVwr_runName_val.setText(EVT_VWR_TIMESTAMP)
-        self.evtVwr_runName_val.returnPressed.connect(self.loadEventData)
+        #self.evtVwr_runName_val.setText(EVT_VWR_TIMESTAMP)
+        #self.evtVwr_runName_val.returnPressed.connect(self.loadEventDataViaName)
+        self.evtVwr_openScan_pb.clicked.connect(self.loadEventDataViaFileBrowser)
         self.evtVwrPlotsGLW.setBackground('w')
         self.evtVwrPlots = []
         chanNum = 0
         for irow in range(3):
             for icol in range(3):
-                if chanNum < 8:
+                if chanNum < N_DWA_CHANS:
                     self.evtVwrPlots.append(self.evtVwrPlotsGLW.addPlot())
                     plotTitle = f'V(t) Chan {chanNum}'
                     self.evtVwrPlots[-1].setTitle(plotTitle)
@@ -1309,11 +1370,11 @@ class MainWindow(qtw.QMainWindow):
                 #freq step size column
                 advFss = self.advFssLineEdit.text() # Freq step size
                 if advFss: advFss = float(advFss)
-                else: pass
-                if advFss: 
-                    advFss = config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss)['stimFreqStep']
-                else: 
-                    advFss= config_generator.configure_scan_frequencies(freqMin, freqMax)['stimFreqStep']
+                else: advFss = 1/16
+                #if advFss: 
+                #    advFss = config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss)['stimFreqStep']
+                #else: 
+                #    advFss= config_generator.configure_scan_frequencies(freqMin, freqMax)['stimFreqStep']
                 item = qtw.QTableWidgetItem()
                 self.scanTable.setItem(scanNum-1, 5, item)
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
@@ -1345,13 +1406,13 @@ class MainWindow(qtw.QMainWindow):
             # set background color to white
             # FIXME: clean this up...
             getattr(self, f'pw_grid_{ii}').setBackground('w')
-            getattr(self, f'pw_grid_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
+            getattr(self, f'pw_grid_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
             getattr(self, f'pw_chan_{ii}').setBackground('w')
-            getattr(self, f'pw_chan_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
+            getattr(self, f'pw_chan_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
             getattr(self, f'pw_amplgrid_{ii}').setBackground('w')
-            getattr(self, f'pw_amplgrid_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
+            getattr(self, f'pw_amplgrid_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
             getattr(self, f'pw_amplchan_{ii}').setBackground('w')
-            getattr(self, f'pw_amplchan_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, self.apaChannels[ii]))
+            getattr(self, f'pw_amplchan_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
             #getattr(self, f'pw_resfreqfit_{ii}').setBackground('w')
             #getattr(self, f'pw_resfreqfit_{ii}').setTitle(ii)
 
@@ -1426,6 +1487,15 @@ class MainWindow(qtw.QMainWindow):
 
     def startScanThreadComplete(self):
         print("startScanThread complete!")
+
+    def submitResonancesThreadComplete(self):
+        print("submitResonancesThread complete!")
+
+    def loadTensionsThreadComplete(self):
+        print("loadTensionsThread complete!")
+
+    def submitTensionsThreadComplete(self):
+        print("submitTensionsThread complete!")
         
     def startScanAdvThreadComplete(self):
         print("startScanAdvThread complete!")
@@ -1674,8 +1744,8 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot()
     def evtVwrChange(self, step=None):
-        print('\n\n\n')
-        print(f"step by {step}")
+        #print('\n\n\n')
+        #print(f"step by {step}")
 
         if self.evtData is None:
             print("No EVENT VIEWER data yet available")
@@ -1689,7 +1759,7 @@ class MainWindow(qtw.QMainWindow):
             idx = nfreq-1
         self.evtData['freqIdx'] = idx
         self.evtData['freqCurrent'] = self.evtData['freqUnion'][self.evtData['freqIdx']] 
-        print('\n\n\n')
+        #print('\n\n\n')
         self.evtVwrUpdatePlots()
         
     def evtVwrUpdatePlots(self, plotAmpl=False):
@@ -1734,6 +1804,7 @@ class MainWindow(qtw.QMainWindow):
     def abortScan(self):
         print("User has requested a soft abort of this run...")
         print("... this is not yet tested")
+        self.ampData[SCAN_END_MODE_KEYWORD] = ScanEnd.ABORTED
         self.uz.abort()
         
     @pyqtSlot()
@@ -1757,6 +1828,39 @@ class MainWindow(qtw.QMainWindow):
         worker = Worker(self.startScan)  # could pass args/kwargs too..
         #worker.signals.result.connect(self.printOutput)
         worker.signals.finished.connect(self.startScanThreadComplete)
+
+        # execute
+        self.threadPool.start(worker)
+
+    @pyqtSlot()
+    def submitResonancesThread(self):
+    
+        # Pass the function to execute
+        worker = Worker(self.submitResonances)  # could pass args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.submitResonancesThreadComplete)
+
+        # execute
+        self.threadPool.start(worker)
+
+    @pyqtSlot()
+    def loadTensionsThread(self):
+    
+        # Pass the function to execute
+        worker = Worker(self.loadTensions)  # could pass args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.loadTensionsThreadComplete)
+
+        # execute
+        self.threadPool.start(worker)
+
+    @pyqtSlot()
+    def submitTensionsThread(self):
+    
+        # Pass the function to execute
+        worker = Worker(self.submitTensions)  # could pass args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.submitTensionsThreadComplete)
 
         # execute
         self.threadPool.start(worker)
@@ -1790,20 +1894,13 @@ class MainWindow(qtw.QMainWindow):
         self.configHeadboard = self.configHeadboardSpinBox.value()
         self.configApaSide = self.SideComboBox.currentText()
 
-        advFss = self.advFssLineEdit.text() # Freq step size
+        self.updateApaUuidListModel()  
+        
         advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
         advInitDelay = self.advInitDelayLineEdit.text() # Init delay
         advStimAmplitude = self.advStimAmplitudeLineEdit.text() # Amplitude
         advDigipotAmplitude = self.advDigipotAmplitudeLineEdit.text() # Digipot amplitude
         
-        # TODO: Make sure inputs can be safely converted to floats
-        # TODO: Grab default values if undefined
-        if advFss: advFss = float(advFss)
-        if advStimTime: advStimTime = float(advStimTime)
-        if advInitDelay: advInitDelay = float(advInitDelay)
-        if advStimAmplitude: advStimAmplitude = float(advStimAmplitude) # BUG: should accept hex string, no?
-        if advDigipotAmplitude: advDigipotAmplitude = float(advDigipotAmplitude)  # BUG: should accept hex string, no?
-
         scanIndex = -1
         logging.info(self.radioBtns)
         for i, btn in enumerate(self.radioBtns):
@@ -1811,6 +1908,19 @@ class MainWindow(qtw.QMainWindow):
             if btn.isChecked():
                 scanIndex = i
         if scanIndex < 0: return
+        
+        # This gets values from the table for scan configurations
+        freqMax = float(self.scanTable.item(scanIndex, 4).text())
+        freqMin = float(self.scanTable.item(scanIndex, 3).text())
+        freqStep = float(self.scanTable.item(scanIndex, 5).text())
+        
+        # TODO: Make sure inputs can be safely converted to floats
+        # TODO: Grab default values if undefined
+        if advStimTime: advStimTime = float(advStimTime)
+        if advInitDelay: advInitDelay = float(advInitDelay)
+        if advStimAmplitude: advStimAmplitude = float(advStimAmplitude) # BUG: should accept hex string, no?
+        if advDigipotAmplitude: advDigipotAmplitude = float(advDigipotAmplitude)  # BUG: should accept hex string, no?
+
 
         rd = self.range_data_list[scanIndex]
         #need to impliment list of all -1 for channels not being used
@@ -1824,16 +1934,18 @@ class MainWindow(qtw.QMainWindow):
             self.wires.sort(key = int)
             channels = rd["apaChannels"]
         #sorting apa channels list to follow increasing order of dwa channels
-        dwaChannels = []
-        for i in range(0,len(channels)):
-            dwaChannels.append(channel_map.apa_channel_to_dwa_channel(self.configLayer, channels[i]))
-        self.apaChannels = [x for _, x in sorted(zip(dwaChannels, channels), key=lambda pair: pair[0])]
+        dwaChannels = range(8)
+        self.apaChannels = [None]*len(dwaChannels)
+        for apaChannel in channels:
+            dwaChannel = channel_map.apa_channel_to_dwa_channel(self.configLayer, apaChannel)
+            self.apaChannels[dwaChannel] = apaChannel
 
         self.wires.sort(key = int)
 
         fpgaConfig = config_generator.configure_default()
         
         #print(f"self.configLayer, channels = {self.configLayer}, {channels}")
+        #print(f"  type(channels) = {type(channels)}")
         fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
 
         fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
@@ -1846,10 +1958,10 @@ class MainWindow(qtw.QMainWindow):
         elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(stim_time=advStimTime))
 
         if advStimAmplitude: 
-            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, stim_mag=int(advStimAmplitude)))
+            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=int(advStimAmplitude)))
             
         if advDigipotAmplitude: 
-            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=self.freqMax, digipot=int(advDigipotAmplitude)))
+            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, digipot=int(advDigipotAmplitude)))
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
@@ -1861,13 +1973,9 @@ class MainWindow(qtw.QMainWindow):
         self._loadDaqConfig()
 
         self.combinedConfig = {"FPGA": fpgaConfig, "DATABASE": dataConfig, "DAQ": self.daqConfig}
-        #this gets values from the table for scan configurations
-        self.freqMax = float(self.scanTable.item(scanIndex, 4).text())
-        self.freqMin = float(self.scanTable.item(scanIndex, 3).text())
-        self.freqStep = self.scanTable.item(scanIndex, 5).text()
         
-        fpgaConfig.update(config_generator.configure_scan_frequencies(self.freqMin, self.freqMax, stim_freq_step = int(self.freqStep)/160))
-        fpgaConfig.update(config_generator.configure_noise_subtraction(self.freqMin, self.freqMax))
+        fpgaConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step = freqStep))
+        fpgaConfig.update(config_generator.configure_noise_subtraction(freqMin, freqMax))
 
         self.combinedConfig = {"FPGA": fpgaConfig, "DATABASE": dataConfig, "DAQ": self.daqConfig}
         
@@ -2106,6 +2214,7 @@ class MainWindow(qtw.QMainWindow):
     def loadSavedScanData(self, filename):
         self._loadAmpData(filename)
         self.runResonanceAnalysis()
+        self.labelResonanceSubmitStatus.setText("Resonances have not been submitted")
 
     @pyqtSlot()
     def _resFreqUserInputText(self):
@@ -2345,6 +2454,7 @@ class MainWindow(qtw.QMainWindow):
     @pyqtSlot()
     def loadTensions(self):
         print("loadTensions()")
+
         # Load sietch credentials #FIXME still using James's credentials
         sietch = SietchConnect("sietch.creds")
         # Get APA UUID from text box
@@ -2356,6 +2466,15 @@ class MainWindow(qtw.QMainWindow):
         # Get selected layer from GUI
         layer = self.tensionLayerComboBox.currentText()
         self.tensionLayer = layer
+        # Build dictionary and table
+        self.tensionData = {
+            'A':[-1]*MAX_WIRE_SEGMENT[layer],
+            'B':[-1]*MAX_WIRE_SEGMENT[layer],
+        }
+        self.tensionTableModel = TensionTableModel(self.tensionData)
+        self.tensionTableView.setModel(self.tensionTableModel)
+        #self.tensionTableView.resizeColumnsToContents()
+        self.tensionTableView.resizeRowsToContents()
 
         for side in ["A", "B"]:
             print("apaUuid, side, layer, stage")
@@ -2395,7 +2514,7 @@ class MainWindow(qtw.QMainWindow):
         self.tensionTableModel.setData(self.tensionData)
         #self.tensionTableView.resizeRowsToContents()
         self.tensionTableModel.layoutChanged.emit()
-        self.tensionTableView.resizeColumnsToContents()  # probably don't need?
+        #self.tensionTableView.resizeColumnsToContents()  # probably don't need?
         
     def submitTensions(self):
         # Load sietch credentials #FIXME still using James's credentials
@@ -2403,6 +2522,7 @@ class MainWindow(qtw.QMainWindow):
         pointerTableId = self.pointerTable["_id"]
         apaUuid = self.pointerTable["data"]["apaUuid"]
         stage = self.pointerTable["stage"]
+        note = self.submitResonanceNoteLineEdit.text()
         wireData = {
             'X': {
                 'A': [],
@@ -2433,10 +2553,13 @@ class MainWindow(qtw.QMainWindow):
                 "version": "1.1",
                 "apaUuid": apaUuid,
                 "wireSegments": wireData,
+                "wires": wireData,
                 "saveAsDraft": True,
-                "submit": True
+                "submit": True,
+                "note": note
             }
         }
+        print(record_result)
         dbid= sietch.api('/test',record_result)
 
     def saveResonanceData(self):
@@ -2462,89 +2585,119 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot()
     def submitResonances(self):
+        self.labelResonanceSubmitStatus.setText("Submitting...")
+        try: 
+            self.saveResonanceData()
 
-        self.saveResonanceData()
+            # Load sietch credentials #FIXME still using James's credentials
+            sietch = SietchConnect("sietch.creds")
 
-        # Load sietch credentials #FIXME still using James's credentials
-        sietch = SietchConnect("sietch.creds")
+            note = self.submitResonanceNoteLineEdit.text()
+            
+            print(f"sietch = {sietch}")
+            print(f"self.ampData['apaUuid'] = {self.ampData['apaUuid']}")
+            out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"])
+            print(f"out = {out}")
 
 
-        print(f"sietch = {sietch}")
-        print(f"self.ampData['apaUuid'] = {self.ampData['apaUuid']}")
-        out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"])
-        print(f"out = {out}")
-
-
-        #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
-        pointerTable = database_functions.get_pointer_table(sietch, self.ampData['apaUuid'], self.ampData['stage'])
-        wirePointersAllLayers = pointerTable["data"]["wireSegments"]
-        
-        pointer_lists = {}
-        for layer in APA_LAYERS:
-            pointer_lists[layer] = {}
-            for side in APA_SIDES:
-                #pointer_lists[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT # BUG: shouldn't you read from db what's already there?
-                pointer_lists[layer][side] = wirePointersAllLayers[layer][side]
-                
-        #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
-        for dwaCh, ch in enumerate(self.ampData["apaChannels"]): # Loop over channels in scan
-            for w in self.ampData["wireSegments"]:
-                wire_ch = channel_map.wire_to_apa_channel(self.ampData["layer"], w)
-                if wire_ch == ch:
-                    resonance_result = {
-                        "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
-                        "formId": "wire_resonance_measurement",
-                        "formName": "Wire Resonance Measurement",
-                        "data": {
-                            "versionDaq": "1.1",
-                            "dwaUuid": self.ampData["apaUuid"],
-                            "versionFirmware": "1.1",
-                            "site": "Harvard",
-                            "measuredBy": self.ampData["measuredBy"],
-                            "productionStage": self.ampData["stage"],
-                            "side": self.ampData["side"],
-                            "layer": self.ampData["layer"],
-                            "wireSegments": {
-                                str(w): self.resonantFreqs[dwaCh]
+            #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
+            pointerTable = database_functions.get_pointer_table(sietch, self.ampData['apaUuid'], self.ampData['stage'])
+            wirePointersAllLayers = pointerTable["data"]["wireSegments"]
+            
+            pointer_lists = {}
+            for layer in APA_LAYERS:
+                pointer_lists[layer] = {}
+                for side in APA_SIDES:
+                    #pointer_lists[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT # BUG: shouldn't you read from db what's already there?
+                    pointer_lists[layer][side] = wirePointersAllLayers[layer][side]
+                    
+            #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
+            for dwaCh, ch in enumerate(self.ampData["apaChannels"]): # Loop over channels in scan
+                for w in self.ampData["wireSegments"]:
+                    wire_ch = channel_map.wire_to_apa_channel(self.ampData["layer"], w)
+                    if wire_ch == ch:
+                        resonance_result = {
+                            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
+                            "formId": "wire_resonance_measurement",
+                            "formName": "Wire Resonance Measurement",
+                            "data": {
+                                "versionDaq": "1.1",
+                                "dwaUuid": self.ampData["apaUuid"],
+                                "versionFirmware": "1.1",
+                                "site": "Harvard",
+                                "measuredBy": self.ampData["measuredBy"],
+                                "productionStage": self.ampData["stage"],
+                                "side": self.ampData["side"],
+                                "layer": self.ampData["layer"],
+                                "wireSegments": {
+                                    str(w): self.resonantFreqs[dwaCh]
+                                },
+                                "saveAsDraft": True,
+                                "submit": True,
+                                "note": note
                             },
-                            "saveAsDraft": True,
-                            "submit": True
-                        },
-                    }
-                    dbid = sietch.api('/test',resonance_result)
-                    pointer_lists[self.ampData['layer']][self.ampData['side']][w] = {"testId": dbid}
-                    #pointer_list[w] = {"testId": dbid}
+                        }
+                        dbid = sietch.api('/test',resonance_result)
+                        pointer_lists[self.ampData['layer']][self.ampData['side']][w] = {"testId": dbid}
+                        #pointer_list[w] = {"testId": dbid}
 
-        
-        #pointer_lists[self.ampData["layer"]][self.ampData["side"]] = pointer_list  # BUG? should copy the list not reference it?
-        record_result = {
-            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
-            "formId": "wire_tension_pointer",
-            "formName": "Wire Tension Pointer Record",
-            "stage": self.ampData["stage"],
-            "data": {
-                "version": "1.1",
-                "apaUuid": self.ampData["apaUuid"],
-                "wireSegments": pointer_lists,
-                "saveAsDraft": True,
-                "submit": True
+            
+            #pointer_lists[self.ampData["layer"]][self.ampData["side"]] = pointer_list  # BUG? should copy the list not reference it?
+            record_result = {
+                "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
+                "formId": "wire_tension_pointer",
+                "formName": "Wire Tension Pointer Record",
+                "stage": self.ampData["stage"],
+                "data": {
+                    "version": "1.1",
+                    "apaUuid": self.ampData["apaUuid"],
+                    "wireSegments": pointer_lists,
+                    "saveAsDraft": True,
+                    "submit": True
+                }
             }
-        }
-        dbid= sietch.api('/test',record_result)
+            dbid= sietch.api('/test',record_result)
 
-        self.recentScansTableModel.setSubmitted(self.recentScansTableRowInUse, Submitted.YES)
-        self.recentScansTableModel.layoutChanged.emit()
+            self.recentScansTableModel.setSubmitted(self.recentScansTableRowInUse, Submitted.YES)
+            self.recentScansTableModel.layoutChanged.emit()
+
+            self.labelResonanceSubmitStatus.setText("Submitted!")
+        except:
+            self.labelResonanceSubmitStatus.setText("Error submitting resonances")
+
+
+
+    #def loadEventDataViaName(self):
+    #    print("cannot load event data this way anymore")
+        #scanId = self.evtVwr_runName_val.text()
+        #print(f'scanId = {scanId}')
+        #
+        #fileroot = 'scanData/'+scanId+'/'
+        #
+        #wireDataFilenames = [ f'{scanId}_{nn:02d}.txt' for nn in range(N_DWA_CHANS) ]
+        #wireDataFilenames = [ os.path.join(fileroot, ff) for ff in wireDataFilenames ]
+        #runHeaderFile = os.path.join(fileroot, f'{scanId}_FF.txt')
+    
+    def loadEventDataViaFileBrowser(self):
+        #options = qtw.QFileDialog.Options()
+        #options |= qtw.QFileDialog.DontUseNativeDialog
+        #scanDir, _ = qtw.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()",
+        #"","All Files (*);;JSON Files (*.json)",
+        #                                                  options=options)
+        scanDir = qtw.QFileDialog.getExistingDirectory(self,"Select directory")
+        print("scanDir = {scanDir}")
         
-    @pyqtSlot()
-    def loadEventData(self):
-        scanId = self.evtVwr_runName_val.text()
-        print(f'scanId = {scanId}')
+        validScanDir = True
+        if not scanDir:  # fixme: better check for valid scan
+            validScanDir = False
+        if not validScanDir:
+            print("invalid directory: ignoring request to load event data")
+            print(scanDir)
+            return
 
-        fileroot = 'scanData/'+scanId+'/'
-
-        wireDataFilenames = [ f'{scanId}_{nn:02d}.txt' for nn in range(N_DWA_CHANS) ]
-        wireDataFilenames = [ os.path.join(fileroot, ff) for ff in wireDataFilenames ]
-        runHeaderFile = os.path.join(fileroot, f'{scanId}_FF.txt')
+        wireDataFilenames = [ f'rawData_{nn:02d}.txt' for nn in range(N_DWA_CHANS) ]
+        wireDataFilenames = [ os.path.join(scanDir, ff) for ff in wireDataFilenames ]
+        runHeaderFile = os.path.join(scanDir, f'rawData_FF.txt')
 
         print("Replaying data from the following files: ")
         print(f"  runHeaderFile = {runHeaderFile}")
@@ -2630,7 +2783,8 @@ class MainWindow(qtw.QMainWindow):
         self.evtData['stimPeriodUnion'].sort()
         self.evtData['stimPeriodUnion'] = self.evtData['stimPeriodUnion'][::-1]  # reverse the sort
         #print(self.evtData['periodUnion'])
-        self.evtData['freqUnion'] = CLOCK_PERIOD_SEC/self.evtData['stimPeriodUnion']
+        #self.evtData['freqUnion'] = CLOCK_PERIOD_SEC/self.evtData['stimPeriodUnion']
+        self.evtData['freqUnion'] = (1e12/self.evtData['stimPeriodUnion'])/78.125 # convert period in 78.125ps to freq in Hz
         #print(self.evtData['freqUnion'])
         
         # Second pass through the data -- align individual channel data with the master frequency list
@@ -2663,9 +2817,9 @@ class MainWindow(qtw.QMainWindow):
                 self.evtData['V(t)_fit'][ichan].append(yfit)
 
         # Update the A(f) and V(t) plots
-        for ichan in range(N_DWA_CHANS):
-            self.evtData['freqIdx'] = 0
-            self.evtData['freqCurrent'] = self.evtData['freqUnion'][self.evtData['freqIdx']] 
+        #for ichan in range(N_DWA_CHANS):
+        self.evtData['freqIdx'] = 0
+        self.evtData['freqCurrent'] = self.evtData['freqUnion'][self.evtData['freqIdx']] 
         self.evtVwrUpdatePlots(plotAmpl=True)
             
         #print("Payload -------------------")
@@ -2808,16 +2962,26 @@ class MainWindow(qtw.QMainWindow):
         self._initResonanceFitLines()
 
                 
+    def _clearTimeseriesData(self):
+        plotTypes = ['grid', 'chan']
+        for ptype in plotTypes:
+            for reg in self.registers:
+                regId = reg
+                self.curves[ptype][regId].setData([])
+                self.curvesFit[ptype][regId].setData([])
+        self.curves['chan']['main'].setData([])
+        self.curvesFit['chan']['main'].setData([])
+        
     def _clearAmplitudeData(self):
         self.resonantFreqs = {}  # FIXME: this should not go here... should happen when A(f) data is loaded...
         self.ampData = {}        # FIXME: shouldn't really reset the dict like this...
+        self.ampData[SCAN_END_MODE_KEYWORD] = ScanEnd.NORMAL
         for reg in self.registers:
             self.ampData[reg] = {'freq':[],  # stim freq in Hz
                                  'ampl':[] } # amplitude in ADC counts
             self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
 
         # Clear amplitude plots
-        #plotTypes = ['amplchan', 'amplgrid', 'resRawFit', 'resProcFit']
         plotTypes = ['amplchan', 'amplgrid']
         for ptype in plotTypes:
             for reg in self.registers:
@@ -2825,7 +2989,8 @@ class MainWindow(qtw.QMainWindow):
                 self.curves[ptype][regId].setData([])
                 self.curves['amplgrid']['all'][reg].setData([])
         self.curves['amplchan']['main'].setData([])
-        
+
+    def _configureAmplitudePlots(self):
         # Set x-ranges for frequency plots so pyqtgraph does not have to autoscale
         runFreqMin = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMin_Hz'] 
         runFreqMax = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMax_Hz'] 
@@ -2837,7 +3002,9 @@ class MainWindow(qtw.QMainWindow):
                 except:
                     apaChan = None
                 getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
-                getattr(self, f'pw_{ptype}_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, apaChan))
+                getattr(self, f'pw_{ptype}_{ii}').setTitle("{}-{}, DWA Chan: {} APA Chan: {}".format(self.ampData['layer'],
+                                                                                                     self.ampData['side'],
+                                                                                                     ii, apaChan))
         self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
         self.pw_amplchan_main.setXRange(runFreqMin, runFreqMax)
 
@@ -2991,8 +3158,11 @@ class MainWindow(qtw.QMainWindow):
                 self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.3f}")
                 self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
 
+                self._clearTimeseriesData()
                 self._clearAmplitudeData() 
                 self._setScanMetadata()    # must come after clearAmplitudeData
+                self._configureAmplitudePlots() # must come after setScanMetadata()
+                
                 print("\n\nSCAN START")
                 print(f"self.ampData = {self.ampData}")
                 
@@ -3059,10 +3229,18 @@ class MainWindow(qtw.QMainWindow):
         # Check to see if this is an ADC data transfer:
         if ddp.Frame.ADC_DATA in udpDict:
             self.outputText.appendPlainText("\nFOUND ADC DATA\n")
+            
             # update the relevant plot...
             regId = udpDict[ddp.Frame.FREQ]['Register_ID_Freq']
             self.logger.info(f'regId = {regId}')
             reg = self.registerOfVal[regId]
+
+            # If this DWA channel does not correspond to an actual wire, then don't update
+            # plots in the GUI
+            print(f" regId = {regId}; self.apaChannels = {self.apaChannels}")
+            if (self.scanType == ScanType.AUTO) and (self.apaChannels[regId] is None):
+                return
+            
             #self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
             dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
             tt = np.arange(len(udpDict[ddp.Frame.ADC_DATA]['adcSamples']))*dt
