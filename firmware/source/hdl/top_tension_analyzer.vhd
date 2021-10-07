@@ -343,30 +343,17 @@ begin
       --acStim_nPeriod_fp6_all  := (x"17d7840000"/ stimFreqReq);
       acStim_nPeriod_fp6_all := (x"2FAF0800000"/ stimFreqReq);
 
-      -- division using combintorial logic is not so great ... but it works with a few clock cycles
+      -- division using combintorial logic is not so great ... but it works with a few clock cycles,
+      -- consider saving resources by muxing the input of a single division, having parallel resources is unnecessary
       if mCDelayCount = x"0E" then -- latch division after 150 ns
         acStim_nPeriod_fp6 <= acStim_nPeriod_fp6_all(30 downto 0); -- only take what is needed for min 10 HZ stim freq
       elsif mCDelayCount = x"1D"then 
         acStimX200_nPeriod_fxp8 <= (acStim_nPeriod_fp6 & "00") / x"C8"; -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
+      -- for the conversion period, fp6 << 6 , 200MHz clk  to 100MHz ADC clk << 1 . ie Shift 7 bits to get nPeriod for 1 cycle 
+      -- consider setting conversion period to be fixed throughout noise range to help with the interpolation
+        adcCnv_nPeriod <= "000" & acStim_nPeriod_fp6(30 downto 7)/fromDaqReg.adcSamplesPerCycle; -- get period of conversions for set frequency
       end if;
 
-
-      --  let's start with a fixed conversion 
-      -- temp shift left ~8 samples per cycle
-      -- nPeriod of ADC is shifted acStim period to maintain the samples / cycle
-      -- fp6 - 6 , 200 to 100 - 1 ,8 samples per cycle -3 (10 total)
-
-      --!! future option when in the noise subtraction region we hold the sampling period 
-      -- to improve the results of interpolating between two measured noise samples in between frequencies
-
-      --if inNoiseRange then 
-      --adcCnv_nPeriod <= adcCnv_nPeriodNoise;
-      --else 
-      adcCnv_nPeriod <= "000" & acStim_nPeriod_fp6(30 downto 10);
-      --end if;
-      --IF adcCnv_nPeriodNoiseLatch then
-      --adcCnv_nPeriodNoise <= "000" & acStim_nPeriod_fp6(30 downto 10);
-      --end if;
       -- find the number of total canversions for each frequency
       adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
       adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);

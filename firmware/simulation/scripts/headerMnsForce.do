@@ -71,7 +71,7 @@ force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fr
 
 # set reset and start
 # to make the simulation faster, limit the time between conversions
-force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/adcCnv_nPeriod 24'h00000f 0
+force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/adcReadout_inst/adcCnv_nPeriodRn 24'h00000F 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.reset true 20ns -cancel 30ns
 force -freeze sim:/tb_adc_emu/mainsSquare 0 0
 force -freeze sim:/tb_adc_emu/fromDaqReg.ctrlStart true 100ns -cancel 110ns

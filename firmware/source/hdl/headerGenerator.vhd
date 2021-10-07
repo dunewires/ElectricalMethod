@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Sep 20 13:31:11 2021
+-- Last update : Wed Oct  6 21:59:25 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ entity headerGenerator is
         fromDaqReg : in  fromDaqRegType;
         toDaqReg   : out toDaqRegType;
 
-        pButton : in  std_logic_vector(3 downto 0);
+        pButton : in std_logic_vector(3 downto 0);
 
         ---------------------------
         -- this will come from PS
@@ -64,12 +64,19 @@ entity headerGenerator is
         adcDataRen : out std_logic_vector(7 downto 0) := (others => '0');
         adcData    : in  slv_vector_type(7 downto 0)(31 downto 0);
 
-        dwaClk100 : in  std_logic -- := '0'
+        dwaClk100 : in std_logic -- := '0'
     );
 
 end entity headerGenerator;
 
 architecture rtl of headerGenerator is
+    type statusData_type is record
+        errors std_logic_vector(23 downto 0),
+        pButton std_logic_vector(3 downto 0),
+        ctrlBusy boolean
+    end record;
+
+    signal statusDataSticky,statusDataLatch : statusData_type := (others => '0'),(others => '0');
 
     type state_type is (idle_s, udpPldEnd_s, genAFrame_s, genCFrame_s, genDFrame_s, genEFrame_s, genFFrame_s);
     signal state_reg  : state_type := idle_s;
@@ -229,7 +236,7 @@ begin
     --STATUS Header
     headEDataList <= ( -- Status frame
             x"EEEE" & std_logic_vector(to_unsigned(nHeadE-2, 16)),
-            -- push or timeoutx"61" & x"0000" & x"55",
+            x"61" & x"0000" & x"55",
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
             x"63" & std_logic_vector(fromDaqReg.errors),
             x"64" & x"00000" & pButton,
@@ -432,16 +439,33 @@ begin
     statusTiming : process (dwaClk100) -- latch the packet data validated by the sendData strobe
     begin
         if rising_edge(dwaClk100) then
-            if statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod then
-                sendStatus     <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off
+            statusDataTrig <= statusDataSticky /= statusDataLatch;
+            statusTimeout <= statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod;
+            statusDataSticky.timeout  <=  fromDaqReg.errors;
+            statusDataSticky.timeout  <=  fromDaqReg.errors;
+
+            if statusDataTrig or statusTimeout then
+                sendStatus <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off
+                statusDataLatch <= statusDataSticky;
+
+                statusSticky.errors <= fromDaqReg.errors;
+                statusSticky.pButton  <= pButton;
+                statusSticky.ctrlBusy  <= ctrlBusy;
+
                 statusTimerCnt <= x"00000001";
             else
+                statusSticky.errors <= fromDaqReg.errors or statusSticky.errors;
+                statusSticky.pButton  <= pButton or statusSticky.pButton;
+                statusSticky.ctrlBusy  <= ctrlBusy;
+
                 statusTimerCnt <= statusTimerCnt+1;
                 sendStatus     <= sendStatus and not statusBusy; --clear request
             end if;
 
         end if;
     end process;
+
+    ctrlBusy  <= fromDaqReg.ctrlStateDbg = x"0" else '1';
 
     watchdogTiming : process (dwaClk100) -- latch the packet data validated by the sendData strobe
     begin
