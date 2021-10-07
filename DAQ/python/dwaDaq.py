@@ -162,6 +162,10 @@ CLOCK_PERIOD_SEC = 1e8
 STIM_VIEW_OFFSET = 0
 #
 UDP_RECV_BUF_SIZE = 4*2**20 # Bytes (2**20 Bytes is ~1MB)
+SYSTEM_PLATFORM   = platform.system().upper()
+if SYSTEM_PLATFORM == 'WINDOWS':
+    UDP_RECV_BUF_SIZE = 16*2**20 # Bytes (2**20 Bytes is ~1MB)
+
 #
 N_DWA_CHANS = 8
 PUSH_BUTTON_LIST = [1, 2] # PB0 is deprecated
@@ -870,9 +874,11 @@ class MainWindow(qtw.QMainWindow):
         # Get platform:
         # platform.system()
         # Returns the system/OS name, such as 'Linux', 'Darwin', 'Java', 'Windows'. An empty string is returned if the value cannot be determined.
-        psys = platform.system().upper()
-        print(f"platform.system() = {psys}")
-        if psys == 'WINDOWS':
+        #SYSTEM_PLATFORM   = platform.system().upper()
+        #psys = platform.system().upper()
+        print(f"platform.system() = {SYSTEM_PLATFORM}")
+            
+        if SYSTEM_PLATFORM == 'WINDOWS':
             self.showMaximized()
         else:
             ############ Resize and launch GUI in bottom right corner of screen
