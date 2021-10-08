@@ -112,6 +112,7 @@ architecture STRUCT of top_tension_analyzer is
   signal acStimX200 : std_logic := '0';
 
   signal adcCnv_nCnv             : unsigned(15 downto 0) := (others => '0');
+  signal adcSamplesPerCycleSet  : unsigned(15 downto 0) := (others => '0');
   signal adcCnv_nPeriod          : unsigned(23 downto 0) := (others => '0');
   signal adcCnv_nPeriodNoise          : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriodAuto : unsigned(23 downto 0) := (others => '0');
@@ -335,6 +336,7 @@ begin
 
       if mCDelayReset then
         mCDelayCount <= x"00";
+        adcSamplesPerCycleSet <= fromDaqReg.adcSamplesPerCycle;  -- Update the register to include into the multicycle delay path. Not necessary but we'll do it just for fun
       elsif mCDelayCount /= x"FF" then -- stop at 0xFF
         mCDelayCount <= mCDelayCount +1;
       end if;
@@ -351,7 +353,7 @@ begin
         acStimX200_nPeriod_fxp8 <= (acStim_nPeriod_fp6 & "00") / x"C8"; -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
       -- for the conversion period, fp6 << 6 , 200MHz clk  to 100MHz ADC clk << 1 . ie Shift 7 bits to get nPeriod for 1 cycle 
       -- consider setting conversion period to be fixed throughout noise range to help with the interpolation
-        adcCnv_nPeriod <= "000" & acStim_nPeriod_fp6(30 downto 7)/fromDaqReg.adcSamplesPerCycle; -- get period of conversions for set frequency
+        adcCnv_nPeriod <= acStim_nPeriod_fp6(30 downto 7)/adcSamplesPerCycleSet; -- get period of conversions for set frequency
       end if;
 
       -- find the number of total canversions for each frequency

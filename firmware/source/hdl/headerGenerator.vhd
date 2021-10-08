@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Oct  6 21:59:25 2021
+-- Last update : Thu Oct  7 17:40:17 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -70,13 +70,6 @@ entity headerGenerator is
 end entity headerGenerator;
 
 architecture rtl of headerGenerator is
-    type statusData_type is record
-        errors std_logic_vector(23 downto 0),
-        pButton std_logic_vector(3 downto 0),
-        ctrlBusy boolean
-    end record;
-
-    signal statusDataSticky,statusDataLatch : statusData_type := (others => '0'),(others => '0');
 
     type state_type is (idle_s, udpPldEnd_s, genAFrame_s, genCFrame_s, genDFrame_s, genEFrame_s, genFFrame_s);
     signal state_reg  : state_type := idle_s;
@@ -114,7 +107,7 @@ architecture rtl of headerGenerator is
 
     ----------------------------
     ---- Setup for Header E
-    constant nHeadE      : integer                                         := 5; -- # of header words (incl. 2 delimiters)
+    constant nHeadE      : integer                                         := 6; -- # of header words (incl. 2 delimiters)
     constant nHeadElog   : integer                                         := integer(log2(real(nHeadE +1)));
     signal headEDataList : slv_vector_type(nHeadE-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
@@ -131,9 +124,20 @@ architecture rtl of headerGenerator is
     signal watchdogSleep    : boolean               := false;
     signal watchdogTimerCnt : unsigned(31 downto 0) := (others => '0');
 
-    signal sendStatus     : boolean               := false;
-    signal statusBusy     : boolean               := false;
-    signal statusTimerCnt : unsigned(31 downto 0) := (others => '0');
+    type statusData_type is record
+        errors   : std_logic_vector(23 downto 0);
+        pButton  : std_logic_vector(3 downto 0);
+        ctrlBusy : boolean;
+    end record;
+
+    signal statusDataSticky,statusDataLatch : statusData_type := (
+            errors   => (others => '0'),
+            pButton   => (others => '0'),
+            ctrlBusy => false);
+    signal sendStatus                                       : boolean               := false;
+    signal statusBusy, statusBusy_del                       : boolean               := false;
+    signal statusDataTrig,statusTimeout, statusTimeoutLatch : boolean               := false;
+    signal statusTimerCnt                                   : unsigned(31 downto 0) := (others => '0');
 
     signal adcRegNum         : unsigned(3 downto 0)  := (others => '0');
     signal adcSamplesPerFreq : unsigned(39 downto 0) := (others => '0');
@@ -236,10 +240,10 @@ begin
     --STATUS Header
     headEDataList <= ( -- Status frame
             x"EEEE" & std_logic_vector(to_unsigned(nHeadE-2, 16)),
-            x"61" & x"0000" & x"55",
+            x"61" & x"00000" & "000" & BOOL2SL(statusTimeoutLatch),
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
-            x"63" & std_logic_vector(fromDaqReg.errors),
-            x"64" & x"00000" & pButton,
+            x"63" & statusDataSticky.errors,
+            x"64" & x"00000" & statusDataSticky.pButton,
             x"EEEEEEEE"
     );
 
@@ -436,36 +440,39 @@ begin
 
         end case;
     end process;
+
     statusTiming : process (dwaClk100) -- latch the packet data validated by the sendData strobe
     begin
         if rising_edge(dwaClk100) then
+            statusBusy_del <= statusBusy;
             statusDataTrig <= statusDataSticky /= statusDataLatch;
-            statusTimeout <= statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod;
-            statusDataSticky.timeout  <=  fromDaqReg.errors;
-            statusDataSticky.timeout  <=  fromDaqReg.errors;
+            statusTimeout  <= statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod;
 
-            if statusDataTrig or statusTimeout then
-                sendStatus <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off
+            if (statusDataTrig or statusTimeout) and not sendStatus then -- latch data and set senStatus flag, Don't re latch on subsequent triggers, keep sticky for next pkt.
+                sendStatus      <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off
                 statusDataLatch <= statusDataSticky;
 
-                statusSticky.errors <= fromDaqReg.errors;
-                statusSticky.pButton  <= pButton;
-                statusSticky.ctrlBusy  <= ctrlBusy;
+                statusTimeoutLatch    <= not statusDataTrig; -- if not data triggered signal it was timeout triggered, timeout is not priority
+                statusDataSticky.errors   <= fromDaqReg.errors;
+                statusDataSticky.pButton  <= pButton;
+                statusDataSticky.ctrlBusy <= fromDaqReg.ctrlStateDbg /= x"0";
 
                 statusTimerCnt <= x"00000001";
             else
-                statusSticky.errors <= fromDaqReg.errors or statusSticky.errors;
-                statusSticky.pButton  <= pButton or statusSticky.pButton;
-                statusSticky.ctrlBusy  <= ctrlBusy;
-
-                statusTimerCnt <= statusTimerCnt+1;
-                sendStatus     <= sendStatus and not statusBusy; --clear request
+                -- triggers are stickey so we don't miss one if busy sending a packet
+                statusDataSticky.errors   <= fromDaqReg.errors or statusDataSticky.errors;
+                statusDataSticky.pButton  <= pButton or statusDataSticky.pButton;
+                statusDataSticky.ctrlBusy <= fromDaqReg.ctrlStateDbg /= x"0";
+                if not statusTimeout then -- keep from overflowing counter while we wait to send packet.
+                    statusTimerCnt <= statusTimerCnt+1;
+                end if;
+                -- latch status until statusBusy is done
+                sendStatus <= sendStatus and (not statusBusy_del or statusBusy); --clear request
             end if;
 
         end if;
     end process;
 
-    ctrlBusy  <= fromDaqReg.ctrlStateDbg = x"0" else '1';
 
     watchdogTiming : process (dwaClk100) -- latch the packet data validated by the sendData strobe
     begin
