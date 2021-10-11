@@ -3253,9 +3253,16 @@ class MainWindow(qtw.QMainWindow):
 
             #################################
             # Update plots
-            if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_GRID:
+            # FIXME: only update plots every so often (e.g. 2Hz or so).
+            # Should we use a QTimer for this?
+            # for now, can update everytime the dataset grows by, say, 4 points...
+            # by looking at e.g. 
+            #OK_TO_PLOT = (len(self.ampData[reg]['freq']+1) % 4) == 0
+            OK_TO_PLOT = False
+            
+            if OK_TO_PLOT and self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_GRID:
                 self.curves['grid'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
-            if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_CHAN:
+            if OK_TO_PLOT and self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_CHAN:
                 self.curves['chan'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
                 # FIXME: need to update the main window in chan view, too
                 if regId == self.chanViewMain:
@@ -3271,20 +3278,21 @@ class MainWindow(qtw.QMainWindow):
             #print(f'   B = {B}')
             #print(f'   C = {C}')
             #print(f'   D = {D}')
-            if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_GRID:
-                self.curvesFit['grid'][regId].setData(tfit, yfit)
-            if self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_CHAN:
-                self.curvesFit['chan'][regId].setData(tfit, yfit)
-                if regId == self.chanViewMain:
-                    self.curvesFit['chan']['main'].setData(tfit, yfit)
+            if OK_TO_PLOT and self.currentViewStage == MainView.STIMULUS:
+                if self.currentViewStim == StimView.V_GRID:
+                    self.curvesFit['grid'][regId].setData(tfit, yfit)
+                elif self.currentViewStim == StimView.V_CHAN:
+                    self.curvesFit['chan'][regId].setData(tfit, yfit)
+                    if regId == self.chanViewMain:
+                        self.curvesFit['chan']['main'].setData(tfit, yfit)
 
             # Update A(f) plots
             # During scan, only update plots in the STIMULUS tab.
-            if self.currentViewStage == MainView.STIMULUS:
+            if OK_TO_PLOT and self.currentViewStage == MainView.STIMULUS:
                 if self.currentViewStim == StimView.A_GRID:
                     self.curves['amplgrid'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
                     # don't update the "all" plot until the end...
-                if self.currentViewStim == StimView.A_CHAN:
+                elif self.currentViewStim == StimView.A_CHAN:
                     self.curves['amplchan'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
                     if regId == self.chanViewMainAmpl:
                         self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
