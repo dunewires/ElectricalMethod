@@ -1,6 +1,5 @@
 # FIXME/TODO:
-# * When generating recent scan table in resonance tab on launch, the .DS_STORE subdirs create problems (should ignore)
-# 
+#
 # * In automated scan, the config file gets a "statusPeriod" field, but it should only have statusPeriodSec
 # 
 # * may need progress bars (or other indicator) for long processes such as:
