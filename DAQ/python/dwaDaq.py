@@ -759,13 +759,15 @@ class MainWindow(qtw.QMainWindow):
         scanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
                                           advDir=OUTPUT_DIR_SCAN_DATA_ADVANCED,
                                           sort=True)
-        print("\n\n")
-        print(scanDirs[:N_RECENT_SCANS])
-        print("\n\n")
 
         tabledata = []
         
         for sd in scanDirs:  # first entry in list is most recent
+            print(f"scanDir = {sd}")
+            if '.DS_Store' in sd:
+                print("directory contains .DS_STORE... ignoring")
+                continue
+            
             tabledata.append(self.generateScanListEntry(sd, Submitted.UNKNOWN))  # add to end of table
             
             if len(tabledata) == N_RECENT_SCANS:
@@ -3258,7 +3260,7 @@ class MainWindow(qtw.QMainWindow):
             # for now, can update everytime the dataset grows by, say, 4 points...
             # by looking at e.g. 
             #OK_TO_PLOT = (len(self.ampData[reg]['freq']+1) % 4) == 0
-            OK_TO_PLOT = False
+            OK_TO_PLOT = True
             
             if OK_TO_PLOT and self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_GRID:
                 self.curves['grid'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
@@ -3314,6 +3316,7 @@ class MainWindow(qtw.QMainWindow):
                 self._scanButtonEnable()
                 
             if self.enableScanButtonTemp and (self.dwaControllerState == State.IDLE):
+                print("\n\n enabling button via temp\n\n")
                 self.enableScanButtonTemp = False
                 self._scanButtonEnable()
                 
@@ -3621,6 +3624,8 @@ class MainWindow(qtw.QMainWindow):
             if self.resFitParams['find_peaks']['bkgPoly'] >= 0:
                 dataToFit -= dwa.baseline(self.ampData[reg]['freq'], dataToFit,
                                           polyDeg=self.resFitParams['find_peaks']['bkgPoly'])
+            elif self.resFitParams['find_peaks']['bkgPoly'] == -1:
+                print("RC background fit requested (not yet implemented)")
 
             # plot fxn that is used for peakfinding
             self.curves['resProcFit'][reg].setData(self.ampData[reg]['freq'], dataToFit)
