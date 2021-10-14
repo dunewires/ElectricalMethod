@@ -1,6 +1,4 @@
 # FIXME/TODO:
-# * When generating recent scan table in resonance tab on launch, the .DS_STORE subdirs create problems (should ignore)
-# 
 # * In automated scan, the config file gets a "statusPeriod" field, but it should only have statusPeriodSec
 # 
 # * may need progress bars (or other indicator) for long processes such as:
@@ -169,7 +167,7 @@ if SYSTEM_PLATFORM == 'WINDOWS':
 #
 N_DWA_CHANS = 8
 PUSH_BUTTON_LIST = [1, 2] # PB0 is deprecated
-INTER_SCAN_DELAY_SEC = 2  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
+#INTER_SCAN_DELAY_SEC = 2  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
 
 # DEBUGGING FLAGS
 AUTO_CHANGE_TAB = False # False for debugging
@@ -307,6 +305,7 @@ class WorkerSignals(qtc.QObject):
        'dict' of data from UDP transmission
 
     '''
+    starting = qtc.pyqtSignal()
     finished = qtc.pyqtSignal()
     error = qtc.pyqtSignal(tuple)
     result = qtc.pyqtSignal(object)
@@ -359,6 +358,7 @@ class Worker(qtc.QRunnable):
         self.logger.info("Thread start")
         # retrieve args/kwargs here; and fire processing using them
         try:
+            self.signals.starting.emit() # Process is starting
             result = self.fn(*self.args, **self.kwargs)
             #result = self.fn(
             #    *self.args, **self.kwargs,
@@ -548,7 +548,7 @@ class MainWindow(qtw.QMainWindow):
         self._scanButtonDisable()
         self._submitResonanceButtonDisable()
         self._setScanButtonAction('START')
-        self.interScanDelay = INTER_SCAN_DELAY_SEC
+        #self.interScanDelay = INTER_SCAN_DELAY_SEC
         self.dwaConnected_label.setText('Not Connected')
         self.dwaConnected_label.setStyleSheet("color:red")
         self.setPushButtonStatusAll([-1]*4)
@@ -950,7 +950,7 @@ class MainWindow(qtw.QMainWindow):
             self.IDLELabel.setText("DWA state: "+str(self.dwaControllerState))
         self.configure = ""
         self.connectedToUzed = ""
-        self.idle = ""
+        self.idle = False # FIXME: need this?
 
         # Resonance analysis plots
         self.resonanceProcessedDataGLW.scene().sigMouseClicked.connect(self._resProcGraphClicked)
@@ -1493,9 +1493,6 @@ class MainWindow(qtw.QMainWindow):
     def threadComplete(self):
         logging.info("THREAD COMPLETE!")
 
-    def startScanThreadComplete(self):
-        print("startScanThread complete!")
-
     def submitResonancesThreadComplete(self):
         print("submitResonancesThread complete!")
 
@@ -1505,9 +1502,6 @@ class MainWindow(qtw.QMainWindow):
     def submitTensionsThreadComplete(self):
         print("submitTensionsThread complete!")
         
-    def startScanAdvThreadComplete(self):
-        print("startScanAdvThread complete!")
-
     def _makeDummyData(self):
         # V(t)
         self.dummyData = {}  
@@ -1815,13 +1809,12 @@ class MainWindow(qtw.QMainWindow):
         self.ampData[SCAN_END_MODE_KEYWORD] = ScanEnd.ABORTED
         self.uz.abort()
         
-    @pyqtSlot()
-    def startScanThread(self):
-        print("User has requested a new AUTO scan (DWA is IDLE)")
-        self.scanType = ScanType.AUTO
-
+    ###############################################################
+    # Auto Scan Thread
+    def startScanThreadStarting(self):
         self._scanButtonDisable()
-        self._setScanButtonAction('ABORT')
+        self.btnScanCtrl.setStyleSheet("background-color : orange")
+        self.btnScanCtrl.setText("Configuring DWA...")
 
         for i, btn in enumerate(self.radioBtns):
             if btn.isChecked():
@@ -1832,14 +1825,53 @@ class MainWindow(qtw.QMainWindow):
                 #logging.info("Row "+str(i)+"has not been selected")
                 pass
     
+    def startScanThreadComplete(self):
+        self._setScanButtonAction('ABORT')
+        self._scanButtonEnable()
+        print("startScanThread complete!")
+
+    @pyqtSlot()
+    def startScanThread(self):
+        print("User has requested a new AUTO scan (DWA is IDLE)")
+        self.scanType = ScanType.AUTO
+
         # Pass the function to execute
         worker = Worker(self.startScan)  # could pass args/kwargs too..
         #worker.signals.result.connect(self.printOutput)
         worker.signals.finished.connect(self.startScanThreadComplete)
+        worker.signals.starting.connect(self.startScanThreadStarting)
 
         # execute
         self.threadPool.start(worker)
 
+    ###############################################################
+    # Advanced Scan Thread
+    def startScanAdvThreadStarting(self):
+        print("startScanAdvThread starting!")
+        self._scanButtonDisable()
+        self.btnScanCtrlAdv.setStyleSheet("background-color : orange")
+        self.btnScanCtrlAdv.setText("Configuring DWA...")
+
+    def startScanAdvThreadComplete(self):
+        print("startScanAdvThread complete!")
+        self._setScanButtonAction('ABORT')
+        self._scanButtonEnable()
+
+    @pyqtSlot()
+    def startScanAdvThread(self):
+
+        print("User has requested a new CUSTOM scan (DWA is IDLE)")
+        self.scanType = ScanType.CUSTOM
+
+        # Pass the function to execute
+        worker = Worker(self.startScanAdv)  # could pass args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.startScanAdvThreadComplete)
+        worker.signals.starting.connect(self.startScanAdvThreadStarting)
+
+        # execute
+        self.threadPool.start(worker)
+        
     @pyqtSlot()
     def submitResonancesThread(self):
     
@@ -1873,20 +1905,27 @@ class MainWindow(qtw.QMainWindow):
         # execute
         self.threadPool.start(worker)
 
+        
+    def disableRelaysThreadComplete(self):
+        print("disableRelaysThreadComplete")
+        self._setScanButtonAction('START')
+        self._scanButtonEnable()
 
-    @pyqtSlot()
-    def startScanAdvThread(self):
-            
-        print("User has requested a new CUSTOM scan (DWA is IDLE)")
-        self.scanType = ScanType.CUSTOM
+    def disableRelaysThreadStarting(self):
+        self.btnScanCtrl.setStyleSheet("background-color : orange")
+        self.btnScanCtrl.setText("Disabling relays...")
+        self.btnScanCtrlAdv.setStyleSheet("background-color : orange")
+        self.btnScanCtrlAdv.setText("Disabling relays...")
 
-        self._scanButtonDisable()
-        self._setScanButtonAction('ABORT')
-
+        
+    def disableRelays(self):
+        self.uz.disableAllRelays() # Break all relay connections to let charge bleed off of wires
+        
+    def disableRelaysThread(self):
         # Pass the function to execute
-        worker = Worker(self.startScanAdv)  # could pass args/kwargs too..
-        #worker.signals.result.connect(self.printOutput)
-        worker.signals.finished.connect(self.startScanAdvThreadComplete)
+        worker = Worker(self.disableRelays)
+        worker.signals.finished.connect(self.disableRelaysThreadComplete)
+        worker.signals.starting.connect(self.disableRelaysThreadStarting)
 
         # execute
         self.threadPool.start(worker)
@@ -3186,15 +3225,17 @@ class MainWindow(qtw.QMainWindow):
                 self._scanButtonDisable()
                 print("\nSet button to START\n")
                 self._setScanButtonAction('START')
-                qtc.QCoreApplication.processEvents()
+                #qtc.QCoreApplication.processEvents()
                 print("\nDisable relays\n")
-                self.uz.disableAllRelays() # Break all relay connections to let charge bleed off of wires
-                print("\nStart sleep\n")
-                time.sleep(self.interScanDelay)
-                print("\nEnable button\n")
-                self._scanButtonEnable()
+                self.disableRelaysThread()
                 
-                self.dwaControllerState = State.IDLE
+                #self.uz.disableAllRelays() # Break all relay connections to let charge bleed off of wires
+                #print("\nStart sleep\n")
+                #time.sleep(self.interScanDelay)
+                #print("\nEnable button\n")
+                #self._scanButtonEnable()
+                
+                #self.dwaControllerState = State.IDLE
 
                 #self.disableScanButtonForTime(self.interScanDelay)  # Don't allow user to start another scan for a bit
 
@@ -3312,8 +3353,8 @@ class MainWindow(qtw.QMainWindow):
                 
             self.dwaControllerState = udpDict[ddp.Frame.STATUS]['controllerState']
 
-            if self.dwaControllerState != State.IDLE:
-                self._scanButtonEnable()
+            #if self.dwaControllerState != State.IDLE:
+            #    self._scanButtonEnable()
                 
             if self.enableScanButtonTemp and (self.dwaControllerState == State.IDLE):
                 print("\n\n enabling button via temp\n\n")
@@ -3321,13 +3362,15 @@ class MainWindow(qtw.QMainWindow):
                 self._scanButtonEnable()
                 
             self.dwaControllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerStateStr']}")
+            self.idle = False # KLUGE: we may not get status frames for all states...
             if udpDict[ddp.Frame.STATUS]['controllerStateStr'] == "IDLE":
                 self.IDLELabel.setText("")
                 self.idle = True
-                self._scanButtonEnable()
+                #self._scanButtonEnable()
 
             else:
                 pass
+
             self.statusErrors_val.setText(f"{udpDict[ddp.Frame.STATUS]['statusErrorBits']}")
 
             # Display the status of the push buttons
