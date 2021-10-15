@@ -3329,12 +3329,7 @@ class MainWindow(qtw.QMainWindow):
             
             #################################
             # Update plots
-            # FIXME: only update plots every so often (e.g. 2Hz or so).
-            # Should we use a QTimer for this?
-            # for now, can update everytime the dataset grows by, say, 4 points...
-            # by looking at e.g. 
-            #OK_TO_PLOT = (len(self.ampData[reg]['freq']+1) % 4) == 0
-            OK_TO_PLOT = True
+            self.DATA_TO_PLOT = True
             
             # compute the best fit to V(t) and plot (in red)
             (B, C, D, freq_Hz) = dwa.processWaveform(udpDict)
