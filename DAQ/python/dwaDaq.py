@@ -1,4 +1,8 @@
 # FIXME/TODO:
+# * to sense "stale" values: every time a status frame arrives, reset a count-down timer (QTimer) of duration
+#   equal to the status frame period (plus a small amount). When that timer times out, trigger a call to a
+#   function that highlights values as stale (e.g. the 50Vac and 500Vdc indicators)
+# 
 # * In automated scan, the config file gets a "statusPeriod" field, but it should only have statusPeriodSec
 # 
 # * may need progress bars (or other indicator) for long processes such as:
