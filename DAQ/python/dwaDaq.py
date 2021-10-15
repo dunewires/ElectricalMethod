@@ -796,7 +796,9 @@ class MainWindow(qtw.QMainWindow):
     def initPlottingUpdater(self):
         self.plottingTimer = qtc.QTimer()
         self.plottingTimer.timeout.connect(self.updatePlots)
-        self.plottingTimer.start(PLOT_UPDATE_TIME_SEC*1000) # millseconds
+        self.plottingTimer.setInterval(PLOT_UPDATE_TIME_SEC*1000) # millseconds
+        self.plottingTimer.start()
+        #self.plottingTimer.start(PLOT_UPDATE_TIME_SEC*1000) # millseconds
         
     def _initTimeseriesData(self):
         self.adcData = {}
@@ -1140,6 +1142,10 @@ class MainWindow(qtw.QMainWindow):
         self.clientIp_val.setText(self.daqConfig['client_IP'])
         self.dwaIp_val.setText(self.daqConfig['DWA_IP'])
 
+        if 'guiUpdatePeriodSec' in self.daqConfig:
+            print(f"\n\n updating GUI udpate rate to {self.daqConfig['guiUpdatePeriodSec']}\n\n")
+            self.plottingTimer.setInterval(int(float(self.daqConfig['guiUpdatePeriodSec'])*1000))
+            self.plottingTimer.start()
 
         # Try reading date code from uzed as a way to confirm connection
         try:
