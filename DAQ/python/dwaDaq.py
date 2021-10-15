@@ -202,6 +202,9 @@ TENSION_LOW_COLOR  = qtg.QColor(253,253,150)
 TENSION_HIGH_COLOR = qtg.QColor(219,88,86)
 TENSION_GOOD_COLOR = qtg.QColor(178, 251, 165)
 
+
+PLOT_UPDATE_TIME_SEC = 0.5
+
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
 #    """ handle logging events -- display them in a text box in the gui"""
@@ -594,6 +597,7 @@ class MainWindow(qtw.QMainWindow):
         self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
         self.currentViewStim = TAB_ACTIVE_STIM
         self.tabWidgetStim.setCurrentIndex(self.currentViewStim)
+        self.DATA_TO_PLOT = False
         
         # testing updating tab labels
         self._setTabTooltips()
@@ -636,7 +640,9 @@ class MainWindow(qtw.QMainWindow):
             self.registerOfVal[reg.value] = reg
 
         self._configureAmps()
-
+        self._initTimeseriesData()
+        self.initPlottingUpdater()
+        
         # KLUGE to prevent a res freq InfLine from being added right after removal
         # via mouse click
         self.removedInfLine = False
@@ -788,6 +794,25 @@ class MainWindow(qtw.QMainWindow):
         print(f"double-clicked row: {mi.row()}")
         print(f"double-clicked col: {mi.column()}")
         self.loadRecentScanData()
+        
+    def initPlottingUpdater(self):
+        self.plottingTimer = qtc.QTimer()
+        self.plottingTimer.timeout.connect(self.updatePlots)
+        self.plottingTimer.setInterval(PLOT_UPDATE_TIME_SEC*1000) # millseconds
+        self.plottingTimer.start()
+        #self.plottingTimer.start(PLOT_UPDATE_TIME_SEC*1000) # millseconds
+        
+    def _initTimeseriesData(self):
+        self.adcData = {}
+        for reg in self.registers:
+            self.adcData[reg] = {}
+            
+        #self.adcData[reg]['time'] = list
+        #self.adcData[reg]['ADC']  = list
+        #self.adcData[reg]['freq'] = float
+        #self.adcData[reg]['tfit'] = list
+        #self.adcData[reg]['ADCfit'] = list
+
         
     def _configureAmps(self):
         self.ampData = {}  # hold amplitude vs. freq data for a scan (and metadata)
@@ -1119,6 +1144,10 @@ class MainWindow(qtw.QMainWindow):
         self.clientIp_val.setText(self.daqConfig['client_IP'])
         self.dwaIp_val.setText(self.daqConfig['DWA_IP'])
 
+        if 'guiUpdatePeriodSec' in self.daqConfig:
+            print(f"\n\n updating GUI udpate rate to {self.daqConfig['guiUpdatePeriodSec']}\n\n")
+            self.plottingTimer.setInterval(int(float(self.daqConfig['guiUpdatePeriodSec'])*1000))
+            self.plottingTimer.start()
 
         # Try reading date code from uzed as a way to confirm connection
         try:
@@ -2491,7 +2520,7 @@ class MainWindow(qtw.QMainWindow):
             # add metadata to ampData before writing to file (this could also be done earlier)
             # FIXME: grab these values from user input
             print("\n\nsaveAmplitudeData()")
-            print(self.ampData)
+            #print(self.ampData)
             with open(self.fnOfAmpData, 'w') as outfile:
                 json.dump(self.ampData, outfile)
             self.logger.info(f"Saved as {self.fnOfAmpData}") 
@@ -3258,8 +3287,10 @@ class MainWindow(qtw.QMainWindow):
                     item.setChecked(True)
                     self.radioBtns[nextBtn]=item
 
-                self.updateAmplitudePlots()
-                self.updateTimeseriesPlots()
+                #self.updateAmplitudePlots()
+                #self.updateTimeseriesPlots()
+                print("\n\nUPDATING PLOTS ONE LAST TIME\n\n")
+                self.updatePlots(force_all=True)
                 self.wrapUpStimulusScan()
                 self.scanType = None
                 
@@ -3292,8 +3323,10 @@ class MainWindow(qtw.QMainWindow):
             
             #self.mycurves[reg].setData(udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
             dt = udpDict[ddp.Frame.FREQ]['adcSamplingPeriod']*1e-8
-            tt = np.arange(len(udpDict[ddp.Frame.ADC_DATA]['adcSamples']))*dt
-
+            self.adcData[reg]['ADC'] = udpDict[ddp.Frame.ADC_DATA]['adcSamples'] # FIXME: list copy issue?
+            self.adcData[reg]['time'] = np.arange(len(self.adcData[reg]['ADC']))*dt
+            self.adcData[reg]['freq'] = udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']
+            
             #################################
             # Update plots
             # FIXME: only update plots every so often (e.g. 2Hz or so).
@@ -3303,43 +3336,15 @@ class MainWindow(qtw.QMainWindow):
             #OK_TO_PLOT = (len(self.ampData[reg]['freq']+1) % 4) == 0
             OK_TO_PLOT = True
             
-            if OK_TO_PLOT and self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_GRID:
-                self.curves['grid'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
-            if OK_TO_PLOT and self.currentViewStage == MainView.STIMULUS and self.currentViewStim == StimView.V_CHAN:
-                self.curves['chan'][regId].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
-                # FIXME: need to update the main window in chan view, too
-                if regId == self.chanViewMain:
-                    self.curves['chan']['main'].setData(tt, udpDict[ddp.Frame.ADC_DATA]['adcSamples'])
-
             # compute the best fit to V(t) and plot (in red)
             (B, C, D, freq_Hz) = dwa.processWaveform(udpDict)
             self.ampData[reg]['freq'].append(freq_Hz)
             self.ampData[reg]['ampl'].append(np.sqrt(B**2+C**2))
             nptsInFit=500
-            tfit = np.linspace(tt[0], tt[-1], nptsInFit)
-            yfit = B*np.sin(2*np.pi*freq_Hz*tfit) + C*np.cos(2*np.pi*freq_Hz*tfit) + D
-            #print(f'   B = {B}')
-            #print(f'   C = {C}')
-            #print(f'   D = {D}')
-            if OK_TO_PLOT and self.currentViewStage == MainView.STIMULUS:
-                if self.currentViewStim == StimView.V_GRID:
-                    self.curvesFit['grid'][regId].setData(tfit, yfit)
-                elif self.currentViewStim == StimView.V_CHAN:
-                    self.curvesFit['chan'][regId].setData(tfit, yfit)
-                    if regId == self.chanViewMain:
-                        self.curvesFit['chan']['main'].setData(tfit, yfit)
-
-            # Update A(f) plots
-            # During scan, only update plots in the STIMULUS tab.
-            if OK_TO_PLOT and self.currentViewStage == MainView.STIMULUS:
-                if self.currentViewStim == StimView.A_GRID:
-                    self.curves['amplgrid'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-                    # don't update the "all" plot until the end...
-                elif self.currentViewStim == StimView.A_CHAN:
-                    self.curves['amplchan'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-                    if regId == self.chanViewMainAmpl:
-                        self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-                    
+            tmin, tmax = self.adcData[reg]['time'][0], self.adcData[reg]['time'][-1]
+            self.adcData[reg]['tfit'] = np.linspace(tmin, tmax, nptsInFit)
+            self.adcData[reg]['ADCfit'] = B*np.sin(2*np.pi*freq_Hz*self.adcData[reg]['tfit']) + C*np.cos(2*np.pi*freq_Hz*self.adcData[reg]['tfit']) + D
+            
         # Look for STATUS frame
         if ddp.Frame.STATUS in udpDict:
             if self.verbose > 1:
@@ -3377,6 +3382,58 @@ class MainWindow(qtw.QMainWindow):
             self.buttonStatus_val.setText(f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
             self.setPushButtonStatusAll(udpDict[ddp.Frame.STATUS]['buttonStatusList'])
 
+    def updatePlotsVGrid(self):
+        for reg in self.registers:
+            self.curves['grid'][reg].setData(self.adcData[reg]['time'],
+                                             self.adcData[reg]['ADC'])
+            self.curvesFit['grid'][reg].setData(self.adcData[reg]['tfit'],
+                                                self.adcData[reg]['ADCfit'])
+
+    def updatePlotsVChan(self):
+        for reg in self.registers:
+            self.curves['chan'][reg].setData(self.adcData[reg]['time'],
+                                             self.adcData[reg]['ADC'])
+            self.curvesFit['chan'][reg].setData(self.adcData[reg]['tfit'],
+                                                self.adcData[reg]['ADCfit'])
+        # Update the main window too
+        self.curves['chan']['main'].setData(self.adcData[self.chanViewMain]['time'],
+                                            self.adcData[self.chanViewMain]['ADC'])
+        self.curvesFit['chan']['main'].setData(self.adcData[self.chanViewMain]['tfit'],
+                                               self.adcData[self.chanViewMain]['ADCfit'])
+
+    def updatePlotsAmpGrid(self):
+        for reg in self.registers:
+            self.curves['amplgrid'][reg].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+
+    def updatePlotsAmpChan(self):
+        for reg in self.registers:
+            self.curves['amplchan'][reg].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+        # Update the main window too
+        self.curves['amplchan']['main'].setData(self.ampData[self.chanViewMainAmpl]['freq'], self.ampData[reg]['ampl'])
+            
+    def updatePlots(self, force_all=False):
+
+        if force_all:
+            self.updatePlotsVGrid()
+            self.updatePlotsVChan()
+            self.updatePlotsAmpGrid()
+            self.updatePlotsAmpChan()
+            return
+
+        if not self.DATA_TO_PLOT:
+            return
+
+        if self.currentViewStage == MainView.STIMULUS:
+            if self.currentViewStim == StimView.V_GRID:
+                self.updatePlotsVGrid()
+            elif self.currentViewStim == StimView.V_CHAN:
+                self.updatePlotsVChan()
+            elif self.currentViewStim == StimView.A_GRID:
+                self.updatePlotsAmpGrid()
+            elif self.currentViewStim == StimView.A_CHAN:
+                self.updatePlotsAmpChan()
+            
+        self.DATA_TO_PLOT = False
 
     def updateHeartbeatLogo(self):
         self.heartval = (self.heartval+1) % len(self.heartPixmaps)
@@ -3457,33 +3514,33 @@ class MainWindow(qtw.QMainWindow):
         if self.connectedToUzed and self.idle:
             self.btnScanCtrlAdv.setEnabled(True)
             
-    def updateTimeseriesPlots(self):
-        # when a scan is done, ensure that the V(t) data shows the last received data
-        # (those plots are not updated unless that tab is active)
-        #
-        ## FIXME: need to keep the last V(t) data in memory (create self.lastTimeSeriesData somewhere...)
-        #pTypes = ['grid', 'chan']
-        #for reg in self.registers:
-        #    regId = reg
-        #    for pt in pTypes:
-        #        self.curves[pt][regId].setData(self.lastTimeseriesData[regId]['times'],
-        #                                       self.lastTimeseriesData[regId]['adcVals'])
-        #    if regId == self.chanViewMain:
-        #        self.curves['chan']['main'].setData(self.lastTimeseriesData[regId]['times'],
-        #                                            self.lastTimeseriesData[regId]['adcVals'])
-        pass
+    ##def updateTimeseriesPlots(self):
+    #    # when a scan is done, ensure that the V(t) data shows the last received data
+    #    # (those plots are not updated unless that tab is active)
+    #    #
+    #    ## FIXME: need to keep the last V(t) data in memory (create self.lastTimeSeriesData somewhere...)
+    #    #pTypes = ['grid', 'chan']
+    #    #for reg in self.registers:
+    #    #    regId = reg
+    #    #    for pt in pTypes:
+    #    #        self.curves[pt][regId].setData(self.lastTimeseriesData[regId]['times'],
+    #    #                                       self.lastTimeseriesData[regId]['adcVals'])
+    #    #    if regId == self.chanViewMain:
+    #    #        self.curves['chan']['main'].setData(self.lastTimeseriesData[regId]['times'],
+    #    #                                            self.lastTimeseriesData[regId]['adcVals'])
+    #    pass
     
-    def updateAmplitudePlots(self):
-        # This should only update the plots on the STIMULUS tab
-        # other A(f) plots are updated elsewhere
-        for reg in self.registers:
-            regId = reg
-            # Stimulus tab plots
-            self.curves['amplgrid'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-            self.curves['amplgrid']['all'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-            self.curves['amplchan'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-            if regId == self.chanViewMainAmpl:
-                self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+    #def updateAmplitudePlots(self):
+    #    # This should only update the plots on the STIMULUS tab
+    #    # other A(f) plots are updated elsewhere
+    #    for reg in self.registers:
+    #        regId = reg
+    #        # Stimulus tab plots
+    #        self.curves['amplgrid'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+    #        self.curves['amplgrid']['all'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+    #        self.curves['amplchan'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+    #        if regId == self.chanViewMainAmpl:
+    #            self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
             
     def _resFreqSetDefaultParams(self):
         #height=None, threshold=None, distance=None, prominence=None, width=None, wlen=None, rel_height=0.5, plateau_size=None
