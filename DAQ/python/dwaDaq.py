@@ -114,7 +114,7 @@ from itertools import chain
 
 import numpy as np
 import scipy
-from scipy.signal import find_peaks
+from scipy.signal import find_peaks, savgol_filter
 
 from PyQt5 import uic
 from PyQt5 import QtWidgets as qtw
@@ -2697,13 +2697,13 @@ class MainWindow(qtw.QMainWindow):
             note = self.submitResonanceNoteLineEdit.text()
             
             print(f"sietch = {sietch}")
-            print(f"self.ampData['apaUuid'] = {self.ampData['apaUuid']}")
-            out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"])
+            print(f"self.ampDataS['apaUuid'] = {self.ampDataS['apaUuid']}")
+            out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"])
             print(f"out = {out}")
 
 
             #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
-            pointerTable = database_functions.get_pointer_table(sietch, self.ampData['apaUuid'], self.ampData['stage'])
+            pointerTable = database_functions.get_pointer_table(sietch, self.ampDataS['apaUuid'], self.ampDataS['stage'])
             wirePointersAllLayers = pointerTable["data"]["wireSegments"]
             
             pointer_lists = {}
@@ -2714,23 +2714,23 @@ class MainWindow(qtw.QMainWindow):
                     pointer_lists[layer][side] = wirePointersAllLayers[layer][side]
                     
             #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
-            for dwaCh, ch in enumerate(self.ampData["apaChannels"]): # Loop over channels in scan
-                for w in self.ampData["wireSegments"]:
-                    wire_ch = channel_map.wire_to_apa_channel(self.ampData["layer"], w)
+            for dwaCh, ch in enumerate(self.ampDataS["apaChannels"]): # Loop over channels in scan
+                for w in self.ampDataS["wireSegments"]:
+                    wire_ch = channel_map.wire_to_apa_channel(self.ampDataS["layer"], w)
                     if wire_ch == ch:
                         resonance_result = {
-                            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
+                            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
                             "formId": "wire_resonance_measurement",
                             "formName": "Wire Resonance Measurement",
                             "data": {
                                 "versionDaq": "1.1",
-                                "dwaUuid": self.ampData["apaUuid"],
+                                "dwaUuid": self.ampDataS["apaUuid"],
                                 "versionFirmware": "1.1",
                                 "site": "Harvard",
-                                "measuredBy": self.ampData["measuredBy"],
-                                "productionStage": self.ampData["stage"],
-                                "side": self.ampData["side"],
-                                "layer": self.ampData["layer"],
+                                "measuredBy": self.ampDataS["measuredBy"],
+                                "productionStage": self.ampDataS["stage"],
+                                "side": self.ampDataS["side"],
+                                "layer": self.ampDataS["layer"],
                                 "wireSegments": {
                                     str(w): self.resonantFreqs[dwaCh]
                                 },
@@ -2740,19 +2740,19 @@ class MainWindow(qtw.QMainWindow):
                             },
                         }
                         dbid = sietch.api('/test',resonance_result)
-                        pointer_lists[self.ampData['layer']][self.ampData['side']][w] = {"testId": dbid}
+                        pointer_lists[self.ampDataS['layer']][self.ampDataS['side']][w] = {"testId": dbid}
                         #pointer_list[w] = {"testId": dbid}
 
             
-            #pointer_lists[self.ampData["layer"]][self.ampData["side"]] = pointer_list  # BUG? should copy the list not reference it?
+            #pointer_lists[self.ampDataS["layer"]][self.ampDataS["side"]] = pointer_list  # BUG? should copy the list not reference it?
             record_result = {
-                "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampData["apaUuid"]),
+                "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
                 "formId": "wire_tension_pointer",
                 "formName": "Wire Tension Pointer Record",
-                "stage": self.ampData["stage"],
+                "stage": self.ampDataS["stage"],
                 "data": {
                     "version": "1.1",
-                    "apaUuid": self.ampData["apaUuid"],
+                    "apaUuid": self.ampDataS["apaUuid"],
                     "wireSegments": pointer_lists,
                     "saveAsDraft": True,
                     "submit": True
@@ -2952,20 +2952,20 @@ class MainWindow(qtw.QMainWindow):
         with open(ampFilename, "r") as fh:
             data = json.load(fh)
 
-        self.ampData = {}
+        self.ampDataS = {}  # "S" = "Saved"
         for reg in self.registers:
-            self.ampData[reg.value] = {'freq':data[str(reg.value)]['freq'],  # stim freq in Hz
-                                       'ampl':data[str(reg.value)]['ampl'] } # amplitude in ADC counts
-            self.curves['resRawFit'][reg].setData(self.ampData[reg.value]['freq'],
-                                                  self.ampData[reg.value]['ampl'])
+            self.ampDataS[reg.value] = {'freq':data[str(reg.value)]['freq'],  # stim freq in Hz
+                                        'ampl':data[str(reg.value)]['ampl'] } # amplitude in ADC counts
+            self.curves['resRawFit'][reg].setData(self.ampDataS[reg.value]['freq'],
+                                                  self.ampDataS[reg.value]['ampl'])
 
         # Get the Metadata
         for field in DATABASE_FIELDS:
-            self.ampData[field] = data[field]
+            self.ampDataS[field] = data[field]
 
-        okToLogToDb = False if self.ampData['apaUuid'] is None else True  # KLUGE: may want a different test here
+        okToLogToDb = False if self.ampDataS['apaUuid'] is None else True  # KLUGE: may want a different test here
         print(f'okToLogToDb = {okToLogToDb}')
-        print(f"self.ampData['apaUuid'] = {self.ampData['apaUuid']}")
+        print(f"self.ampDataS['apaUuid'] = {self.ampDataS['apaUuid']}")
         if okToLogToDb:
             self._submitResonanceButtonEnable()
         else:
@@ -3709,7 +3709,7 @@ class MainWindow(qtw.QMainWindow):
         # loop over each register
 
         # FIXME: this function should be farmed out to dwaTools, or somewhere else...
-        #        need only pass the self.ampData and self.resFitParams dictionaries
+        #        need only pass the self.ampDataS and self.resFitParams dictionaries
         
         print("runResonanceAnalysis():")
         self.resFreqGetParams()
@@ -3722,34 +3722,36 @@ class MainWindow(qtw.QMainWindow):
             #print(f'reg       = {reg}')
             #print(f'reg.value = {reg.value}')
             chan = reg.value
-            if len(self.ampData[reg]['freq']) == 0:  # maybe a register has no data?
+            if len(self.ampDataS[reg]['freq']) == 0:  # maybe a register has no data?
                 continue
-            #peakIds, _ = find_peaks(np.cumsum(self.ampData[reg]['ampl']))
+            #peakIds, _ = find_peaks(np.cumsum(self.ampDataS[reg]['ampl']))
 
             # Make a copy of the data to work with
-            dataToFit = self.ampData[reg]['ampl'][:]
+            dataToFit = self.ampDataS[reg]['ampl'][:]
             
             # subtract a line first?
             if self.resFitParams['preprocess']['detrend']:
                 # remove linear fit
                 if self.verbose > 2:
                     print("detrending")
-                dataToFit -= dwa.baseline(self.ampData[reg]['freq'], dataToFit, polyDeg=1)
+                dataToFit -= dwa.baseline(self.ampDataS[reg]['freq'], dataToFit, polyDeg=1)
             
             # Cumulative sum, remove baseline, plot, fit peaks, annotate plot
             # Vertical shift to start the y-values at zero
             dataToFit -= np.min(dataToFit)
-            dataToFit  = scipy.integrate.cumtrapz(dataToFit, x=self.ampData[reg]['freq'], initial=0)
+            dataToFit  = scipy.integrate.cumtrapz(dataToFit, x=self.ampDataS[reg]['freq'], initial=0)
 
             # User can disable this step by specifying a negative Baseline poly value
             if self.resFitParams['find_peaks']['bkgPoly'] >= 0:
-                dataToFit -= dwa.baseline(self.ampData[reg]['freq'], dataToFit,
+                dataToFit -= dwa.baseline(self.ampDataS[reg]['freq'], dataToFit,
                                           polyDeg=self.resFitParams['find_peaks']['bkgPoly'])
-            elif self.resFitParams['find_peaks']['bkgPoly'] == -1:
-                print("RC background fit requested (not yet implemented)")
+            elif self.resFitParams['find_peaks']['bkgPoly'] < 0:
+                polyval = -1*int(self.resFitParams['find_peaks']['bkgPoly'])
+                dataToFit -= savgol_filter(dataToFit, 51, polyval)
+                #print("RC background fit requested (not yet implemented)")
 
             # plot fxn that is used for peakfinding
-            self.curves['resProcFit'][reg].setData(self.ampData[reg]['freq'], dataToFit)
+            self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], dataToFit)
             
             # FIXME: set width based on frequency, not hard-coded number of samples!
             peakIds, properties = find_peaks(dataToFit,
@@ -3767,7 +3769,7 @@ class MainWindow(qtw.QMainWindow):
             # FIXME: could add interpolation for better precision
 
             # update the label:
-            peakFreqs = [ self.ampData[reg]['freq'][id] for id in peakIds ]
+            peakFreqs = [ self.ampDataS[reg]['freq'][id] for id in peakIds ]
 
             # Store the resonant *frequencies* and then update the GUI based on that
             self.resonantFreqs[reg.value] = peakFreqs[:]
