@@ -11,10 +11,10 @@
 #
 # * May need to thread some processes:
 #   - dB actions (submit/read)
-#   - end of scan actions (disable relays TCP/IP comm)
 #   - abort run
 #
-# * Add indication that TCP/IP communication is underway during start of scan configuration (otherwise GUI just sits idle...)
+# * Add indication on sidebar that TCP/IP communication is underway during start of scan configuration
+#   (otherwise GUI just sits idle...)
 # 
 # * Add scroll-bar to Advanced tab in Stimulus tab:
 #   https://stackoverflow.com/questions/63228003/add-scroll-bar-into-tab-pyqt5
@@ -556,8 +556,9 @@ class MainWindow(qtw.QMainWindow):
         self._submitResonanceButtonDisable()
         self._setScanButtonAction('START')
         #self.interScanDelay = INTER_SCAN_DELAY_SEC
-        self.dwaConnected_label.setText('Not Connected')
-        self.dwaConnected_label.setStyleSheet("color:red")
+        self.setDwaStatusLabel('notConnected')
+        #self.dwaConnected_label.setText('Not Connected')
+        #self.dwaConnected_label.setStyleSheet("color:red")
         self.setPushButtonStatusAll([-1]*4)
         self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
         self.runStatusHeading_label.setStyleSheet("font-weight: bold;")
@@ -1166,8 +1167,9 @@ class MainWindow(qtw.QMainWindow):
         
         if self.connectedToUzed:
             self.btnDwaConnect.setText("Re-connect")
-            self.dwaConnected_label.setText('Connected')
-            self.dwaConnected_label.setStyleSheet("color: green")
+            self.setDwaStatusLabel('connected')
+            #self.dwaConnected_label.setText('Connected')
+            #self.dwaConnected_label.setStyleSheet("color: green")
             self.dwaFirmwareDate_val.setText(dateCodeYYMMDD)
             self.enableScanButtonTemp = True
             self.connectLabel.setText("")
@@ -1841,6 +1843,22 @@ class MainWindow(qtw.QMainWindow):
         print("... this is not yet tested")
         self.ampData[SCAN_END_MODE_KEYWORD] = ScanEnd.ABORTED
         self.uz.abort()
+
+
+    def setDwaStatusLabel(self, state):
+        # state can be 'connected', 'configuring', 'notConnected'
+        if state == 'connected':
+            text = 'Connected'
+            color = 'green'
+        elif state == 'configuring':
+            text = 'Configuring...'
+            color = 'orange'
+        elif state == 'notConnected':
+            text = 'Not Connected'
+            color = 'red'
+        
+        self.dwaConnected_label.setText(text)
+        self.dwaConnected_label.setStyleSheet(f"color: {color}")
         
     ###############################################################
     # Auto Scan Thread
@@ -1848,6 +1866,9 @@ class MainWindow(qtw.QMainWindow):
         self._scanButtonDisable()
         self.btnScanCtrl.setStyleSheet("background-color : orange")
         self.btnScanCtrl.setText("Configuring DWA...")
+        self.setDwaStatusLabel('configuring')
+        #self.dwaConnected_label.setText('Configuring...')
+        #self.dwaConnected_label.setStyleSheet("color: orange")
 
         for i, btn in enumerate(self.radioBtns):
             if btn.isChecked():
@@ -1859,6 +1880,7 @@ class MainWindow(qtw.QMainWindow):
                 pass
     
     def startScanThreadComplete(self):
+        self.setDwaStatusLabel('connected')
         self._setScanButtonAction('ABORT')
         self._scanButtonEnable()
         print("startScanThread complete!")
