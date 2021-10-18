@@ -1882,7 +1882,7 @@ class MainWindow(qtw.QMainWindow):
     def startScanThreadComplete(self):
         self.setDwaStatusLabel('connected')
         self._setScanButtonAction('ABORT')
-        self._scanButtonEnable()
+        self._scanButtonEnable(force=True)
         print("startScanThread complete!")
 
     @pyqtSlot()
@@ -1910,7 +1910,7 @@ class MainWindow(qtw.QMainWindow):
     def startScanAdvThreadComplete(self):
         print("startScanAdvThread complete!")
         self._setScanButtonAction('ABORT')
-        self._scanButtonEnable()
+        self._scanButtonEnable(force=True)
 
     @pyqtSlot()
     def startScanAdvThread(self):
@@ -1964,7 +1964,7 @@ class MainWindow(qtw.QMainWindow):
     def disableRelaysThreadComplete(self):
         print("disableRelaysThreadComplete")
         self._setScanButtonAction('START')
-        self._scanButtonEnable()
+        self._scanButtonEnable(force=True)
 
     def disableRelaysThreadStarting(self):
         self.btnScanCtrl.setStyleSheet("background-color : orange")
@@ -3526,13 +3526,13 @@ class MainWindow(qtw.QMainWindow):
         self.btnScanCtrl.setEnabled(False)
         self.btnScanCtrlAdv.setEnabled(False)
 
-    def _scanButtonEnable(self):
+    def _scanButtonEnable(self, force=False):
         #for scb in self.scanCtrlButtons:
             #scb.setEnabled(state)
-        if self.connectedToUzed and self.idle and self.configure:
+        if force or (self.connectedToUzed and self.idle and self.configure):
             if len(self.radioBtns)>0:
                 self.btnScanCtrl.setEnabled(True)
-        if self.connectedToUzed and self.idle:
+        if force or (self.connectedToUzed and self.idle):
             self.btnScanCtrlAdv.setEnabled(True)
             
     ##def updateTimeseriesPlots(self):
