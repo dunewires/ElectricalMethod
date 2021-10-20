@@ -822,6 +822,7 @@ class MainWindow(qtw.QMainWindow):
     def _configureAmps(self):
         self.ampData = {}  # hold amplitude vs. freq data for a scan (and metadata)
         self.resonantFreqs = {}  
+        self.expectedFreqs = {}  
         self._initResonanceFitLines()
         
         # Set default A(f) peak detection parameters
@@ -3088,6 +3089,7 @@ class MainWindow(qtw.QMainWindow):
             self.ampData[reg] = {'freq':[],  # stim freq in Hz
                                  'ampl':[] } # amplitude in ADC counts
             self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
+            self.expectedFreqs[reg.value] = []
 
         # Clear amplitude plots
         plotTypes = ['amplchan', 'amplgrid']
@@ -3731,6 +3733,10 @@ class MainWindow(qtw.QMainWindow):
             if len(self.ampData[reg]['freq']) == 0:  # maybe a register has no data?
                 continue
             #peakIds, _ = find_peaks(np.cumsum(self.ampData[reg]['ampl']))
+            apaChan = self.ampData['apaChannels'][reg.value]
+            if not apaChan: continue
+            wires, expectedFreqs = channel_frequencies.get_expected_resonances(self.ampData["layer"], apaChan, thresh = 250.)
+            expectedFreqs = [f for sublist in expectedFreqs for f in sublist]
 
             # Make a copy of the data to work with
             dataToFit = self.ampData[reg]['ampl'][:]
@@ -3777,6 +3783,7 @@ class MainWindow(qtw.QMainWindow):
 
             # Store the resonant *frequencies* and then update the GUI based on that
             self.resonantFreqs[reg.value] = peakFreqs[:]
+            self.expectedFreqs[reg.value] = expectedFreqs[:]
 
         # Keep track of the fitted resonances, as determined by the peak-finding algorithm
         # Used only for outputting to resonanceData.json
@@ -3784,7 +3791,10 @@ class MainWindow(qtw.QMainWindow):
         self.resFitToLog['preprocess'] = copy.deepcopy(self.resFitParams['preprocess'])
         self.resFitToLog['find_peaks'] = copy.deepcopy(self.resFitParams['find_peaks'])
         self.resFitToLog['resonances'] = {}
+
         for reg in self.registers:
+            apaChan = self.ampData['apaChannels'][reg.value]
+            if not apaChan: continue
             self.resFitToLog['resonances'][reg.value] = self.resonantFreqs[reg.value][:]
         
     def resFreqUpdateDisplay(self, chan=None):
@@ -3798,6 +3808,7 @@ class MainWindow(qtw.QMainWindow):
                 
         # FIXME: move pen definition to __init__ (self.f0pen)
         f0Pen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
+        f1Pen = pg.mkPen(color='#0000FF', width=4, style=qtc.Qt.SolidLine)
 
         debug = False
         
@@ -3808,6 +3819,12 @@ class MainWindow(qtw.QMainWindow):
             getattr(self, f'le_resfreq_val_{reg}').setText(labelStr)
             
             fitx, fity = self.curves['resProcFit'][chan].getData()
+
+            # Add expected resonances to plot
+            expectedFreqRounded = np.array([round(f,2) for f in self.expectedFreqs[chan]])
+            expectedFreqRounded = np.unique(expectedFreqRounded)
+            for ii, ff in enumerate(expectedFreqRounded):
+                self.resFitLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=False, pen=f1Pen) )
 
             # Create/display new InfiniteLine instance for each resonant freq
             for ii, ff in enumerate(self.resonantFreqs[chan]):
