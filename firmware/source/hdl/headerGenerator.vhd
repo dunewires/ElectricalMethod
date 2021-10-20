@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Oct  7 17:40:17 2021
+-- Last update : Tue Oct 19 17:58:29 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -125,19 +125,20 @@ architecture rtl of headerGenerator is
     signal watchdogTimerCnt : unsigned(31 downto 0) := (others => '0');
 
     type statusData_type is record
-        errors   : std_logic_vector(23 downto 0);
-        pButton  : std_logic_vector(3 downto 0);
-        ctrlBusy : boolean;
+        errors  : std_logic_vector(23 downto 0);
+        pButton : std_logic_vector(3 downto 0);
+        tState  : boolean;
     end record;
 
     signal statusDataSticky,statusDataLatch : statusData_type := (
-            errors   => (others => '0'),
-            pButton   => (others => '0'),
-            ctrlBusy => false);
-    signal sendStatus                                       : boolean               := false;
-    signal statusBusy, statusBusy_del                       : boolean               := false;
-    signal statusDataTrig,statusTimeout, statusTimeoutLatch : boolean               := false;
-    signal statusTimerCnt                                   : unsigned(31 downto 0) := (others => '0');
+            errors  => (others => '0'),
+            pButton => (others => '0'),
+            tState  => false);
+    signal sendStatus                        : boolean := false;
+    signal statusBusy, statusBusy_del        : boolean := false;
+    signal statusTimeout, statusTrigLatch : boolean := false;
+
+    signal statusTimerCnt : unsigned(31 downto 0) := (others => '0');
 
     signal adcRegNum         : unsigned(3 downto 0)  := (others => '0');
     signal adcSamplesPerFreq : unsigned(39 downto 0) := (others => '0');
@@ -240,7 +241,7 @@ begin
     --STATUS Header
     headEDataList <= ( -- Status frame
             x"EEEE" & std_logic_vector(to_unsigned(nHeadE-2, 16)),
-            x"61" & x"00000" & "000" & BOOL2SL(statusTimeoutLatch),
+            x"61" & x"00000" & "000" & std_logic_vector(statusTrigLatch),
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
             x"63" & statusDataSticky.errors,
             x"64" & x"00000" & statusDataSticky.pButton,
@@ -442,27 +443,44 @@ begin
     end process;
 
     statusTiming : process (dwaClk100) -- latch the packet data validated by the sendData strobe
+
+        variable statusErrorsTrig  : boolean := false;
+        variable statusPButtonTrig : boolean := false;
+        variable statusTStateTrig  : boolean := false;
+        variable statusDataTrig    : boolean := false;
     begin
         if rising_edge(dwaClk100) then
             statusBusy_del <= statusBusy;
-            statusDataTrig <= statusDataSticky /= statusDataLatch;
-            statusTimeout  <= statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod;
+
+            --separate the status triggr to be used in status packet.
+            -- a variable is used here so latched status will reflect trigger status and not the next cluck cycle status.
+            statusErrorsTrig  := statusDataSticky.errors /= statusDataLatch.errors;
+            statusPButtonTrig := statusDataSticky.pButton /= statusDataLatch.pButton;
+            statusTStateTrig  := statusDataSticky.tState /= statusDataLatch.tState;
+            statusDataTrig    := statusErrorsTrig or statusTStateTrig or statusPButtonTrig;
+
+            statusTimeout     <= statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod;
 
             if (statusDataTrig or statusTimeout) and not sendStatus then -- latch data and set senStatus flag, Don't re latch on subsequent triggers, keep sticky for next pkt.
                 sendStatus      <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off
                 statusDataLatch <= statusDataSticky;
-
-                statusTimeoutLatch    <= not statusDataTrig; -- if not data triggered signal it was timeout triggered, timeout is not priority
-                statusDataSticky.errors   <= fromDaqReg.errors;
-                statusDataSticky.pButton  <= pButton;
-                statusDataSticky.ctrlBusy <= fromDaqReg.ctrlStateDbg /= x"0";
+                statusTrigLatch <= (
+                        3 => bool2sl(statusErrorsTrig),
+                        2 => bool2sl(statusPButtonTrig),
+                        1 => bool2sl(statusTStateTrig),
+                        0 => bool2sl(statusTimeout)
+                );
+                statusTrigLatch       <= not statusDataTrig; -- if not data triggered signal it was timeout triggered, timeout is not priority
+                statusDataSticky.errors  <= fromDaqReg.errors;
+                statusDataSticky.pButton <= pButton;
+                statusDataSticky.tState  <= fromDaqReg.ctrlStateDbg /= x"0";
 
                 statusTimerCnt <= x"00000001";
             else
                 -- triggers are stickey so we don't miss one if busy sending a packet
-                statusDataSticky.errors   <= fromDaqReg.errors or statusDataSticky.errors;
-                statusDataSticky.pButton  <= pButton or statusDataSticky.pButton;
-                statusDataSticky.ctrlBusy <= fromDaqReg.ctrlStateDbg /= x"0";
+                statusDataSticky.errors  <= fromDaqReg.errors or statusDataSticky.errors;
+                statusDataSticky.pButton <= pButton or statusDataSticky.pButton;
+                statusDataSticky.tState  <= fromDaqReg.ctrlStateDbg /= x"0";
                 if not statusTimeout then -- keep from overflowing counter while we wait to send packet.
                     statusTimerCnt <= statusTimerCnt+1;
                 end if;
