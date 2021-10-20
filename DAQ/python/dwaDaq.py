@@ -3343,7 +3343,7 @@ class MainWindow(qtw.QMainWindow):
 
             # If this DWA channel does not correspond to an actual wire, then don't update
             # plots in the GUI
-            print(f" regId = {regId}; self.apaChannels = {self.apaChannels}")
+            #print(f" regId = {regId}; self.apaChannels = {self.apaChannels}")
             if (self.scanType == ScanType.AUTO) and (self.apaChannels[regId] is None):
                 return
             
