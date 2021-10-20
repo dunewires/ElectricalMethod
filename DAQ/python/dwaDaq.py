@@ -964,6 +964,10 @@ class MainWindow(qtw.QMainWindow):
             self.configStageComboBox.addItem(stage)
         for layer in APA_LAYERS:
             self.configLayerComboBox.addItem(layer)
+        
+        self.configOrientationComboBox.addItem("Winder")
+        self.configOrientationComboBox.addItem("Vertical (Top)")
+        self.configOrientationComboBox.addItem("Vertical (Bottom)")
 
         self.headboardLabel.setText("Connect to headboard #"+str(self.spinBox.value()))
         self.headboardLabel.setStyleSheet("color : rgb(3,205,0)")
@@ -1995,6 +1999,9 @@ class MainWindow(qtw.QMainWindow):
         self.configLayer = self.configLayerComboBox.currentText()
         self.configHeadboard = self.configHeadboardSpinBox.value()
         self.configApaSide = self.SideComboBox.currentText()
+        self.configOrientation = self.configOrientationComboBox.currentText()
+        is_flex_connection_winderlike = True
+        if self.configOrientation == "Vertical (Top)": is_flex_connection_winderlike = False
 
         self.updateApaUuidListModel()  
         
@@ -2039,7 +2046,7 @@ class MainWindow(qtw.QMainWindow):
         dwaChannels = range(8)
         self.apaChannels = [None]*len(dwaChannels)
         for apaChannel in channels:
-            dwaChannel = channel_map.apa_channel_to_dwa_channel(self.configLayer, apaChannel)
+            dwaChannel = channel_map.apa_channel_to_dwa_channel(self.configLayer, apaChannel, is_flex_connection_winderlike)
             self.apaChannels[dwaChannel] = apaChannel
 
         self.wires.sort(key = int)
@@ -2048,7 +2055,6 @@ class MainWindow(qtw.QMainWindow):
         
         #print(f"self.configLayer, channels = {self.configLayer}, {channels}")
         #print(f"  type(channels) = {type(channels)}")
-        fpgaConfig.update(config_generator.configure_relays(self.configLayer,channels))
 
         fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
         fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
@@ -2066,7 +2072,7 @@ class MainWindow(qtw.QMainWindow):
             fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, digipot=int(advDigipotAmplitude)))
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
-        fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels))
+        fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels, is_flex_connection_winderlike))
         #print(f'\n\nAfter Relays:\n  fpgaConfig: {fpgaConfig}')
         
         dataConfig = {"apaChannels": self.apaChannels, "wireSegments": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
