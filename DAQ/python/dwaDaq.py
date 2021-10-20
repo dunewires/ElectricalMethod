@@ -557,8 +557,6 @@ class MainWindow(qtw.QMainWindow):
         self._setScanButtonAction('START')
         #self.interScanDelay = INTER_SCAN_DELAY_SEC
         self.setDwaStatusLabel('notConnected')
-        #self.dwaConnected_label.setText('Not Connected')
-        #self.dwaConnected_label.setStyleSheet("color:red")
         self.setPushButtonStatusAll([-1]*4)
         self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
         self.runStatusHeading_label.setStyleSheet("font-weight: bold;")
@@ -1172,8 +1170,6 @@ class MainWindow(qtw.QMainWindow):
         if self.connectedToUzed:
             self.btnDwaConnect.setText("Re-connect")
             self.setDwaStatusLabel('connected')
-            #self.dwaConnected_label.setText('Connected')
-            #self.dwaConnected_label.setStyleSheet("color: green")
             self.dwaFirmwareDate_val.setText(dateCodeYYMMDD)
             self.enableScanButtonTemp = True
             self.connectLabel.setText("")
@@ -1871,8 +1867,6 @@ class MainWindow(qtw.QMainWindow):
         self.btnScanCtrl.setStyleSheet("background-color : orange")
         self.btnScanCtrl.setText("Configuring DWA...")
         self.setDwaStatusLabel('configuring')
-        #self.dwaConnected_label.setText('Configuring...')
-        #self.dwaConnected_label.setStyleSheet("color: orange")
 
         for i, btn in enumerate(self.radioBtns):
             if btn.isChecked():
@@ -3100,8 +3094,8 @@ class MainWindow(qtw.QMainWindow):
 
     def _configureAmplitudePlots(self):
         # Set x-ranges for frequency plots so pyqtgraph does not have to autoscale
-        runFreqMin = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMin_Hz'] 
-        runFreqMax = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMax_Hz'] 
+        #runFreqMin = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMin_Hz'] 
+        #runFreqMax = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMax_Hz'] 
         plotTypes = ['amplgrid', 'amplchan']
         for ptype in plotTypes:
             for ii in range(N_DWA_CHANS):
@@ -3109,12 +3103,15 @@ class MainWindow(qtw.QMainWindow):
                     apaChan = self.apaChannels[ii]
                 except:
                     apaChan = None
-                getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
+                #getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
+                getattr(self, f'pw_{ptype}_{ii}').setXRange(self.stimFreqMin, self.stimFreqMax)
                 getattr(self, f'pw_{ptype}_{ii}').setTitle("{}-{}, DWA Chan: {} APA Chan: {}".format(self.ampData['layer'],
                                                                                                      self.ampData['side'],
                                                                                                      ii, apaChan))
-        self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
-        self.pw_amplchan_main.setXRange(runFreqMin, runFreqMax)
+        self.pw_amplgrid_all.setXRange(self.stimFreqMin, self.stimFreqMax)
+        self.pw_amplchan_main.setXRange(self.stimFreqMin, self.stimFreqMax)
+        #self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
+        #self.pw_amplchan_main.setXRange(runFreqMin, runFreqMax)
 
         #self.registerOfVal = {}
         #for reg in ddp.Registers:
@@ -3262,9 +3259,11 @@ class MainWindow(qtw.QMainWindow):
                 self.stimFreqMin  = udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']
                 self.stimFreqMax  = udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']
                 self.stimFreqStep = udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']
+                self.formatRunStatusIndicators(state='fresh')
                 self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.3f}")
                 self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.3f}")
                 self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
+                self.globalFreqActive_val.setText(f"--")
 
                 self._clearTimeseriesData()
                 self._clearAmplitudeData() 
@@ -3280,6 +3279,8 @@ class MainWindow(qtw.QMainWindow):
 
                 self.saveAmplitudeData()  # do this first to avoid data loss
 
+                self.formatRunStatusIndicators(state='stale')
+                
                 # FIXME: shouldn't really change button state or controller state via
                 # RUN end frame. Should only do this from STATUS frame...
                 print("\nScan button disable\n")
@@ -3336,7 +3337,7 @@ class MainWindow(qtw.QMainWindow):
         if ddp.Frame.FREQ in udpDict:  
             self.logger.info("FOUND FREQUENCY HEADER")
             self.logger.info(udpDict)
-            self.globalFreqActive_val.setText(f"{udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']:.3f}")
+            self.globalFreqActive_val.setText(f"{udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']:.4f}")
 
         # Check to see if this is an ADC data transfer:
         if ddp.Frame.ADC_DATA in udpDict:
@@ -3409,6 +3410,18 @@ class MainWindow(qtw.QMainWindow):
             self.buttonStatus_val.setText(f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
             self.setPushButtonStatusAll(udpDict[ddp.Frame.STATUS]['buttonStatusList'])
 
+    def formatRunStatusIndicators(self, state=None):
+        if state.upper() == 'STALE':
+            color = 'gray'
+        elif state.upper() == 'FRESH':
+            color = 'black'
+            
+        self.globalFreqMin_val.setStyleSheet(f"color: {color}")
+        self.globalFreqMax_val.setStyleSheet(f"color: {color}")
+        self.globalFreqStep_val.setStyleSheet(f"color: {color}")
+        self.globalFreqActive_val.setStyleSheet(f"color: {color}")
+    
+            
     def updatePlotsVGrid(self):
         for reg in self.registers:
             self.curves['grid'][reg].setData(self.adcData[reg]['time'],
