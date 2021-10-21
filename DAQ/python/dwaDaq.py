@@ -1,4 +1,14 @@
 # FIXME/TODO:
+# 
+# * Handle STATUS frames that are pushed because of errors or voltage changes
+#   Write these to file (for button change or error)
+#   KEY = 0x61
+#   0: timeout
+#   1: state change
+#   2: button change
+#   3: error
+#   So a value of 1010b = 10(decimal) would mean that both an error and state change triggered the push
+#
 # * to sense "stale" values: every time a status frame arrives, reset a count-down timer (QTimer) of duration
 #   equal to the status frame period (plus a small amount). When that timer times out, trigger a call to a
 #   function that highlights values as stale (e.g. the 50Vac and 500Vdc indicators)
@@ -20,11 +30,6 @@
 # * Replace hard-coded 'amplitudeData.json' string with AMP_DATA_FILE or similar
 #   same for 'resonanceData.json'
 # 
-# * after scan ends:
-#   + update the V(t) plots with the last set of data (in process)
-#   + disable all relays but do this in a thread and have the "thread end" signal trigger the
-#     re-activation of the "Start Scan" buttons
-#
 # * Add graphic of APA wires to Config tab
 #
 # * Filter glitches in A(f) prior to integration. (sigma-clipping and width can work). See e.g. V_A_10_361-363-...
@@ -42,13 +47,13 @@
 #
 # * AUTO-SCAN items
 #   + After all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
-#   + Suggestion: the "Wires" column in the AUTO scan confit table should just list the numbers, not an array of strings...
+#   + Suggestion: the "Wires" column in the AUTO scan config table should just list the numbers, not an array of strings...
 #     and should be left-justified
 #   + "All wires" and "Single wire" should be in the same "radio group" and
 #   + also search "BUG:" for a couple other things
 # * remove self.oldDataFormat -- it's not actually used (is it?)
 # * Update GUI process to protect against missing end of run frame.
-#   Can listen for STATUS frame. If DAQ things a run is active but then sees STATUS=IDLE,
+#   Can listen for STATUS frame. If DAQ thinks a run is active but then sees STATUS=IDLE,
 #   then trigger end of run sequence
 # * The wire number spinBox should be disabled unless "Single Wire" is selected
 # * When clicking to add f0 line -- use "hover" width for tolerance (instead of a hardcoded # of pixels)
