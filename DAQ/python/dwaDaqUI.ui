@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1313</width>
-    <height>1122</height>
+    <height>1071</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -447,14 +447,14 @@
                    </item>
                   </widget>
                  </item>
-                 <item row="11" column="0">
+                 <item row="10" column="0">
                   <widget class="QLabel" name="scanTypeLabel">
                    <property name="text">
                     <string>Scan type</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="11" column="1">
+                 <item row="10" column="1">
                   <widget class="QWidget" name="widget_7" native="true">
                    <layout class="QHBoxLayout" name="horizontalLayout_16">
                     <property name="leftMargin">
@@ -568,7 +568,7 @@
                    </layout>
                   </widget>
                  </item>
-                 <item row="12" column="1">
+                 <item row="11" column="1">
                   <widget class="QPushButton" name="btnConfigureScans">
                    <property name="minimumSize">
                     <size>
@@ -587,14 +587,14 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="13" column="0">
+                 <item row="12" column="0">
                   <widget class="QLabel" name="scanList_label">
                    <property name="text">
                     <string>Scans</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="13" column="1">
+                 <item row="12" column="1">
                   <widget class="QTableWidget" name="scanTable">
                    <property name="minimumSize">
                     <size>
@@ -639,7 +639,7 @@
                    </column>
                   </widget>
                  </item>
-                 <item row="14" column="1">
+                 <item row="13" column="1">
                   <layout class="QVBoxLayout" name="verticalLayout_2">
                    <property name="leftMargin">
                     <number>6</number>
@@ -703,40 +703,10 @@
                    </item>
                   </layout>
                  </item>
-                 <item row="15" column="1">
+                 <item row="14" column="1">
                   <widget class="QPushButton" name="btnScanCtrl">
                    <property name="text">
                     <string>Start next scan</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="6" column="1">
-                  <widget class="QComboBox" name="configOrientationComboBox">
-                   <property name="minimumSize">
-                    <size>
-                     <width>120</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>120</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="6" column="0">
-                  <widget class="QLabel" name="orientationLabel">
-                   <property name="text">
-                    <string>Orientation</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="16" column="1">
-                  <widget class="QCheckBox" name="scanCtrlRunAll">
-                   <property name="text">
-                    <string>Automate scanning</string>
                    </property>
                   </widget>
                  </item>
@@ -1751,7 +1721,7 @@
      <x>0</x>
      <y>0</y>
      <width>1313</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -1814,6 +1784,7 @@
   <tabstop>spinBox</tabstop>
   <tabstop>btnConfigureScans</tabstop>
   <tabstop>scanTable</tabstop>
+  <tabstop>btnScanCtrl</tabstop>
   <tabstop>graphicsView</tabstop>
   <tabstop>configFileName</tabstop>
   <tabstop>omitComments_cb</tabstop>

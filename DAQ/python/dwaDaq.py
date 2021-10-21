@@ -185,7 +185,7 @@ GUI_Y_OFFSET = 0 #FIXME: remove this!
 SCAN_START = 1
 SCAN_END = 0
 
-APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Storage", "Installation"]
+APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Installation (Top)", "Installation (Bottom)", "Storage"]
 APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
 MAX_WIRE_SEGMENT = {
@@ -966,10 +966,6 @@ class MainWindow(qtw.QMainWindow):
             self.configStageComboBox.addItem(stage)
         for layer in APA_LAYERS:
             self.configLayerComboBox.addItem(layer)
-        
-        self.configOrientationComboBox.addItem("Winder")
-        self.configOrientationComboBox.addItem("Vertical (Top)")
-        self.configOrientationComboBox.addItem("Vertical (Bottom)")
 
         self.headboardLabel.setText("Connect to headboard #"+str(self.spinBox.value()))
         self.headboardLabel.setStyleSheet("color : rgb(3,205,0)")
@@ -2039,9 +2035,8 @@ class MainWindow(qtw.QMainWindow):
         self.configLayer = self.configLayerComboBox.currentText()
         self.configHeadboard = self.configHeadboardSpinBox.value()
         self.configApaSide = self.SideComboBox.currentText()
-        self.configOrientation = self.configOrientationComboBox.currentText()
         is_flex_connection_winderlike = True
-        if self.configOrientation == "Vertical (Top)": is_flex_connection_winderlike = False
+        if self.configStage == "Installation (Top)": is_flex_connection_winderlike = False
 
         self.updateApaUuidListModel()  
         
