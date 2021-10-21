@@ -1,4 +1,14 @@
 # FIXME/TODO:
+# 
+# * Handle STATUS frames that are pushed because of errors or voltage changes
+#   Write these to file (for button change or error)
+#   KEY = 0x61
+#   0: timeout
+#   1: state change
+#   2: button change
+#   3: error
+#   So a value of 1010b = 10(decimal) would mean that both an error and state change triggered the push
+#
 # * to sense "stale" values: every time a status frame arrives, reset a count-down timer (QTimer) of duration
 #   equal to the status frame period (plus a small amount). When that timer times out, trigger a call to a
 #   function that highlights values as stale (e.g. the 50Vac and 500Vdc indicators)
@@ -13,9 +23,6 @@
 #   - dB actions (submit/read)
 #   - abort run
 #
-# * Add indication on sidebar that TCP/IP communication is underway during start of scan configuration
-#   (otherwise GUI just sits idle...)
-# 
 # * Add scroll-bar to Advanced tab in Stimulus tab:
 #   https://stackoverflow.com/questions/63228003/add-scroll-bar-into-tab-pyqt5
 #   [was:] "Advanced" tab: not all items show (below the "config file contents" text area)
@@ -23,11 +30,6 @@
 # * Replace hard-coded 'amplitudeData.json' string with AMP_DATA_FILE or similar
 #   same for 'resonanceData.json'
 # 
-# * after scan ends:
-#   + update the V(t) plots with the last set of data (in process)
-#   + disable all relays but do this in a thread and have the "thread end" signal trigger the
-#     re-activation of the "Start Scan" buttons
-#
 # * Add graphic of APA wires to Config tab
 #
 # * Filter glitches in A(f) prior to integration. (sigma-clipping and width can work). See e.g. V_A_10_361-363-...
@@ -45,13 +47,13 @@
 #
 # * AUTO-SCAN items
 #   + After all scans are done in an AUTO scan, the "Start Scan" button should be disabled until another "Configure Scan List" is done
-#   + Suggestion: the "Wires" column in the AUTO scan confit table should just list the numbers, not an array of strings...
+#   + Suggestion: the "Wires" column in the AUTO scan config table should just list the numbers, not an array of strings...
 #     and should be left-justified
 #   + "All wires" and "Single wire" should be in the same "radio group" and
 #   + also search "BUG:" for a couple other things
 # * remove self.oldDataFormat -- it's not actually used (is it?)
 # * Update GUI process to protect against missing end of run frame.
-#   Can listen for STATUS frame. If DAQ things a run is active but then sees STATUS=IDLE,
+#   Can listen for STATUS frame. If DAQ thinks a run is active but then sees STATUS=IDLE,
 #   then trigger end of run sequence
 # * The wire number spinBox should be disabled unless "Single Wire" is selected
 # * When clicking to add f0 line -- use "hover" width for tolerance (instead of a hardcoded # of pixels)
@@ -363,7 +365,7 @@ class Worker(qtc.QRunnable):
         Initialize the runner function with passed args, kwargs.
         '''
 
-        print("\n\n ======== Worker.run() (thread start) ========== \n\n")
+        print("\n ======== Worker.run() (thread start) ========== \n")
         self.logger.info("Thread start")
         # retrieve args/kwargs here; and fire processing using them
         try:
@@ -380,11 +382,11 @@ class Worker(qtc.QRunnable):
             exctype, value = sys.exc_info()[:2]
             self.signals.error.emit( (exctype, value, traceback.format_exc()) )
         else:
-            print("\n\n ======== Worker.run() else ========== \n\n")
+            print("\n ======== Worker.run() else ========== \n")
             self.signals.result.emit(result)  # return the result of the processing
         finally:
             self.signals.finished.emit() # Done
-            print("\n\n ======== Worker.run() finally ========== \n\n")
+            print("\n ======== Worker.run() finally ========== \n")
             self.logger.info("Thread complete")
         
 # new additions
@@ -1141,7 +1143,10 @@ class MainWindow(qtw.QMainWindow):
         if 'verbose' in self.daqConfig:
             self.uz.setVerbose(self.daqConfig['verbose'])
             self.verbose = int(self.daqConfig['verbose'])
-            
+
+        print("self.daqConfig")
+        print(self.daqConfig)
+
         # Set up STATUS frame cadence
         self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
 
@@ -1182,6 +1187,7 @@ class MainWindow(qtw.QMainWindow):
 
         # Read status frame period (0x35)
         out = self.uz.readValue('00000035') 
+        print("Read-back status frame period")
         print(out)
         statusFramePeriod_str = '{:.1f} s'.format(out[-1]*2.56e-6)
         self.statusFramePeriod_val.setText(statusFramePeriod_str)
@@ -2203,7 +2209,7 @@ class MainWindow(qtw.QMainWindow):
         for field in DATABASE_FIELDS:
             self.ampData[field] = dbConfig[field] if dbConfig else None
 
-        print(f'self.ampDataS = {self.ampDataS}')
+        print(f'self.ampData = {self.ampData}')
             
             
     def runScan(self):
@@ -3316,7 +3322,7 @@ class MainWindow(qtw.QMainWindow):
                 
             #if end of scan...
             elif udpDict[ddp.Frame.RUN]['runStatus'] == SCAN_END:
-                print("\n\n SCAN IS DONE!!!")
+                print("\n SCAN IS DONE!!!")
 
                 self.saveAmplitudeData()  # do this first to avoid data loss
 
@@ -3324,12 +3330,12 @@ class MainWindow(qtw.QMainWindow):
                 
                 # FIXME: shouldn't really change button state or controller state via
                 # RUN end frame. Should only do this from STATUS frame...
-                print("\nScan button disable\n")
+                #print("\nScan button disable\n")
                 self._scanButtonDisable()
-                print("\nSet button to START\n")
+                #print("\nSet button to START\n")
                 self._setScanButtonAction('START')
                 #qtc.QCoreApplication.processEvents()
-                print("\nDisable relays\n")
+                print("Disable relays")
                 self.disableRelaysThread()
                 
                 #self.uz.disableAllRelays() # Break all relay connections to let charge bleed off of wires
@@ -3343,7 +3349,7 @@ class MainWindow(qtw.QMainWindow):
                 #self.disableScanButtonForTime(self.interScanDelay)  # Don't allow user to start another scan for a bit
 
                 #
-                print(f'self.scanType = {self.scanType}')
+                #print(f'self.scanType = {self.scanType}')
                 #if the scan is auto, then when it finishes and the scan is over this finds what row was scanned and changes it green, 
                 #this also selects the next radio button
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
@@ -3363,7 +3369,7 @@ class MainWindow(qtw.QMainWindow):
 
                 #self.updateAmplitudePlots()
                 #self.updateTimeseriesPlots()
-                print("\n\nUPDATING PLOTS ONE LAST TIME\n\n")
+                print("UPDATING PLOTS ONE LAST TIME")
                 self.updatePlots(force_all=True)
                 self.wrapUpStimulusScan()
                 self.scanType = None
@@ -3703,12 +3709,11 @@ class MainWindow(qtw.QMainWindow):
         submitted: have the resonances from this scan been submitted yet?  
         .          default is Submitted.NO, but could also be Submitted.UNKNOWN
         '''
-
-        print("\n\n\n")
-        print("insertScanIntoScanList:")
-        print(f"  scanDir:   {scanDir}")
-        print(f"  row:       {row}")
-        print(f"  submitted: {submitted} (NO={Submitted.NO}, UNKNOWN={Submitted.UNKNOWN}, YES={Submitted.YES})")
+        if self.verbose > 0:
+            print("insertScanIntoScanList:")
+            print(f"  scanDir:   {scanDir}")
+            print(f"  row:       {row}")
+            print(f"  submitted: {submitted} (NO={Submitted.NO}, UNKNOWN={Submitted.UNKNOWN}, YES={Submitted.YES})")
 
         # FIXME: validate passed arguments
         if submitted is None:
