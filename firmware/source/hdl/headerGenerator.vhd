@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Oct 21 16:53:12 2021
+-- Last update : Thu Oct 21 17:34:07 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -276,9 +276,6 @@ begin
                 udpCnt_reg     <= (others => '0');
                 adcIdx         <= 7;
                 rqstType       <= RQST_NULL;
-                -- with the status packet being pushed we need to latch the other requests so they are not missed
-                sendRunHdrLatch  <= (sendRunHdr or sendRunHdrLatch) and not sendRunHdrClear;
-                sendAdcDataLatch <= (sendAdcData or sendAdcDataLatch) and not sendAdcDataClear;
             else
                 state_reg      <= state_next;
                 headCnt_reg    <= headCnt_next;
@@ -289,6 +286,10 @@ begin
                 pktBuildBusy   <= state_reg /= idle_s;
 
             end if;
+            
+            -- with the status packet being pushed we need to latch the other requests so they are not missed
+            sendRunHdrLatch  <= (sendRunHdr or sendRunHdrLatch) and not sendRunHdrClear;
+            sendAdcDataLatch <= (sendAdcData or sendAdcDataLatch) and not sendAdcDataClear;
         end if;
     end process state_seq;
 
@@ -297,16 +298,16 @@ begin
     process (all)
     begin
         -- set defaults
-        state_next      <= state_reg;
-        udpDataRdy_next <= udpDataRdy_reg;
-        rqstType_next   <= rqstType;
-        headCnt_next    <= headCnt_reg;
-        udpCnt_next     <= udpCnt_reg;
-        adcIdx_next     <= adcIdx;
-        adcDataRen      <= (others => '0');
-        statusBusy      <= false;
-        watchdogSleep   <= false;
-        sendRunHdrClear <= false;
+        state_next       <= state_reg;
+        udpDataRdy_next  <= udpDataRdy_reg;
+        rqstType_next    <= rqstType;
+        headCnt_next     <= headCnt_reg;
+        udpCnt_next      <= udpCnt_reg;
+        adcIdx_next      <= adcIdx;
+        adcDataRen       <= (others => '0');
+        statusBusy       <= false;
+        watchdogSleep    <= false;
+        sendRunHdrClear  <= false;
         sendAdcDataClear <= false;
         case (state_reg) is
 
@@ -323,10 +324,10 @@ begin
 
                 elsif sendAdcDataLatch then
                     sendAdcDataClear <= true;
-                    udpDataRdy_next <= true;
-                    state_next      <= genAFrame_s;
-                    headCnt_next    <= to_unsigned(nHeadA-1, headCnt_next'length);
-                    rqstType_next   <= RQST_ADC;
+                    udpDataRdy_next  <= true;
+                    state_next       <= genAFrame_s;
+                    headCnt_next     <= to_unsigned(nHeadA-1, headCnt_next'length);
+                    rqstType_next    <= RQST_ADC;
                     --registerId      <= std_logic_vector(to_unsigned(adcIdx, registerId'length));
 
                 elsif sendStatus then
