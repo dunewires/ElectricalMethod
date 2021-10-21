@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1313</width>
-    <height>1099</height>
+    <height>1122</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -710,13 +710,6 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="15" column="1">
-                  <widget class="QCheckBox" name="scanCtrlRunAll">
-                   <property name="text">
-                    <string>Automate scanning</string>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="6" column="1">
                   <widget class="QComboBox" name="configOrientationComboBox">
                    <property name="minimumSize">
@@ -737,6 +730,13 @@
                   <widget class="QLabel" name="orientationLabel">
                    <property name="text">
                     <string>Orientation</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="16" column="1">
+                  <widget class="QCheckBox" name="scanCtrlRunAll">
+                   <property name="text">
+                    <string>Automate scanning</string>
                    </property>
                   </widget>
                  </item>
