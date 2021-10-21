@@ -14,11 +14,12 @@ entity top_tension_analyzer is
 
     --regToDwa       : in SLV_VECTOR_TYPE_32(31 downto 0);
     dwaClk400 : in std_logic;
+    dwaClk333 : in std_logic;
     dwaClk200 : in std_logic;
     dwaClk100 : in std_logic;
     dwaClk10  : in std_logic;
 
-    led     : out std_logic_vector(3 downto 0);
+    led     : out std_logic_vector(3 downto 0) := (others => '0');
     pButton : in  std_logic_vector(3 downto 0);
 
     acStimX200_obuf : out std_logic := '0';
@@ -74,7 +75,7 @@ architecture STRUCT of top_tension_analyzer is
       rd_rst_busy : OUT STD_LOGIC
     );
   END COMPONENT;
-  
+
   COMPONENT ila_4x32
     PORT (
       clk : IN STD_LOGIC;
@@ -111,17 +112,18 @@ architecture STRUCT of top_tension_analyzer is
   signal acStimX200 : std_logic := '0';
 
   signal adcCnv_nCnv             : unsigned(15 downto 0) := (others => '0');
+  signal adcSamplesPerCycleSet  : unsigned(15 downto 0) := (others => '0');
   signal adcCnv_nPeriod          : unsigned(23 downto 0) := (others => '0');
+  signal adcCnv_nPeriodNoise          : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriodAuto : unsigned(23 downto 0) := (others => '0');
 
-  signal acStim_mag               : unsigned(11 downto 0) := (others => '0');
-  signal acStim_enable            : std_logic             := '0';
-  signal ctrl_acStim_enable       : std_logic             := '0';
-  signal acStim_trigger           : std_logic             := '0';
-  signal acStim_nHPeriod          : unsigned(23 downto 0) := (others => '0');
-  signal acStimX200_nHPeriod      : unsigned(23 downto 0) := (others => '0');
-  signal acStimX200_nHPeriod_fxp8 : unsigned(31 downto 0) := (others => '0'); -- floating point at 8
-                                                                              --initial value non zero
+  signal acStim_mag              : unsigned(11 downto 0) := (others => '0');
+  signal acStim_enable           : std_logic             := '0';
+  signal ctrl_acStim_enable      : std_logic             := '0';
+  signal acStim_trigger          : std_logic             := '0';
+  signal acStim_nPeriod_fp6      : unsigned(30 downto 0) := (others => '0');
+  signal acStimX200_nPeriod_fxp8 : unsigned(32 downto 0) := (others => '0'); -- floating point at 8
+                                                                             --initial value non zero
   signal stimFreqReq : unsigned(23 downto 0) := (others => '1');
   signal ctrlFreqSet : unsigned(23 downto 0) := (others => '1');
 
@@ -137,12 +139,10 @@ architecture STRUCT of top_tension_analyzer is
 
   signal adcBusy : std_logic := '0';
 
-  signal mainsSquare_del1, mainsSquare_del2 : std_logic := '0';
   signal mainsTrig ,adcReadoutTrig          : std_logic := '0';
 
-  signal mainsTrig_filter : unsigned(17 downto 0);
-
-  signal senseWireData     : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+    signal senseWireData     : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+    signal senseWireDataDiv2     : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0) := (others => (others => '0'));
   signal senseWireDataStrb : std_logic                                   := '0';
 
   signal senseWireMNSData     : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0) := (others => (others => '0'));
@@ -164,10 +164,19 @@ architecture STRUCT of top_tension_analyzer is
   signal dwaClk2          : std_logic                    := '0';
   signal vioUpdate        : std_logic                    := '0';
 
-  signal flashCount : unsigned(23 downto 0);
-
   signal pktBuildBusy : boolean := false;
   signal freqScanBusy : boolean := false;
+
+  signal pButton_del : SLV_VECTOR_TYPE(1 downto 0)(3 downto 0)       := (others => (others => '0'));
+  signal pBHoldOff   : UNSIGNED_VECTOR_TYPE(3 downto 0)(19 downto 0) := (others => (others => '0'));
+
+  signal pButtonClean : std_logic_vector(3 downto 0) := (others => '0');
+
+  signal scanStatusCnt : unsigned(27 downto 0) := (others => '0');
+  signal netStatusCnt  : unsigned(23 downto 0) := (others => '0');
+
+  signal mCDelayCount :unsigned(7 downto 0) := (others  => '0');
+  signal mCDelayReset :std_logic := '1';
 
   signal
   toDaqReg_headerGenerator,
@@ -178,18 +187,68 @@ architecture STRUCT of top_tension_analyzer is
   toDaqReg_mainsNoiseCorrection : toDaqRegType;
 
 begin
-  lightsAndButtons : process (dwaClk10)
+  lightsAndButtons : process (dwaClk100)
   begin
-    if rising_edge(dwaClk10) then
-      flashCount <= flashCount + 1;
-      -- flash lights in reverse order
-      led(0) <= not pButton(3) and flashCount(flashCount'left - 0);
-      led(1) <= not pButton(2) and flashCount(flashCount'left - 1);
-      led(2) <= not pButton(1) and flashCount(flashCount'left - 2);
-      led(3) <= not pButton(0) and flashCount(flashCount'left - 3);
+    if rising_edge(dwaClk100) then
+      led(0) <= or(toDaqReg.errors);
+      led(3) <= '0'; -- 0 is off ?
+
+      --metastability 
+      pButton_del <= pButton_del(0) & pButton;
+
+      --debounce
+      for pB_i in 3 downto 0 loop
+        -- reset holdoff counter while button is pressed or there is signal bouncing 
+        if pButton_del(1)(pB_i) then
+          pBHoldOff(pB_i) <= (others => '0');
+        -- count until MSb is 1 after button if released, waiting for bounces to settle 
+        elsif pBHoldOff(pB_i)(pBHoldOff(pB_i)'left) = '0' then
+          pBHoldOff(pB_i) <= pBHoldOff(pB_i)+1;
+        end if;
+
+        pButtonClean(pB_i) <= pBHoldOff((pB_i))(pBHoldOff(pB_i)'left);
+      end loop;
+
+      toDaqReg.pButton <= pButtonClean;
+
+      -- single pulse for each button press cycle
+
     end if;
   end process;
 
+
+  genLedScanStatus : process (dwaClk100)
+  begin
+    if rising_edge(dwaClk100) then
+      if scanStatusCnt(27 downto 22) = "100110" then
+        -- we are finished with the current frequency's blink, wait here for the next frequency
+        led(1) <= '1' when freqScanBusy else '0'; -- display scan status
+                                                  -- pulse once each time the ADC sequenced is activated
+        if adcStart then
+          -- scale requested frequency to a time range we can actually see ~ 1.5 sec to 150 ms
+          scanStatusCnt <= (27 => '0', 26 downto 9 => stimFreqReq(17 downto 0), 8 downto 0 => '0');
+        end if;
+
+      else
+        -- when counting, pulse 0 for ~125 ms at the end of each count
+        led(1)        <= bool2sl(freqScanBusy) when (scanStatusCnt(27 downto 22) < "100011") else '0';
+        scanStatusCnt <= scanStatusCnt + 1;
+      end if;
+    end if;
+  end process;
+
+  genLedNetStatus : process (dwaClk100)
+  begin
+    if rising_edge(dwaClk100) then
+
+      led(2) <= '1' when and(netStatusCnt) else '0';
+      if not fromDaqReg.netStatus(0) then -- blink on transaction
+        netStatusCnt <= (others => '0');
+      elsif netStatusCnt /= (netStatusCnt'range => '1') then -- extend pulse ~150ms
+        netStatusCnt <= netStatusCnt + 1;
+      end if;
+    end if;
+  end process genLedNetStatus;
 
   BUFR_inst : BUFR
     generic map (
@@ -259,51 +318,56 @@ begin
 
   -- convert requested stim frequency to number of 100Mhz clocks
   -- move this to the processor!
-  compute_n_periods : process (dwaClk10)
-    variable acStim_nHPeriod_all : unsigned(63 downto 0 );
-    variable adcCnv_nPeriod_all  : unsigned(63 downto 0 );
-    variable adcCnv_nCnv_all     : unsigned(39 downto 0 );
+  compute_n_periods : process (dwaClk100)
+    variable acStim_nPeriod_fp6_all : unsigned(43 downto 0 );
+    variable adcCnv_nCnv_all        : unsigned(39 downto 0 );
 
   begin
-    if rising_edge(dwaClk10) then
+    if rising_edge(dwaClk100) then
       if fromDaqReg.auto then
-        stimFreqReq <= ctrlFreqSet;
-        --acStim_enable <= '0';--ctrl_acStim_enable;
+        stimFreqReq   <= ctrlFreqSet;
         acStim_enable <= ctrl_acStim_enable;
+        mCDelayReset  <= '0' when stimFreqReq = ctrlFreqSet else '1'; -- reset multicycle delay counter
       else
         stimFreqReq   <= fromDaqReg.stimFreqReq;
         acStim_enable <= '1';
+        mCDelayReset  <= '0' when stimFreqReq = fromDaqReg.stimFreqReq else '1'; -- reset multicycle delay counter
       end if;
 
-      acStimX200_nHPeriod_fxp8 <= (x"3d090000"/ stimFreqReq);
-      -- trim off 8 MSbs because we don't need to go below ~10Hz
-      -- acStim_nHPeriod_all := (x"5F5E1000"/unsigned(stimFreqReq));
-      -- acStim_nHPeriod     <= acStim_nHPeriod_all(acStim_nHPeriod'range);
-      -- use the acStim_nHPeriod as the basis for the other freq to maintain exact sync
-      -- this will produce a greater error in the actual freq being measured.
-      acStim_nHPeriod_all := acStimX200_nHPeriod_fxp8 * 200;
-      adcCnv_nPeriod_all  := acStimX200_nHPeriod_fxp8 * 50;
-      --  let's start with a fixed conversion from half wave to ADC samples
-      -- 100 = 4 samples/period
-      -- 400 = 1 samples/period
-      -- 50 = 8
-      -- 25 = 16
-      -- find the number of total canversions for each frequency
-      adcCnv_nCnv_all     := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
-      acStimX200_nHPeriod <= acStimX200_nHPeriod_fxp8(31 downto 8);
-      acStim_nHPeriod     <= acStim_nHPeriod_all(31 downto 8);
-      adcCnv_nPeriod      <= adcCnv_nPeriod_all(31 downto 8);
-      adcCnv_nCnv         <= adcCnv_nCnv_all(15 downto 0);
+      if mCDelayReset then
+        mCDelayCount <= x"00";
+        adcSamplesPerCycleSet <= fromDaqReg.adcSamplesPerCycle;  -- Update the register to include into the multicycle delay path. Not necessary but we'll do it just for fun
+      elsif mCDelayCount /= x"FF" then -- stop at 0xFF
+        mCDelayCount <= mCDelayCount +1;
+      end if;
 
+      -- nPeriod has units of 5ns with specified fixed point
+      --acStim_nPeriod_fp6_all  := (x"17d7840000"/ stimFreqReq);
+      acStim_nPeriod_fp6_all := (x"2FAF0800000"/ stimFreqReq);
+
+      -- division using combintorial logic is not so great ... but it works with a few clock cycles,
+      -- consider saving resources by muxing the input of a single division, having parallel resources is unnecessary
+      if mCDelayCount = x"0E" then -- latch division after 150 ns
+        acStim_nPeriod_fp6 <= acStim_nPeriod_fp6_all(30 downto 0); -- only take what is needed for min 10 HZ stim freq
+      elsif mCDelayCount = x"1D"then 
+        acStimX200_nPeriod_fxp8 <= (acStim_nPeriod_fp6 & "00") / x"C8"; -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
+      -- for the conversion period, fp6 << 6 , 200MHz clk  to 100MHz ADC clk << 1 . ie Shift 7 bits to get nPeriod for 1 cycle 
+      -- consider setting conversion period to be fixed throughout noise range to help with the interpolation
+        adcCnv_nPeriod <= acStim_nPeriod_fp6(30 downto 7)/adcSamplesPerCycleSet; -- get period of conversions for set frequency
+      end if;
+
+      -- find the number of total canversions for each frequency
+      adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
+      adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
     end if;
   end process compute_n_periods;
 
   bandPassClkGen_inst : entity work.bandPassClkGen
     port map (
-      bPClk_nHPeriod => acStimX200_nHPeriod_fxp8,
-      bPClk          => acStimX200,
-      dwaClk400      => dwaClk400,
-      dwaClk200      => dwaClk200
+      bPClk_nPeriod_fp8 => acStimX200_nPeriod_fxp8(25 downto 0),
+      bPClk             => acStimX200,
+      dwaClk400         => dwaClk400,
+      dwaClk200         => dwaClk200
     );
 
 
@@ -355,35 +419,26 @@ begin
       dwaClk2 => dwaClk2
     );
 
-  -- mains trigger noise filter
-  trigGen : process (dwaClk100)
-  begin
-    if rising_edge(dwaClk100) then
-      mainsSquare_del1 <= mainsSquare;
-      mainsSquare_del2 <= mainsSquare_del1;
-      -- not yet supported by xilinx simulation 
-      -- mainsTrig        <= '1' when mainsTrig_filter = (mainsTrig_filter'left downto 1 => '0', 0 => '1') else '0';
-      if mainsTrig_filter = "00" & x"0001" then
-        mainsTrig <= '1';
-      else
-        mainsTrig <= '0' ;
-      end if;
+-- trigger on  supply mains
+  triggerMains_inst : entity duneDwa.triggerMains
+    port map (
 
-      if mainsSquare_del2 = '0' then
-        mainsTrig_filter <= (others => '1');
-      elsif mainsTrig_filter /= (mainsTrig_filter'range => '0') then
-        mainsTrig_filter <= mainsTrig_filter-1;
-      end if;
-    end if;
-  end process;
+      mainsSquare => mainsSquare,
+      stimFreqReq =>  stimFreqReq,
+
+      mainsTrig   => mainsTrig,
+
+      dwaClk100   => dwaClk100
+
+    );
 
   -- stimulus frequency generation via DAC
-  dacInterface_inst : entity work.dacInterface
+  dacInterface_inst : entity duneDwa.dacInterface
     port map (
-      acStim_mag      => fromDaqReg.stimMag,
-      acStim_nHPeriod => acStim_nHPeriod,
-      acStim_enable   => acStim_enable,
-      acStim_trigger  => acStim_trigger,
+      acStim_mag         => fromDaqReg.stimMag,
+      acStim_nPeriod_fp6 => acStim_nPeriod_fp6,
+      acStim_enable      => acStim_enable,
+      acStim_trigger     => acStim_trigger,
 
       DAC_SDI   => DAC_SDI,
       DAC_CS_B  => DAC_CS_B,
@@ -391,6 +446,8 @@ begin
       DAC_CLR_B => DAC_CLR_B,
       DAC_CLK   => DAC_CLK,
 
+      dwaClk400 => dwaClk400,
+      dwaClk200 => dwaClk200,
       dwaClk100 => dwaClk100,
       dwaClk10  => dwaClk10
     );
@@ -407,8 +464,6 @@ begin
       acStim_enable => ctrl_acStim_enable,
 
       noiseReadoutBusy  => noiseReadoutBusy,
-      noiseFirstReadout => noiseFirstReadout,
-      noiseResetBusy    => noiseResetBusy,
 
       sendRunHdr  => sendRunHdr,
       sendAdcData => sendAdcData,
@@ -432,7 +487,6 @@ begin
 
       adcCnv_nCnv      => adcCnv_nCnv,
       adcCnv_nPeriod   => adcCnv_nPeriod,
-      noiseReadoutBusy => noiseReadoutBusy,
 
       adcStart => adcStart,
       trigger  => adcReadoutTrig, -- temp disable untested adcReadoutTrig,
@@ -452,6 +506,17 @@ begin
       dwaClk100 => dwaClk100
     );
 
+dropLsb : process (all)
+begin
+  for adc_i in 7 downto 0 loop
+  -- ADC part is either 16 or 14 bit, 
+  -- in both cases 16 bits are used.
+  -- since we don't need the resolotion of 16 bits, we drop a bit here for conveince later
+    senseWireDataDiv2(adc_i) <= senseWireData(adc_i)(15 downto 1);
+  end loop;
+end process dropLsb;
+
+
   mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
     port map (
       fromDaqReg => fromDaqReg,
@@ -460,24 +525,21 @@ begin
       freqSet => ctrlFreqSet,
 
       noiseReadoutBusy  => noiseReadoutBusy,
-      noiseFirstReadout => noiseFirstReadout,
 
-      dataSel => noiseCorrDataSel,
-
-      resetBusy => noiseResetBusy,
       adcStart  => adcStart,
 
+      senseWireData     => senseWireDataDiv2,
       senseWireDataStrb => senseWireDataStrb,
-      senseWireData     => senseWireData,
 
-      senseWireMNSDataStrb => senseWireMNSDataStrb,
       senseWireMNSData     => senseWireMNSData,
+      senseWireMNSDataStrb => senseWireMNSDataStrb,
 
       dwaClk100 => dwaClk100
     );
 
   --for each of the 8 channels
   adcFifoGen : for adc_i in 7 downto 0 generate
+
 
     -- store data for AXI read
     fifoAdcData_ch : fifo_autoDatacollection
@@ -508,7 +570,7 @@ begin
       fromDaqReg => fromDaqReg,
       toDaqReg   => toDaqReg_headerGenerator, -- Keep this one for sim
 
-      pButton  => pButton,
+      pButton => pButtonClean,
 
       runOdometer => (others => '0'),
 
@@ -518,8 +580,10 @@ begin
 
       pktBuildBusy => pktBuildBusy,
       freqScanBusy => freqScanBusy,
+      acStim_enable => acStim_enable,
 
-      stimPeriodActive  => acStim_nHPeriod(22 downto 0) & '0',
+
+      stimPeriodActive  => acStim_nPeriod_fp6,
       stimPeriodCounter => (others => '0'),
 
       adcSamplingPeriod => adcCnv_nPeriod,
@@ -533,45 +597,38 @@ begin
       dwaClk100 => dwaClk100
     );
 
-  ila_4x32_inst : ila_4x32
-    PORT MAP (
-      clk                  => dwaClk100,
-      probe0(31 downto 16) => (others => '0'),
-      probe0(15 downto 0)  => std_logic_vector(adcData(3)(15 downto 0)),
-      probe1(31 downto 16) => (others => '0'),
-      probe1(15 downto 0)  => std_logic_vector(senseWireData(3)(15 downto 0)),
-      probe2(31 downto 15) => (others => '0'),
-      probe2(14 downto 0)  => std_logic_vector(senseWireMNSData(3)(14 downto 0)),
-      probe3(31 downto 8)  => (others => '0'),
-      probe3(7)            => adcReadoutTrig,
-      probe3(6)            => acStim_trigger,
-      probe3(5)            => senseWireDataStrb,
-      probe3(4)            => mainsTrig,
-      probe3(3)            => senseWireMNSDataStrb,
-      probe3(2)            => bool2sl(adcStart),
-      probe3(1)            => bool2sl(noiseReadoutBusy),
-      probe3(0)            => bool2sl(noiseResetBusy)
-    );
-
+  --ila_4x32_inst : ila_4x32
+  --  PORT MAP (
+  --    clk                  => dwaClk10,
+  --    probe0(31 downto 24) => (others => '0'),
+  --    probe0(23 downto 0)  => std_logic_vector(acStim_nHPeriod),
+  --    probe1               => std_logic_vector(acStimX200_nPeriod_fxp8),
+  --    probe2(31 downto 24) => (others => '0'),
+  --    probe2(23 downto 0)  => std_logic_vector(adcCnv_nPeriod),
+  --    probe3               => std_logic_vector(acStimX200_nPeriod_fxp8)
+  --  );
+  --
   vio_ctrl_inst : vio_ctrl
     PORT MAP (
-      clk                     => dwaClk100,
-      probe_in0               => (others => '0'),
-      probe_in1               => (others => '0'),
-      probe_in2               => (others => '0'),
-      probe_out0              => open,
-      probe_out1              => open,
-      probe_out2(0)           => vioUpdate,
-      probe_out3              => open,
-      probe_out4              => open,
-      probe_out5              => open,
-      probe_out6              => open,
-      probe_out7              => open,
-      probe_out8              => open,
-      probe_out9              => open,
-      probe_out10             => open,
-      probe_out11(4 downto 2) => msimDumy,
-      probe_out11(1 downto 0) => noiseCorrDataSel
+      clk => dwaClk100,
+
+      probe_in0(3 downto 0)  => led,
+      probe_in0(5 downto 4)  => fromDaqReg.netStatus(1 downto 0),
+      probe_in0(31 downto 6) => (others => '0'),
+      probe_in1              => (others => '0'),
+      probe_in2              => (others => '0'),
+      probe_out0             => open,
+      probe_out1             => open,
+      probe_out2             => open,
+      probe_out3             => open,
+      probe_out4             => open,
+      probe_out5             => open,
+      probe_out6             => open,
+      probe_out7             => open,
+      probe_out8             => open,
+      probe_out9             => open,
+      probe_out10            => open,
+      probe_out11            => open
     );
 
   toDaqReg.ctrlBusy         <= toDaqReg_wtaController.ctrlBusy;
@@ -587,6 +644,7 @@ begin
   toDaqReg.serNum           <= toDaqReg_serialPromInterface.serNum;
   toDaqReg.serNumMemAddress <= toDaqReg_serialPromInterface.serNumMemAddress;
   toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
+  toDaqReg.errors    <= (others  => '0'); -- all unsigned errors set to 0
 
 end STRUCT;
 

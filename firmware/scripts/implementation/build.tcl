@@ -15,13 +15,14 @@ proc makeBit {} {
     puts "#                    Run Selected Implementation Processes       #"
     puts "##################################################################\n"
 
-    setup
+    setupProj
     readSource
     synth
     opt
     place
     postPlacePhysOpt
     route
+    postRoutePhysOpt
     bitgen
 }
 
@@ -44,11 +45,44 @@ proc rePlace {} {
    # bitgen
 }
 
-proc setup {} {
+
+
+proc setupEnv {} {
 
     puts "\n##################################################################"
-    puts "#                    Setup                                         #"
+    puts "#                    setupEnv                                         #"
     puts "##################################################################\n"
+ 
+    global scriptdir
+    global firmware_dir
+    global proj_sources_dir
+    global target
+    global fsbl_elf
+    global lwip_elf
+    global boot_bin
+    global hardware_loc
+
+ ##select configuration   
+    set target "dune"
+
+    set scriptdir [pwd]
+    set firmware_dir $scriptdir/../
+    set proj_sources_dir $firmware_dir/source/
+    #set fsbl_elf $proj_sources_dir/sdk/dwaFsbl/Debug/dwaFsbl.elf
+    #set lwip_elf $proj_sources_dir/sdk/lwip_ref/Release/lwip_ref.elf
+    set fsbl_elf $proj_sources_dir/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/boot/fsbl.elf
+    set lwip_elf $proj_sources_dir/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+    set boot_bin $firmware_dir/flash/BOOT.bin
+    set hardware_loc TCP:127.0.0.1:3121
+}
+
+proc setupProj {} {
+
+    puts "\n##################################################################"
+    puts "#                    setupProj                                         #"
+    puts "##################################################################\n"
+
+
 
     #Script Configuration
     set synth 0
@@ -70,14 +104,7 @@ proc setup {} {
     global hardware_loc
 
     #set location of compiled soruce for flash
-
- ##select configuration   
-    set target "dune"
-
-    set scriptdir [pwd]
-    set firmware_dir $scriptdir/../
-    set proj_sources_dir $firmware_dir/source/
-
+    setupEnv
 
         #set top_module "top_tension_analyzer"
         set top_module "dwa_ps_pl_top"
@@ -96,12 +123,7 @@ proc setup {} {
     set post_route_wns xxx
     set proj_dir $firmware_dir/vivadoProjects/$proj_name
    
-    #set fsbl_elf $proj_sources_dir/sdk/dwaFsbl/Debug/dwaFsbl.elf
-    #set lwip_elf $proj_sources_dir/sdk/lwip_ref/Release/lwip_ref.elf
-    set fsbl_elf $proj_sources_dir/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/boot/fsbl.elf
-    set lwip_elf $proj_sources_dir/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
-    set boot_bin $firmware_dir/flash/BOOT.bin
-    set hardware_loc TCP:127.0.0.1:3124
+
     puts "Target: $target"
     puts "FPGA Part: $part"
     puts "Scripts Directory:  $scriptdir"
@@ -264,9 +286,9 @@ proc postPlacePhysOpt {} {
     global proj_name
 
     puts "\n##################################################################"
-    puts "#                    Post Place Phys Opt   AlternateReplication   #"
+    puts "#                    Post Place Phys Opt   AggressiveExplore   #"
     puts "##################################################################\n"
-    phys_opt_design -directive AlternateReplication
+    phys_opt_design -directive AggressiveExplore
     report_timing_summary -file $proj_dir/${proj_name}_post_place_physopt_tim2.rpt
  
     set WNS [get_property SLACK [get_timing_paths -max_paths 1 -nworst 1 -setup]]
@@ -281,7 +303,7 @@ proc route {} {
     puts "##################################################################"
     puts ""
     # Route Design
-    route_design -directive Explore
+    route_design -directive AggressiveExplore
     report_timing_summary -file $proj_dir/${proj_name}_post_route_tim.rpt
     report_utilization -hierarchical -file $proj_dir/${proj_name}_post_route_util.rpt
     report_route_status -file $proj_dir/${proj_name}_post_route_status.rpt
@@ -306,7 +328,7 @@ proc postRoutePhysOpt {} {
     puts "#                    Post Route Phys Opt    AggressiveExplore                #"
     puts "##################################################################\n"
     phys_opt_design -directive AggressiveExplore
-    report_timing_summary -file $proj_dir/${proj_name}_post_place_physopt_tim1.rpt
+    report_timing_summary -file $proj_dir/${proj_name}_post_route_physopt_tim1.rpt
 
  
     #phys_opt_design -directive AddRetime
@@ -347,17 +369,17 @@ proc bitgen {} {
 }
 
 proc progFlash {} {
-    setup
+    puts "\n##################################################################"
+    puts "#                   program flash                           #"
+    puts "##################################################################\n"
+
     global fsbl_elf
     global boot_bin
     global hardware_loc
     global scriptdir
 
-    puts "\n##################################################################"
-    puts "#                   program flash                           #"
-    puts "##################################################################\n"
-
-    source $scriptdir/implementation/progFlash.tcl
+    setupEnv
+    source $scriptdir/implementation/progFlashV2.tcl
 }
 
 proc writeGdrive {} {

@@ -112,6 +112,7 @@ begin
 					               -- fake old MAC address
 					toDaqReg.serNum <= x"97da03"; --use for default
 					--toDaqReg.serNum <= x"97da00"; --use for NW
+					
 					deviceAddr      <= "1010000"; --after we are here once switch device address to memory;
 					snDone          <= '1';       -- do it once
 				else

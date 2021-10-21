@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Fri Jun 18 15:16:52 2021
+-- Last update : Thu Oct 21 17:34:07 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ entity headerGenerator is
         fromDaqReg : in  fromDaqRegType;
         toDaqReg   : out toDaqRegType;
 
-        pButton : in  std_logic_vector(3 downto 0);
+        pButton : in std_logic_vector(3 downto 0);
 
         ---------------------------
         -- this will come from PS
@@ -50,10 +50,12 @@ entity headerGenerator is
         sendRunHdr  : in boolean;
         sendAdcData : in boolean;
 
-        pktBuildBusy : out boolean;
-        freqScanBusy : in  boolean;
+        pktBuildBusy  : out boolean;
+        freqScanBusy  : in  boolean;
+        acStim_enable : in  std_logic := '0';
 
-        stimPeriodActive  : in unsigned(23 downto 0); -- current period (10ns)
+
+        stimPeriodActive  : in unsigned(30 downto 0); -- current period (10ns)
         stimPeriodCounter : in unsigned(23 downto 0); -- track how many freqs
                                                       -- have been done in
                                                       -- this run.   FIXME: bits???
@@ -64,7 +66,7 @@ entity headerGenerator is
         adcDataRen : out std_logic_vector(7 downto 0) := (others => '0');
         adcData    : in  slv_vector_type(7 downto 0)(31 downto 0);
 
-        dwaClk100 : in  std_logic -- := '0'
+        dwaClk100 : in std_logic -- := '0'
     );
 
 end entity headerGenerator;
@@ -101,13 +103,13 @@ architecture rtl of headerGenerator is
 
     ----------------------------
     ---- Setup for Header C
-    constant nHeadC      : integer                                         := 8; -- # of header words (incl. 2 delimiters)
+    constant nHeadC      : integer                                         := 9; -- # of header words (incl. 2 delimiters)
     constant nHeadCLog   : integer                                         := integer(log2(real(nHeadC +1)));
     signal headCDataList : slv_vector_type(nHeadC-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
     ----------------------------
     ---- Setup for Header E
-    constant nHeadE      : integer                                         := 5; -- # of header words (incl. 2 delimiters)
+    constant nHeadE      : integer                                         := 6; -- # of header words (incl. 2 delimiters)
     constant nHeadElog   : integer                                         := integer(log2(real(nHeadE +1)));
     signal headEDataList : slv_vector_type(nHeadE-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
@@ -124,9 +126,22 @@ architecture rtl of headerGenerator is
     signal watchdogSleep    : boolean               := false;
     signal watchdogTimerCnt : unsigned(31 downto 0) := (others => '0');
 
-    signal sendStatus     : boolean               := false;
-    signal statusBusy     : boolean               := false;
-    signal statusTimerCnt : unsigned(31 downto 0) := (others => '0');
+    type statusData_type is record
+        errors  : std_logic_vector(23 downto 0);
+        pButton : std_logic_vector(3 downto 0);
+        tState  : boolean;
+    end record;
+
+    signal statusDataSticky,statusDataLatch : statusData_type := (
+            errors  => (others => '0'),
+            pButton => (others => '0'),
+            tState  => false);
+    signal sendStatus                 : boolean := false;
+    signal statusBusy, statusBusy_del : boolean := false;
+    signal statusTimeout              : boolean := false;
+    signal statusTrigLatch            : std_logic_vector(3 downto 0);
+    signal statusTimerCnt             : unsigned(31 downto 0) := (others => '0');
+    signal acStim_enable_del          : std_logic             := '0';
 
     signal adcRegNum         : unsigned(3 downto 0)  := (others => '0');
     signal adcSamplesPerFreq : unsigned(39 downto 0) := (others => '0');
@@ -135,8 +150,11 @@ architecture rtl of headerGenerator is
     signal udpCnt_next : unsigned(15 downto 0) := (others => '0');
     signal udpPktCnt   : unsigned(15 downto 0) := (others => '0');
 
-    signal stimPeriodActive_reg  : unsigned(23 downto 0) := (others => '0');
+    signal stimPeriodActive_reg  : unsigned(30 downto 0) := (others => '0');
     signal adcSamplingPeriod_reg : unsigned(23 downto 0) := (others => '0');
+
+    signal sendRunHdrLatch,sendRunHdrClear    : boolean := false;
+    signal sendAdcDataLatch, sendAdcDataClear : boolean := false;
 
 begin
 
@@ -219,8 +237,9 @@ begin
             x"40" & std_logic_vector(stimPeriodCounter),
             --FIXME: the following product can overflow...
             x"41" & std_logic_vector(adcSamplesPerFreq(23 downto 0)),
-            x"42" & std_logic_vector(stimPeriodActive_reg),
             x"43" & std_logic_vector(adcSamplingPeriod_reg),
+            x"52" & x"00" & "0" & std_logic_vector(stimPeriodActive_reg(30 downto 16)),
+            x"53" & x"00" & std_logic_vector(stimPeriodActive_reg(15 downto 0)),
             x"CCCCCCCC",
             x"DDDD" & x"5151" -- FIXME: this shoould be in the genDFrame_s...
     );
@@ -228,10 +247,10 @@ begin
     --STATUS Header
     headEDataList <= ( -- Status frame
             x"EEEE" & std_logic_vector(to_unsigned(nHeadE-2, 16)),
-            --x"61" & x"0000" & x"55",
+            x"61" & x"00000" & statusTrigLatch,
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
-            x"63" & std_logic_vector(fromDaqReg.errors),
-            x"64" & x"00000" & pButton,
+            x"63" & statusDataSticky.errors,
+            x"64" & x"00000" & statusDataSticky.pButton,
             x"EEEEEEEE"
     );
 
@@ -257,7 +276,6 @@ begin
                 udpCnt_reg     <= (others => '0');
                 adcIdx         <= 7;
                 rqstType       <= RQST_NULL;
-
             else
                 state_reg      <= state_next;
                 headCnt_reg    <= headCnt_next;
@@ -268,6 +286,10 @@ begin
                 pktBuildBusy   <= state_reg /= idle_s;
 
             end if;
+            
+            -- with the status packet being pushed we need to latch the other requests so they are not missed
+            sendRunHdrLatch  <= (sendRunHdr or sendRunHdrLatch) and not sendRunHdrClear;
+            sendAdcDataLatch <= (sendAdcData or sendAdcDataLatch) and not sendAdcDataClear;
         end if;
     end process state_seq;
 
@@ -276,32 +298,36 @@ begin
     process (all)
     begin
         -- set defaults
-        state_next      <= state_reg;
-        udpDataRdy_next <= udpDataRdy_reg;
-        rqstType_next   <= rqstType;
-        headCnt_next    <= headCnt_reg;
-        udpCnt_next     <= udpCnt_reg;
-        adcIdx_next     <= adcIdx;
-        adcDataRen      <= (others => '0');
-        statusBusy      <= false;
-        watchdogSleep   <= false;
+        state_next       <= state_reg;
+        udpDataRdy_next  <= udpDataRdy_reg;
+        rqstType_next    <= rqstType;
+        headCnt_next     <= headCnt_reg;
+        udpCnt_next      <= udpCnt_reg;
+        adcIdx_next      <= adcIdx;
+        adcDataRen       <= (others => '0');
+        statusBusy       <= false;
+        watchdogSleep    <= false;
+        sendRunHdrClear  <= false;
+        sendAdcDataClear <= false;
         case (state_reg) is
 
             when idle_s =>
                 watchdogSleep   <= true;
                 udpDataRdy_next <= false;
-                if sendRunHdr then
+                if sendRunHdrLatch then
+                    sendRunHdrClear <= true;
                     udpDataRdy_next <= true;
                     state_next      <= genAFrame_s;
                     headCnt_next    <= to_unsigned(nHeadA-1, headCnt_next'length);
                     rqstType_next   <= RQST_RUN;
                     --registerId      <= REG_RUN;
 
-                elsif sendAdcData then
-                    udpDataRdy_next <= true;
-                    state_next      <= genAFrame_s;
-                    headCnt_next    <= to_unsigned(nHeadA-1, headCnt_next'length);
-                    rqstType_next   <= RQST_ADC;
+                elsif sendAdcDataLatch then
+                    sendAdcDataClear <= true;
+                    udpDataRdy_next  <= true;
+                    state_next       <= genAFrame_s;
+                    headCnt_next     <= to_unsigned(nHeadA-1, headCnt_next'length);
+                    rqstType_next    <= RQST_ADC;
                     --registerId      <= std_logic_vector(to_unsigned(adcIdx, registerId'length));
 
                 elsif sendStatus then
@@ -428,19 +454,56 @@ begin
 
         end case;
     end process;
+
     statusTiming : process (dwaClk100) -- latch the packet data validated by the sendData strobe
+
+        variable statusErrorsTrig  : boolean := false;
+        variable statusPButtonTrig : boolean := false;
+        variable statusTStateTrig  : boolean := false;
+        variable statusDataTrig    : boolean := false;
     begin
         if rising_edge(dwaClk100) then
-            if statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod then
-                sendStatus     <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off
+            statusBusy_del    <= statusBusy;
+            acStim_enable_del <= acStim_enable;
+            --separate the status triggr to be used in status packet.
+            -- a variable is used here so latched status will reflect trigger status and not the next cluck cycle status.
+            statusErrorsTrig  := statusDataSticky.errors /= statusDataLatch.errors;
+            statusPButtonTrig := statusDataSticky.pButton /= statusDataLatch.pButton;
+            statusTStateTrig  := (statusDataSticky.tState /= statusDataLatch.tState) or
+                (acStim_enable = '1' and acStim_enable_del = '0'); --trigger at start of test
+            statusDataTrig := statusErrorsTrig or statusTStateTrig or statusPButtonTrig;
+
+            statusTimeout <= statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod;
+
+            if (statusDataTrig or statusTimeout) and not sendStatus then -- latch data and set senStatus flag, Don't re latch on subsequent triggers, keep sticky for next pkt.
+                sendStatus      <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off
+                statusDataLatch <= statusDataSticky;
+                statusTrigLatch <= (
+                        3 => bool2sl(statusErrorsTrig),
+                        2 => bool2sl(statusPButtonTrig),
+                        1 => bool2sl(statusTStateTrig),
+                        0 => bool2sl(statusTimeout)
+                );
+                statusDataSticky.errors  <= fromDaqReg.errors;
+                statusDataSticky.pButton <= pButton;
+                statusDataSticky.tState  <= fromDaqReg.ctrlStateDbg /= x"0";
+
                 statusTimerCnt <= x"00000001";
             else
-                statusTimerCnt <= statusTimerCnt+1;
-                sendStatus     <= sendStatus and not statusBusy; --clear request
+                -- triggers are stickey so we don't miss one if busy sending a packet
+                statusDataSticky.errors  <= fromDaqReg.errors or statusDataSticky.errors;
+                statusDataSticky.pButton <= pButton or statusDataSticky.pButton;
+                statusDataSticky.tState  <= fromDaqReg.ctrlStateDbg /= x"0";
+                if not statusTimeout then -- keep from overflowing counter while we wait to send packet.
+                    statusTimerCnt <= statusTimerCnt+1;
+                end if;
+                -- latch status until statusBusy is done
+                sendStatus <= sendStatus and (not statusBusy_del or statusBusy); --clear request
             end if;
 
         end if;
     end process;
+
 
     watchdogTiming : process (dwaClk100) -- latch the packet data validated by the sendData strobe
     begin
