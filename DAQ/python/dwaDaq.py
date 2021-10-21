@@ -124,10 +124,12 @@ from SietchConnect import SietchConnect
 
 sys.path.append('./mappings')
 sys.path.append('./database')
+sys.path.append('./fitter')
 import config_generator
 import channel_map
 import channel_frequencies
 import database_functions
+import resonance_fitter
 
 DWA_DAQ_VERSION = "X.X.X"
 #
@@ -3450,6 +3452,8 @@ class MainWindow(qtw.QMainWindow):
 
             # update the label:
             peakFreqs = [ self.ampData[reg]['freq'][id] for id in peakIds ]
+            for peakFreq in peakFreqs:
+                print(peakFreq, resonance_fitter.get_r2(self.ampData[reg]['freq'], self.ampData[reg]['ampl'], peakFreq))
 
             # Store the resonant *frequencies* and then update the GUI based on that
             self.resonantFreqs[reg.value] = peakFreqs[:]
