@@ -801,9 +801,8 @@ class MainWindow(qtw.QMainWindow):
     def initPlottingUpdater(self):
         self.plottingTimer = qtc.QTimer()
         self.plottingTimer.timeout.connect(self.updatePlots)
-        self.plottingTimer.setInterval(PLOT_UPDATE_TIME_SEC*1000) # millseconds
+        self.plottingTimer.setInterval(int(PLOT_UPDATE_TIME_SEC*1000)) # millseconds
         self.plottingTimer.start()
-        #self.plottingTimer.start(PLOT_UPDATE_TIME_SEC*1000) # millseconds
         
     def _initTimeseriesData(self):
         self.adcData = {}
@@ -1884,7 +1883,44 @@ class MainWindow(qtw.QMainWindow):
         self._scanButtonEnable(force=True)
         print("startScanThread complete!")
 
+    def startNextScanIfRequested(self):
+        print("Checking if next scan should start automatically...")
+        runAllScans = self.scanCtrlRunAll.isChecked()
+        if not runAllScans:
+            print('"Run all scans" box is not checked... no more scans to run')
+            return
+        #buttonStatus = [btn.isChecked() for btn in self.radioBtns]
+        #print(f'buttonStatus = {buttonStatus}')
+        #print(f'self.radioBtns[-1].isChecked() = {self.radioBtns[-1].isChecked()}')
+        if self.autoScansRemain:
+            self.autoScansRemain = not self.radioBtns[-1].isChecked()
+            self.startScanThread()
+        else:
+            print("final scan has completed...")
+
     @pyqtSlot()
+    def startScanThreadHandler(self):
+        # Launch either one scan or all scans
+        self.autoScansRemain = not self.radioBtns[-1].isChecked()
+        self.startScanThread()
+        ## Get the checkbox status (one or all scans):
+        #runAllScans = self.scanCtrlRunAll.isChecked()
+        #print(f"runAllScans = {runAllScans}")
+        #if not runAllScans:
+        #    self.startScanThread()
+        #
+        #else:
+        #    print("not yet implemented")
+        #    # Get a list of scans to run
+        #    print(self.radioBtns)
+        #    nScans = len(self.radioBtns)
+        #    scansToRun = list(range(nScans))
+        #    for iscan in scansToRun:
+        #        print(f'activating radio button {iscan}')
+        #        self.radioBtns[iscan].setChecked(True)
+        #        self.startScanThread()
+
+            
     def startScanThread(self):
         print("User has requested a new AUTO scan (DWA is IDLE)")
         self.scanType = ScanType.AUTO
@@ -1964,6 +2000,7 @@ class MainWindow(qtw.QMainWindow):
         print("disableRelaysThreadComplete")
         self._setScanButtonAction('START')
         self._scanButtonEnable(force=True)
+        self.startNextScanIfRequested()
 
     def disableRelaysThreadStarting(self):
         self.btnScanCtrl.setStyleSheet("background-color : orange")
@@ -3506,7 +3543,7 @@ class MainWindow(qtw.QMainWindow):
             for scb in self.scanCtrlButtons:
                 scb.setStyleSheet("background-color : rgb(3,205,0)")#this makes it so buton/row color are the same
                 if scb == self.btnScanCtrl:
-                    scb.setText("Start next scan")
+                    scb.setText("Start selected scan")
                 else:
                     scb.setText("Start scan")
         elif state == 'ABORT':
@@ -3530,7 +3567,8 @@ class MainWindow(qtw.QMainWindow):
             pass
         
         if state == 'START':
-            self.btnScanCtrl.clicked.connect(self.startScanThread)
+            #self.btnScanCtrl.clicked.connect(self.startScanThread)
+            self.btnScanCtrl.clicked.connect(self.startScanThreadHandler)
             self.btnScanCtrlAdv.clicked.connect(self.startScanAdvThread)
         elif state == 'ABORT':
             self.btnScanCtrl.clicked.connect(self.abortScan)
