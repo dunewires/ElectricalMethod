@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1313</width>
-    <height>1071</height>
+    <height>1112</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -303,171 +303,12 @@
               </attribute>
               <layout class="QHBoxLayout" name="horizontalLayout_6">
                <item>
-                <layout class="QFormLayout" name="formLayout">
-                 <property name="fieldGrowthPolicy">
-                  <enum>QFormLayout::ExpandingFieldsGrow</enum>
-                 </property>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="stage_label">
-                   <property name="text">
-                    <string>Stage</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QComboBox" name="configStageComboBox">
-                   <property name="minimumSize">
-                    <size>
-                     <width>250</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>250</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="0">
-                  <widget class="QLabel" name="measure_by_label">
-                   <property name="text">
-                    <string>Measured By</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="1">
-                  <widget class="QLineEdit" name="measuredByLineEdit">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>250</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>250</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="0">
-                  <widget class="QLabel" name="apaId_label">
-                   <property name="text">
-                    <string>APA UUID</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="QLineEdit" name="configApaUuidLineEdit">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>250</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>250</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="focusPolicy">
-                    <enum>Qt::StrongFocus</enum>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="4" column="0">
-                  <widget class="QLabel" name="layer_label">
-                   <property name="text">
-                    <string>Layer</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="4" column="1">
-                  <widget class="QComboBox" name="configLayerComboBox">
-                   <property name="minimumSize">
-                    <size>
-                     <width>60</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>40</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="5" column="0">
-                  <widget class="QLabel" name="apaSide">
-                   <property name="text">
-                    <string>Side</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="5" column="1">
-                  <widget class="QComboBox" name="SideComboBox">
-                   <property name="minimumSize">
-                    <size>
-                     <width>60</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>40</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string>A</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>B</string>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
-                 <item row="10" column="0">
-                  <widget class="QLabel" name="scanTypeLabel">
-                   <property name="text">
-                    <string>Scan type</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="10" column="1">
-                  <widget class="QWidget" name="widget_7" native="true">
-                   <layout class="QHBoxLayout" name="horizontalLayout_16">
-                    <property name="leftMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>0</number>
+                <widget class="QWidget" name="widget_2" native="true">
+                 <layout class="QVBoxLayout" name="verticalLayout_19">
+                  <item>
+                   <layout class="QFormLayout" name="formLayout">
+                    <property name="fieldGrowthPolicy">
+                     <enum>QFormLayout::ExpandingFieldsGrow</enum>
                     </property>
                     <item row="1" column="0">
                      <widget class="QLabel" name="stage_label">
@@ -609,37 +450,14 @@
                       </item>
                      </widget>
                     </item>
-                    <item row="6" column="0">
-                     <widget class="QLabel" name="orientationLabel">
-                      <property name="text">
-                       <string>Orientation</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="6" column="1">
-                     <widget class="QComboBox" name="configOrientationComboBox">
-                      <property name="minimumSize">
-                       <size>
-                        <width>120</width>
-                        <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>120</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="11" column="0">
+                    <item row="10" column="0">
                      <widget class="QLabel" name="scanTypeLabel">
                       <property name="text">
                        <string>Scan type</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="11" column="1">
+                    <item row="10" column="1">
                      <widget class="QWidget" name="widget_7" native="true">
                       <layout class="QHBoxLayout" name="horizontalLayout_16">
                        <property name="leftMargin">
@@ -753,7 +571,7 @@
                       </layout>
                      </widget>
                     </item>
-                    <item row="12" column="1">
+                    <item row="11" column="1">
                      <widget class="QPushButton" name="btnConfigureScans">
                       <property name="minimumSize">
                        <size>
@@ -818,98 +636,16 @@
                      </layout>
                     </item>
                    </layout>
-                  </widget>
-                 </item>
-                 <item row="11" column="1">
-                  <widget class="QPushButton" name="btnConfigureScans">
-                   <property name="minimumSize">
-                    <size>
-                     <width>250</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>250</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>Configure Scan List</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="12" column="0">
-                  <widget class="QLabel" name="scanList_label">
-                   <property name="text">
-                    <string>Scans</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="12" column="1">
-                  <widget class="QTableWidget" name="scanTable">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>400</height>
-                    </size>
-                   </property>
-                   <column>
-                    <property name="text">
-                     <string>Select</string>
+                  </item>
+                  <item>
+                   <widget class="QTableWidget" name="scanTable">
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>400</height>
+                     </size>
                     </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Scan #</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Wires</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Freq Min (Hz)</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Freq Max (Hz)</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Step Size (Hz)</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string/>
-                    </property>
-                   </column>
-                  </widget>
-                 </item>
-                 <item row="13" column="1">
-                  <layout class="QVBoxLayout" name="verticalLayout_2">
-                   <property name="leftMargin">
-                    <number>6</number>
-                   </property>
-                   <item>
-                    <widget class="QLabel" name="connectLabel">
-                     <property name="minimumSize">
-                      <size>
-                       <width>250</width>
-                       <height>0</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>250</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
+                    <column>
                      <property name="text">
                       <string>Select</string>
                      </property>
@@ -943,18 +679,25 @@
                      <property name="text">
                       <string/>
                      </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </item>
-                 <item row="14" column="1">
-                  <widget class="QPushButton" name="btnScanCtrl">
-                   <property name="text">
-                    <string>Start next scan</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                    </column>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btnScanCtrl">
+                    <property name="text">
+                     <string>Start next scan</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="scanCtrlRunAll">
+                    <property name="text">
+                     <string>Automate scanning</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
                </item>
                <item>
                 <spacer name="verticalSpacer">
@@ -1965,7 +1708,7 @@
      <x>0</x>
      <y>0</y>
      <width>1313</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -2027,8 +1770,6 @@
   <tabstop>configRadioSingle</tabstop>
   <tabstop>spinBox</tabstop>
   <tabstop>btnConfigureScans</tabstop>
-  <tabstop>scanTable</tabstop>
-  <tabstop>btnScanCtrl</tabstop>
   <tabstop>graphicsView</tabstop>
   <tabstop>configFileName</tabstop>
   <tabstop>omitComments_cb</tabstop>

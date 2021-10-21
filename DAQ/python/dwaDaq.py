@@ -262,8 +262,8 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-#TAB_ACTIVE_MAIN = MainView.STIMULUS
-TAB_ACTIVE_MAIN = MainView.RESONANCE
+TAB_ACTIVE_MAIN = MainView.STIMULUS
+#TAB_ACTIVE_MAIN = MainView.RESONANCE
 #TAB_ACTIVE_MAIN = MainView.TENSION
 #TAB_ACTIVE_MAIN = MainView.EVTVWR
 TAB_ACTIVE_STIM = StimView.CONFIG
@@ -3414,10 +3414,14 @@ class MainWindow(qtw.QMainWindow):
                             btnNum = i
                     for c in range(0, self.scanTable.columnCount()):
                         self.scanTable.item(btnNum,c).setBackground(qtg.QColor(3,205,0))
-                        if len(self.radioBtns)>(btnNum+1):
-                            nextBtn = btnNum+1
-                        else: 
-                            nextBtn = len(self.radioBtns)
+                    # select the next row
+                    nextBtn = btnNum + 1
+                    if nextBtn > (len(self.radioBtns)-1):
+                        nextBtn = len(self.radioBtns)-1
+                    #if len(self.radioBtns)>(btnNum+1):
+                    #    nextBtn = btnNum+1
+                    #else: 
+                    #    nextBtn = len(self.radioBtns)-1
                     item = qtw.QRadioButton(self.scanTable)
                     self.scanTable.setCellWidget(nextBtn, 0, item)
                     item.setChecked(True)
