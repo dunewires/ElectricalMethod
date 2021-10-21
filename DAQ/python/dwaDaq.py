@@ -3885,7 +3885,10 @@ class MainWindow(qtw.QMainWindow):
                                           polyDeg=self.resFitParams['find_peaks']['bkgPoly'])
             elif self.resFitParams['find_peaks']['bkgPoly'] < 0:
                 polyval = -1*int(self.resFitParams['find_peaks']['bkgPoly'])
-                dataToFit -= savgol_filter(dataToFit, 51, polyval)
+                savgolWindow = 101
+                if savgolWindow > len(dataToFit):
+                    savgolWindow = (int(len(dataToFit)/20)*2)+1
+                dataToFit -= savgol_filter(dataToFit, savgolWindow, polyval)
                 #print("RC background fit requested (not yet implemented)")
 
             # plot fxn that is used for peakfinding
