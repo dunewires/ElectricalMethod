@@ -136,8 +136,8 @@ architecture rtl of headerGenerator is
             tState  => false);
     signal sendStatus                        : boolean := false;
     signal statusBusy, statusBusy_del        : boolean := false;
-    signal statusTimeout, statusTrigLatch : boolean := false;
-
+    signal statusTimeout: boolean := false;
+    signal statusTrigLatch: std_logic_vector(3 downto 0);
     signal statusTimerCnt : unsigned(31 downto 0) := (others => '0');
 
     signal adcRegNum         : unsigned(3 downto 0)  := (others => '0');
@@ -241,7 +241,7 @@ begin
     --STATUS Header
     headEDataList <= ( -- Status frame
             x"EEEE" & std_logic_vector(to_unsigned(nHeadE-2, 16)),
-            x"61" & x"00000" & "000" & std_logic_vector(statusTrigLatch),
+            x"61" & x"00000" & statusTrigLatch,
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
             x"63" & statusDataSticky.errors,
             x"64" & x"00000" & statusDataSticky.pButton,
@@ -470,7 +470,6 @@ begin
                         1 => bool2sl(statusTStateTrig),
                         0 => bool2sl(statusTimeout)
                 );
-                statusTrigLatch       <= not statusDataTrig; -- if not data triggered signal it was timeout triggered, timeout is not priority
                 statusDataSticky.errors  <= fromDaqReg.errors;
                 statusDataSticky.pButton <= pButton;
                 statusDataSticky.tState  <= fromDaqReg.ctrlStateDbg /= x"0";
