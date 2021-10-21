@@ -833,7 +833,7 @@ class MainWindow(qtw.QMainWindow):
         # Set default A(f) peak detection parameters
         self.resFitParams = {}
         self.resFitParams['preprocess'] = {'detrend':True}  # detrend: subtract a line from A(f) before processing?
-        self.resFitParams['find_peaks'] = {'bkgPoly':2, 'width':5, 'prominence':4}
+        self.resFitParams['find_peaks'] = {'bkgPoly':-3, 'width':10, 'prominence':2}
         # FIXME: replace this with a Model/View approach
         self.resFitPreDetrend.blockSignals(True)
         self.resFitPreDetrend.setChecked(self.resFitParams['preprocess']['detrend'])
