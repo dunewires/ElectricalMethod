@@ -61,8 +61,10 @@ vcom -64 -93 -work xil_defaultlib  \
 
 vcom -64 -2008 -work duneDwa  \
 "../source/packages/global_def.vhd" \
+"../source/packages/trigPhaseCorr.vhd" \
 "../source/hdl/bandPassClkGen.vhd" \
 "../source/hdl/dacInterface.vhd" \
+"../source/hdl/triggerMains.vhd" \
 "../source/hdl/dpotInterface.vhd" \
 "../source/hdl/serialPromInterface.vhd" \
 "../source/hdl/wireRelayInterface.vhd" \

@@ -1005,7 +1005,7 @@ begin
 			when b"110011" => --controller state reg 51
 				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.ctrlStateDbg);
 			when b"110100" => --serror bits reg 52
-				reg_data_out <= x"00" & std_logic_vector(toDaqReg.errors);
+				reg_data_out <= x"00" & toDaqReg.errors;
 			when b"110101" => --reg 53
 				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.statusPeriod);
 			when b"110110" => --reg 54

@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Aug 12 14:05:18 2021
+-- Last update : Wed Sep 22 14:03:31 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -36,16 +36,13 @@ entity wtaController is
 		freqSet       : out unsigned(23 downto 0) := (others => '1');
 		acStim_enable : out std_logic             := '0';
 
-		noiseReadoutBusy  : out boolean := false;
-		noiseFirstReadout : out boolean := false;
-		noiseResetBusy    : in  boolean := false;
+		noiseReadoutBusy : out boolean := false;
 
 		sendRunHdr  : out boolean := false;
 		sendAdcData : out boolean := false;
 
 		pktBuildBusy : in  boolean;
 		freqScanBusy : out boolean;
-
 
 		adcAutoDc_af : in std_logic_vector(7 downto 0) := (others => '0');
 
@@ -72,15 +69,15 @@ begin
 	ctrlState_seq : process (dwaClk100)
 	begin
 		if rising_edge(dwaClk100) then
-			scanAbort         <= (scanAbort or fromDaqReg.scanAbort) and freqScanBusy;
-			scanDone          <= (freqSet >= fromDaqReg.noiseFreqMax) when noiseReadoutBusy else (freqSet >= fromDaqReg.stimFreqMax);
+			scanAbort <= (scanAbort or fromDaqReg.scanAbort) and freqScanBusy;
+			--the noise scan will 
+			scanDone          <= (freqSet >= fromDaqReg.noiseFreqMax) when noiseReadoutBusy else (freqSet >= (fromDaqReg.stimFreqMax + fromDaqReg.noiseFreqStep));
 			toDaqReg.ctrlBusy <= true;
 			ctrlStart_del     <= fromDaqReg.ctrlStart;
 			adcBusy_del       <= adcBusy;
 			adcStart          <= false;
 			sendRunHdr        <= false;
 			sendAdcData       <= false;
-			noiseFirstReadout <= noiseReadoutCnt = x"1";
 			pktBuildBusy_del  <= pktBuildBusy;
 			--generate pulse when we finish a task
 			pktBuildDone <= not pktBuildBusy and pktBuildBusy_del;
@@ -109,9 +106,8 @@ begin
 								freqSet   <= fromDaqReg.stimFreqMin;
 								ctrlState <= stimEnable_s;
 							else
-								noiseReadoutBusy <= true; -- only count 
-								freqSet          <= fromDaqReg.noiseFreqMin;
-								ctrlState        <= noisePrep_s;
+								freqSet   <= fromDaqReg.noiseFreqMin;
+								ctrlState <= noisePrep_s;
 							end if;
 						end if;
 
@@ -122,33 +118,36 @@ begin
 							timerCnt         <= x"00000000";
 							ctrlState        <= freqScanFinish_s;
 						else
-							--wait a bit for the division to update and BPF to respond to the new setting
+							noiseReadoutBusy <= true; -- tell the mainsNoiseCorrection that we care collecting noise samples
+							                          --wait a bit for the division to update and BPF to respond to the new setting
 							if timerCnt(31 downto 8) <= fromDaqReg.noiseBPFSetTime then
-								timerCnt <= timerCnt +1;  -- only count 
-							                              -- check FIFOs are not almost full
-							elsif not noiseResetBusy then -- wait for the noise memory to be reset
+								timerCnt <= timerCnt +1; -- only count 
+							                             -- check FIFOs are not almost full
+							else
 								adcStart  <= true;
 								timerCnt  <= x"00000000";
 								ctrlState <= noiseReadout_s;
 							end if;
 						end if;
 
-					when noiseReadout_s => --wait a bit for the division to update and check FIFOs are not almost full
-						                   -- wait for falling edge of adcBusy;
-						if adcBusy = '0' and adcBusy_del = '1' then
-							if scanDone then
-								if noiseReadoutCnt = x"8" then --we are done with the noise
-									freqSet          <= fromDaqReg.stimFreqMin;
-									noiseReadoutBusy <= false;
-									ctrlState        <= stimEnable_s; -- start stimulus 
-								else                                  -- accumulate more noise samples to average 
-									freqSet         <= fromDaqReg.noiseFreqMin;
-									noiseReadoutCnt <= noiseReadoutCnt +1;
-									ctrlState       <= noisePrep_s;
+					when noiseReadout_s =>
+						if adcBusy = '0' and adcBusy_del = '1' then -- wait for falling edge of adcBusy;
+							if noiseReadoutCnt < x"8" then
+								-- for each frequency, sample noise 8 times
+								-- As soon as the ADC is finished with a series of samples
+								-- adcStart will initiate the trigger on mains frequency
+								adcStart        <= true;
+								noiseReadoutCnt <= noiseReadoutCnt +1;
+							else                           -- we are done averaging samples for the current freq
+								noiseReadoutBusy <= false; -- tell the mainsNoise Correction we are finished collecting noise samples for current frequency
+								noiseReadoutCnt  <= x"1";
+								if not scanDone then                               -- we have collected all samples in range +1
+									freqSet   <= freqSet+fromDaqReg.noiseFreqStep; -- on to the next frequency's noise samples
+									ctrlState <= noisePrep_s;
+								else
+									freqSet   <= fromDaqReg.stimFreqMin;
+									ctrlState <= stimEnable_s; -- start stimulus 
 								end if;
-							else
-								freqSet   <= freqSet+fromDaqReg.noiseFreqStep;
-								ctrlState <= noisePrep_s;
 							end if;
 						end if;
 

@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Aug 12 16:47:49 2021
+-- Last update : Thu Oct  7 17:26:26 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -31,8 +31,10 @@ package global_def is
 
 
     type SLV_VECTOR_TYPE is array (natural range <>) of std_logic_vector;
+    type SLV_VEC_OF_VEC_TYPE is array (natural range <>) of SLV_VECTOR_TYPE;
     type UNSIGNED_VECTOR_TYPE is array (natural range <>) of unsigned;
     type SIGNED_VECTOR_TYPE is array (natural range <>) of signed;
+    type SIGNED_VEC_OF_VEC_TYPE is array (natural range <>) of SIGNED_VECTOR_TYPE;
     type INTEGER_VECTOR_TYPE is array (natural range <>) of integer;
 
     type toDaqRegType is record
@@ -51,7 +53,7 @@ package global_def is
         serNumMemData    : unsigned(31 downto 0);
 
         ctrlStateDbg   : unsigned(3 downto 0);
-        errors         : unsigned(23 downto 0);
+        errors         : std_logic_vector(23 downto 0);
         pktGenStateDbg : unsigned(3 downto 0);
         pButton        : std_logic_vector(3 downto 0);
     end record; -- toDaqRegType
@@ -108,7 +110,7 @@ package global_def is
         stimTimeInitial : unsigned(23 downto 0);
 
         ctrlStateDbg         : unsigned(3 downto 0);
-        errors               : unsigned(23 downto 0);
+        errors               : std_logic_vector(23 downto 0);
         statusPeriod         : unsigned(23 downto 0);
         pktGenWatchdogPeriod : unsigned(23 downto 0);
         --- Channel mask indicating which sense channels are active (8bit)

@@ -112,7 +112,9 @@ architecture STRUCT of top_tension_analyzer is
   signal acStimX200 : std_logic := '0';
 
   signal adcCnv_nCnv             : unsigned(15 downto 0) := (others => '0');
+  signal adcSamplesPerCycleSet  : unsigned(15 downto 0) := (others => '0');
   signal adcCnv_nPeriod          : unsigned(23 downto 0) := (others => '0');
+  signal adcCnv_nPeriodNoise          : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriodAuto : unsigned(23 downto 0) := (others => '0');
 
   signal acStim_mag              : unsigned(11 downto 0) := (others => '0');
@@ -137,12 +139,10 @@ architecture STRUCT of top_tension_analyzer is
 
   signal adcBusy : std_logic := '0';
 
-  signal mainsSquare_del1, mainsSquare_del2 : std_logic := '0';
   signal mainsTrig ,adcReadoutTrig          : std_logic := '0';
 
-  signal mainsTrig_filter : unsigned(17 downto 0);
-
-  signal senseWireData     : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+    signal senseWireData     : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+    signal senseWireDataDiv2     : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0) := (others => (others => '0'));
   signal senseWireDataStrb : std_logic                                   := '0';
 
   signal senseWireMNSData     : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0) := (others => (others => '0'));
@@ -336,6 +336,7 @@ begin
 
       if mCDelayReset then
         mCDelayCount <= x"00";
+        adcSamplesPerCycleSet <= fromDaqReg.adcSamplesPerCycle;  -- Update the register to include into the multicycle delay path. Not necessary but we'll do it just for fun
       elsif mCDelayCount /= x"FF" then -- stop at 0xFF
         mCDelayCount <= mCDelayCount +1;
       end if;
@@ -344,19 +345,17 @@ begin
       --acStim_nPeriod_fp6_all  := (x"17d7840000"/ stimFreqReq);
       acStim_nPeriod_fp6_all := (x"2FAF0800000"/ stimFreqReq);
 
-      -- division using combintorial logic is not so great ... but it works with a few clock cycles
+      -- division using combintorial logic is not so great ... but it works with a few clock cycles,
+      -- consider saving resources by muxing the input of a single division, having parallel resources is unnecessary
       if mCDelayCount = x"0E" then -- latch division after 150 ns
         acStim_nPeriod_fp6 <= acStim_nPeriod_fp6_all(30 downto 0); -- only take what is needed for min 10 HZ stim freq
       elsif mCDelayCount = x"1D"then 
         acStimX200_nPeriod_fxp8 <= (acStim_nPeriod_fp6 & "00") / x"C8"; -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
+      -- for the conversion period, fp6 << 6 , 200MHz clk  to 100MHz ADC clk << 1 . ie Shift 7 bits to get nPeriod for 1 cycle 
+      -- consider setting conversion period to be fixed throughout noise range to help with the interpolation
+        adcCnv_nPeriod <= acStim_nPeriod_fp6(30 downto 7)/adcSamplesPerCycleSet; -- get period of conversions for set frequency
       end if;
 
-
-      --  let's start with a fixed conversion 
-      -- temp shift left ~8 samples per cycle
-      -- nPeriod of ADC is still 10 ns. shift additional 1 
-      -- fp1 - 1 , 200 to 100 - 1 ,8 samples per cycle -3 (5 total)
-      adcCnv_nPeriod <= "000" & acStim_nPeriod_fp6(30 downto 10);
       -- find the number of total canversions for each frequency
       adcCnv_nCnv_all := fromDaqReg.cyclesPerFreq * fromDaqReg.adcSamplesPerCycle;
       adcCnv_nCnv     <= adcCnv_nCnv_all(15 downto 0);
@@ -420,30 +419,21 @@ begin
       dwaClk2 => dwaClk2
     );
 
-  -- mains trigger noise filter
-  trigGen : process (dwaClk100)
-  begin
-    if rising_edge(dwaClk100) then
-      mainsSquare_del1 <= mainsSquare;
-      mainsSquare_del2 <= mainsSquare_del1;
-      -- not yet supported by xilinx simulation 
-      -- mainsTrig        <= '1' when mainsTrig_filter = (mainsTrig_filter'left downto 1 => '0', 0 => '1') else '0';
-      if mainsTrig_filter = "00" & x"0001" then
-        mainsTrig <= '1';
-      else
-        mainsTrig <= '0' ;
-      end if;
+-- trigger on  supply mains
+  triggerMains_inst : entity duneDwa.triggerMains
+    port map (
 
-      if mainsSquare_del2 = '0' then
-        mainsTrig_filter <= (others => '1');
-      elsif mainsTrig_filter /= (mainsTrig_filter'range => '0') then
-        mainsTrig_filter <= mainsTrig_filter-1;
-      end if;
-    end if;
-  end process;
+      mainsSquare => mainsSquare,
+      stimFreqReq =>  stimFreqReq,
+
+      mainsTrig   => mainsTrig,
+
+      dwaClk100   => dwaClk100
+
+    );
 
   -- stimulus frequency generation via DAC
-  dacInterface_inst : entity work.dacInterface
+  dacInterface_inst : entity duneDwa.dacInterface
     port map (
       acStim_mag         => fromDaqReg.stimMag,
       acStim_nPeriod_fp6 => acStim_nPeriod_fp6,
@@ -474,8 +464,6 @@ begin
       acStim_enable => ctrl_acStim_enable,
 
       noiseReadoutBusy  => noiseReadoutBusy,
-      noiseFirstReadout => noiseFirstReadout,
-      noiseResetBusy    => noiseResetBusy,
 
       sendRunHdr  => sendRunHdr,
       sendAdcData => sendAdcData,
@@ -499,7 +487,6 @@ begin
 
       adcCnv_nCnv      => adcCnv_nCnv,
       adcCnv_nPeriod   => adcCnv_nPeriod,
-      noiseReadoutBusy => noiseReadoutBusy,
 
       adcStart => adcStart,
       trigger  => adcReadoutTrig, -- temp disable untested adcReadoutTrig,
@@ -519,6 +506,17 @@ begin
       dwaClk100 => dwaClk100
     );
 
+dropLsb : process (all)
+begin
+  for adc_i in 7 downto 0 loop
+  -- ADC part is either 16 or 14 bit, 
+  -- in both cases 16 bits are used.
+  -- since we don't need the resolotion of 16 bits, we drop a bit here for conveince later
+    senseWireDataDiv2(adc_i) <= senseWireData(adc_i)(15 downto 1);
+  end loop;
+end process dropLsb;
+
+
   mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
     port map (
       fromDaqReg => fromDaqReg,
@@ -527,24 +525,21 @@ begin
       freqSet => ctrlFreqSet,
 
       noiseReadoutBusy  => noiseReadoutBusy,
-      noiseFirstReadout => noiseFirstReadout,
 
-      dataSel => noiseCorrDataSel,
-
-      resetBusy => noiseResetBusy,
       adcStart  => adcStart,
 
+      senseWireData     => senseWireDataDiv2,
       senseWireDataStrb => senseWireDataStrb,
-      senseWireData     => senseWireData,
 
-      senseWireMNSDataStrb => senseWireMNSDataStrb,
       senseWireMNSData     => senseWireMNSData,
+      senseWireMNSDataStrb => senseWireMNSDataStrb,
 
       dwaClk100 => dwaClk100
     );
 
   --for each of the 8 channels
   adcFifoGen : for adc_i in 7 downto 0 generate
+
 
     -- store data for AXI read
     fifoAdcData_ch : fifo_autoDatacollection
@@ -647,6 +642,7 @@ begin
   toDaqReg.serNum           <= toDaqReg_serialPromInterface.serNum;
   toDaqReg.serNumMemAddress <= toDaqReg_serialPromInterface.serNumMemAddress;
   toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
+  toDaqReg.errors    <= (others  => '0'); -- all unsigned errors set to 0
 
 end STRUCT;
 
