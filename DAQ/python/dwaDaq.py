@@ -199,7 +199,7 @@ DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUui
 # Recent scan list 
 SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid']
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
-N_RECENT_SCANS = 2
+N_RECENT_SCANS = 4
 
 TENSION_SPEC = 6.5 # Newtons
 TENSION_SPEC_MIN = TENSION_SPEC-1.0
@@ -260,8 +260,8 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-TAB_ACTIVE_MAIN = MainView.STIMULUS
-#TAB_ACTIVE_MAIN = MainView.RESONANCE
+#TAB_ACTIVE_MAIN = MainView.STIMULUS
+TAB_ACTIVE_MAIN = MainView.RESONANCE
 #TAB_ACTIVE_MAIN = MainView.TENSION
 #TAB_ACTIVE_MAIN = MainView.EVTVWR
 TAB_ACTIVE_STIM = StimView.CONFIG
@@ -615,6 +615,7 @@ class MainWindow(qtw.QMainWindow):
 
         # Configure/label plots
         self.apaChannels = [None]*N_DWA_CHANS
+        self.activeRegisters = []
         self._configurePlots()
         
         # make dummy data to display
@@ -657,6 +658,10 @@ class MainWindow(qtw.QMainWindow):
         self.stimFreqMax = 0
         #self.dwaControllerState = None
 
+        # For loading saved A(f) data
+        self._initResonanceFitLines()
+        self._initResonanceExpLines()
+        
         # Socket for UDP connection to FPGA    
         self.sock = None
 
@@ -822,7 +827,6 @@ class MainWindow(qtw.QMainWindow):
         self.ampData = {}  # hold amplitude vs. freq data for a scan (and metadata)
         self.resonantFreqs = {}  
         self.expectedFreqs = {}  
-        self._initResonanceFitLines()
         
         # Set default A(f) peak detection parameters
         self.resFitParams = {}
@@ -1206,6 +1210,16 @@ class MainWindow(qtw.QMainWindow):
             self.resFitLines['raw'][reg] = []
             self.resFitLines['proc'][reg] = []
             self.resFitLines['procDebug'][reg] = []
+
+    def _initResonanceExpLines(self):
+        self.resExpLines = {'raw':{},  # hold instances of InfiniteLines that indicate expected resonance positions
+                            'proc':{},  # for both raw and processed A(f) plots
+                            'procDebug':{} # for debugging
+                            }  
+        for reg in self.registers:
+            self.resExpLines['raw'][reg] = []
+            self.resExpLines['proc'][reg] = []
+            self.resExpLines['procDebug'][reg] = []
             
     def _setTabTooltips(self):
         self.tabWidgetStages.setTabToolTip(MainView.STIMULUS, Shortcut.STIMULUS.value)
@@ -2087,6 +2101,8 @@ class MainWindow(qtw.QMainWindow):
             dwaChannel = channel_map.apa_channel_to_dwa_channel(self.configLayer, apaChannel, is_flex_connection_winderlike)
             self.apaChannels[dwaChannel] = apaChannel
 
+        self.activeRegisters = [ii for ii in range(len(self.apaChannels)) if self.apaChannels[ii]]  # Which DWA channels have data?
+            
         self.wires.sort(key = int)
 
         fpgaConfig = config_generator.configure_default()
@@ -2358,7 +2374,16 @@ class MainWindow(qtw.QMainWindow):
             self.loadSavedScanData(scanFilename)
 
     def loadSavedScanData(self, filename):
-        self._loadAmpData(filename)
+        print("loadSavedScanData")
+        self._initSavedAmpDataPlots()
+        self._clearResonanceFitLines()
+        self._clearResonanceExpectedLines()
+        
+        #self.resonanceProcessedDataGLW.update()
+        #qtc.QCoreApplication.processEvents()
+        #time.sleep(3)
+        #BOBOBOBOB
+        self._loadSavedAmpData(filename)
         self.runResonanceAnalysis()
         self.labelResonanceSubmitStatus.setText("Resonances have not been submitted")
 
@@ -2988,7 +3013,15 @@ class MainWindow(qtw.QMainWindow):
         f.close()
         return data
 
-    def _loadAmpData(self, ampFilename):
+    def _initSavedAmpDataPlots(self):
+        print("_initSavedAmpDataPlots()")
+        #BOBOBOB
+        #for reg in self.registers:
+        for reg in range(N_DWA_CHANS):
+            self.curves['resRawFit'][reg].setData([])
+            self.curves['resProcFit'][reg].setData([])
+        
+    def _loadSavedAmpData(self, ampFilename):
         print(f"ampFilename = {ampFilename}")
         self.ampDataActiveLabel.setText(f'Current: {ampFilename}')
         # read in the json file
@@ -2996,12 +3029,25 @@ class MainWindow(qtw.QMainWindow):
         with open(ampFilename, "r") as fh:
             data = json.load(fh)
 
-        self.ampDataS = {}  # "S" = "Saved"
+        self.activeRegistersS = []
         for reg in self.registers:
-            self.ampDataS[reg.value] = {'freq':data[str(reg.value)]['freq'],  # stim freq in Hz
-                                        'ampl':data[str(reg.value)]['ampl'] } # amplitude in ADC counts
-            self.curves['resRawFit'][reg].setData(self.ampDataS[reg.value]['freq'],
-                                                  self.ampDataS[reg.value]['ampl'])
+            if len(data[str(reg.value)]['freq']) > 0:
+                self.activeRegistersS.append(reg.value)
+
+        print(f"Active registers for the saved data is: {self.activeRegistersS}")
+                
+        self.ampDataS = {}  # "S" = "Saved"
+        #for reg in self.registers:
+        for chan in self.activeRegistersS:
+            #self.ampDataS[reg.value] = {'freq':data[str(reg.value)]['freq'],  # stim freq in Hz
+            #                            'ampl':data[str(reg.value)]['ampl'] } # amplitude in ADC counts
+            #self.curves['resRawFit'][reg].setData(self.ampDataS[reg.value]['freq'],
+            #                                      self.ampDataS[reg.value]['ampl'])
+            self.ampDataS[chan] = {'freq':data[str(chan)]['freq'],  # stim freq in Hz
+                                        'ampl':data[str(chan)]['ampl'] } # amplitude in ADC counts
+            self.curves['resRawFit'][chan].setData(self.ampDataS[chan]['freq'],
+                                                   self.ampDataS[chan]['ampl'])
+            
 
         # Get the Metadata
         for field in DATABASE_FIELDS:
@@ -3092,7 +3138,7 @@ class MainWindow(qtw.QMainWindow):
             rawFH.write(f'{item}\n')
         rawFH.close()
 
-    def _clearResonanceFits(self):
+    def _clearResonanceFitLines(self):
         print("Clearing fit lines from the resonance plots")
 
         for reg in self.registers:
@@ -3107,6 +3153,21 @@ class MainWindow(qtw.QMainWindow):
 
         self._initResonanceFitLines()
 
+
+    def _clearResonanceExpectedLines(self):
+        print("Clearing expected resonance lines from the resonance plots")
+
+        for reg in self.registers:
+            for infLine in self.resExpLines['proc'][reg]:
+                self.resonanceProcessedPlots[reg].removeItem(infLine)
+            for infLine in self.resExpLines['raw'][reg]:
+                self.resonanceRawPlots[reg].removeItem(infLine)
+            for line in self.resExpLines['procDebug'][reg]:
+                self.resonanceProcessedPlots[reg].removeItem(line)
+
+        self._initResonanceExpLines()
+
+        
                 
     def _clearTimeseriesData(self):
         plotTypes = ['grid', 'chan']
@@ -3468,14 +3529,16 @@ class MainWindow(qtw.QMainWindow):
     
             
     def updatePlotsVGrid(self):
-        for reg in self.registers:
+        #for reg in self.registers:
+        for reg in self.activeRegisters:
             self.curves['grid'][reg].setData(self.adcData[reg]['time'],
                                              self.adcData[reg]['ADC'])
             self.curvesFit['grid'][reg].setData(self.adcData[reg]['tfit'],
                                                 self.adcData[reg]['ADCfit'])
 
     def updatePlotsVChan(self):
-        for reg in self.registers:
+        #for reg in self.registers:
+        for reg in self.activeRegisters:
             self.curves['chan'][reg].setData(self.adcData[reg]['time'],
                                              self.adcData[reg]['ADC'])
             self.curvesFit['chan'][reg].setData(self.adcData[reg]['tfit'],
@@ -3487,14 +3550,16 @@ class MainWindow(qtw.QMainWindow):
                                                self.adcData[self.chanViewMain]['ADCfit'])
 
     def updatePlotsAmpGrid(self):
-        for reg in self.registers:
+        for reg in self.activeRegisters:
+        #for reg in self.registers:
             self.curves['amplgrid'][reg].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
 
     def updatePlotsAmpChan(self):
-        for reg in self.registers:
+        for reg in self.activeRegisters:
+        #for reg in self.registers:
             self.curves['amplchan'][reg].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
         # Update the main window too
-        self.curves['amplchan']['main'].setData(self.ampData[self.chanViewMainAmpl]['freq'], self.ampData[reg]['ampl'])
+        self.curves['amplchan']['main'].setData(self.ampData[self.chanViewMainAmpl]['freq'], self.ampData[self.chanViewMainAmpl]['ampl'])
             
     def updatePlots(self, force_all=False):
 
@@ -3782,14 +3847,18 @@ class MainWindow(qtw.QMainWindow):
 
     def resFreqRunFit(self):
         
-        for reg in self.registers:
-            #print(f'reg       = {reg}')
-            #print(f'reg.value = {reg.value}')
-            chan = reg.value
+        #for reg in self.registers:
+        for chan in self.activeRegistersS:
+            ##print(f'reg       = {reg}')
+            ##print(f'reg.value = {reg.value}')
+            #chan = reg.value
+            reg = chan
+            # FIXME: defunct...
             if len(self.ampDataS[reg]['freq']) == 0:  # maybe a register has no data?
                 continue
             #peakIds, _ = find_peaks(np.cumsum(self.ampDataS[reg]['ampl']))
-            apaChan = self.ampDataS['apaChannels'][reg.value]
+            #apaChan = self.ampDataS['apaChannels'][reg.value]
+            apaChan = self.ampDataS['apaChannels'][chan]
             if not apaChan: continue
             wires, expectedFreqs = channel_frequencies.get_expected_resonances(self.ampDataS["layer"], apaChan, thresh = 250.)
             expectedFreqs = [f for sublist in expectedFreqs for f in sublist]
@@ -3840,8 +3909,10 @@ class MainWindow(qtw.QMainWindow):
             peakFreqs = [ self.ampDataS[reg]['freq'][id] for id in peakIds ]
 
             # Store the resonant *frequencies* and then update the GUI based on that
-            self.resonantFreqs[reg.value] = peakFreqs[:]
-            self.expectedFreqs[reg.value] = expectedFreqs[:]
+            #self.resonantFreqs[reg.value] = peakFreqs[:]
+            #self.expectedFreqs[reg.value] = expectedFreqs[:]
+            self.resonantFreqs[chan] = peakFreqs[:]
+            self.expectedFreqs[chan] = expectedFreqs[:]
 
         # Keep track of the fitted resonances, as determined by the peak-finding algorithm
         # Used only for outputting to resonanceData.json
@@ -3862,7 +3933,8 @@ class MainWindow(qtw.QMainWindow):
         """
 
         # Remove any existing InfiniteLines from A(f) plots and reset dict
-        self._clearResonanceFits()
+        self._clearResonanceFitLines()
+        self._clearResonanceExpectedLines()
                 
         # FIXME: move pen definition to __init__ (self.f0pen)
         f0Pen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
@@ -3870,8 +3942,10 @@ class MainWindow(qtw.QMainWindow):
 
         debug = False
         
-        for reg in self.registers:
-            chan = reg.value
+        #for reg in self.registers:
+        for chan in self.activeRegistersS:
+            #chan = reg.value
+            reg = chan
             #print(f'in update: {chan}: {self.resonantFreqs[chan]}')
             labelStr = ', '.join([f'{ff:.3f}' for ff in self.resonantFreqs[chan]])
             getattr(self, f'le_resfreq_val_{reg}').setText(labelStr)
@@ -3882,7 +3956,7 @@ class MainWindow(qtw.QMainWindow):
             expectedFreqRounded = np.array([round(f,2) for f in self.expectedFreqs[chan]])
             expectedFreqRounded = np.unique(expectedFreqRounded)
             for ii, ff in enumerate(expectedFreqRounded):
-                self.resFitLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=False, pen=f1Pen) )
+                self.resExpLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=False, pen=f1Pen) )
 
             # Create/display new InfiniteLine instance for each resonant freq
             for ii, ff in enumerate(self.resonantFreqs[chan]):
