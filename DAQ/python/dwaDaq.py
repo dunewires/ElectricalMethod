@@ -975,13 +975,13 @@ class MainWindow(qtw.QMainWindow):
         self.connectLabel.setText("DWA is not connected")
         self.configureLabel.setStyleSheet("color : red")
         self.configureLabel.setText("Please configure a scan")
-        self.IDLELabel.setStyleSheet("color : red")
-        try:
-            self.connectedToUzed
-        except AttributeError:
-            self.IDLELabel.setText("DWA state --")
-        else:
-            self.IDLELabel.setText("DWA state: "+str(self.dwaControllerState))
+        #self.IDLELabel.setStyleSheet("color : red")
+        #try:
+        #    self.connectedToUzed
+        #except AttributeError:
+        #    self.IDLELabel.setText("DWA state --")
+        #else:
+        #    self.IDLELabel.setText("DWA state: "+str(self.dwaControllerState))
         self.configure = ""
         self.connectedToUzed = ""
         self.idle = False # FIXME: need this?
@@ -3442,7 +3442,7 @@ class MainWindow(qtw.QMainWindow):
             self.dwaControllerState_val.setText(f"{udpDict[ddp.Frame.STATUS]['controllerStateStr']}")
             self.idle = False # KLUGE: we may not get status frames for all states...
             if udpDict[ddp.Frame.STATUS]['controllerStateStr'] == "IDLE":
-                self.IDLELabel.setText("")
+                #self.IDLELabel.setText("")
                 self.idle = True
                 #self._scanButtonEnable()
 
