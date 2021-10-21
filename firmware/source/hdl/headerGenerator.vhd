@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Oct 19 17:58:29 2021
+-- Last update : Thu Oct 21 16:53:12 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -50,8 +50,10 @@ entity headerGenerator is
         sendRunHdr  : in boolean;
         sendAdcData : in boolean;
 
-        pktBuildBusy : out boolean;
-        freqScanBusy : in  boolean;
+        pktBuildBusy  : out boolean;
+        freqScanBusy  : in  boolean;
+        acStim_enable : in  std_logic := '0';
+
 
         stimPeriodActive  : in unsigned(30 downto 0); -- current period (10ns)
         stimPeriodCounter : in unsigned(23 downto 0); -- track how many freqs
@@ -134,11 +136,12 @@ architecture rtl of headerGenerator is
             errors  => (others => '0'),
             pButton => (others => '0'),
             tState  => false);
-    signal sendStatus                        : boolean := false;
-    signal statusBusy, statusBusy_del        : boolean := false;
-    signal statusTimeout: boolean := false;
-    signal statusTrigLatch: std_logic_vector(3 downto 0);
-    signal statusTimerCnt : unsigned(31 downto 0) := (others => '0');
+    signal sendStatus                 : boolean := false;
+    signal statusBusy, statusBusy_del : boolean := false;
+    signal statusTimeout              : boolean := false;
+    signal statusTrigLatch            : std_logic_vector(3 downto 0);
+    signal statusTimerCnt             : unsigned(31 downto 0) := (others => '0');
+    signal acStim_enable_del          : std_logic             := '0';
 
     signal adcRegNum         : unsigned(3 downto 0)  := (others => '0');
     signal adcSamplesPerFreq : unsigned(39 downto 0) := (others => '0');
@@ -149,6 +152,9 @@ architecture rtl of headerGenerator is
 
     signal stimPeriodActive_reg  : unsigned(30 downto 0) := (others => '0');
     signal adcSamplingPeriod_reg : unsigned(23 downto 0) := (others => '0');
+
+    signal sendRunHdrLatch,sendRunHdrClear    : boolean := false;
+    signal sendAdcDataLatch, sendAdcDataClear : boolean := false;
 
 begin
 
@@ -270,7 +276,9 @@ begin
                 udpCnt_reg     <= (others => '0');
                 adcIdx         <= 7;
                 rqstType       <= RQST_NULL;
-
+                -- with the status packet being pushed we need to latch the other requests so they are not missed
+                sendRunHdrLatch  <= (sendRunHdr or sendRunHdrLatch) and not sendRunHdrClear;
+                sendAdcDataLatch <= (sendAdcData or sendAdcDataLatch) and not sendAdcDataClear;
             else
                 state_reg      <= state_next;
                 headCnt_reg    <= headCnt_next;
@@ -298,19 +306,23 @@ begin
         adcDataRen      <= (others => '0');
         statusBusy      <= false;
         watchdogSleep   <= false;
+        sendRunHdrClear <= false;
+        sendAdcDataClear <= false;
         case (state_reg) is
 
             when idle_s =>
                 watchdogSleep   <= true;
                 udpDataRdy_next <= false;
-                if sendRunHdr then
+                if sendRunHdrLatch then
+                    sendRunHdrClear <= true;
                     udpDataRdy_next <= true;
                     state_next      <= genAFrame_s;
                     headCnt_next    <= to_unsigned(nHeadA-1, headCnt_next'length);
                     rqstType_next   <= RQST_RUN;
                     --registerId      <= REG_RUN;
 
-                elsif sendAdcData then
+                elsif sendAdcDataLatch then
+                    sendAdcDataClear <= true;
                     udpDataRdy_next <= true;
                     state_next      <= genAFrame_s;
                     headCnt_next    <= to_unsigned(nHeadA-1, headCnt_next'length);
@@ -450,16 +462,17 @@ begin
         variable statusDataTrig    : boolean := false;
     begin
         if rising_edge(dwaClk100) then
-            statusBusy_del <= statusBusy;
-
+            statusBusy_del    <= statusBusy;
+            acStim_enable_del <= acStim_enable;
             --separate the status triggr to be used in status packet.
             -- a variable is used here so latched status will reflect trigger status and not the next cluck cycle status.
             statusErrorsTrig  := statusDataSticky.errors /= statusDataLatch.errors;
             statusPButtonTrig := statusDataSticky.pButton /= statusDataLatch.pButton;
-            statusTStateTrig  := statusDataSticky.tState /= statusDataLatch.tState;
-            statusDataTrig    := statusErrorsTrig or statusTStateTrig or statusPButtonTrig;
+            statusTStateTrig  := (statusDataSticky.tState /= statusDataLatch.tState) or
+                (acStim_enable = '1' and acStim_enable_del = '0'); --trigger at start of test
+            statusDataTrig := statusErrorsTrig or statusTStateTrig or statusPButtonTrig;
 
-            statusTimeout     <= statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod;
+            statusTimeout <= statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod;
 
             if (statusDataTrig or statusTimeout) and not sendStatus then -- latch data and set senStatus flag, Don't re latch on subsequent triggers, keep sticky for next pkt.
                 sendStatus      <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off

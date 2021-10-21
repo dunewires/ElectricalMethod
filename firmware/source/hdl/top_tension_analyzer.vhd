@@ -580,6 +580,8 @@ end process dropLsb;
 
       pktBuildBusy => pktBuildBusy,
       freqScanBusy => freqScanBusy,
+      acStim_enable => acStim_enable,
+
 
       stimPeriodActive  => acStim_nPeriod_fp6,
       stimPeriodCounter => (others => '0'),

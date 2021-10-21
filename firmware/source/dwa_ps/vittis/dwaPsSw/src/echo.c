@@ -37,7 +37,7 @@ int transfer_data() {
 }
 
 void print_app_header() {
-  xil_printf("\n\r\n\r-----DUNE DWA PSV 2021, Oct 20 ------\n\r");
+  xil_printf("\n\r\n\r-----DUNE DWA PSV 2021, Oct 21 ------\n\r");
 }
 int *ptr = 0xc2000000;
 err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
@@ -172,7 +172,7 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) 
   case 0xFE170002:
     xil_printf("TCP Write \r\n");
     int wIndex;
-    for (wIndex = 0; wIndex < (rxBufLength / 4 - 3)/2; wIndex++) {
+    for (wIndex = 0; wIndex < (rxBufLength / 4 - 2)/2; wIndex++) {
 
     pktAddr = ((*(u8_t*) (p->payload + 8 +  (wIndex << 3))) << 24)
     	    | ((*(u8_t*) (p->payload + 9 +  (wIndex << 3))) << 16)
