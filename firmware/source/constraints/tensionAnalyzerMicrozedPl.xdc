@@ -233,3 +233,13 @@ set_multicycle_path -setup -from [get_pins {top_tension_analyzer_1/acStim_nPerio
 set_multicycle_path -setup -from [get_pins {top_tension_analyzer_1/acStim_nPeriod_fp6_reg[*]/C}] -to [get_pins {top_tension_analyzer_1/acStimX200_nPeriod_fxp8_reg[*]/D}] 15
 set_multicycle_path -hold -from [get_pins {top_tension_analyzer_1/acStim_nPeriod_fp6_reg[*]*/C}] -to [get_pins {top_tension_analyzer_1/acStimX200_nPeriod_fxp8_reg[*]/D}] 14
 set_multicycle_path -hold -from [get_pins {top_tension_analyzer_1/acStim_nPeriod_fp6_reg[*]/C}] -to [get_pins {top_tension_analyzer_1/acStimX200_nPeriod_fxp8_reg[*]/D}] 14
+
+set_multicycle_path -setup -from [get_pins {top_tension_analyzer_1/acStim_nPeriod_fp6_reg[*]*/C}] -to [get_pins {top_tension_analyzer_1/adcCnv_nPeriod_reg[*]/D}] 15
+set_multicycle_path -setup -from [get_pins {top_tension_analyzer_1/acStim_nPeriod_fp6_reg[*]/C}] -to [get_pins {top_tension_analyzer_1/adcCnv_nPeriod_reg[*]/D}] 15
+set_multicycle_path -hold -from [get_pins {top_tension_analyzer_1/acStim_nPeriod_fp6_reg[*]*/C}] -to [get_pins {top_tension_analyzer_1/adcCnv_nPeriod_reg[*]/D}] 14
+set_multicycle_path -hold -from [get_pins {top_tension_analyzer_1/acStim_nPeriod_fp6_reg[*]/C}] -to [get_pins {top_tension_analyzer_1/adcCnv_nPeriod_reg[*]/D}] 14
+
+set_multicycle_path -setup -from [get_pins {top_tension_analyzer_1/adcSamplesPerCycleSet_reg[*]*/C}] -to [get_pins {top_tension_analyzer_1/adcCnv_nPeriod_reg[*]/D}] 15
+set_multicycle_path -setup -from [get_pins {top_tension_analyzer_1/adcSamplesPerCycleSet_reg[*]/C}] -to [get_pins {top_tension_analyzer_1/adcCnv_nPeriod_reg[*]/D}] 15
+set_multicycle_path -hold -from [get_pins {top_tension_analyzer_1/adcSamplesPerCycleSet_reg[*]*/C}] -to [get_pins {top_tension_analyzer_1/adcCnv_nPeriod_reg[*]/D}] 14
+set_multicycle_path -hold -from [get_pins {top_tension_analyzer_1/adcSamplesPerCycleSet_reg[*]/C}] -to [get_pins {top_tension_analyzer_1/adcCnv_nPeriod_reg[*]/D}] 14

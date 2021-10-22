@@ -1,53 +1,11 @@
-import socket
-#import nmap
-#import getmac
-import urllib.request
 import os
 import sys
 from channel_map import *
 
 
 def configure_ip_addresses(client_ip=None):
-    '''Return a dictionary of a configuration value for the IP address of the UDP receiver client, i.e. the computer running the DAQ, given the IP address of the client in format 'X.X.X.X'. If no client IP address is given, attempt finding it using a website.'''
-    # TODO check if external IP should be used
-    # TODO return dwa_ip
-
-    # def configure_ip_addresses(dwa_mac=None, client_ip=None, dwa_ip=None):
-    # '''Return a dictionary of configuration values for Format of input IP addresses: 'X.X.X.X' and format of input MAC address: 'XX:XX:XX:XX:XX:XX'.'''
-    # def find_dwa_ip(computer_ip):
-    #     return_ip = None
-    #     nm = nmap.PortScanner()
-    #     nm.scan(f'{computer_ip}/24', arguments='-sn')
-    #     all_ips = nm.all_hosts()
-    #     for ip in all_ips:
-    #         if mac := getmac.get_mac_address(ip=ip) is not None:
-    #             if dwa_mac.upper() == mac.upper():
-    #                 return_ip = ip
-    #                 break
-    #     return return_ip
-
-    # If no client IP is provided, get external IP address of computer by using website
-    if client_ip is None:
-        try:
-            client_ip = urllib.request.urlopen('https://api.ipify.org').read().decode()
-        except:
-            raise ValueError('Could not find IP address of client. IP address of client needs to be provided manually.')
-
-    # if dwa_ip is None:
-    #     # If no DWA IP is provided, get external IP address of computer by using website
-    #     if dwa_mac is not None:
-    #         local_ip = socket.gethostbyname(socket.gethostname())
-    #         dwa_ip = find_dwa_ip(local_ip)
-
-    #         if dwa_ip is None:
-    #             dwa_ip = find_dwa_ip(client_ip)
-
-    #         if dwa_ip is None:
-    #             raise ValueError("Could not find IP address of DWA. IP address of DWA needs to be provided manually.")
-    #     else:
-    #         raise ValueError("Need to provide either the MAC address or the IP address of the DWA.")
-    # 
-    # return {'client_IP': client_ip, 'DWA_IP': dwa_ip}
+    '''Incomplete'''
+    # TODO: Need to fetch IP address from DB.
     return {'client_IP': client_ip}
 
 
@@ -78,7 +36,7 @@ def configure_scan_frequencies(stim_freq_min, stim_freq_max, stim_freq_step=1/16
             'stimFreqStep': format(int(stim_freq_step * unit_factor), '06X')}
 
 
-def configure_wait_times(stim_time_initial=2, stim_time=0.5):
+def configure_wait_times(stim_time_initial=2, stim_time=0):
     '''Return a dictionary of configuration values for the initial and subsequent stimulus wait times given input time values in seconds.'''
     
     unit_factor = 1/2.56e-6
@@ -110,26 +68,22 @@ def configure_sampling(cycles_per_freq=2, samples_per_cycle=16):
             'adcSamplesPerCycle': format(samples_per_cycle, '06X')}
 
 
-def configure_relays(wire_layer: str, apa_channels: list, *,
+def configure_relays(wire_layer: str, apa_channels: list, is_flex_connection_winderlike: bool = True, *,
                      relay_wire_top=None, relay_wire_bot=None, relay_bus_top=None, relay_bus_bot=None):
-    '''Return a dictionary of configuration values for the relays given a wire layer and the list of APA channels to be read out in that layer. Configuration values can also be provided directly, bypassing the determination based on the wire layer and list of APA channels.'''
-
-    #print('\n\nconfigure_relays:')
-    #print(f'wire_layer, apa_channels = {wire_layer}, {apa_channels}')
-    #print(f'relay_wire_top, relay_wire_bot = {relay_wire_top}, {relay_wire_bot}')
-    #print(f'relay_bus_top, relay_bus_bot   = {relay_bus_top}, {relay_bus_bot}')
+    '''Return a dictionary of configuration values for the relays given a wire layer and the list of APA channels to be read out in that layer, depending on the orientation of the connection between the flex cable and the probe board. Configuration values can also be provided directly, bypassing the determination based on the wire layer and list of APA channels.'''
     
     def raise_incompatible_channels(message=''):
         raise ValueError('Trying to configure incompatible APA channels: ' + message)
     
     def fill_wire_relays_bottom_and_top(relays_bottom_and_top, relay):
-        #print('fill_wire_relays_bottom_and_top')
-        #print(f'relay = {relay}')
         if relay <= 64:
             relays_bottom_and_top[0].append(relay)
         else:
             relays_bottom_and_top[1].append(relay-64)
-        #print(f'relays_bottom_and_top = {relays_bottom_and_top}')
+
+    # If apa_channels is not a list, assume it is a numpy array and convert it and its elements
+    if not isinstance(apa_channels, list):
+        apa_channels = apa_channels.tolist()
 
     wire_layer = check_valid_wire_layer(wire_layer)
 
@@ -138,11 +92,10 @@ def configure_relays(wire_layer: str, apa_channels: list, *,
     wire_bias_relays_bottom_and_top = [[], []]
     wire_relays_bottom_and_top = [[], []]
 
-    # Get first board number with an arbitrary default value of 1 for the case when the apa_channels list is empty
+    # Get first board number, with an arbitrary default value of 1 for the case when the apa_channels list is empty
     board_number = 1
     if len(apa_channels) >= 1:
         board_number = apa_channel_to_board_number(wire_layer, apa_channels[0])
-    #print(f'board_number = {board_number}')
     
     for apa_channel in apa_channels:
         # Check if all APA channels are on a single head board
@@ -151,21 +104,21 @@ def configure_relays(wire_layer: str, apa_channels: list, *,
         
         # Add wire signal relays
         fill_wire_relays_bottom_and_top(wire_signal_relays_bottom_and_top,
-                                        apa_channel_to_wire_relay(wire_layer, apa_channel))
+                                        apa_channel_to_wire_relay(wire_layer, apa_channel, is_flex_connection_winderlike))
         
         # Add part of wire bias relays
         if apa_channel_to_board_channel(wire_layer, apa_channel) != 1:
             fill_wire_relays_bottom_and_top(wire_bias_relays_bottom_and_top,
-                                            apa_channel_to_wire_relay(wire_layer, apa_channel-1))
+                                            apa_channel_to_wire_relay(wire_layer, apa_channel-1, is_flex_connection_winderlike))
 
-        # Add remaining part of wire bias relays, taking into account that last APA channel is different per layer and per board
+        # Add remaining part of wire bias relays, taking into account that the last APA channel is different per layer and per board
         if ((wire_layer == 'X' and apa_channel_to_board_channel(wire_layer, apa_channel) != 48)
                 or (wire_layer in {'V', 'U'} and apa_channel_to_board_channel(wire_layer, apa_channel) != 40)
                 or (wire_layer == 'G' and apa_channel_to_board_number(wire_layer, apa_channel) == 1
                     and apa_channel_to_board_channel(wire_layer, apa_channel) != 49)
                 or (wire_layer == 'G' and apa_channel_to_board_number(wire_layer, apa_channel) != 1
                     and apa_channel_to_board_channel(wire_layer, apa_channel) != 48)):
-            fill_wire_relays_bottom_and_top(wire_bias_relays_bottom_and_top, apa_channel_to_wire_relay(wire_layer, apa_channel+1))
+            fill_wire_relays_bottom_and_top(wire_bias_relays_bottom_and_top, apa_channel_to_wire_relay(wire_layer, apa_channel+1, is_flex_connection_winderlike))
 
     # Check no DWA channel is used twice
     dwa_channels = []
@@ -225,34 +178,18 @@ def configure_relays(wire_layer: str, apa_channels: list, *,
     concatenated_wire_relays_bottom_and_top = []
     concatenated_bus_relays_bottom_and_top = []
 
-    #print(f'wire_relays_bottom_and_top = {wire_relays_bottom_and_top}')
     for wire_relays in wire_relays_bottom_and_top:
         concatenated_wire_relays = 0
+        #print(f'     type(wire_relays) = {type(wire_relays)}')
         for relay in wire_relays:
-            #print(f'     relay: {relay}')
-            #print(f'     type(relay) = {type(relay)}')
-            #print(f'     1<<(relay-1): {1<<(relay-1)}')
-            #print(f'     int(1)<<(int(relay)-1): {int(1)<<(int(relay)-1)}')
-            concatenated_wire_relays |= 1<<(int(relay)-1)
-            #print(f'     concatenated_wire_relays = {concatenated_wire_relays}')
-
-        #print(f' concatenated_wire_relays = {concatenated_wire_relays}')
+            concatenated_wire_relays |= 1<<(relay-1)
         concatenated_wire_relays_bottom_and_top.append(concatenated_wire_relays)
-    #print(f'concatenated_wire_relays_bottom_and_top = {concatenated_wire_relays_bottom_and_top}')
     
     for bus_relays in bus_relays_bottom_and_top:
         concatenated_bus_relays = 0
         for relay in bus_relays:
-            concatenated_bus_relays |= 1<<(int(relay)-1)
+            concatenated_bus_relays |= 1<<(relay-1)
         concatenated_bus_relays_bottom_and_top.append(concatenated_bus_relays)
-    #print(f'concatenated_bus_relays_bottom_and_top = {concatenated_bus_relays_bottom_and_top}')
-
-    #print(f'relay_wire_bot = {relay_wire_bot}')
-    #print(f'concatenated_wire_relays_bottom_and_top[0] = {concatenated_wire_relays_bottom_and_top[0]}')
-    #print(f'proxy for relayWireBot: ')
-    #print(f'        concatenated_wire_relays_bottom_and_top[0] (dec) = {concatenated_wire_relays_bottom_and_top[0]}')
-    #print(f'        concatenated_wire_relays_bottom_and_top[0] (hex) = {concatenated_wire_relays_bottom_and_top[0]:016X}')
-    
     relay_config = {}
     relay_config['relayWireTop'] = format(concatenated_wire_relays_bottom_and_top[1] if relay_wire_top is None else relay_wire_top, '016X') 
     relay_config['relayWireBot'] = format(concatenated_wire_relays_bottom_and_top[0] if relay_wire_bot is None else relay_wire_bot, '016X')
@@ -296,6 +233,10 @@ def configure_noise_subtraction(stim_freq_min, stim_freq_max, *,
 
     noise_sampling_period = 1 / ((NOISE_MAX + NOISE_MIN)/2) / noise_samples_per_freq
 
+    # Force no noise subtraction
+    # TODO: should be removed
+    noise_freq_min = noise_freq_max = 50
+
     return {'noiseFreqMin': format(int(noise_freq_min * unit_factor_freq), '06X'),
             'noiseFreqMax': format(int(noise_freq_max * unit_factor_freq), '06X'),
             'noiseFreqStep': format(int(noise_freq_step * unit_factor_freq), '06X'),
@@ -312,7 +253,7 @@ def configure_default():
     configs.update(configure_fixed_frequency())
     configs.update(configure_scan_frequencies(stim_freq_min=99, stim_freq_max=100))
     configs.update(configure_wait_times())
-    configs.update(configure_gains(stim_freq_max=100, stim_mag=0xBB8, digipot=0x7766554433221100))
+    configs.update(configure_gains(stim_freq_max=100, stim_mag=0xBB8, digipot=0x4444444444444444))
     configs.update(configure_sampling())
     configs.update(configure_relays(wire_layer='X', apa_channels=[]))
     configs.update(configure_noise_subtraction(stim_freq_min=99, stim_freq_max=100))

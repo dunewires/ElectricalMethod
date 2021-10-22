@@ -37,7 +37,7 @@ int transfer_data() {
 }
 
 void print_app_header() {
-  xil_printf("\n\r\n\r-----DUNE DWA PSV 2021, August 24 ------\n\r");
+  xil_printf("\n\r\n\r-----DUNE DWA PSV 2021, Oct 21 ------\n\r");
 }
 int *ptr = 0xc2000000;
 err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
@@ -172,19 +172,24 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) 
   case 0xFE170002:
     xil_printf("TCP Write \r\n");
     int wIndex;
-    for (wIndex = 0; wIndex < (rxBufLength / 4 - 3); wIndex++) {
+    for (wIndex = 0; wIndex < (rxBufLength / 4 - 2)/2; wIndex++) {
+
+    pktAddr = ((*(u8_t*) (p->payload + 8 +  (wIndex << 3))) << 24)
+    	    | ((*(u8_t*) (p->payload + 9 +  (wIndex << 3))) << 16)
+    	    | (*(u8_t*) (p->payload + 10 +  (wIndex << 3))) << 8
+    	    | (*(u8_t*) (p->payload + 11 +  (wIndex << 3)));
 
       pktData =
-	((*(u8_t*) (p->payload + 12 + (wIndex << 2))) << 24)
-	| ((*(u8_t*) (p->payload + 13 + (wIndex << 2))) << 16)
-	| (*(u8_t*) (p->payload + 14 + (wIndex << 2))) << 8
-	| (*(u8_t*) (p->payload + 15 + (wIndex << 2)));
+	((*(u8_t*) (p->payload + 12 + (wIndex << 3))) << 24)
+	| ((*(u8_t*) (p->payload + 13 + (wIndex << 3))) << 16)
+	| (*(u8_t*) (p->payload + 14 + (wIndex << 3))) << 8
+	| (*(u8_t*) (p->payload + 15 + (wIndex << 3)));
 
-      // xil_printf("Address:  %x", pktAddr);
-      //xil_printf(" Data:  %x\n\r", pktData);
+      xil_printf("Address:  %x", pktAddr);
+      xil_printf(" Data:  %x\n\r", pktData);
       //
       *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR
-			 + ((pktAddr+wIndex) << 2)) = pktData;
+			 + ((pktAddr) << 2)) = pktData;
     }
     break;
 
