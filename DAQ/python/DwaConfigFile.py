@@ -69,7 +69,7 @@ class DwaConfigFile():
                                      ]
         self.validOptions["DATABASE"] = ["wireSegments", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side", "apaChannels"]
 
-        self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose", "client_IP"]
+        self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose", "client_IP", "guiUpdatePeriodSec"]
 
     def parse(self):
         """Parse the DWA configuration parameters from a file
@@ -138,8 +138,9 @@ class DwaConfigFile():
         self.defaults["FPGA"]["relayBusBot"]   = "00000000"         # 32-bit  bot1bot0
 
         # 
-        self.defaults["DAQ"]["statusPeriodSec"] = 1    # seconds (float)
-        self.defaults["DAQ"]["verbose"]         = 1    # verbosity level (integer)
+        self.defaults["DAQ"]["statusPeriodSec"] = 1.0      # seconds (float)
+        self.defaults["DAQ"]["verbose"]         = 1        # verbosity level (integer)
+        self.defaults["DAQ"]["guiUpdatePeriodSec"] = 0.5  # seconds (float)
         #self.defaults["DAQ"]["client_IP"]       = None # verbosity level (integer)
         
     def validate(self):

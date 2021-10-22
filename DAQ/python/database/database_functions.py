@@ -81,6 +81,7 @@ def get_tension_frame_uuid_from_apa_uuid(sietch, apa_uuid):
     tension_frames_metadata = sietch.api("/search/component", {
         "type":"Tension Frame",
     })
+    
     for t in tension_frames_metadata:
         tension_frame_data = sietch.api("/component/"+t["componentUuid"])
         if tension_frame_data["data"]["apa"] == apa_uuid: return t["componentUuid"]
