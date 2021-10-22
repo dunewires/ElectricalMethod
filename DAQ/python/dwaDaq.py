@@ -1491,9 +1491,9 @@ class MainWindow(qtw.QMainWindow):
                 if irow == 2 and icol == 2:
                     continue
                 self.resonanceRawPlots.append(self.resonanceRawDataGLW.addPlot())
-                self.resonanceRawPlots[-1].setTitle(f'A(f) Raw DWA:{chanNum}')
+                self.resonanceRawPlots[-1].setTitle(f'DWA Chan: {chanNum} APA Chan: N/A')
                 self.resonanceProcessedPlots.append(self.resonanceProcessedDataGLW.addPlot())
-                self.resonanceProcessedPlots[-1].setTitle(f'A(f) Proc. DWA:{chanNum}')
+                self.resonanceProcessedPlots[-1].setTitle(f'DWA Chan: {chanNum} APA Chan: N/A')
                 chanNum += 1
             self.resonanceRawDataGLW.nextRow()
             self.resonanceProcessedDataGLW.nextRow()
@@ -2381,6 +2381,7 @@ class MainWindow(qtw.QMainWindow):
         #time.sleep(3)
         #BOBOBOBOB
         self._loadSavedAmpData(filename)
+        self._configureResonancePlots()
         self.runResonanceAnalysis()
         self.labelResonanceSubmitStatus.setText("Resonances have not been submitted")
 
@@ -3219,7 +3220,19 @@ class MainWindow(qtw.QMainWindow):
         #self.registerOfVal = {}
         #for reg in ddp.Registers:
         #    self.registerOfVal[reg.value] = reg
-        
+
+    def _configureResonancePlots(self):
+        for index in range(N_DWA_CHANS):
+            if index in self.activeRegistersS:
+                apaChan = self.ampDataS['apaChannels'][index]
+                apaLayer = self.ampDataS['layer']
+                apaSide = self.ampDataS['side']
+                self.resonanceRawPlots[index].setTitle(f'DWA Chan: {index} APA Chan: {apaLayer}{apaSide}{apaChan}')
+                self.resonanceProcessedPlots[index].setTitle(f'DWA Chan: {index} APA Chan: {apaLayer}{apaSide}{apaChan}')
+            else:
+                self.resonanceRawPlots[index].setTitle(f'DWA Chan: {index} APA Chan: N/A')
+                self.resonanceProcessedPlots[index].setTitle(f'DWA Chan: {index} APA Chan: N/A')
+
     def _makeOutputFilenames(self):
         # Generate a unique filename for each register
         # Generate filehandles for each register
