@@ -3917,7 +3917,7 @@ class MainWindow(qtw.QMainWindow):
             apaChan = self.ampDataS['apaChannels'][chan]
             if not apaChan: continue
             wires, expectedFreqs = channel_frequencies.get_expected_resonances(self.ampDataS["layer"], apaChan, thresh = 250.)
-            expectedFreqs = [f for sublist in expectedFreqs for f in sublist]
+            #expectedFreqs = [f for sublist in expectedFreqs for f in sublist]
 
             # Make a copy of the data to work with
             dataToFit = self.ampDataS[reg]['ampl'][:]
@@ -3997,7 +3997,7 @@ class MainWindow(qtw.QMainWindow):
                 
         # FIXME: move pen definition to __init__ (self.f0pen)
         f0Pen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
-        f1Pen = pg.mkPen(color='#0000FF', width=4, style=qtc.Qt.SolidLine)
+        fPenBlue = [pg.mkPen(color='#0000FF', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#00AADD', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#008888', width=4, style=qtc.Qt.SolidLine)]
 
         debug = False
         
@@ -4012,10 +4012,11 @@ class MainWindow(qtw.QMainWindow):
             fitx, fity = self.curves['resProcFit'][chan].getData()
 
             # Add expected resonances to plot
-            expectedFreqRounded = np.array([round(f,2) for f in self.expectedFreqs[chan]])
-            expectedFreqRounded = np.unique(expectedFreqRounded)
-            for ii, ff in enumerate(expectedFreqRounded):
-                self.resExpLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=False, pen=f1Pen) )
+            for i, wireSegmentFreqs in enumerate(self.expectedFreqs[chan]):
+                expectedFreqRounded = np.array([round(f,2) for f in wireSegmentFreqs])
+                expectedFreqRounded = np.unique(expectedFreqRounded)
+                for ii, ff in enumerate(expectedFreqRounded):
+                    self.resExpLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=False, pen=fPenBlue[i]) )
 
             # Create/display new InfiniteLine instance for each resonant freq
             for ii, ff in enumerate(self.resonantFreqs[chan]):
