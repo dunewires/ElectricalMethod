@@ -4069,7 +4069,7 @@ class MyApplication(qtw.QApplication):
 if __name__ == "__main__":
     app = qtw.QApplication(sys.argv)
     #app = MyApplication(sys.argv)
-    app.setWindowIcon(qtg.QIcon('icon.png'))
+    app.setWindowIcon(qtg.QIcon('icons/app.png'))
     if SYSTEM_PLATFORM == 'WINDOWS':
         myappid = u'org.dune.dwa.v3' # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
