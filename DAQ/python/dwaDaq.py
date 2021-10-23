@@ -1,4 +1,8 @@
 # FIXME/TODO:
+#
+# * can't just use self.recentScansTableRowInUse because rows may have been added
+#   to the scan since the A(f) data was loaded!
+#   Should probably get rid of self.recentScansTableRowInUse entirely
 # 
 # * Handle STATUS frames that are pushed because of errors or voltage changes
 #   Write these to file (for button change or error)
@@ -107,6 +111,7 @@ import json
 import platform
 import shutil
 import copy
+import ctypes
 
 from functools import partial
 from enum import Enum, IntEnum
@@ -723,7 +728,7 @@ class MainWindow(qtw.QMainWindow):
             data['submitted'] = submitted
         except:
             print(f"Could not add new scan to list (bad json file?) {ampFilename}...")
-            return entry
+            return None
 
         for kk in SCAN_LIST_DATA_KEYS: # populate with useful information
             try:
@@ -731,7 +736,7 @@ class MainWindow(qtw.QMainWindow):
             except:
                 print(f"key [{kk}] missing")
                 print(f"cannot add scan to list: {ampFilename}")
-                return entry
+                return None
         return entry
 
     def initApaUuidSuggestions(self):
@@ -785,8 +790,11 @@ class MainWindow(qtw.QMainWindow):
             if '.DS_Store' in sd:
                 print("directory contains .DS_STORE... ignoring")
                 continue
-            
-            tabledata.append(self.generateScanListEntry(sd, Submitted.UNKNOWN))  # add to end of table
+            #tabledata.append(self.generateScanListEntry(sd, Submitted.UNKNOWN))  # add to end of table
+            entry = self.generateScanListEntry(sd, Submitted.UNKNOWN)  # add to end of table
+            if not entry:
+                continue
+            tabledata.append(entry)  # add to end of table
             
             if len(tabledata) == N_RECENT_SCANS:
                 break
@@ -800,7 +808,8 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
         #https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
         self.recentScansTableView.doubleClicked.connect(self.recentScansRowDoubleClicked)
-        self.recentScansTableRowInUse = None
+        #self.recentScansTableRowInUse = None
+        self.recentScansNameOfLoadedScan = None
 
     def recentScansRowDoubleClicked(self, mi):
         print(f"double-clicked row: {mi.row()}")
@@ -1491,9 +1500,9 @@ class MainWindow(qtw.QMainWindow):
                 if irow == 2 and icol == 2:
                     continue
                 self.resonanceRawPlots.append(self.resonanceRawDataGLW.addPlot())
-                self.resonanceRawPlots[-1].setTitle(f'A(f) Raw DWA:{chanNum}')
+                self.resonanceRawPlots[-1].setTitle(f'DWA Chan: {chanNum} APA Chan: N/A')
                 self.resonanceProcessedPlots.append(self.resonanceProcessedDataGLW.addPlot())
-                self.resonanceProcessedPlots[-1].setTitle(f'A(f) Proc. DWA:{chanNum}')
+                self.resonanceProcessedPlots[-1].setTitle(f'DWA Chan: {chanNum} APA Chan: N/A')
                 chanNum += 1
             self.resonanceRawDataGLW.nextRow()
             self.resonanceProcessedDataGLW.nextRow()
@@ -2346,7 +2355,8 @@ class MainWindow(qtw.QMainWindow):
         print(f"selected file = {tableRowData['scanName']}")
         #scanFilename = './scanDataAdv/dwaConfigWC_20210812T112511/amplitudeData.json' # DUMMY
         scanFilename = os.path.join(tableRowData['scanName'], 'amplitudeData.json')
-        self.recentScansTableRowInUse = row
+        #self.recentScansTableRowInUse = row
+        self.recentScansNameOfLoadedScan = tableRowData['scanName']
         self.loadSavedScanData(scanFilename)
 
     def loadArbitraryScanData(self):
@@ -2366,7 +2376,11 @@ class MainWindow(qtw.QMainWindow):
             self.insertScanIntoScanList(scanDir, row=row, submitted=Submitted.UNKNOWN)
             # and highlight the newly inserted row in the table
             self.recentScansTableView.selectRow(row)
-            self.recentScansTableRowInUse = 0
+            #self.recentScansTableRowInUse = row
+            tableRowData = self.recentScansTableModel.getData()[row]
+            #print(f"scanDir = {scanDir}")
+            #print(f"tableRowData['scanName'] = {tableRowData['scanName']}")
+            self.recentScansNameOfLoadedScan = tableRowData['scanName']
             
             self.loadSavedScanData(scanFilename)
 
@@ -2375,12 +2389,8 @@ class MainWindow(qtw.QMainWindow):
         self._initSavedAmpDataPlots()
         self._clearResonanceFitLines()
         self._clearResonanceExpectedLines()
-        
-        #self.resonanceProcessedDataGLW.update()
-        #qtc.QCoreApplication.processEvents()
-        #time.sleep(3)
-        #BOBOBOBOB
         self._loadSavedAmpData(filename)
+        self._configureResonancePlots()
         self.runResonanceAnalysis()
         self.labelResonanceSubmitStatus.setText("Resonances have not been submitted")
 
@@ -2731,17 +2741,24 @@ class MainWindow(qtw.QMainWindow):
         dbid= sietch.api('/test',record_result)
 
     def saveResonanceData(self):
+        print("saveResonanceData()")
         resData = {}
 
+        print(f'self.resonantFreqs = {self.resonantFreqs}')
+        
         # Get the actual resonance frequencies (perhaps obtained with manual intervention)
-        finalResonances = {}
+        resData['resonances'] = {}
+
         for reg in self.registers:
-            finalResonances[reg.value] = self.resonantFreqs[reg.value]
-        resData['resonances'] = finalResonances
-            
+            apaChan = self.ampDataS['apaChannels'][reg.value]
+            if not apaChan: continue
+            resData['resonances'][reg.value] = self.resonantFreqs[reg.value]
+        
         # Get fit parameters and algorithm-determined resonances
         resData['fit'] = self.resFitToLog
             
+        print(f"resData = {resData}")
+        
         try:
             with open(self.fnOfResData, 'w') as outfile:
                 json.dump(resData, outfile)
@@ -2754,84 +2771,102 @@ class MainWindow(qtw.QMainWindow):
     @pyqtSlot()
     def submitResonances(self):
         self.labelResonanceSubmitStatus.setText("Submitting...")
-        #try: 
-        self.saveResonanceData()
+        try:
+            self.saveResonanceData()
 
-        # Load sietch credentials #FIXME still using James's credentials
-        sietch = SietchConnect("sietch.creds")
+            # Load sietch credentials #FIXME still using James's credentials
+            sietch = SietchConnect("sietch.creds")
 
-        note = self.submitResonanceNoteLineEdit.text()
-        
-        print(f"sietch = {sietch}")
-        print(f"self.ampDataS['apaUuid'] = {self.ampDataS['apaUuid']}")
-        out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"])
-        print(f"out = {out}")
+            note = self.submitResonanceNoteLineEdit.text()
+            
+            print(f"sietch = {sietch}")
+            print(f"self.ampDataS['apaUuid'] = {self.ampDataS['apaUuid']}")
+            out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"])
+            print(f"out = {out}")
 
+            print("Making pointer table...")
+            #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
+            pointerTable = database_functions.get_pointer_table(sietch, self.ampDataS['apaUuid'], self.ampDataS['stage'])
+            if not pointerTable:
+                wirePointersAllLayers = {}
+                for layer in APA_LAYERS:
+                    wirePointersAllLayers[layer] = {}
+                    for side in APA_SIDES:
+                        wirePointersAllLayers[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT[layer]
+            else:
+                wirePointersAllLayers = pointerTable["data"]["wireSegments"]
+            print("Done making pointer table...")
 
-        #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
-        pointerTable = database_functions.get_pointer_table(sietch, self.ampDataS['apaUuid'], self.ampDataS['stage'])
-        if not pointerTable:
-            wirePointersAllLayers = {}
-            for layer in APA_LAYERS:
-                wirePointersAllLayers[layer] = {}
-                for side in APA_SIDES:
-                    wirePointersAllLayers[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT[layer]
-        else:
-            wirePointersAllLayers = pointerTable["data"]["wireSegments"]
-                
-        #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
-        for dwaCh, ch in enumerate(self.ampDataS["apaChannels"]): # Loop over channels in scan
-            for w in self.ampDataS["wireSegments"]:
-                wire_ch = channel_map.wire_to_apa_channel(self.ampDataS["layer"], w)
-                if wire_ch == ch:
-                    resonance_result = {
-                        "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
-                        "formId": "wire_resonance_measurement",
-                        "formName": "Wire Resonance Measurement",
-                        "data": {
-                            "versionDaq": "1.1",
-                            "dwaUuid": self.ampDataS["apaUuid"],
-                            "versionFirmware": "1.1",
-                            "site": "Harvard",
-                            "measuredBy": self.ampDataS["measuredBy"],
-                            "productionStage": self.ampDataS["stage"],
-                            "side": self.ampDataS["side"],
-                            "layer": self.ampDataS["layer"],
-                            "wireSegments": {
-                                str(w): self.resonantFreqs[dwaCh]
+            print("Writing resonance results to db")
+            #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
+            for dwaCh, ch in enumerate(self.ampDataS["apaChannels"]): # Loop over channels in scan
+                for w in self.ampDataS["wireSegments"]:
+                    wire_ch = channel_map.wire_to_apa_channel(self.ampDataS["layer"], w)
+                    if wire_ch == ch:
+                        resonance_result = {
+                            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
+                            "formId": "wire_resonance_measurement",
+                            "formName": "Wire Resonance Measurement",
+                            "data": {
+                                "versionDaq": "1.1",
+                                "dwaUuid": self.ampDataS["apaUuid"],
+                                "versionFirmware": "1.1",
+                                "site": "Harvard",
+                                "measuredBy": self.ampDataS["measuredBy"],
+                                "productionStage": self.ampDataS["stage"],
+                                "side": self.ampDataS["side"],
+                                "layer": self.ampDataS["layer"],
+                                "wireSegments": {
+                                    str(w): self.resonantFreqs[dwaCh]
+                                },
+                                "saveAsDraft": True,
+                                "submit": True,
+                                "note": note
                             },
-                            "saveAsDraft": True,
-                            "submit": True,
-                            "note": note
-                        },
-                    }
-                    dbid = sietch.api('/test',resonance_result)
-                    wirePointersAllLayers[self.ampDataS['layer']][self.ampDataS['side']][w] = {"testId": dbid}
-                    #pointer_list[w] = {"testId": dbid}
-
-        
-        #pointer_lists[self.ampDataS["layer"]][self.ampDataS["side"]] = pointer_list  # BUG? should copy the list not reference it?
-        record_result = {
-            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
-            "formId": "wire_tension_pointer",
-            "formName": "Wire Tension Pointer Record",
-            "stage": self.ampDataS["stage"],
-            "data": {
-                "version": "1.1",
-                "apaUuid": self.ampDataS["apaUuid"],
-                "wireSegments": wirePointersAllLayers,
-                "saveAsDraft": True,
-                "submit": True
+                        }
+                        dbid = sietch.api('/test',resonance_result)
+                        wirePointersAllLayers[self.ampDataS['layer']][self.ampDataS['side']][w] = {"testId": dbid}
+                        #pointer_list[w] = {"testId": dbid}
+            print("Done writing resonance results to db")
+            
+            print("Writing record_result to db")
+            #pointer_lists[self.ampDataS["layer"]][self.ampDataS["side"]] = pointer_list  # BUG? should copy the list not reference it?
+            record_result = {
+                "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
+                "formId": "wire_tension_pointer",
+                "formName": "Wire Tension Pointer Record",
+                "stage": self.ampDataS["stage"],
+                "data": {
+                    "version": "1.1",
+                    "apaUuid": self.ampDataS["apaUuid"],
+                    "wireSegments": wirePointersAllLayers,
+                    "saveAsDraft": True,
+                    "submit": True
+                }
             }
-        }
-        dbid= sietch.api('/test',record_result)
+            dbid= sietch.api('/test',record_result)
+            print("Done writing record_result to db")
 
-        self.recentScansTableModel.setSubmitted(self.recentScansTableRowInUse, Submitted.YES)
-        self.recentScansTableModel.layoutChanged.emit()
+            # get the right row number to change Submitted status on
+            # can't just use self.recentScansTableRowInUse because rows may have been added
+            # to the scan since the A(f) data was loaded!
+            # Even this approach is not foolproof (race condition)
+            print("Updating Submitted status in Recent Scans table")
+            print(f"trying to match to: {self.recentScansNameOfLoadedScan}")
+            tableData = self.recentScansTableModel.getData()
+            for row in range(len(tableData)):
+                print(f"row, scanName = {row}, {tableData[row]['scanName']}")
+                if tableData[row]['scanName'] == self.recentScansNameOfLoadedScan:
+                    print("found match!")
+                    self.recentScansTableModel.setSubmitted(row, Submitted.YES)
+                
+            #self.recentScansTableModel.setSubmitted(self.recentScansTableRowInUse, Submitted.YES)
+            self.recentScansTableModel.layoutChanged.emit()
 
-        self.labelResonanceSubmitStatus.setText("Submitted!")
-    #except:
-        self.labelResonanceSubmitStatus.setText("Error submitting resonances")
+            self.labelResonanceSubmitStatus.setText("Submitted!")
+            
+        except:
+            self.labelResonanceSubmitStatus.setText("Error submitting resonances")
 
 
 
@@ -3012,7 +3047,6 @@ class MainWindow(qtw.QMainWindow):
 
     def _initSavedAmpDataPlots(self):
         print("_initSavedAmpDataPlots()")
-        #BOBOBOB
         #for reg in self.registers:
         for reg in range(N_DWA_CHANS):
             self.curves['resRawFit'][reg].setData([])
@@ -3219,7 +3253,19 @@ class MainWindow(qtw.QMainWindow):
         #self.registerOfVal = {}
         #for reg in ddp.Registers:
         #    self.registerOfVal[reg.value] = reg
-        
+
+    def _configureResonancePlots(self):
+        for index in range(N_DWA_CHANS):
+            if index in self.activeRegistersS:
+                apaChan = self.ampDataS['apaChannels'][index]
+                apaLayer = self.ampDataS['layer']
+                apaSide = self.ampDataS['side']
+                self.resonanceRawPlots[index].setTitle(f'DWA Chan: {index} APA Chan: {apaLayer}{apaSide}{apaChan}')
+                self.resonanceProcessedPlots[index].setTitle(f'DWA Chan: {index} APA Chan: {apaLayer}{apaSide}{apaChan}')
+            else:
+                self.resonanceRawPlots[index].setTitle(f'DWA Chan: {index} APA Chan: N/A')
+                self.resonanceProcessedPlots[index].setTitle(f'DWA Chan: {index} APA Chan: N/A')
+
     def _makeOutputFilenames(self):
         # Generate a unique filename for each register
         # Generate filehandles for each register
@@ -3784,7 +3830,13 @@ class MainWindow(qtw.QMainWindow):
             submitted = Submitted.NO
         row = 0 if row is None else row
 
-        self.recentScansTableModel.insert(row, self.generateScanListEntry(scanDir, submitted=submitted))
+        #self.recentScansTableModel.insert(row, self.generateScanListEntry(scanDir, submitted=submitted))
+        entry = self.generateScanListEntry(scanDir, submitted=submitted)
+        if not entry:
+            print("ERROR adding scanDir to Recent Scans table")
+            print(f"scanDir = {scanDir}")
+            return
+        self.recentScansTableModel.insert(row, entry)
         self.recentScansTableModel.layoutChanged.emit()
         self.recentScansTableView.resizeColumnsToContents()
 
@@ -3885,7 +3937,10 @@ class MainWindow(qtw.QMainWindow):
                                           polyDeg=self.resFitParams['find_peaks']['bkgPoly'])
             elif self.resFitParams['find_peaks']['bkgPoly'] < 0:
                 polyval = -1*int(self.resFitParams['find_peaks']['bkgPoly'])
-                dataToFit -= savgol_filter(dataToFit, 51, polyval)
+                savgolWindow = 101
+                if savgolWindow > len(dataToFit):
+                    savgolWindow = (int(len(dataToFit)/20)*2)+1
+                dataToFit -= savgol_filter(dataToFit, savgolWindow, polyval)
                 #print("RC background fit requested (not yet implemented)")
 
             # plot fxn that is used for peakfinding
@@ -4014,6 +4069,10 @@ class MyApplication(qtw.QApplication):
 if __name__ == "__main__":
     app = qtw.QApplication(sys.argv)
     #app = MyApplication(sys.argv)
+    app.setWindowIcon(qtg.QIcon('icons/app.png'))
+    if SYSTEM_PLATFORM == 'WINDOWS':
+        myappid = u'org.dune.dwa.v3' # arbitrary string
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
     pg.setConfigOptions(antialias=False)
     

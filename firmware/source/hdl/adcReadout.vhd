@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Mar  3 15:23:56 2021
+-- Last update : Fri Sep 24 14:04:08 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -35,7 +35,6 @@ entity adcReadout is
 
 		adcCnv_nCnv      : in unsigned(15 downto 0) := (others => '0');
 		adcCnv_nPeriod   : in unsigned(23 downto 0) := (others => '0');
-		noiseReadoutBusy : in boolean               := false;
 
 		adcStart : in  boolean   := false;
 		trigger  : in  std_logic := '0';
@@ -82,8 +81,8 @@ architecture rtl of adcReadout is
 
 begin
 	--select adc conv parameters
-	adcCnv_nCnvRn    <= fromDaqReg.noiseNCnv    when noiseReadoutBusy else (x"00" & adcCnv_nCnv);
-	adcCnv_nPeriodRn <= fromDaqReg.noiseSampPer when noiseReadoutBusy else adcCnv_nPeriod;
+	adcCnv_nCnvRn    <= (x"00" & adcCnv_nCnv);
+	adcCnv_nPeriodRn <= adcCnv_nPeriod;
 	--ADC emulator
 	adc_dds_io_inst : entity work.adc_dds_io
 		port map (

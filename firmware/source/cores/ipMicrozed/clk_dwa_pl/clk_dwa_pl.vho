@@ -56,9 +56,10 @@
 --   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 ------------------------------------------------------------------------------
 -- clk_out1__400.00000______0.000______50.0______101.114_____98.575
--- clk_out2__200.00000______0.000______50.0______114.829_____98.575
--- clk_out3__100.00000______0.000______50.0______130.958_____98.575
--- clk_out4__10.00000______0.000______50.0______209.588_____98.575
+-- clk_out2__333.33333______0.000______50.0______104.542_____98.575
+-- clk_out3__200.00000______0.000______50.0______114.829_____98.575
+-- clk_out4__100.00000______0.000______50.0______130.958_____98.575
+-- clk_out5__10.00000______0.000______50.0______209.588_____98.575
 --
 ------------------------------------------------------------------------------
 -- Input Clock   Freq (MHz)    Input Jitter (UI)
@@ -76,6 +77,7 @@ port
   clk_out2          : out    std_logic;
   clk_out3          : out    std_logic;
   clk_out4          : out    std_logic;
+  clk_out5          : out    std_logic;
   -- Status and control signals
   reset             : in     std_logic;
   locked            : out    std_logic;
@@ -94,6 +96,7 @@ your_instance_name : clk_dwa_pl
    clk_out2 => clk_out2,
    clk_out3 => clk_out3,
    clk_out4 => clk_out4,
+   clk_out5 => clk_out5,
   -- Status and control signals                
    reset => reset,
    locked => locked,

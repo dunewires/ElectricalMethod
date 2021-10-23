@@ -140,21 +140,21 @@ architecture STRUCTURE of dwa_ps_pl_top is
         );
     end component dwa_ps_bd;
 
-    component clk_dwa_pl
-        port
-        (   -- Clock in ports
-            -- Clock out ports
-            clk_out1 : out std_logic;
-            clk_out2 : out std_logic;
-            clk_out3 : out std_logic;
-            clk_out4 : out std_logic;
-
-            -- Status and control signals
-            reset   : in  std_logic;
-            locked  : out std_logic;
-            clk_in1 : in  std_logic
-        );
-    end component;
+component clk_dwa_pl
+port
+ (-- Clock in ports
+  -- Clock out ports
+  clk_out1          : out    std_logic;
+  clk_out2          : out    std_logic;
+  clk_out3          : out    std_logic;
+  clk_out4          : out    std_logic;
+  clk_out5          : out    std_logic;
+  -- Status and control signals
+  reset             : in     std_logic;
+  locked            : out    std_logic;
+  clk_in1           : in     std_logic
+ );
+end component;
 
     -- COMP_TAG_END ------ End COMPONENT Declaration ------------
     -- The following code must appear in the VHDL architecture
@@ -185,7 +185,7 @@ architecture STRUCTURE of dwa_ps_pl_top is
     signal peripheral_aresetn_0                   : STD_LOGIC_VECTOR ( 0 to 0 );
     signal S_AXI_ACLK_100                         : STD_LOGIC;
     signal S_AXI_ACLK_10                          : STD_LOGIC;
-    signal plClk_100,plClk_10,plClk_200,plClk_400 : STD_LOGIC;
+    signal plClk_100,plClk_10,plClk_200,plClk_333,plClk_400 : STD_LOGIC;
 
     signal fromDaqReg : fromDaqRegType;
     signal toDaqReg   : toDaqRegType;
@@ -339,9 +339,10 @@ begin
         port map (
             -- Clock out ports  
             clk_out1 => plClk_400,
-            clk_out2 => plClk_200,
-            clk_out3 => plClk_100,
-            clk_out4 => plClk_10,
+            clk_out2 => plClk_333,
+            clk_out3 => plClk_200,
+            clk_out4 => plClk_100,
+            clk_out5 => plClk_10,
             -- Status and control signals                
             reset  => '0',
             locked => open,
@@ -359,6 +360,7 @@ begin
 
             --dwaClk100 => S_AXI_ACLK_100,
             dwaClk400 => plClk_400,
+            dwaClk333 => plClk_333,
             dwaClk200 => plClk_200,
             dwaClk100 => plClk_100,
             --dwaClk10  => S_AXI_ACLK_10,

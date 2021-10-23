@@ -301,7 +301,7 @@
               <attribute name="title">
                <string>Config</string>
               </attribute>
-              <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="8,1">
                <item>
                 <widget class="QWidget" name="widget_2" native="true">
                  <layout class="QVBoxLayout" name="verticalLayout_19">
@@ -309,6 +309,9 @@
                    <layout class="QFormLayout" name="formLayout">
                     <property name="fieldGrowthPolicy">
                      <enum>QFormLayout::ExpandingFieldsGrow</enum>
+                    </property>
+                    <property name="formAlignment">
+                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
                     </property>
                     <item row="1" column="0">
                      <widget class="QLabel" name="stage_label">
@@ -321,13 +324,13 @@
                      <widget class="QComboBox" name="configStageComboBox">
                       <property name="minimumSize">
                        <size>
-                        <width>250</width>
+                        <width>350</width>
                         <height>0</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>250</width>
+                        <width>350</width>
                         <height>16777215</height>
                        </size>
                       </property>
@@ -350,13 +353,13 @@
                       </property>
                       <property name="minimumSize">
                        <size>
-                        <width>250</width>
+                        <width>350</width>
                         <height>0</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>250</width>
+                        <width>350</width>
                         <height>16777215</height>
                        </size>
                       </property>
@@ -379,13 +382,13 @@
                       </property>
                       <property name="minimumSize">
                        <size>
-                        <width>250</width>
+                        <width>350</width>
                         <height>0</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>250</width>
+                        <width>350</width>
                         <height>16777215</height>
                        </size>
                       </property>
@@ -698,19 +701,6 @@
                   </item>
                  </layout>
                 </widget>
-               </item>
-               <item>
-                <spacer name="verticalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
                </item>
                <item>
                 <widget class="QGraphicsView" name="graphicsView"/>
