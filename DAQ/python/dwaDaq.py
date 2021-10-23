@@ -2091,8 +2091,8 @@ class MainWindow(qtw.QMainWindow):
         # TODO: Grab default values if undefined
         if advStimTime: advStimTime = float(advStimTime)
         if advInitDelay: advInitDelay = float(advInitDelay)
-        if advStimAmplitude: advStimAmplitude = float(advStimAmplitude) # BUG: should accept hex string, no?
-        if advDigipotAmplitude: advDigipotAmplitude = float(advDigipotAmplitude)  # BUG: should accept hex string, no?
+        if advStimAmplitude: advStimAmplitude = int(advStimAmplitude)
+        if advDigipotAmplitude: advDigipotAmplitude = int(advDigipotAmplitude)
 
 
         rd = self.range_data_list[scanIndex]
