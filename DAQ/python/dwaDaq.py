@@ -1285,6 +1285,7 @@ class MainWindow(qtw.QMainWindow):
             self.configureSingleScans()
 
     def configureSingleScans(self):
+        #TODO: Not poroperly taking into account some advances tab parameters
         self.scanTable.clearContents()
 
         configLayer = self.configLayerComboBox.currentText()
@@ -1385,6 +1386,7 @@ class MainWindow(qtw.QMainWindow):
 
         configLayer = self.configLayerComboBox.currentText()
         configHeadboard = self.configHeadboardSpinBox.value()
+        useAdvancedParameters = not self.advDisableAdvancedParametersCheckBox.isChecked()
 
         channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
         scanNum = 1
@@ -1398,8 +1400,6 @@ class MainWindow(qtw.QMainWindow):
             for rd in range_data:
                 self.range_data_list.append(rd)
                 wires = rd["wireSegments"]
-                freqMin = float(rd["range"][0])
-                freqMax = float(rd["range"][1])
                 wires.sort(key = int)
                 #table with scan details
                 self.scanTable.setRowCount(scanNum)
@@ -1424,6 +1424,9 @@ class MainWindow(qtw.QMainWindow):
                 item.setText(qtc.QCoreApplication.translate("MainWindow", str(wires)))
                 self.scanTable.resizeColumnsToContents()
                 #freq min column
+                advFreqMin = self.advFreqMinLineEdit.text() # Freq step size
+                if advFreqMin and useAdvancedParameters: freqMin = float(advFreqMin)
+                else: freqMin = float(rd["range"][0])
                 item = qtw.QTableWidgetItem()
                 self.scanTable.setItem(scanNum-1, 3, item)
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
@@ -1431,6 +1434,9 @@ class MainWindow(qtw.QMainWindow):
                 self.scanTable.resizeColumnsToContents()
                 self.freqMinBox.append(freqMin)
                 #freq max column
+                advFreqMax = self.advFreqMaxLineEdit.text() # Freq step size
+                if advFreqMax and useAdvancedParameters: freqMax = float(advFreqMax)
+                else: freqMax = float(rd["range"][1])
                 item = qtw.QTableWidgetItem()
                 self.scanTable.setItem(scanNum-1, 4, item)
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
@@ -1439,8 +1445,8 @@ class MainWindow(qtw.QMainWindow):
                 self.freqMaxBox.append(freqMax)
                 #freq step size column
                 advFss = self.advFssLineEdit.text() # Freq step size
-                if advFss: advFss = float(advFss)
-                else: advFss = 1/16
+                if advFss and useAdvancedParameters: fss = float(advFss)
+                else: fss = 1/16
                 #if advFss: 
                 #    advFss = config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss)['stimFreqStep']
                 #else: 
@@ -1448,9 +1454,8 @@ class MainWindow(qtw.QMainWindow):
                 item = qtw.QTableWidgetItem()
                 self.scanTable.setItem(scanNum-1, 5, item)
                 item.setTextAlignment(qtc.Qt.AlignHCenter)
-                item.setText(qtc.QCoreApplication.translate("MainWindow", str(advFss)))
+                item.setText(qtc.QCoreApplication.translate("MainWindow", str(fss)))
                 self.scanTable.resizeColumnsToContents()
-                self.freqMaxBox.append(freqMax)
                 self.scanTable.setColumnCount(6)
 
 
@@ -2063,6 +2068,7 @@ class MainWindow(qtw.QMainWindow):
 
         self.updateApaUuidListModel()  
         
+        useAdvancedParameters = self.advDisableAdvancedParametersCheckBox.isChecked()
         advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
         advInitDelay = self.advInitDelayLineEdit.text() # Init delay
         advStimAmplitude = self.advStimAmplitudeLineEdit.text() # Amplitude
@@ -2120,16 +2126,17 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
         fpgaConfig.update(config_generator.configure_fixed_frequency())
 
-        if advInitDelay: 
-           if advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
-           else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
-        elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(stim_time=advStimTime))
+        if useAdvancedParameters:
+            if advInitDelay: 
+                if advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
+                else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
+            elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(stim_time=advStimTime))
 
-        if advStimAmplitude: 
-            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=int(advStimAmplitude)))
-            
-        if advDigipotAmplitude: 
-            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, digipot=int(advDigipotAmplitude)))
+            if advStimAmplitude: 
+                fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=int(advStimAmplitude)))
+                
+            if advDigipotAmplitude: 
+                fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, digipot=int(advDigipotAmplitude)))
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels, is_flex_connection_winderlike))
@@ -2771,103 +2778,99 @@ class MainWindow(qtw.QMainWindow):
     @pyqtSlot()
     def submitResonances(self):
         self.labelResonanceSubmitStatus.setText("Submitting...")
-        try:
-            self.saveResonanceData()
 
-            # Load sietch credentials #FIXME still using James's credentials
-            sietch = SietchConnect("sietch.creds")
+        self.saveResonanceData()
 
-            note = self.submitResonanceNoteLineEdit.text()
-            
-            print(f"sietch = {sietch}")
-            print(f"self.ampDataS['apaUuid'] = {self.ampDataS['apaUuid']}")
-            out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"])
-            print(f"out = {out}")
+        # Load sietch credentials #FIXME still using James's credentials
+        sietch = SietchConnect("sietch.creds")
 
-            print("Making pointer table...")
-            #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
-            pointerTable = database_functions.get_pointer_table(sietch, self.ampDataS['apaUuid'], self.ampDataS['stage'])
-            if not pointerTable:
-                wirePointersAllLayers = {}
-                for layer in APA_LAYERS:
-                    wirePointersAllLayers[layer] = {}
-                    for side in APA_SIDES:
-                        wirePointersAllLayers[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT[layer]
-            else:
-                wirePointersAllLayers = pointerTable["data"]["wireSegments"]
-            print("Done making pointer table...")
+        note = self.submitResonanceNoteLineEdit.text()
+        
+        print(f"sietch = {sietch}")
+        print(f"self.ampDataS['apaUuid'] = {self.ampDataS['apaUuid']}")
+        out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"])
+        print(f"out = {out}")
 
-            print("Writing resonance results to db")
-            #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
-            for dwaCh, ch in enumerate(self.ampDataS["apaChannels"]): # Loop over channels in scan
-                for w in self.ampDataS["wireSegments"]:
-                    wire_ch = channel_map.wire_to_apa_channel(self.ampDataS["layer"], w)
-                    if wire_ch == ch:
-                        resonance_result = {
-                            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
-                            "formId": "wire_resonance_measurement",
-                            "formName": "Wire Resonance Measurement",
-                            "data": {
-                                "versionDaq": "1.1",
-                                "dwaUuid": self.ampDataS["apaUuid"],
-                                "versionFirmware": "1.1",
-                                "site": "Harvard",
-                                "measuredBy": self.ampDataS["measuredBy"],
-                                "productionStage": self.ampDataS["stage"],
-                                "side": self.ampDataS["side"],
-                                "layer": self.ampDataS["layer"],
-                                "wireSegments": {
-                                    str(w): self.resonantFreqs[dwaCh]
-                                },
-                                "saveAsDraft": True,
-                                "submit": True,
-                                "note": note
+        print("Making pointer table...")
+        #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
+        pointerTable = database_functions.get_pointer_table(sietch, self.ampDataS['apaUuid'], self.ampDataS['stage'])
+        if not pointerTable:
+            wirePointersAllLayers = {}
+            for layer in APA_LAYERS:
+                wirePointersAllLayers[layer] = {}
+                for side in APA_SIDES:
+                    wirePointersAllLayers[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT[layer]
+        else:
+            wirePointersAllLayers = pointerTable["data"]["wireSegments"]
+        print("Done making pointer table...")
+
+        print("Writing resonance results to db")
+        #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
+        for dwaCh, ch in enumerate(self.ampDataS["apaChannels"]): # Loop over channels in scan
+            for w in self.ampDataS["wireSegments"]:
+                wire_ch = channel_map.wire_to_apa_channel(self.ampDataS["layer"], w)
+                if wire_ch == ch:
+                    resonance_result = {
+                        "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
+                        "formId": "wire_resonance_measurement",
+                        "formName": "Wire Resonance Measurement",
+                        "data": {
+                            "versionDaq": "1.1",
+                            "dwaUuid": self.ampDataS["apaUuid"],
+                            "versionFirmware": "1.1",
+                            "site": "Harvard",
+                            "measuredBy": self.ampDataS["measuredBy"],
+                            "productionStage": self.ampDataS["stage"],
+                            "side": self.ampDataS["side"],
+                            "layer": self.ampDataS["layer"],
+                            "wireSegments": {
+                                str(w): self.resonantFreqs[dwaCh]
                             },
-                        }
-                        dbid = sietch.api('/test',resonance_result)
-                        wirePointersAllLayers[self.ampDataS['layer']][self.ampDataS['side']][w] = {"testId": dbid}
-                        #pointer_list[w] = {"testId": dbid}
-            print("Done writing resonance results to db")
-            
-            print("Writing record_result to db")
-            #pointer_lists[self.ampDataS["layer"]][self.ampDataS["side"]] = pointer_list  # BUG? should copy the list not reference it?
-            record_result = {
-                "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
-                "formId": "wire_tension_pointer",
-                "formName": "Wire Tension Pointer Record",
-                "stage": self.ampDataS["stage"],
-                "data": {
-                    "version": "1.1",
-                    "apaUuid": self.ampDataS["apaUuid"],
-                    "wireSegments": wirePointersAllLayers,
-                    "saveAsDraft": True,
-                    "submit": True
-                }
+                            "saveAsDraft": True,
+                            "submit": True,
+                            "note": note
+                        },
+                    }
+                    dbid = sietch.api('/test',resonance_result)
+                    wirePointersAllLayers[self.ampDataS['layer']][self.ampDataS['side']][w] = {"testId": dbid}
+                    #pointer_list[w] = {"testId": dbid}
+        print("Done writing resonance results to db")
+        
+        print("Writing record_result to db")
+        #pointer_lists[self.ampDataS["layer"]][self.ampDataS["side"]] = pointer_list  # BUG? should copy the list not reference it?
+        record_result = {
+            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
+            "formId": "wire_tension_pointer",
+            "formName": "Wire Tension Pointer Record",
+            "stage": self.ampDataS["stage"],
+            "data": {
+                "version": "1.1",
+                "apaUuid": self.ampDataS["apaUuid"],
+                "wireSegments": wirePointersAllLayers,
+                "saveAsDraft": True,
+                "submit": True
             }
-            dbid= sietch.api('/test',record_result)
-            print("Done writing record_result to db")
+        }
+        dbid= sietch.api('/test',record_result)
+        print("Done writing record_result to db")
 
-            # get the right row number to change Submitted status on
-            # can't just use self.recentScansTableRowInUse because rows may have been added
-            # to the scan since the A(f) data was loaded!
-            # Even this approach is not foolproof (race condition)
-            print("Updating Submitted status in Recent Scans table")
-            print(f"trying to match to: {self.recentScansNameOfLoadedScan}")
-            tableData = self.recentScansTableModel.getData()
-            for row in range(len(tableData)):
-                print(f"row, scanName = {row}, {tableData[row]['scanName']}")
-                if tableData[row]['scanName'] == self.recentScansNameOfLoadedScan:
-                    print("found match!")
-                    self.recentScansTableModel.setSubmitted(row, Submitted.YES)
-                
-            #self.recentScansTableModel.setSubmitted(self.recentScansTableRowInUse, Submitted.YES)
-            self.recentScansTableModel.layoutChanged.emit()
-
-            self.labelResonanceSubmitStatus.setText("Submitted!")
+        # get the right row number to change Submitted status on
+        # can't just use self.recentScansTableRowInUse because rows may have been added
+        # to the scan since the A(f) data was loaded!
+        # Even this approach is not foolproof (race condition)
+        print("Updating Submitted status in Recent Scans table")
+        print(f"trying to match to: {self.recentScansNameOfLoadedScan}")
+        tableData = self.recentScansTableModel.getData()
+        for row in range(len(tableData)):
+            print(f"row, scanName = {row}, {tableData[row]['scanName']}")
+            if tableData[row]['scanName'] == self.recentScansNameOfLoadedScan:
+                print("found match!")
+                self.recentScansTableModel.setSubmitted(row, Submitted.YES)
             
-        except:
-            self.labelResonanceSubmitStatus.setText("Error submitting resonances")
+        #self.recentScansTableModel.setSubmitted(self.recentScansTableRowInUse, Submitted.YES)
+        self.recentScansTableModel.layoutChanged.emit()
 
+        self.labelResonanceSubmitStatus.setText("Submitted!")
 
 
     #def loadEventDataViaName(self):
