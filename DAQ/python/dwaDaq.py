@@ -2085,8 +2085,8 @@ class MainWindow(qtw.QMainWindow):
         # TODO: Grab default values if undefined
         if advStimTime: advStimTime = float(advStimTime)
         if advInitDelay: advInitDelay = float(advInitDelay)
-        if advStimAmplitude: advStimAmplitude = float(advStimAmplitude) # BUG: should accept hex string, no?
-        if advDigipotAmplitude: advDigipotAmplitude = float(advDigipotAmplitude)  # BUG: should accept hex string, no?
+        if advStimAmplitude: advStimAmplitude = int(advStimAmplitude)
+        if advDigipotAmplitude: advDigipotAmplitude = int(advDigipotAmplitude)
 
 
         rd = self.range_data_list[scanIndex]
@@ -2125,11 +2125,12 @@ class MainWindow(qtw.QMainWindow):
            else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
         elif advStimTime: fpgaConfig.update(config_generator.configure_wait_times(stim_time=advStimTime))
 
-        if advStimAmplitude: 
-            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=int(advStimAmplitude)))
-            
-        if advDigipotAmplitude: 
-            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, digipot=int(advDigipotAmplitude)))
+        if advStimAmplitude and advDigipotAmplitude: 
+            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=advStimAmplitude, digipot=advDigipotAmplitude))
+        elif advStimAmplitude:
+            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, stim_mag=advStimAmplitude))
+        elif advDigipotAmplitude: 
+            fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, digipot=advDigipotAmplitude))
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels, is_flex_connection_winderlike))
