@@ -295,13 +295,13 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
                <string>Config</string>
               </attribute>
-              <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="8,1">
+              <layout class="QHBoxLayout" name="horizontalLayout_6">
                <item>
                 <widget class="QWidget" name="widget_2" native="true">
                  <layout class="QVBoxLayout" name="verticalLayout_19">
@@ -309,9 +309,6 @@
                    <layout class="QFormLayout" name="formLayout">
                     <property name="fieldGrowthPolicy">
                      <enum>QFormLayout::ExpandingFieldsGrow</enum>
-                    </property>
-                    <property name="formAlignment">
-                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
                     </property>
                     <item row="1" column="0">
                      <widget class="QLabel" name="stage_label">
@@ -324,13 +321,13 @@
                      <widget class="QComboBox" name="configStageComboBox">
                       <property name="minimumSize">
                        <size>
-                        <width>350</width>
+                        <width>250</width>
                         <height>0</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>350</width>
+                        <width>250</width>
                         <height>16777215</height>
                        </size>
                       </property>
@@ -353,13 +350,13 @@
                       </property>
                       <property name="minimumSize">
                        <size>
-                        <width>350</width>
+                        <width>250</width>
                         <height>0</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>350</width>
+                        <width>250</width>
                         <height>16777215</height>
                        </size>
                       </property>
@@ -382,13 +379,13 @@
                       </property>
                       <property name="minimumSize">
                        <size>
-                        <width>350</width>
+                        <width>250</width>
                         <height>0</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>350</width>
+                        <width>250</width>
                         <height>16777215</height>
                        </size>
                       </property>
@@ -703,6 +700,19 @@
                 </widget>
                </item>
                <item>
+                <spacer name="verticalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
                 <widget class="QGraphicsView" name="graphicsView"/>
                </item>
               </layout>
@@ -820,57 +830,100 @@
                 <item row="11" column="1">
                  <layout class="QHBoxLayout" name="horizontalLayout_10"/>
                 </item>
-                <item row="14" column="0">
-                 <widget class="QLabel" name="label_14">
+                <item row="12" column="0">
+                 <widget class="QLabel" name="label_18">
                   <property name="text">
-                   <string>Initialization delay(s)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="14" column="1">
-                 <widget class="QLineEdit" name="advInitDelayLineEdit"/>
-                </item>
-                <item row="15" column="0">
-                 <widget class="QLabel" name="label_15">
-                  <property name="text">
-                   <string>Stimulus Amplitude</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="15" column="1">
-                 <widget class="QLineEdit" name="advStimAmplitudeLineEdit"/>
-                </item>
-                <item row="13" column="1">
-                 <widget class="QLineEdit" name="advStimTimeLineEdit"/>
-                </item>
-                <item row="13" column="0">
-                 <widget class="QLabel" name="label_13">
-                  <property name="text">
-                   <string>Stimulation time (s)</string>
+                   <string>Frequency step min (Hz)</string>
                   </property>
                  </widget>
                 </item>
                 <item row="12" column="1">
-                 <widget class="QLineEdit" name="advFssLineEdit"/>
+                 <widget class="QLineEdit" name="advFreqMinLineEdit"/>
                 </item>
-                <item row="12" column="0">
+                <item row="13" column="0">
+                 <widget class="QLabel" name="label_17">
+                  <property name="text">
+                   <string>Frequency step max (Hz)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="13" column="1">
+                 <widget class="QLineEdit" name="advFreqMaxLineEdit"/>
+                </item>
+                <item row="14" column="0">
                  <widget class="QLabel" name="label_12">
                   <property name="text">
                    <string>Frequency step size (Hz)</string>
                   </property>
                  </widget>
                 </item>
+                <item row="14" column="1">
+                 <widget class="QLineEdit" name="advFssLineEdit"/>
+                </item>
+                <item row="15" column="0">
+                 <widget class="QLabel" name="label_13">
+                  <property name="text">
+                   <string>Stimulation time (s)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="15" column="1">
+                 <widget class="QLineEdit" name="advStimTimeLineEdit"/>
+                </item>
                 <item row="16" column="0">
+                 <widget class="QLabel" name="label_14">
+                  <property name="text">
+                   <string>Initialization delay(s)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="16" column="1">
+                 <widget class="QLineEdit" name="advInitDelayLineEdit"/>
+                </item>
+                <item row="17" column="0">
+                 <widget class="QLabel" name="label_15">
+                  <property name="text">
+                   <string>Stimulus Amplitude</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="17" column="1">
+                 <widget class="QLineEdit" name="advStimAmplitudeLineEdit"/>
+                </item>
+                <item row="18" column="0">
                  <widget class="QLabel" name="label_7">
                   <property name="text">
                    <string>Digipot Amplitude</string>
                   </property>
                  </widget>
                 </item>
-                <item row="16" column="1">
+                <item row="18" column="1">
                  <widget class="QLineEdit" name="advDigipotAmplitudeLineEdit"/>
                 </item>
+                <item row="19" column="0">
+                 <widget class="QLabel" name="disableAdvancedParametersLabel">
+                  <property name="text">
+                   <string>Disable Advanced Parameters</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="19" column="1">
+                 <widget class="QCheckBox" name="advDisableAdvancedParametersCheckBox"/>
+                </item>
                </layout>
+              </widget>
+              <widget class="QLabel" name="omitComments_label_2">
+               <property name="geometry">
+                <rect>
+                 <x>880</x>
+                 <y>850</y>
+                 <width>119</width>
+                 <height>19</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>Omit comments:</string>
+               </property>
               </widget>
              </widget>
              <widget class="QWidget" name="tab_timeseriesGrid">
@@ -1072,6 +1125,18 @@
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>150</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>150</height>
+              </size>
              </property>
             </widget>
            </item>
@@ -1698,7 +1763,7 @@
      <x>0</x>
      <y>0</y>
      <width>1313</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -1747,32 +1812,32 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>btnDwaConnect</tabstop>
   <tabstop>tabWidgetStages</tabstop>
   <tabstop>tabWidgetStim</tabstop>
-  <tabstop>configStageComboBox</tabstop>
-  <tabstop>measuredByLineEdit</tabstop>
-  <tabstop>configApaUuidLineEdit</tabstop>
-  <tabstop>configLayerComboBox</tabstop>
-  <tabstop>SideComboBox</tabstop>
-  <tabstop>configRadioAll</tabstop>
-  <tabstop>configHeadboardSpinBox</tabstop>
-  <tabstop>configRadioSingle</tabstop>
-  <tabstop>spinBox</tabstop>
-  <tabstop>btnConfigureScans</tabstop>
-  <tabstop>graphicsView</tabstop>
+  <tabstop>btnScanCtrlAdv</tabstop>
   <tabstop>configFileName</tabstop>
   <tabstop>omitComments_cb</tabstop>
-  <tabstop>pw_grid_2</tabstop>
+  <tabstop>configFileContents</tabstop>
+  <tabstop>advFreqMinLineEdit</tabstop>
+  <tabstop>advFreqMaxLineEdit</tabstop>
+  <tabstop>advFssLineEdit</tabstop>
+  <tabstop>advStimTimeLineEdit</tabstop>
   <tabstop>advInitDelayLineEdit</tabstop>
   <tabstop>advStimAmplitudeLineEdit</tabstop>
-  <tabstop>advStimTimeLineEdit</tabstop>
-  <tabstop>advFssLineEdit</tabstop>
   <tabstop>advDigipotAmplitudeLineEdit</tabstop>
+  <tabstop>advDisableAdvancedParametersCheckBox</tabstop>
+  <tabstop>btnDwaConnect</tabstop>
+  <tabstop>configLayerComboBox</tabstop>
+  <tabstop>pw_grid_2</tabstop>
+  <tabstop>configRadioSingle</tabstop>
+  <tabstop>spinBox</tabstop>
+  <tabstop>configHeadboardSpinBox</tabstop>
+  <tabstop>configRadioAll</tabstop>
+  <tabstop>btnConfigureScans</tabstop>
   <tabstop>pw_grid_0</tabstop>
   <tabstop>pw_grid_4</tabstop>
   <tabstop>pw_grid_1</tabstop>
-  <tabstop>configFileContents</tabstop>
+  <tabstop>configStageComboBox</tabstop>
   <tabstop>pw_grid_5</tabstop>
   <tabstop>pw_grid_7</tabstop>
   <tabstop>outputText</tabstop>
@@ -1785,7 +1850,7 @@
   <tabstop>pw_grid_3</tabstop>
   <tabstop>pw_grid_6</tabstop>
   <tabstop>pw_chan_7</tabstop>
-  <tabstop>btnScanCtrlAdv</tabstop>
+  <tabstop>SideComboBox</tabstop>
   <tabstop>pw_chan_2</tabstop>
   <tabstop>pw_amplgrid_0</tabstop>
   <tabstop>pw_amplgrid_2</tabstop>
@@ -1837,6 +1902,15 @@
   <tabstop>evtVwrTabs</tabstop>
   <tabstop>evtVwrPlotsGLW</tabstop>
   <tabstop>pw_chan_1</tabstop>
+  <tabstop>scanTable</tabstop>
+  <tabstop>btnScanCtrl</tabstop>
+  <tabstop>scanCtrlRunAll</tabstop>
+  <tabstop>submitResonanceNoteLineEdit</tabstop>
+  <tabstop>submitTensionNoteLineEdit</tabstop>
+  <tabstop>evtVwr_openScan_pb</tabstop>
+  <tabstop>configApaUuidLineEdit</tabstop>
+  <tabstop>measuredByLineEdit</tabstop>
+  <tabstop>graphicsView</tabstop>
  </tabstops>
  <resources/>
  <connections/>

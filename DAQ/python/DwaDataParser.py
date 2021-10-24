@@ -137,7 +137,7 @@ class DwaDataParser():
         # ADC Data Frame entries
         # N/A
         #
-        self.frameKeys[Frame.STATUS]["61"] = "unknown"
+        self.frameKeys[Frame.STATUS]["61"] = "statusTrigger"   # what triggered the STATUS frame transmission (1=timeout, 0=state machine change)
         self.frameKeys[Frame.STATUS]["62"] = "controllerState"
         self.frameKeys[Frame.STATUS]["63"] = "statusErrorBits"
         self.frameKeys[Frame.STATUS]["64"] = "buttonStatus"
@@ -232,7 +232,7 @@ class DwaDataParser():
             #"UNHANDLED_LINES": self._parseUnknownInfoLine  # do this if a key is not recognized...
             #
             # STATUS frame keys
-            "unknown":self._parseInfoLineAsInt,
+            "statusTrigger":self._parseInfoLineAsInt,
             "controllerState":self._parseInfoLineAsInt,
             "statusErrorBits":self._parseInfoLineAsBits,
             "buttonStatus":self._parseInfoLineAsBits,
@@ -463,6 +463,18 @@ class DwaDataParser():
             dd['controllerStateStr'] = 'UNKNOWN'
         #
         dd['buttonStatusList'] = [ dd['buttonStatus'][-(n+1)] for n in range(N_PUSH_BUTTONS) ]
+
+        # Determine why this status frame was sent
+        #   1: timeout
+        #   2: state change
+        #   4: button change
+        #   8: error
+        #   So a value of 1010b = 10(decimal) would mean that both an error and state change triggered the push
+        
+        dd['trgTimeout']      = bool(dd['statusTrigger'] & 0b0001)
+        dd['trgStateChange']  = bool(dd['statusTrigger'] & 0b0010)
+        dd['trgButtonChange'] = bool(dd['statusTrigger'] & 0b0100)
+        dd['trgErrorChange']  = bool(dd['statusTrigger'] & 0b1000)
         
         return dd
 
