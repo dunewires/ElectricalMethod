@@ -2074,7 +2074,7 @@ class MainWindow(qtw.QMainWindow):
 
         self.updateApaUuidListModel()  
         
-        useAdvancedParameters = self.advDisableAdvancedParametersCheckBox.isChecked()
+        useAdvancedParameters = not self.advDisableAdvancedParametersCheckBox.isChecked()
         advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
         advInitDelay = self.advInitDelayLineEdit.text() # Init delay
         advStimAmplitude = self.advStimAmplitudeLineEdit.text() # Amplitude
