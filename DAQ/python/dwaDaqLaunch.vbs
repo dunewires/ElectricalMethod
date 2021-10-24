@@ -1,0 +1,1 @@
+CreateObject("Wscript.Shell").Run "cmd /c pythonw dwaDaq.py > logs\output.txt 2>&1", 0, True
