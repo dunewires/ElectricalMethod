@@ -206,7 +206,7 @@ DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUui
 # Recent scan list 
 SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid']
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
-N_RECENT_SCANS = 4
+N_RECENT_SCANS = 160
 
 TENSION_SPEC = 6.5 # Newtons
 TENSION_SPEC_MIN = TENSION_SPEC-1.0
@@ -803,7 +803,7 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.setModel(self.recentScansTableModel)
         self.recentScansTableView.resizeColumnsToContents()
         self.recentScansTableView.resizeRowsToContents()
-        self.recentScansTableView.setMaximumHeight(80)
+        #self.recentScansTableView.setMaximumHeight(80)
         self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)  # clicking in cell selects entire row
         self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
         #https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
@@ -842,7 +842,7 @@ class MainWindow(qtw.QMainWindow):
         # Set default A(f) peak detection parameters
         self.resFitParams = {}
         self.resFitParams['preprocess'] = {'detrend':True}  # detrend: subtract a line from A(f) before processing?
-        self.resFitParams['find_peaks'] = {'bkgPoly':-3, 'width':10, 'prominence':2}
+        self.resFitParams['find_peaks'] = {'bkgPoly':-3, 'width':10, 'prominence':99}
         # FIXME: replace this with a Model/View approach
         self.resFitPreDetrend.blockSignals(True)
         self.resFitPreDetrend.setChecked(self.resFitParams['preprocess']['detrend'])
@@ -1500,8 +1500,8 @@ class MainWindow(qtw.QMainWindow):
         chanNum = 0
         #for irow in range(4):
         #    for icol in range(2):
-        for irow in range(3):     # fixme: can addPlot(row=, col=)...
-            for icol in range(3):
+        for irow in range(8):     # fixme: can addPlot(row=, col=)...
+            for icol in range(1):
                 if irow == 2 and icol == 2:
                     continue
                 self.resonanceRawPlots.append(self.resonanceRawDataGLW.addPlot())
