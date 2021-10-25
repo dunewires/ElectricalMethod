@@ -207,7 +207,7 @@ DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUui
 # Recent scan list 
 SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid']
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
-N_RECENT_SCANS = 4
+N_RECENT_SCANS = 160
 
 TENSION_SPEC = 6.5 # Newtons
 TENSION_SPEC_MIN = TENSION_SPEC-1.0
@@ -711,26 +711,37 @@ class MainWindow(qtw.QMainWindow):
         #self.dwaPB0Status.setStyleSheet(style)
         #self.dwaPB1Status.setStyleSheet(style)
         
-    def generateScanListEntry(self, scanDir, submitted):
+    def generateScanListEntry(self, scanDir, submitted=None):
         
         entry = {}
         for kk in SCAN_LIST_DATA_KEYS:  # populate with default/garbage
             entry[kk] = None
             
         ampFilename = os.path.join(scanDir, 'amplitudeData.json')
-        print("generateScanListEntry()")
-        print(f"  ampFilename = {ampFilename}")
+        #print("generateScanListEntry()")
+        #print(f"  ampFilename = {ampFilename}")
         try:         # Ensure that there is an amplitudeData.json file present!
             with open(ampFilename, "r") as fh:
                 data = json.load(fh)
 
             # Add in a couple fields
             data['scanName'] = scanDir
-            data['submitted'] = submitted
         except:
             print(f"Could not add new scan to list (bad json file?) {ampFilename}...")
             return None
 
+        # If caller doesn't specify a "submitted" status, the try to figure it out
+        if not submitted:
+            try:
+                resFilename = ampFilename.replace('amplitudeData.json', 'resonanceData.json')
+                with open(resFilename, 'r') as fh:
+                    pass
+                submitted = Submitted.YES
+            except:
+                submitted = Submitted.NO
+                
+        data['submitted'] = submitted
+        
         for kk in SCAN_LIST_DATA_KEYS: # populate with useful information
             try:
                 entry[kk] = data[kk]
@@ -783,7 +794,6 @@ class MainWindow(qtw.QMainWindow):
         scanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
                                           advDir=OUTPUT_DIR_SCAN_DATA_ADVANCED,
                                           sort=True)
-
         tabledata = []
         
         for sd in scanDirs:  # first entry in list is most recent
@@ -792,7 +802,7 @@ class MainWindow(qtw.QMainWindow):
                 print("directory contains .DS_STORE... ignoring")
                 continue
             #tabledata.append(self.generateScanListEntry(sd, Submitted.UNKNOWN))  # add to end of table
-            entry = self.generateScanListEntry(sd, Submitted.UNKNOWN)  # add to end of table
+            entry = self.generateScanListEntry(sd, submitted=None)  # add to end of table
             if not entry:
                 continue
             tabledata.append(entry)  # add to end of table
@@ -804,7 +814,7 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.setModel(self.recentScansTableModel)
         self.recentScansTableView.resizeColumnsToContents()
         self.recentScansTableView.resizeRowsToContents()
-        self.recentScansTableView.setMaximumHeight(80)
+        #self.recentScansTableView.setMaximumHeight(80)
         self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)  # clicking in cell selects entire row
         self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
         #https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
@@ -843,7 +853,7 @@ class MainWindow(qtw.QMainWindow):
         # Set default A(f) peak detection parameters
         self.resFitParams = {}
         self.resFitParams['preprocess'] = {'detrend':True}  # detrend: subtract a line from A(f) before processing?
-        self.resFitParams['find_peaks'] = {'bkgPoly':-3, 'width':10, 'prominence':2}
+        self.resFitParams['find_peaks'] = {'bkgPoly':-3, 'width':10, 'prominence':99}
         # FIXME: replace this with a Model/View approach
         self.resFitPreDetrend.blockSignals(True)
         self.resFitPreDetrend.setChecked(self.resFitParams['preprocess']['detrend'])
@@ -1506,8 +1516,8 @@ class MainWindow(qtw.QMainWindow):
         chanNum = 0
         #for irow in range(4):
         #    for icol in range(2):
-        for irow in range(3):     # fixme: can addPlot(row=, col=)...
-            for icol in range(3):
+        for irow in range(8):     # fixme: can addPlot(row=, col=)...
+            for icol in range(1):
                 if irow == 2 and icol == 2:
                     continue
                 self.resonanceRawPlots.append(self.resonanceRawDataGLW.addPlot())
@@ -2377,26 +2387,26 @@ class MainWindow(qtw.QMainWindow):
         # open a file selection dialog for user to input a scan filename
         options = qtw.QFileDialog.Options()
         #options |= qtw.QFileDialog.DontUseNativeDialog
-        scanFilename, _ = qtw.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()",
+        scanFilenames, _ = qtw.QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileName()",
                                                           "","All Files (*);;JSON Files (*.json)",
                                                           options=options)
-        
-        if scanFilename:  # validate the selected filename (require .json?)
-            print(scanFilename)
+        for scanFilename in scanFilenames:
+            if scanFilename:  # validate the selected filename (require .json?)
+                print(scanFilename)
 
-            # Insert this scan into to the Recent Scans list
-            scanDir = os.path.dirname(scanFilename)
-            row = 0
-            self.insertScanIntoScanList(scanDir, row=row, submitted=Submitted.UNKNOWN)
-            # and highlight the newly inserted row in the table
-            self.recentScansTableView.selectRow(row)
-            #self.recentScansTableRowInUse = row
-            tableRowData = self.recentScansTableModel.getData()[row]
-            #print(f"scanDir = {scanDir}")
-            #print(f"tableRowData['scanName'] = {tableRowData['scanName']}")
-            self.recentScansNameOfLoadedScan = tableRowData['scanName']
-            
-            self.loadSavedScanData(scanFilename)
+                # Insert this scan into to the Recent Scans list
+                scanDir = os.path.dirname(scanFilename)
+                row = 0
+                self.insertScanIntoScanList(scanDir, row=row, submitted=None)
+                # and highlight the newly inserted row in the table
+                self.recentScansTableView.selectRow(row)
+                #self.recentScansTableRowInUse = row
+                tableRowData = self.recentScansTableModel.getData()[row]
+                #print(f"scanDir = {scanDir}")
+                #print(f"tableRowData['scanName'] = {tableRowData['scanName']}")
+                self.recentScansNameOfLoadedScan = tableRowData['scanName']
+                
+                self.loadSavedScanData(scanFilename)
 
     def loadSavedScanData(self, filename):
         print("loadSavedScanData")
@@ -2688,10 +2698,10 @@ class MainWindow(qtw.QMainWindow):
                 if len(measured_frequencies) > 0:
                     mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
                     for i,w in enumerate(wires):
-                        self.tensionData[side][int(w)-1] = mapped[i]
+                        self.tensionData[side][w-1] = mapped[i]
                         print(side,str(w),str(mapped[i]))
                 print("\n")
-            self.curves['tension']['tensionOfWireNumber'][layer][side].setData( self.tensionData[side] )
+            self.curves['tension']['tensionOfWireNumber'][layer][side].setData(range(1, MAX_WIRE_SEGMENT[layer]+1), self.tensionData[side] )
             # FIXME: this should only happen once -- in _makeCurves()
             # Create the scatter plot and add it to the view
             #scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
@@ -2839,7 +2849,7 @@ class MainWindow(qtw.QMainWindow):
                         },
                     }
                     dbid = sietch.api('/test',resonance_result)
-                    wirePointersAllLayers[self.ampDataS['layer']][self.ampDataS['side']][w] = {"testId": dbid}
+                    wirePointersAllLayers[self.ampDataS['layer']][self.ampDataS['side']][w-1] = {"testId": dbid}
                     #pointer_list[w] = {"testId": dbid}
         print("Done writing resonance results to db")
         
@@ -3859,8 +3869,6 @@ class MainWindow(qtw.QMainWindow):
             print(f"  submitted: {submitted} (NO={Submitted.NO}, UNKNOWN={Submitted.UNKNOWN}, YES={Submitted.YES})")
 
         # FIXME: validate passed arguments
-        if submitted is None:
-            submitted = Submitted.NO
         row = 0 if row is None else row
 
         #self.recentScansTableModel.insert(row, self.generateScanListEntry(scanDir, submitted=submitted))
