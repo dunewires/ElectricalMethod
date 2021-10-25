@@ -711,26 +711,37 @@ class MainWindow(qtw.QMainWindow):
         #self.dwaPB0Status.setStyleSheet(style)
         #self.dwaPB1Status.setStyleSheet(style)
         
-    def generateScanListEntry(self, scanDir, submitted):
+    def generateScanListEntry(self, scanDir, submitted=None):
         
         entry = {}
         for kk in SCAN_LIST_DATA_KEYS:  # populate with default/garbage
             entry[kk] = None
             
         ampFilename = os.path.join(scanDir, 'amplitudeData.json')
-        print("generateScanListEntry()")
-        print(f"  ampFilename = {ampFilename}")
+        #print("generateScanListEntry()")
+        #print(f"  ampFilename = {ampFilename}")
         try:         # Ensure that there is an amplitudeData.json file present!
             with open(ampFilename, "r") as fh:
                 data = json.load(fh)
 
             # Add in a couple fields
             data['scanName'] = scanDir
-            data['submitted'] = submitted
         except:
             print(f"Could not add new scan to list (bad json file?) {ampFilename}...")
             return None
 
+        # If caller doesn't specify a "submitted" status, the try to figure it out
+        if not submitted:
+            try:
+                resFilename = ampFilename.replace('amplitudeData.json', 'resonanceData.json')
+                with open(resFilename, 'r') as fh:
+                    pass
+                submitted = Submitted.YES
+            except:
+                submitted = Submitted.NO
+                
+        data['submitted'] = submitted
+        
         for kk in SCAN_LIST_DATA_KEYS: # populate with useful information
             try:
                 entry[kk] = data[kk]
@@ -783,7 +794,6 @@ class MainWindow(qtw.QMainWindow):
         scanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
                                           advDir=OUTPUT_DIR_SCAN_DATA_ADVANCED,
                                           sort=True)
-
         tabledata = []
         
         for sd in scanDirs:  # first entry in list is most recent
@@ -792,7 +802,7 @@ class MainWindow(qtw.QMainWindow):
                 print("directory contains .DS_STORE... ignoring")
                 continue
             #tabledata.append(self.generateScanListEntry(sd, Submitted.UNKNOWN))  # add to end of table
-            entry = self.generateScanListEntry(sd, Submitted.UNKNOWN)  # add to end of table
+            entry = self.generateScanListEntry(sd, submitted=None)  # add to end of table
             if not entry:
                 continue
             tabledata.append(entry)  # add to end of table
@@ -2387,7 +2397,7 @@ class MainWindow(qtw.QMainWindow):
             # Insert this scan into to the Recent Scans list
             scanDir = os.path.dirname(scanFilename)
             row = 0
-            self.insertScanIntoScanList(scanDir, row=row, submitted=Submitted.UNKNOWN)
+            self.insertScanIntoScanList(scanDir, row=row, submitted=None)
             # and highlight the newly inserted row in the table
             self.recentScansTableView.selectRow(row)
             #self.recentScansTableRowInUse = row
@@ -3859,8 +3869,6 @@ class MainWindow(qtw.QMainWindow):
             print(f"  submitted: {submitted} (NO={Submitted.NO}, UNKNOWN={Submitted.UNKNOWN}, YES={Submitted.YES})")
 
         # FIXME: validate passed arguments
-        if submitted is None:
-            submitted = Submitted.NO
         row = 0 if row is None else row
 
         #self.recentScansTableModel.insert(row, self.generateScanListEntry(scanDir, submitted=submitted))
