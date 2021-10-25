@@ -198,7 +198,7 @@ def all_apa_frequencies():
 
 
 def wire_frequencies_from_channels(wire_layer: str, channel_numbers: list):
-    """Return a dictionary where the keys are the wire numbers for the given channels and the values are their resonance frequency."""
+    """Return a dictionary where the keys are the wire numbers for the given channels and the values are their resonance frequencies."""
     allwires = {}
     for ch in channel_numbers:
         allwires.update(channel_frequencies_per_wire(wire_layer, ch))
