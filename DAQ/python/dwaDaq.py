@@ -1016,9 +1016,9 @@ class MainWindow(qtw.QMainWindow):
         ##print(f"evt.pos()       = {evt.pos()}")
         #print(f"evt.modifiers() = {evt.modifiers()}")
 
-        if evt.modifiers() == qtc.Qt.ControlModifier:
-            print("CTRL held down")
-            self._addF0LineViaClick(evt)
+        #if evt.modifiers() == qtc.Qt.ControlModifier:
+        #    print("CTRL held down")
+        self._addF0LineViaClick(evt)
         #if evt.modifiers() == qtc.Qt.ShiftModifier:
         #    print("SHIFT held down")
         #if evt.modifiers() == qtc.Qt.AltModifier:
@@ -2814,6 +2814,7 @@ class MainWindow(qtw.QMainWindow):
         print("Writing resonance results to db")
         #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
         for dwaCh, ch in enumerate(self.ampDataS["apaChannels"]): # Loop over channels in scan
+            print("Submitting APA channel ",ch)
             for w in self.ampDataS["wireSegments"]:
                 wire_ch = channel_map.wire_to_apa_channel(self.ampDataS["layer"], w)
                 if wire_ch == ch:
@@ -2838,6 +2839,7 @@ class MainWindow(qtw.QMainWindow):
                             "note": note
                         },
                     }
+                    print("Submitting wire ",w)
                     dbid = sietch.api('/test',resonance_result)
                     wirePointersAllLayers[self.ampDataS['layer']][self.ampDataS['side']][w] = {"testId": dbid}
                     #pointer_list[w] = {"testId": dbid}
@@ -2866,12 +2868,12 @@ class MainWindow(qtw.QMainWindow):
         # to the scan since the A(f) data was loaded!
         # Even this approach is not foolproof (race condition)
         print("Updating Submitted status in Recent Scans table")
-        print(f"trying to match to: {self.recentScansNameOfLoadedScan}")
+        #print(f"trying to match to: {self.recentScansNameOfLoadedScan}")
         tableData = self.recentScansTableModel.getData()
         for row in range(len(tableData)):
-            print(f"row, scanName = {row}, {tableData[row]['scanName']}")
+            #print(f"row, scanName = {row}, {tableData[row]['scanName']}")
             if tableData[row]['scanName'] == self.recentScansNameOfLoadedScan:
-                print("found match!")
+                #print("found match!")
                 self.recentScansTableModel.setSubmitted(row, Submitted.YES)
             
         #self.recentScansTableModel.setSubmitted(self.recentScansTableRowInUse, Submitted.YES)
