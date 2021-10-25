@@ -2691,7 +2691,7 @@ class MainWindow(qtw.QMainWindow):
                         self.tensionData[side][int(w)-1] = mapped[i]
                         print(side,str(w),str(mapped[i]))
                 print("\n")
-            self.curves['tension']['tensionOfWireNumber'][layer][side].setData( self.tensionData[side] )
+            self.curves['tension']['tensionOfWireNumber'][layer][side].setData(range(1, MAX_WIRE_SEGMENT[layer]+1), self.tensionData[side] )
             # FIXME: this should only happen once -- in _makeCurves()
             # Create the scatter plot and add it to the view
             #scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
