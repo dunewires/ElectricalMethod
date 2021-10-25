@@ -2377,26 +2377,26 @@ class MainWindow(qtw.QMainWindow):
         # open a file selection dialog for user to input a scan filename
         options = qtw.QFileDialog.Options()
         #options |= qtw.QFileDialog.DontUseNativeDialog
-        scanFilename, _ = qtw.QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()",
+        scanFilenames, _ = qtw.QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileName()",
                                                           "","All Files (*);;JSON Files (*.json)",
                                                           options=options)
-        
-        if scanFilename:  # validate the selected filename (require .json?)
-            print(scanFilename)
+        for scanFilename in scanFilenames:
+            if scanFilename:  # validate the selected filename (require .json?)
+                print(scanFilename)
 
-            # Insert this scan into to the Recent Scans list
-            scanDir = os.path.dirname(scanFilename)
-            row = 0
-            self.insertScanIntoScanList(scanDir, row=row, submitted=Submitted.UNKNOWN)
-            # and highlight the newly inserted row in the table
-            self.recentScansTableView.selectRow(row)
-            #self.recentScansTableRowInUse = row
-            tableRowData = self.recentScansTableModel.getData()[row]
-            #print(f"scanDir = {scanDir}")
-            #print(f"tableRowData['scanName'] = {tableRowData['scanName']}")
-            self.recentScansNameOfLoadedScan = tableRowData['scanName']
-            
-            self.loadSavedScanData(scanFilename)
+                # Insert this scan into to the Recent Scans list
+                scanDir = os.path.dirname(scanFilename)
+                row = 0
+                self.insertScanIntoScanList(scanDir, row=row, submitted=Submitted.UNKNOWN)
+                # and highlight the newly inserted row in the table
+                self.recentScansTableView.selectRow(row)
+                #self.recentScansTableRowInUse = row
+                tableRowData = self.recentScansTableModel.getData()[row]
+                #print(f"scanDir = {scanDir}")
+                #print(f"tableRowData['scanName'] = {tableRowData['scanName']}")
+                self.recentScansNameOfLoadedScan = tableRowData['scanName']
+                
+                self.loadSavedScanData(scanFilename)
 
     def loadSavedScanData(self, filename):
         print("loadSavedScanData")
