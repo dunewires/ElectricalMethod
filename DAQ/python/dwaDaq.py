@@ -2688,7 +2688,7 @@ class MainWindow(qtw.QMainWindow):
                 if len(measured_frequencies) > 0:
                     mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
                     for i,w in enumerate(wires):
-                        self.tensionData[side][int(w)-1] = mapped[i]
+                        self.tensionData[side][w-1] = mapped[i]
                         print(side,str(w),str(mapped[i]))
                 print("\n")
             self.curves['tension']['tensionOfWireNumber'][layer][side].setData(range(1, MAX_WIRE_SEGMENT[layer]+1), self.tensionData[side] )
@@ -2839,7 +2839,7 @@ class MainWindow(qtw.QMainWindow):
                         },
                     }
                     dbid = sietch.api('/test',resonance_result)
-                    wirePointersAllLayers[self.ampDataS['layer']][self.ampDataS['side']][w] = {"testId": dbid}
+                    wirePointersAllLayers[self.ampDataS['layer']][self.ampDataS['side']][w-1] = {"testId": dbid}
                     #pointer_list[w] = {"testId": dbid}
         print("Done writing resonance results to db")
         
