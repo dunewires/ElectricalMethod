@@ -1,4 +1,6 @@
 # FIXME/TODO:
+# * Play audible alert after a scan is done?
+#   and/or bring focus to config tab?
 #
 # * can't just use self.recentScansTableRowInUse because rows may have been added
 #   to the scan since the A(f) data was loaded!
@@ -568,6 +570,7 @@ class MainWindow(qtw.QMainWindow):
         #self.interScanDelay = INTER_SCAN_DELAY_SEC
         self.setDwaStatusLabel('notConnected')
         self.setPushButtonStatusAll([-1]*4)
+        self.setDwaErrorStatus(None)
         self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
         self.runStatusHeading_label.setStyleSheet("font-weight: bold;")
         self.initRecentScanList()
@@ -687,6 +690,24 @@ class MainWindow(qtw.QMainWindow):
         for ii, val in enumerate(buttonVals):
             self.setPushButtonStatus(ii, val)
         
+    def setDwaErrorStatus(self, errorString):
+        #print(f"setDwaErrorStatus: {errorString}")
+        if errorString is None:
+            color = 'gray'
+        else:
+            error = True if '1' in errorString else False
+            print(f"error = {error}")
+            if error:
+                color = 'red'
+            else:
+                color = 'green'
+            
+        borderSize = 3
+        style = f"border: {borderSize}px solid {color};"
+        #print(f"tyle = {style}")
+        # FIXME: add background color: e.g. "background-color green;"
+        self.dwaErrorState_val.setStyleSheet(style)
+
     def setPushButtonStatus(self, buttonId, buttonVal):
         # Set a single push button GUI element
         #width = self.dwaPB0Status_label.size().width()
@@ -3564,6 +3585,8 @@ class MainWindow(qtw.QMainWindow):
             if udpDict[ddp.Frame.STATUS]['trgErrorChange']:
                 self.logDwaErrorStatus(udpDict[ddp.Frame.STATUS]['statusErrorBits'])
 
+            self.updateErrorStatusInGui(udpDict[ddp.Frame.STATUS]['statusErrorBits'])
+            
             # update heart logo
             self.updateHeartbeatLogo()
 
@@ -3588,6 +3611,12 @@ class MainWindow(qtw.QMainWindow):
             # Display the status of the push buttons
             self.buttonStatus_val.setText(f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
             self.setPushButtonStatusAll(udpDict[ddp.Frame.STATUS]['buttonStatusList'])
+
+    def updateErrorStatusInGui(self, errorBitsString):
+        # print(udpDict[ddp.Frame.STATUS]['statusErrorBits'])
+        # statusErrorBits looks like this: '000000000000000000000000'
+        # not yet sure of the mapping...
+        self.setDwaErrorStatus(errorBitsString)
 
     def logDwaButtonStatus(self, msg):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
