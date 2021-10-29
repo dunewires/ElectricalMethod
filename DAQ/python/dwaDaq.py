@@ -141,10 +141,12 @@ from SietchConnect import SietchConnect
 
 sys.path.append('./mappings')
 sys.path.append('./database')
+sys.path.append('./fitting')
 import config_generator
 import channel_map
 import channel_frequencies
 import database_functions
+import resonance_fitting
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -1026,9 +1028,9 @@ class MainWindow(qtw.QMainWindow):
         ##print(f"evt.pos()       = {evt.pos()}")
         #print(f"evt.modifiers() = {evt.modifiers()}")
 
-        if evt.modifiers() == qtc.Qt.ControlModifier:
-            print("CTRL held down")
-            self._addF0LineViaClick(evt)
+        #if evt.modifiers() == qtc.Qt.ControlModifier:
+        #    print("CTRL held down")
+        self._addF0LineViaClick(evt)
         #if evt.modifiers() == qtc.Qt.ShiftModifier:
         #    print("SHIFT held down")
         #if evt.modifiers() == qtc.Qt.AltModifier:
@@ -3935,7 +3937,7 @@ class MainWindow(qtw.QMainWindow):
         #        need only pass the self.ampDataS and self.resFitParams dictionaries
         
         print("runResonanceAnalysis():")
-        self.resFreqGetParams()
+        #self.resFreqGetParams()
         self.resFreqRunFit()
         self.resFreqUpdateDisplay(chan=None)
 
@@ -3950,66 +3952,93 @@ class MainWindow(qtw.QMainWindow):
             # FIXME: defunct...
             if len(self.ampDataS[reg]['freq']) == 0:  # maybe a register has no data?
                 continue
-            #peakIds, _ = find_peaks(np.cumsum(self.ampDataS[reg]['ampl']))
-            #apaChan = self.ampDataS['apaChannels'][reg.value]
-            apaChan = self.ampDataS['apaChannels'][chan]
-            if not apaChan: continue
-            wires, expectedFreqs = channel_frequencies.get_expected_resonances(self.ampDataS["layer"], apaChan, thresh = 250.)
-            #expectedFreqs = [f for sublist in expectedFreqs for f in sublist]
+
+            layer = self.ampDataS['layer']
+            apaCh = self.ampDataS['apaChannels'][reg]
+            opt_res = []
+            print("Channel ",apaCh)
+            if apaCh:
+                ex = channel_frequencies.get_expected_resonances(layer,apaCh,200)[1]
+                ex.sort(key=len,reverse=True)
+                self.expectedFreqs[reg] = ex
+                print(ex)
+                f = np.array(self.ampDataS[reg]['freq'])
+                a = np.array(self.ampDataS[reg]['ampl'])
+                if len(f)>250:
+                    bsub = resonance_fitting.baseline_subtracted(a)
+                    if resonance_fitting.contains_resonances(bsub):
+                        opt_reduced = bsub.copy()
+                        colors = ['red','orange','yellow']
+                        for i,wire_segment_res in enumerate(ex):
+                            opt_res.append(resonance_fitting.optimize_res_placement(f,opt_reduced,wire_segment_res))
+                    else:
+                        print("No resonances")
+                else:
+                    print("Scan too short")
+            else:
+                print("No channel")
+
+            # #peakIds, _ = find_peaks(np.cumsum(self.ampDataS[reg]['ampl']))
+            # #apaChan = self.ampDataS['apaChannels'][reg.value]
+            # apaChan = self.ampDataS['apaChannels'][chan]
+            # if not apaChan: continue
+            # wires, expectedFreqs = channel_frequencies.get_expected_resonances(self.ampDataS["layer"], apaChan, thresh = 250.)
+            # #expectedFreqs = [f for sublist in expectedFreqs for f in sublist]
 
             # Make a copy of the data to work with
             dataToFit = self.ampDataS[reg]['ampl'][:]
+            dataToFit = resonance_fitting.baseline_subtracted(dataToFit)
             
-            # subtract a line first?
-            if self.resFitParams['preprocess']['detrend']:
-                # remove linear fit
-                if self.verbose > 2:
-                    print("detrending")
-                dataToFit -= dwa.baseline(self.ampDataS[reg]['freq'], dataToFit, polyDeg=1)
+            # # subtract a line first?
+            # if self.resFitParams['preprocess']['detrend']:
+            #     # remove linear fit
+            #     if self.verbose > 2:
+            #         print("detrending")
+            #     dataToFit -= dwa.baseline(self.ampDataS[reg]['freq'], dataToFit, polyDeg=1)
             
-            # Cumulative sum, remove baseline, plot, fit peaks, annotate plot
-            # Vertical shift to start the y-values at zero
-            dataToFit -= np.min(dataToFit)
-            dataToFit  = scipy.integrate.cumtrapz(dataToFit, x=self.ampDataS[reg]['freq'], initial=0)
+            # # Cumulative sum, remove baseline, plot, fit peaks, annotate plot
+            # # Vertical shift to start the y-values at zero
+            # dataToFit -= np.min(dataToFit)
+            # dataToFit  = scipy.integrate.cumtrapz(dataToFit, x=self.ampDataS[reg]['freq'], initial=0)
 
-            # User can disable this step by specifying a negative Baseline poly value
-            if self.resFitParams['find_peaks']['bkgPoly'] >= 0:
-                dataToFit -= dwa.baseline(self.ampDataS[reg]['freq'], dataToFit,
-                                          polyDeg=self.resFitParams['find_peaks']['bkgPoly'])
-            elif self.resFitParams['find_peaks']['bkgPoly'] < 0:
-                polyval = -1*int(self.resFitParams['find_peaks']['bkgPoly'])
-                savgolWindow = 101
-                if savgolWindow > len(dataToFit):
-                    savgolWindow = (int(len(dataToFit)/20)*2)+1
-                dataToFit -= savgol_filter(dataToFit, savgolWindow, polyval)
-                #print("RC background fit requested (not yet implemented)")
+            # # User can disable this step by specifying a negative Baseline poly value
+            # if self.resFitParams['find_peaks']['bkgPoly'] >= 0:
+            #     dataToFit -= dwa.baseline(self.ampDataS[reg]['freq'], dataToFit,
+            #                               polyDeg=self.resFitParams['find_peaks']['bkgPoly'])
+            # elif self.resFitParams['find_peaks']['bkgPoly'] < 0:
+            #     polyval = -1*int(self.resFitParams['find_peaks']['bkgPoly'])
+            #     savgolWindow = 101
+            #     if savgolWindow > len(dataToFit):
+            #         savgolWindow = (int(len(dataToFit)/20)*2)+1
+            #     dataToFit -= savgol_filter(dataToFit, savgolWindow, polyval)
+            #     #print("RC background fit requested (not yet implemented)")
 
             # plot fxn that is used for peakfinding
             self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], dataToFit)
             
-            # FIXME: set width based on frequency, not hard-coded number of samples!
-            peakIds, properties = find_peaks(dataToFit,
-                                             height=self.resFitParams['find_peaks']['height'],
-                                             threshold=self.resFitParams['find_peaks']['threshold'],
-                                             distance=self.resFitParams['find_peaks']['distance'],
-                                             prominence=self.resFitParams['find_peaks']['prominence'],
-                                             width=self.resFitParams['find_peaks']['width'],
-                                             wlen=self.resFitParams['find_peaks']['wlen'],
-                                             rel_height=self.resFitParams['find_peaks']['rel_height'],
-                                             plateau_size=self.resFitParams['find_peaks']['plateau_size']
-                                             )
-            self.resFitParamsOut[chan]['peaks'] = peakIds
-            self.resFitParamsOut[chan]['properties'] = properties
-            # FIXME: could add interpolation for better precision
+            # # FIXME: set width based on frequency, not hard-coded number of samples!
+            # peakIds, properties = find_peaks(dataToFit,
+            #                                  height=self.resFitParams['find_peaks']['height'],
+            #                                  threshold=self.resFitParams['find_peaks']['threshold'],
+            #                                  distance=self.resFitParams['find_peaks']['distance'],
+            #                                  prominence=self.resFitParams['find_peaks']['prominence'],
+            #                                  width=self.resFitParams['find_peaks']['width'],
+            #                                  wlen=self.resFitParams['find_peaks']['wlen'],
+            #                                  rel_height=self.resFitParams['find_peaks']['rel_height'],
+            #                                  plateau_size=self.resFitParams['find_peaks']['plateau_size']
+            #                                  )
+            # self.resFitParamsOut[chan]['peaks'] = peakIds
+            # self.resFitParamsOut[chan]['properties'] = properties
+            # # FIXME: could add interpolation for better precision
 
-            # update the label:
-            peakFreqs = [ self.ampDataS[reg]['freq'][id] for id in peakIds ]
+            # # update the label:
+            # peakFreqs = [ self.ampDataS[reg]['freq'][id] for id in peakIds ]
 
             # Store the resonant *frequencies* and then update the GUI based on that
             #self.resonantFreqs[reg.value] = peakFreqs[:]
             #self.expectedFreqs[reg.value] = expectedFreqs[:]
-            self.resonantFreqs[chan] = peakFreqs[:]
-            self.expectedFreqs[chan] = expectedFreqs[:]
+            self.resonantFreqs[chan] = opt_res
+            #self.expectedFreqs[chan] = expectedFreqs[:]
 
         # Keep track of the fitted resonances, as determined by the peak-finding algorithm
         # Used only for outputting to resonanceData.json
@@ -4021,7 +4050,7 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers:
             apaChan = self.ampDataS['apaChannels'][reg.value]
             if not apaChan: continue
-            self.resFitToLog['resonances'][reg.value] = self.resonantFreqs[reg.value][:]
+            self.resFitToLog['resonances'][reg.value] = self.resonantFreqs[reg.value]
         
     def resFreqUpdateDisplay(self, chan=None):
         """ 
@@ -4044,51 +4073,60 @@ class MainWindow(qtw.QMainWindow):
             #chan = reg.value
             reg = chan
             #print(f'in update: {chan}: {self.resonantFreqs[chan]}')
-            labelStr = ', '.join([f'{ff:.3f}' for ff in self.resonantFreqs[chan]])
+            currentTensions = []
+            for i,measured in enumerate(self.resonantFreqs[reg]):
+                minMeasured = np.min(measured)
+                minExpected = np.min(self.expectedFreqs[reg][i])
+                currentTensions.append(6.5*(minMeasured/minExpected)**2)
+            print(currentTensions)
+            labelStr = ', '.join([f'{ff:.3f}' for ff in currentTensions])
             getattr(self, f'le_resfreq_val_{reg}').setText(labelStr)
             
             fitx, fity = self.curves['resProcFit'][chan].getData()
 
-            # Add expected resonances to plot
-            for i, wireSegmentFreqs in enumerate(self.expectedFreqs[chan]):
-                expectedFreqRounded = np.array([round(f,2) for f in wireSegmentFreqs])
-                expectedFreqRounded = np.unique(expectedFreqRounded)
-                for ii, ff in enumerate(expectedFreqRounded):
-                    self.resExpLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=False, pen=fPenBlue[i]) )
+            # # Add expected resonances to plot
+            # for i, wireSegmentFreqs in enumerate(self.expectedFreqs[chan]):
+            #     expectedFreqRounded = np.array([round(f,2) for f in wireSegmentFreqs])
+            #     expectedFreqRounded = np.unique(expectedFreqRounded)
+            #     for ii, ff in enumerate(expectedFreqRounded):
+            #         self.resExpLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=False, pen=fPenBlue[i]) )
 
             # Create/display new InfiniteLine instance for each resonant freq
+            print(self.resonantFreqs[chan])
             for ii, ff in enumerate(self.resonantFreqs[chan]):
-                # Plot vertical line from peak down to "baseline"
-                # And horizontal line showing width of fitted peak
-                # as in last example here:
-                # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
-                #try:
-                #    ymax = fity[self.resFitParamsOut[chan]['peaks'][ii]]
-                #    ymin = ymax - self.resFitParamsOut[chan]['properties']['prominences'][ii]
-                #    print(f'ymin, ymax = {ymin}, {ymax}')
-                #except:
-                #    print("\n\n\nERROR!!!!!!!!!\n\n\n")
+                for i, f in enumerate(ff):
 
-                if (debug):
-                    print(f"Chan, Freq = {chan}, {ii}, {ff}")
-                    ymax = fity[self.resFitParamsOut[chan]['peaks'][ii]]
-                    ymin = ymax - self.resFitParamsOut[chan]['properties']['prominences'][ii]
-                    xmin = fitx[int(np.floor(self.resFitParamsOut[chan]['properties']['left_ips'][ii]))]
-                    xmax = fitx[int(np.ceil(self.resFitParamsOut[chan]['properties']['right_ips'][ii]))] 
-                    ywidth = self.resFitParamsOut[chan]['properties']['width_heights'][ii]
-                    print(f'ymin, ymax = {ymin}, {ymax}')
-                    print("")
-                    self.resFitLines['procDebug'][reg].append( self.resonanceProcessedPlots[reg].plot(x=[ff,ff], y=[ymin,ymax]))
-                    self.resFitLines['procDebug'][reg].append( self.resonanceProcessedPlots[reg].plot(x=[xmin, xmax], y=[ywidth,ywidth]))
+                    # Plot vertical line from peak down to "baseline"
+                    # And horizontal line showing width of fitted peak
+                    # as in last example here:
+                    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
+                    #try:
+                    #    ymax = fity[self.resFitParamsOut[chan]['peaks'][ii]]
+                    #    ymin = ymax - self.resFitParamsOut[chan]['properties']['prominences'][ii]
+                    #    print(f'ymin, ymax = {ymin}, {ymax}')
+                    #except:
+                    #    print("\n\n\nERROR!!!!!!!!!\n\n\n")
 
-                
-                self.resFitLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
-                # FIXME: should the next 2 lines really be commented out?
-                self.resFitLines['proc'][reg][-1].sigClicked.connect(self._f0LineClicked)
-                self.resFitLines['proc'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
-                self.resFitLines['raw'][reg].append( self.resonanceRawPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
-                self.resFitLines['raw'][reg][-1].sigClicked.connect(self._f0LineClicked)
-                self.resFitLines['raw'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
+                    if (debug):
+                        print(f"Chan, Freq = {chan}, {ii}, {ff}")
+                        ymax = fity[self.resFitParamsOut[chan]['peaks'][ii]]
+                        ymin = ymax - self.resFitParamsOut[chan]['properties']['prominences'][ii]
+                        xmin = fitx[int(np.floor(self.resFitParamsOut[chan]['properties']['left_ips'][ii]))]
+                        xmax = fitx[int(np.ceil(self.resFitParamsOut[chan]['properties']['right_ips'][ii]))] 
+                        ywidth = self.resFitParamsOut[chan]['properties']['width_heights'][ii]
+                        print(f'ymin, ymax = {ymin}, {ymax}')
+                        print("")
+                        self.resFitLines['procDebug'][reg].append( self.resonanceProcessedPlots[reg].plot(x=[ff,ff], y=[ymin,ymax]))
+                        self.resFitLines['procDebug'][reg].append( self.resonanceProcessedPlots[reg].plot(x=[xmin, xmax], y=[ywidth,ywidth]))
+
+                    
+                    self.resFitLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=f, movable=True, pen=fPenBlue[ii]) )
+                    # FIXME: should the next 2 lines really be commented out?
+                    self.resFitLines['proc'][reg][-1].sigClicked.connect(self._f0LineClicked)
+                    self.resFitLines['proc'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
+                    self.resFitLines['raw'][reg].append( self.resonanceRawPlots[reg].addLine(x=f, movable=True, pen=fPenBlue[ii]) )
+                    self.resFitLines['raw'][reg][-1].sigClicked.connect(self._f0LineClicked)
+                    self.resFitLines['raw'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
                 
     def cleanUp(self):
         self.logger.info("App quitting:")

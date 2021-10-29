@@ -238,7 +238,13 @@ def wire_range_data_constant(wire_layer: str, wire_freq_data):
         if wire_layer == "X" or wire_layer == "G":
             f_range = [67, 90]
         else:
-            f_range = [50, 250]
+            res_array = np.array(wire_freq_data[w])
+            res_sub_200 = res_array[(res_array<200)]
+            if len(res_sub_200)==0:
+                maxf = 51
+            else:
+                maxf = round(np.max(res_sub_200)*1.2)
+            f_range = [50, maxf]
         range_data.append({"wireSegments": [int(w)], "range": f_range})
     return range_data
 
