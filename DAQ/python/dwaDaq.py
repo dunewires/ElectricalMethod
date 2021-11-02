@@ -1,4 +1,6 @@
 # FIXME/TODO:
+# * Move _getAllLines() to DwaDataParser as a static method
+# 
 # * pop-up to confirm that HV is on before run starts
 #
 # * When loading a scan with fewer than 8 active channels, the resonance numbers on the right sidebar of the Resonance tab don't get deleted for the inactive channels. Their values are kept to whatever the previous scan happened to be. This doesn't affect the submission to the DB, but is confusing when using the GUI.
@@ -3090,7 +3092,8 @@ class MainWindow(qtw.QMainWindow):
         missingVals = [x for x in range(0,udpCtrs[-1]+1) if x not in udpCtrs]
         print(f"Missing UDP packets: {missingVals}")
         print(f"(may also be missing a packet with value larger than {udpCtrs[-1]})")
-        
+
+    # FIXME: move this to DwaDataParser as a static method
     def _getAllLines(self, fname):
         f = open(fname, "r")
         # read all data into a list (without newlines)
