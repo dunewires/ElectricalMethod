@@ -1,4 +1,15 @@
 # FIXME/TODO:
+# * pop-up to confirm that HV is on before run starts
+#
+# * When loading a scan with fewer than 8 active channels, the resonance numbers on the right sidebar of the Resonance tab don't get deleted for the inactive channels. Their values are kept to whatever the previous scan happened to be. This doesn't affect the submission to the DB, but is confusing when using the GUI.
+#
+# *  configuring a new table in the Config tab while the start button is orange due to disabling relays makes that button clickable.
+#
+# * UUID dropdown list for the Config tab, based on UUIDs found in data folders. The same list should be made available for the tension tab.
+# * Configuration parameter to enable mains noise subtraction: This parameter is already in the firmware: bit 1 of register 1, i.e. 2nd bit of 2nd register. It now needs to be used in the software.
+#
+# * The noise sampling period, noise NCnv, active channels and relayMask parameters are unnecessary in the firmware. To avoid possible unforeseen issues in the firmware due to a bad configuration of them, they should be removed from the firmware and software.
+# 
 # * Play audible alert after a scan is done?
 #   and/or bring focus to config tab?
 #
