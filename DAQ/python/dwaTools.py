@@ -100,6 +100,8 @@ def getScanDataFolders(advDir=None, autoDir=None, sort=False):
     
     
 def fitSinusoidToTimeseries(yy, dt, freq_Hz):
+    # B*sin(2pi*freq_Hz*t) + C*cos(2pi*freq_Hz*t) + D
+    # return: (B, C, D, freq_Hz)
     angFreq = 2*np.pi*freq_Hz
     tt = np.arange(len(yy)) * dt
     wt = angFreq*tt
