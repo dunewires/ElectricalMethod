@@ -10,7 +10,8 @@
 -- Platform    : 
 -- Standard    : 
 
--- Description: Interface the wire relay  DAQ registers to the serial shift / Parallel converter.
+-- Description: Interface the setial number and NV mem 
+-- datasheet http://ww1.microchip.com/downloads/en/devicedoc/atmel-8870-seeprom-at24cs64-datasheet.pdf
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
@@ -115,6 +116,11 @@ begin
 					
 					deviceAddr      <= "1010000"; --after we are here once switch device address to memory;
 					snDone          <= '1';       -- do it once
+				-- merge changes to read user selectable sn register
+				-- if this register is not 0x00, disable writing 
+				-- use normal register write path to set 
+				-- verify wiite register operation is still working with the auto increment
+				 	
 				else
 					serialAddress          <= serialAddress + 4 when not dummyWrite;
 					toDaqReg.serNumMemData <= unsigned(shiftRegIn(31 downto 0)); -- tell the DWA
@@ -173,7 +179,7 @@ begin
 					cmdStateNext <= cmdWrite_s;
 				end if;
 
-			when cmdAddress_s =>
+			when cmdAddress_s => --set address pointer and read register, address will be auto incremented
 				-- serial string starts with 0 to generate start condition.
 				-- device address is followed by r/w bit, set address uses a dummy write
 				serString(56 downto 32) <= '0' & std_logic_vector(deviceAddr) & "0000" & std_logic_vector(serialAddress);
@@ -182,7 +188,7 @@ begin
 				nRxWord                 <= x"00"; -- write only
 				cmdStateNext            <= cmdRead_s;
 
-			when cmdRead_s =>
+			when cmdRead_s =>-- read auto incremented  register and so on
 				serString(56 downto 48) <= '0' & std_logic_vector(deviceAddr) & '1';
 				serString(47 downto 0)  <= (others => '0');
 				nWord                   <= x"05"; -- 5 words

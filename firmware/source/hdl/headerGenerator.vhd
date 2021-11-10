@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Oct 21 17:34:07 2021
+-- Last update : Tue Nov  9 21:40:07 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -494,6 +494,7 @@ begin
                 statusDataSticky.errors  <= fromDaqReg.errors or statusDataSticky.errors;
                 statusDataSticky.pButton <= pButton or statusDataSticky.pButton;
                 statusDataSticky.tState  <= fromDaqReg.ctrlStateDbg /= x"0";
+                
                 if not statusTimeout then -- keep from overflowing counter while we wait to send packet.
                     statusTimerCnt <= statusTimerCnt+1;
                 end if;
