@@ -719,7 +719,6 @@ begin
 									slv_reg53(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
 								end if;
 							end loop;
-							fromDaqReg.serNumMemWrite <= '1'; -- signal dwa this register was updated
 
 						when b"110110" => -- reg 54 is pktGenWatchdogPeriod
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
@@ -739,7 +738,6 @@ begin
 								end if;
 							end loop;
 
-							fromDaqReg.serNumMemWrite <= '1'; -- signal dwa this register was updated
 						when others =>
 							slv_reg0  <= slv_reg0;
 							slv_reg1  <= slv_reg1;
