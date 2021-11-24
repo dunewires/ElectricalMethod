@@ -68,6 +68,7 @@ architecture STRUCT of serialPromInterface is
 	signal nRxWord  : unsigned(7 downto 0) := (others => '0');
 	signal waitCnt  : unsigned(7 downto 0) := (others => '0');
 	signal stateDbg : unsigned(7 downto 0) := (others => '0');
+	signal stateDbgCmd : unsigned(1 downto 0) := (others => '0');
 
 	signal clkCnt           : unsigned(4 downto 0) := (others => '0');
 	signal serialCmdEnable  : std_logic            := '0';
@@ -140,8 +141,8 @@ begin
 			-- latch memAddr dummy write operation until read is done
 			dummyWrite <= (memAddr or dummyWrite) and not readDone;
 			-- latch mem read and write daq strobes for slow FSM
-			memRead  <= (fromDaqReg.serNummemRead or memRead) and not readStart;
-			memWrite <= (fromDaqReg.serNummemWrite or memWrite) and not writeStart;
+			memRead  <= (fromDaqReg.serNumMemRead or memRead) and not readStart;
+			memWrite <= (fromDaqReg.serNumMemWrite or memWrite) and not writeStart;
 
 		end if;
 	end process updateCdcDC100;
@@ -291,13 +292,18 @@ begin
 	sdo <= shiftRegOut(shiftRegOut'left);
 	sda <= '0' when sdoEn_del and not sdo_del else 'Z';
 
+	stateDbgCmd <= to_unsigned(cmdState_t'POS(cmdState),stateDbgCmd'length);
 	stateDbg <= to_unsigned(sdaState_t'POS(sdaState),stateDbg'length);
 	ila_4x32_inst : ila_4x32
 		PORT MAP (
 			clk                  => dwaClk10,
 			probe0(31 downto 24) => std_logic_vector(serialAddress(7 downto 0)),
 			probe0(23 downto 0)  => std_logic_vector(toDaqReg.serNum),
-			probe1(31 downto 22) => (others => '0'),
+			probe1(31 downto 27) => (others => '0'),
+			probe1(26 downto 25) => std_logic_vector(stateDbgCmd),
+			probe1(24) => fromDaqReg.serNumMemRead,
+			probe1(23) => fromDaqReg.serNumMemAddrStrb,
+			probe1(22) => fromDaqReg.serNumMemWrite,
 			probe1(21) => memAddr,
 			probe1(20) => writeDone,
 			probe1(19) => snDone,
