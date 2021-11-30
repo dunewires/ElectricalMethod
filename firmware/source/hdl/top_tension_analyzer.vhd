@@ -190,8 +190,8 @@ begin
   lightsAndButtons : process (dwaClk100)
   begin
     if rising_edge(dwaClk100) then
-      led(0) <= or(toDaqReg.errors);
-      led(3) <= '0'; -- 0 is off ?
+      led(3) <= or(toDaqReg.errors);
+      led(0) <= fromDaqReg.disableHV; -- 0 is off ?
 
       --metastability 
       pButton_del <= pButton_del(0) & pButton;

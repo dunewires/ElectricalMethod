@@ -165,6 +165,7 @@ architecture arch_imp of dwa_registers_v1_0_S00_AXI is
 	signal slv_reg53       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg54       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg55       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+	signal slv_reg56       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg_rden    : std_logic;
 	signal slv_reg_wren    : std_logic;
 	signal reg_data_out    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
@@ -325,6 +326,7 @@ begin
 				slv_reg53 <= x"00000000"; -- 00000000 = power up off, 0005F5E1 = 1 sec
 				slv_reg54 <= x"00B2D05E"; -- 30 SEC
 				slv_reg55 <= (others => '0');
+				slv_reg56 <= (others => '0');
 			else
 				loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 				if (slv_reg_wren = '1') then
@@ -738,6 +740,14 @@ begin
 								end if;
 							end loop;
 
+						when b"111000" => --  reg 55 is used for PS network status in fromDaq direction, and controller state in toDaq direction
+							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
+								if ( S_AXI_WSTRB(byte_index) = '1' ) then
+									-- Respective byte enables are asserted as per write strobes                   
+									-- slave registor 31
+									slv_reg56(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+								end if;
+							end loop;
 						when others =>
 							slv_reg0  <= slv_reg0;
 							slv_reg1  <= slv_reg1;
@@ -789,6 +799,7 @@ begin
 							slv_reg53 <= slv_reg53;
 							slv_reg54 <= slv_reg54;
 							slv_reg55 <= slv_reg55;
+							slv_reg56 <= slv_reg56;
 					end case;
 				end if;
 			end if;
@@ -1111,6 +1122,7 @@ begin
 	fromDaqReg.serNum           <= toDaqReg.serNum;
 
 	fromDaqReg.netStatus <= slv_reg55(7 downto 0); -- also used for controller status in toDaq direction
+	fromDaqReg.disableHV <= slv_reg56(0); -- disable HV when switching relays
 	-- User logic ends
 
 end arch_imp;
