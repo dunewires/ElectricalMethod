@@ -1012,6 +1012,14 @@ begin
 				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pktGenStateDbg);
 			when b"111000" => --reg 56 pButton
 				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
+			when b"111001" => --reg 57 pButton
+				reg_data_out <= std_logic_vector(toDaqReg.serNumLocal);
+			when b"111010" => --reg 58 pButton
+				reg_data_out <= std_logic_vector(toDaqReg.ipLocal);
+			when b"111011" => --reg 59 pButton
+				reg_data_out <= std_logic_vector(toDaqReg.macUword);
+			when b"111100" => --reg 60 pButton
+				reg_data_out <= std_logic_vector(toDaqReg.macLword);
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;

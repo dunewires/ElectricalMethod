@@ -162,7 +162,6 @@ architecture STRUCT of top_tension_analyzer is
   signal noiseCorrDataSel : std_logic_vector(1 downto 0) := (others => '0');
   signal msimDumy         : std_logic_vector(2 downto 0) := (others => '0');
   signal dwaClk2          : std_logic                    := '0';
-  signal vioUpdate        : std_logic                    := '0';
 
   signal pktBuildBusy : boolean := false;
   signal freqScanBusy : boolean := false;
@@ -379,7 +378,6 @@ begin
 
       sda       => SNUM_SDA,
       scl       => SNUM_SCL,
-      vioUpdate => vioUpdate,
       dwaClk100 => dwaClk100,
       dwaClk10  => dwaClk10
     );
