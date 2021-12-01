@@ -311,22 +311,16 @@ begin
 
 	stateDbgCmd <= to_unsigned(cmdState_t'POS(cmdState),stateDbgCmd'length);
 	stateDbg    <= to_unsigned(sdaState_t'POS(sdaState),stateDbg'length);
-	ila_4x32_inst : ila_4x32
+	ila_4x32_inst10 : ila_4x32
 		PORT MAP (
 			clk                  => dwaClk10,
 			probe0(31 downto 24) => std_logic_vector(serialAddress(7 downto 0)),
 			probe0(23 downto 0)  => std_logic_vector(toDaqReg.serNum),
-			probe1(31 downto 27) => (others => '0'),
-			probe1(26 downto 25) => std_logic_vector(stateDbgCmd),
-			probe1(24)           => fromDaqReg.serNumMemRead,
-			probe1(23)           => fromDaqReg.serNumMemAddrStrb,
-			probe1(22)           => fromDaqReg.serNumMemWrite,
-			probe1(21)           => memAddr,
-			probe1(20)           => writeDone,
-			probe1(19)           => startupDone,
-			probe1(18)           => readDone,
-			probe1(17)           => readStart,
-			probe1(16)           => writeStart,
+			probe1(31 downto 30) => std_logic_vector(stateDbgCmd),
+			probe1(29) => '0',
+			probe1(28 downto 21) => std_logic_vector(wordCnt),
+			probe1(20 downto 17) => std_logic_vector(bitCnt),
+			probe1(16)           => memAddr,
 			probe1(15)           => memRead,
 			probe1(14)           => memRead,
 			probe1(13)           => memWrite,
@@ -340,4 +334,24 @@ begin
 			probe3               => serString(31 downto 0)
 		);
 
+	ila_4x32_inst100 : ila_4x32
+		PORT MAP (
+			clk                  => dwaClk100,
+			probe0(31 downto 15) => (others  =>  '0'),
+			probe0(14 downto 11) => std_logic_vector(startupSeq),
+			probe0(10)           => fromDaqReg.serNumMemRead,
+			probe0(9)           => fromDaqReg.serNumMemAddrStrb,
+			probe0(8)           => fromDaqReg.serNumMemWrite,
+			probe0(7)           => writeDone,
+			probe0(6)           => initReadStrb,
+			probe0(5)           => initAddrStrb,
+			probe0(4)           => startupDone,
+			probe0(3)           => readDone,
+			probe0(2)           => readStart,
+			probe0(1)           => writeStart,
+			probe0(0)           => writeDone,
+			probe1               => (others => '0'),
+			probe2               => (others => '0'),
+			probe3               => (others => '0')
+		);
 end architecture STRUCT;
