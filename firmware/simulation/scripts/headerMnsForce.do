@@ -79,10 +79,6 @@ force -freeze sim:/tb_adc_emu/fromDaqReg.relayUpdate true 100ns -cancel 110ns
 #force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/mainsTrig 1 0, 0 {10000000 fs} -r 1000ns
 force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/mainsTrig 1 0, 0 {10 ns} -r 5000 ns
 run 500us
-force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fromDaqReg.serNumMemAddrStrb 1 0
-run 10ns
-force -freeze sim:/tb_adc_emu/top_tension_analyzer_1/serialPromInterface_inst/fromDaqReg.serNumMemAddrStrb 0 0
-run 500us
 
 
 
