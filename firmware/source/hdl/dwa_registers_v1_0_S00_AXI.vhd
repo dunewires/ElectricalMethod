@@ -1117,8 +1117,12 @@ begin
 	fromDaqReg.serNumMemAddress <= unsigned(slv_reg49(12 downto 0));
 	fromDaqReg.serNumMemData    <= unsigned(slv_reg50);
 	fromDaqReg.serNum           <= toDaqReg.serNum;
+	fromDaqReg.serNumLocal      <= toDaqReg.serNumLocal;
+	fromDaqReg.ipLocal          <= toDaqReg.ipLocal;
+	fromDaqReg.macUword         <= toDaqReg.macUword;
+	fromDaqReg.macLword         <= toDaqReg.macLword;
 
 	fromDaqReg.netStatus <= slv_reg55(7 downto 0); -- also used for controller status in toDaq direction
-	-- User logic ends
+	                                               -- User logic ends
 
 end arch_imp;

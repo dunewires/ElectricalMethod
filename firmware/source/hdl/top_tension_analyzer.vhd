@@ -112,9 +112,9 @@ architecture STRUCT of top_tension_analyzer is
   signal acStimX200 : std_logic := '0';
 
   signal adcCnv_nCnv             : unsigned(15 downto 0) := (others => '0');
-  signal adcSamplesPerCycleSet  : unsigned(15 downto 0) := (others => '0');
+  signal adcSamplesPerCycleSet   : unsigned(15 downto 0) := (others => '0');
   signal adcCnv_nPeriod          : unsigned(23 downto 0) := (others => '0');
-  signal adcCnv_nPeriodNoise          : unsigned(23 downto 0) := (others => '0');
+  signal adcCnv_nPeriodNoise     : unsigned(23 downto 0) := (others => '0');
   signal acStimX200_nHPeriodAuto : unsigned(23 downto 0) := (others => '0');
 
   signal acStim_mag              : unsigned(11 downto 0) := (others => '0');
@@ -139,10 +139,10 @@ architecture STRUCT of top_tension_analyzer is
 
   signal adcBusy : std_logic := '0';
 
-  signal mainsTrig ,adcReadoutTrig          : std_logic := '0';
+  signal mainsTrig ,adcReadoutTrig : std_logic := '0';
 
-    signal senseWireData     : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
-    signal senseWireDataDiv2     : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0) := (others => (others => '0'));
+  signal senseWireData     : SIGNED_VECTOR_TYPE(7 downto 0)(15 downto 0) := (others => (others => '0'));
+  signal senseWireDataDiv2 : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0) := (others => (others => '0'));
   signal senseWireDataStrb : std_logic                                   := '0';
 
   signal senseWireMNSData     : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0) := (others => (others => '0'));
@@ -174,8 +174,8 @@ architecture STRUCT of top_tension_analyzer is
   signal scanStatusCnt : unsigned(27 downto 0) := (others => '0');
   signal netStatusCnt  : unsigned(23 downto 0) := (others => '0');
 
-  signal mCDelayCount :unsigned(7 downto 0) := (others  => '0');
-  signal mCDelayReset :std_logic := '1';
+  signal mCDelayCount : unsigned(7 downto 0) := (others => '0');
+  signal mCDelayReset : std_logic            := '1';
 
   signal
   toDaqReg_headerGenerator,
@@ -334,9 +334,9 @@ begin
       end if;
 
       if mCDelayReset then
-        mCDelayCount <= x"00";
-        adcSamplesPerCycleSet <= fromDaqReg.adcSamplesPerCycle;  -- Update the register to include into the multicycle delay path. Not necessary but we'll do it just for fun
-      elsif mCDelayCount /= x"FF" then -- stop at 0xFF
+        mCDelayCount          <= x"00";
+        adcSamplesPerCycleSet <= fromDaqReg.adcSamplesPerCycle; -- Update the register to include into the multicycle delay path. Not necessary but we'll do it just for fun
+      elsif mCDelayCount /= x"FF" then                          -- stop at 0xFF
         mCDelayCount <= mCDelayCount +1;
       end if;
 
@@ -346,12 +346,12 @@ begin
 
       -- division using combintorial logic is not so great ... but it works with a few clock cycles,
       -- consider saving resources by muxing the input of a single division, having parallel resources is unnecessary
-      if mCDelayCount = x"0E" then -- latch division after 150 ns
+      if mCDelayCount = x"0E" then                                 -- latch division after 150 ns
         acStim_nPeriod_fp6 <= acStim_nPeriod_fp6_all(30 downto 0); -- only take what is needed for min 10 HZ stim freq
-      elsif mCDelayCount = x"1D"then 
-        acStimX200_nPeriod_fxp8 <= (acStim_nPeriod_fp6 & "00") / x"C8"; -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
-      -- for the conversion period, fp6 << 6 , 200MHz clk  to 100MHz ADC clk << 1 . ie Shift 7 bits to get nPeriod for 1 cycle 
-      -- consider setting conversion period to be fixed throughout noise range to help with the interpolation
+      elsif mCDelayCount = x"1D"then
+        acStimX200_nPeriod_fxp8 <= (acStim_nPeriod_fp6 & "00") / x"C8";          -- add 8 bits for fixed point and calculate BP freq based on exact stim freq
+                                                                                 -- for the conversion period, fp6 << 6 , 200MHz clk  to 100MHz ADC clk << 1 . ie Shift 7 bits to get nPeriod for 1 cycle 
+                                                                                 -- consider setting conversion period to be fixed throughout noise range to help with the interpolation
         adcCnv_nPeriod <= acStim_nPeriod_fp6(30 downto 7)/adcSamplesPerCycleSet; -- get period of conversions for set frequency
       end if;
 
@@ -417,16 +417,16 @@ begin
       dwaClk2 => dwaClk2
     );
 
--- trigger on  supply mains
+  -- trigger on  supply mains
   triggerMains_inst : entity duneDwa.triggerMains
     port map (
 
       mainsSquare => mainsSquare,
-      stimFreqReq =>  stimFreqReq,
+      stimFreqReq => stimFreqReq,
 
-      mainsTrig   => mainsTrig,
+      mainsTrig => mainsTrig,
 
-      dwaClk100   => dwaClk100
+      dwaClk100 => dwaClk100
 
     );
 
@@ -461,7 +461,7 @@ begin
       freqSet       => ctrlFreqSet,
       acStim_enable => ctrl_acStim_enable,
 
-      noiseReadoutBusy  => noiseReadoutBusy,
+      noiseReadoutBusy => noiseReadoutBusy,
 
       sendRunHdr  => sendRunHdr,
       sendAdcData => sendAdcData,
@@ -483,8 +483,8 @@ begin
     port map (
       fromDaqReg => fromDaqReg,
 
-      adcCnv_nCnv      => adcCnv_nCnv,
-      adcCnv_nPeriod   => adcCnv_nPeriod,
+      adcCnv_nCnv    => adcCnv_nCnv,
+      adcCnv_nPeriod => adcCnv_nPeriod,
 
       adcStart => adcStart,
       trigger  => adcReadoutTrig, -- temp disable untested adcReadoutTrig,
@@ -504,15 +504,15 @@ begin
       dwaClk100 => dwaClk100
     );
 
-dropLsb : process (all)
-begin
-  for adc_i in 7 downto 0 loop
-  -- ADC part is either 16 or 14 bit, 
-  -- in both cases 16 bits are used.
-  -- since we don't need the resolotion of 16 bits, we drop a bit here for conveince later
-    senseWireDataDiv2(adc_i) <= senseWireData(adc_i)(15 downto 1);
-  end loop;
-end process dropLsb;
+  dropLsb : process (all)
+  begin
+    for adc_i in 7 downto 0 loop
+      -- ADC part is either 16 or 14 bit, 
+      -- in both cases 16 bits are used.
+      -- since we don't need the resolotion of 16 bits, we drop a bit here for conveince later
+      senseWireDataDiv2(adc_i) <= senseWireData(adc_i)(15 downto 1);
+    end loop;
+  end process dropLsb;
 
 
   mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
@@ -522,9 +522,9 @@ end process dropLsb;
       --sim toDaqReg => open,--toDaqReg,
       freqSet => ctrlFreqSet,
 
-      noiseReadoutBusy  => noiseReadoutBusy,
+      noiseReadoutBusy => noiseReadoutBusy,
 
-      adcStart  => adcStart,
+      adcStart => adcStart,
 
       senseWireData     => senseWireDataDiv2,
       senseWireDataStrb => senseWireDataStrb,
@@ -576,8 +576,8 @@ end process dropLsb;
       sendRunHdr  => sendRunHdr,
       sendAdcData => sendAdcData,
 
-      pktBuildBusy => pktBuildBusy,
-      freqScanBusy => freqScanBusy,
+      pktBuildBusy  => pktBuildBusy,
+      freqScanBusy  => freqScanBusy,
       acStim_enable => acStim_enable,
 
 
@@ -640,9 +640,13 @@ end process dropLsb;
   toDaqReg.relayBusBot      <= toDaqReg_wireRelayInterface.relayBusBot;
   toDaqReg.relayWireBot     <= toDaqReg_wireRelayInterface.relayWireBot;
   toDaqReg.serNum           <= toDaqReg_serialPromInterface.serNum;
+  toDaqReg.serNumLocal      <= toDaqReg_serialPromInterface.serNumLocal;
+  toDaqReg.ipLocal          <= toDaqReg_serialPromInterface.ipLocal;
+  toDaqReg.macUword         <= toDaqReg_serialPromInterface.macUword;
+  toDaqReg.macLword         <= toDaqReg_serialPromInterface.macLword;
   toDaqReg.serNumMemAddress <= toDaqReg_serialPromInterface.serNumMemAddress;
   toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
-  toDaqReg.errors    <= (others  => '0'); -- all unsigned errors set to 0
+  toDaqReg.errors           <= (others => '0'); -- all unsigned errors set to 0
 
 end STRUCT;
 
