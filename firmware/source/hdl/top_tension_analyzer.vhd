@@ -645,14 +645,13 @@ begin
     toDaqReg.relayBusBot    <= toDaqReg_wireRelayInterface.relayBusBot;
     toDaqReg.relayWireBot   <= toDaqReg_wireRelayInterface.relayWireBot;
     toDaqReg.serNum         <= toDaqReg_serialPromInterface.serNum;
+    toDaqReg.serNumLocal <= toDaqReg_serialPromInterface.serNumLocal;
 
     if snMemConfigDefault then
-      toDaqReg.serNumLocal <= serNumLocalDefault;
       toDaqReg.ipLocal     <= ipLocalDefault;
       toDaqReg.macUword    <= x"00" & macDefault(23 downto 32);
       toDaqReg.macLword    <= macDefault(31 downto 0);
     else
-      toDaqReg.serNumLocal <= toDaqReg_serialPromInterface.serNumLocal;
       toDaqReg.ipLocal     <= toDaqReg_serialPromInterface.ipLocal;
       toDaqReg.macUword    <= toDaqReg_serialPromInterface.macUword;
       toDaqReg.macLword    <= toDaqReg_serialPromInterface.macLword;
