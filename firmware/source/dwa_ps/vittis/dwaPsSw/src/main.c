@@ -120,22 +120,29 @@ int IicPhyReset(void);
 
 int main()
 {
-unsigned int udpMacAddr;
+unsigned int macUword;
+unsigned int macLword;
+unsigned int ipLocal;
 #if LWIP_IPV6==0
 	ip_addr_t ipaddr, netmask, gw;
-
 #endif
-	  u8_t *udpMacAddrB = (u8_t*) &udpMacAddr;
+	  u8_t *macUwordB = (u8_t*) &macUword;
+	  u8_t *macLwordB = (u8_t*) &macLword;
+	  u8_t *ipLocalB = (u8_t*) &ipLocal;
+
 	sleep(3);// give time for the power up and  serial num read
-	udpMacAddr = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (48 << 2));
-	xil_printf("MAC address 84, 2b, 2b, %x, %x, %x \r\n", udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0]);
+
+	ipLocal = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (58 << 2));
+	macUword = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (49 << 2));
+	macLword = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (60 << 2));
+	xil_printf("MAC address %x, %x, %x, %x, %x, %x \r\n", macUwordB[1], macUwordB[0], macLwordB[3], macLwordB[2], macLwordB[1], macLwordB[0]);
 	unsigned char mac_ethernet_address[] =
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x00}; //"Jeff" microzed"
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x01}; //"Nate" microzed"
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x02}; //"James" microzed"
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x03}; //"DWA_v2" microzed"
 	//{ 0xfc, 0xc2, 0xde, 0x36, 0xd5, 0x7e}; //"edison"
-	{ 0x84, 0x2b, 0x2b, udpMacAddrB[2], udpMacAddrB[1],udpMacAddrB[0] }; //"DWA_v2" microzed"
+	{ macUword[1], macUword[0], macLword[3], macLword[2], macLword[1], macLword[0]}; //take from PL NV mem
 
 	echo_netif = &server_netif;
 #if defined (__arm__) && !defined (ARMR5)
@@ -162,10 +169,10 @@ unsigned int udpMacAddr;
 	netmask.addr = 0;
 #else
 	/* initliaze IP addresses to be used */
-	IP4_ADDR(&ipaddr,  192,	168, 1, udpMacAddrB[0]);
+	IP4_ADDR(&ipaddr,  ipLocalB[3], ipLocalB[2], ipLocalB[1], ipLocalB[0]);// take from PL NV mem
 //	IP4_ADDR(&ipaddr,  192, 168,   1, 10);
 	IP4_ADDR(&netmask, 255, 255, 255,  0);
-	IP4_ADDR(&gw,      192, 168, 1,  1);
+	IP4_ADDR(&gw,      ipLocalB[3], ipLocalB[2], 1,  1);
 //	IP4_ADDR(&gw,      192, 168,   1,  1);
 #endif
 #endif

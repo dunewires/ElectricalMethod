@@ -27,6 +27,8 @@ entity serialPromInterface is
 		fromDaqReg : in  fromDaqRegType;
 		toDaqReg   : out toDaqRegType;
 
+	 snMemConfigWP      : in std_logic := '1';
+
 		sda : inout std_logic := 'Z';
 
 		scl : out std_logic := '1';
@@ -121,10 +123,7 @@ begin
 				if not startupDone then --  read operation was initiated as part ofstartup sequence, let's set the configuraiton
 					case (startupSeq) is
 						when x"0" =>                          -- first read is hard coded serial number
-					               --toDaqReg.serNum <= unsigned(shiftRegIn(23 downto 0));
-					               -- fake old MAC address
-							toDaqReg.serNum <= x"97da03";     --use for default
-							                                  --toDaqReg.serNum <= x"97da00"; --use for NW
+					       toDaqReg.serNum <= unsigned(shiftRegIn(23 downto 0));
 							deviceAddr    <= "1010000";       --after we are here once switch device address to memory;
 							serialAddress <= (others => '0'); -- set to first init address
 							initAddrStrb  <= '1';             -- update mem address pointer to 0

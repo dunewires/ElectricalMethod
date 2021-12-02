@@ -193,6 +193,20 @@ set_property PACKAGE_PIN G20 [get_ports pButton[2]]
 set_property IOSTANDARD LVCMOS25 [get_ports pButton[3]]
 set_property PACKAGE_PIN H20 [get_ports pButton[3]]
 
+set_property IOSTANDARD LVCMOS25 [get_ports gpio_0]
+set_property PACKAGE_PIN E17 [get_ports gpio_0]
+
+set_property IOSTANDARD LVCMOS25 [get_ports gpio_1]
+set_property PACKAGE_PIN D19 [get_ports gpio_1]
+set_property PULLUP TRUE [get_ports gpio_1]
+
+set_property IOSTANDARD LVCMOS25 [get_ports gpio_2]
+set_property PACKAGE_PIN D18 [get_ports gpio_2]
+
+set_property IOSTANDARD LVCMOS25 [get_ports gpio_3]
+set_property PACKAGE_PIN D20 [get_ports gpio_3]
+set_property PULLUP TRUE [get_ports gpio_3]
+
 set_property IOSTANDARD LVCMOS25 [get_ports adcCnv]
 set_property PACKAGE_PIN G17 [get_ports adcCnv]
 

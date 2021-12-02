@@ -25,6 +25,11 @@ entity dwa_ps_pl_top is
         led     : out std_logic_vector(3 downto 0);
         pButton : in  std_logic_vector(3 downto 0);
 
+        gpio_0: out std_logic := '0';
+        gpio_1: in std_logic := '1';
+        gpio_2: out std_logic := '0';
+        gpio_3: in std_logic := '1';
+
         acStimX200_obuf : out std_logic := '0';
 
         mainsSquare : in std_logic;
@@ -369,6 +374,9 @@ begin
 
             led     => led,
             pButton => pButton,
+
+            snMemConfigWP  => gpio_3,
+            snMemConfigDefault  => gpio_1,
 
             acStimX200_obuf => acStimX200_obuf,
             mainsSquare     => mainsSquare,

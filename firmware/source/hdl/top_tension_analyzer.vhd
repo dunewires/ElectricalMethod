@@ -22,6 +22,9 @@ entity top_tension_analyzer is
     led     : out std_logic_vector(3 downto 0) := (others => '0');
     pButton : in  std_logic_vector(3 downto 0);
 
+    snMemConfigWP      : in std_logic := '1';
+    snMemConfigDefault : in std_logic := '1';
+
     acStimX200_obuf : out std_logic := '0';
     mainsSquare     : in  std_logic := '0';
 
@@ -374,7 +377,8 @@ begin
     port map (
       fromDaqReg => fromDaqReg,
       toDaqReg   => toDaqReg_serialPromInterface,
-      --sim toDaqReg => open,
+
+      snMemConfigWP => snMemConfigWP,
 
       sda       => SNUM_SDA,
       scl       => SNUM_SCL,
@@ -628,25 +632,36 @@ begin
       probe_out10            => open,
       probe_out11            => open
     );
+  selToDaq : process (all)
+  begin
+    toDaqReg.ctrlBusy       <= toDaqReg_wtaController.ctrlBusy;
+    toDaqReg.ctrlStateDbg   <= toDaqReg_wtaController.ctrlStateDbg;
+    toDaqReg.udpDataWord    <= toDaqReg_headerGenerator.udpDataWord;
+    toDaqReg.udpDataRdy     <= toDaqReg_headerGenerator.udpDataRdy;
+    toDaqReg.pktGenStateDbg <= toDaqReg_headerGenerator.pktGenStateDbg;
+    toDaqReg.senseWireGain  <= toDaqReg_dpotInterface.senseWireGain;
+    toDaqReg.relayBusTop    <= toDaqReg_wireRelayInterface.relayBusTop;
+    toDaqReg.relayWireTop   <= toDaqReg_wireRelayInterface.relayWireTop;
+    toDaqReg.relayBusBot    <= toDaqReg_wireRelayInterface.relayBusBot;
+    toDaqReg.relayWireBot   <= toDaqReg_wireRelayInterface.relayWireBot;
+    toDaqReg.serNum         <= toDaqReg_serialPromInterface.serNum;
 
-  toDaqReg.ctrlBusy         <= toDaqReg_wtaController.ctrlBusy;
-  toDaqReg.ctrlStateDbg     <= toDaqReg_wtaController.ctrlStateDbg;
-  toDaqReg.udpDataWord      <= toDaqReg_headerGenerator.udpDataWord;
-  toDaqReg.udpDataRdy       <= toDaqReg_headerGenerator.udpDataRdy;
-  toDaqReg.pktGenStateDbg   <= toDaqReg_headerGenerator.pktGenStateDbg;
-  toDaqReg.senseWireGain    <= toDaqReg_dpotInterface.senseWireGain;
-  toDaqReg.relayBusTop      <= toDaqReg_wireRelayInterface.relayBusTop;
-  toDaqReg.relayWireTop     <= toDaqReg_wireRelayInterface.relayWireTop;
-  toDaqReg.relayBusBot      <= toDaqReg_wireRelayInterface.relayBusBot;
-  toDaqReg.relayWireBot     <= toDaqReg_wireRelayInterface.relayWireBot;
-  toDaqReg.serNum           <= toDaqReg_serialPromInterface.serNum;
-  toDaqReg.serNumLocal      <= toDaqReg_serialPromInterface.serNumLocal;
-  toDaqReg.ipLocal          <= toDaqReg_serialPromInterface.ipLocal;
-  toDaqReg.macUword         <= toDaqReg_serialPromInterface.macUword;
-  toDaqReg.macLword         <= toDaqReg_serialPromInterface.macLword;
-  toDaqReg.serNumMemAddress <= toDaqReg_serialPromInterface.serNumMemAddress;
-  toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
-  toDaqReg.errors           <= (others => '0'); -- all unsigned errors set to 0
+    if snMemConfigDefault then
+      toDaqReg.serNumLocal <= serNumLocalDefault;
+      toDaqReg.ipLocal     <= ipLocalDefault;
+      toDaqReg.macUword    <= x"00" & macDefault(23 downto 32);
+      toDaqReg.macLword    <= macDefault(31 downto 0);
+    else
+      toDaqReg.serNumLocal <= toDaqReg_serialPromInterface.serNumLocal;
+      toDaqReg.ipLocal     <= toDaqReg_serialPromInterface.ipLocal;
+      toDaqReg.macUword    <= toDaqReg_serialPromInterface.macUword;
+      toDaqReg.macLword    <= toDaqReg_serialPromInterface.macLword;
+    end if;
+
+    toDaqReg.serNumMemAddress <= toDaqReg_serialPromInterface.serNumMemAddress;
+    toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
+    toDaqReg.errors           <= (others => '0'); -- all unsigned errors set to 0
+  end process selToDaq;
 
 end STRUCT;
 
