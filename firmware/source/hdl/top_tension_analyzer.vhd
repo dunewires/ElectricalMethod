@@ -649,7 +649,7 @@ begin
 
     if snMemConfigDefault then
       toDaqReg.ipLocal     <= ipLocalDefault;
-      toDaqReg.macUword    <= x"00" & macDefault(23 downto 32);
+      toDaqReg.macUword    <= x"0000" & macDefault(47 downto 32);
       toDaqReg.macLword    <= macDefault(31 downto 0);
     else
       toDaqReg.ipLocal     <= toDaqReg_serialPromInterface.ipLocal;
