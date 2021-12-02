@@ -133,7 +133,7 @@ unsigned int ipLocal;
 	sleep(3);// give time for the power up and  serial num read
 
 	ipLocal = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (58 << 2));
-	macUword = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (49 << 2));
+	macUword = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (59 << 2));
 	macLword = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (60 << 2));
 	xil_printf("MAC address %x, %x, %x, %x, %x, %x \r\n", macUwordB[1], macUwordB[0], macLwordB[3], macLwordB[2], macLwordB[1], macLwordB[0]);
 	unsigned char mac_ethernet_address[] =
@@ -142,7 +142,7 @@ unsigned int ipLocal;
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x02}; //"James" microzed"
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x03}; //"DWA_v2" microzed"
 	//{ 0xfc, 0xc2, 0xde, 0x36, 0xd5, 0x7e}; //"edison"
-	{ macUword[1], macUword[0], macLword[3], macLword[2], macLword[1], macLword[0]}; //take from PL NV mem
+	{macUwordB[1], macUwordB[0], macLwordB[3], macLwordB[2], macLwordB[1], macLwordB[0]}; //take from PL NV mem
 
 	echo_netif = &server_netif;
 #if defined (__arm__) && !defined (ARMR5)
@@ -226,11 +226,11 @@ unsigned int ipLocal;
 	if (dhcp_timoutcntr <= 0) {
 		if ((echo_netif->ip_addr.addr) == 0) {
 			xil_printf("DHCP Timeout\r\n");
-			xil_printf("Configuring default IP of 192.168.140.70\r\n");
-			IP4_ADDR(&(echo_netif->ip_addr),  192, 168,  140, 70);
+			xil_printf("Configuring default IP %x %x %x %x\r\n", ipLocalB[3], ipLocalB[2], ipLocalB[1], ipLocalB[0]);
+			IP4_ADDR(&(echo_netif->ip_addr),  ipLocalB[3], ipLocalB[2], ipLocalB[1], ipLocalB[0]);
 			//IP4_ADDR(&(echo_netif->ip_addr),  128, 103,   100, 173);
 			IP4_ADDR(&(echo_netif->netmask), 255, 255, 255,  0);
-			IP4_ADDR(&(echo_netif->gw),      192, 168,   1,  1);
+			IP4_ADDR(&(echo_netif->gw), ipLocalB[3], ipLocalB[2], 1, 1);
 		}
 	}
 
