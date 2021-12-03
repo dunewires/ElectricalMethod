@@ -27,7 +27,8 @@ entity serialPromInterface is
 		fromDaqReg : in  fromDaqRegType;
 		toDaqReg   : out toDaqRegType;
 
-	 snMemConfigWP      : in std_logic := '1';
+		snMemConfigWP : in std_logic := '1';
+		snMemWPError  : out std_logic := '0';
 
 		sda : inout std_logic := 'Z';
 
@@ -68,7 +69,7 @@ architecture STRUCT of serialPromInterface is
 	signal nRxWord     : unsigned(7 downto 0) := (others => '0');
 	signal waitCnt     : unsigned(7 downto 0) := (others => '0');
 	signal stateDbg    : unsigned(7 downto 0) := (others => '0');
-	signal startupSeq    : unsigned(3 downto 0) := (others => '0');
+	signal startupSeq  : unsigned(3 downto 0) := (others => '0');
 	signal stateDbgCmd : unsigned(1 downto 0) := (others => '0');
 
 	signal clkCnt           : unsigned(4 downto 0) := (others => '0');
@@ -86,13 +87,14 @@ architecture STRUCT of serialPromInterface is
 
 	signal readBusy,readBusy_d, readStart,readDone      : std_logic := '0';
 	signal writeBusy,writeBusy_d, writeStart ,writeDone : std_logic := '0';
+	signal enaWrite : std_logic := '0';
 
 	signal vioUpdate_del1,vioUpdate_del2 : std_logic := '0';
 	signal initAddrStrb                  : std_logic := '0';
 	signal initReadStrb                  : std_logic := '0';
 
-	signal dummyWrite : std_logic := '0';
-	signal startupDone     : std_logic := '0';
+	signal dummyWrite  : std_logic := '0';
+	signal startupDone : std_logic := '0';
 begin
 
 	-- the strobe signals from the DAQ are dwaClk100, so we need to latch them
@@ -122,12 +124,12 @@ begin
 
 				if not startupDone then --  read operation was initiated as part ofstartup sequence, let's set the configuraiton
 					case (startupSeq) is
-						when x"0" =>                          -- first read is hard coded serial number
-					       toDaqReg.serNum <= unsigned(shiftRegIn(23 downto 0));
-							deviceAddr    <= "1010000";       --after we are here once switch device address to memory;
-							serialAddress <= (others => '0'); -- set to first init address
-							initAddrStrb  <= '1';             -- update mem address pointer to 0
-							startupSeq    <= startupSeq +1;
+						when x"0" => -- first read is hard coded serial number
+							toDaqReg.serNum <= unsigned(shiftRegIn(23 downto 0));
+							deviceAddr      <= "1010000";       --after we are here once switch device address to memory;
+							serialAddress   <= (others => '0'); -- set to first init address
+							initAddrStrb    <= '1';             -- update mem address pointer to 0
+							startupSeq      <= startupSeq +1;
 
 						when x"1" =>
 							toDaqReg.serNumLocal <= shiftRegIn; --use for NW
@@ -146,7 +148,7 @@ begin
 
 						when x"4" =>
 							toDaqReg.macLword <= shiftRegIn; --use for NW
-							startupDone            <= '1'; -- do it once
+							startupDone       <= '1';        -- do it once
 						when others =>
 							null;
 					end case;
@@ -156,13 +158,15 @@ begin
 					-- setting the address will read the data and update the data register
 					-- the mem address pointer will be incremented but the serialAddress will
 					-- only increment on reads and writes
-					-- serialAddress is only used for write operations and contents accessable via DAQ
-					serialAddress          <= serialAddress + 4 when not dummyWrite;
+					-- serialAddress is only used for write operations and contents accessible via DAQ
+					-- don't allow rollover to protected mem address to avoid potential corruption risk
+					serialAddress          <= serialAddress + 4 when (dummyWrite = '0' and serialAddress < '1' & x"FFC") else serialAddress;
 					toDaqReg.serNumMemData <= unsigned(shiftRegIn(31 downto 0)); -- tell the DWA
 				end if;
 
 			elsif writeDone then
-				serialAddress <= serialAddress +4;
+				-- don't allow rollover to protected mem address to avoid potential corruption risk
+				serialAddress <= serialAddress + 4 when (serialAddress < '1' & x"FFC") else serialAddress;
 
 			elsif fromDaqReg.serNumMemAddrStrb then -- DAQ updated address
 				serialAddress <= fromDaqReg.serNumMemAddress;
@@ -175,8 +179,10 @@ begin
 			-- latch memAddr dummy write operation until read is done
 			dummyWrite <= (memAddr or dummyWrite) and not readDone;
 			-- latch mem read and write daq strobes for slow FSM
-			memRead  <= (fromDaqReg.serNumMemRead or initReadStrb or memRead) and not readStart;
-			memWrite <= (fromDaqReg.serNumMemWrite or memWrite) and not writeStart;
+			memRead      <= (fromDaqReg.serNumMemRead or initReadStrb or memRead) and not readStart;
+			memWrite     <= (fromDaqReg.serNumMemWrite or memWrite) and (not writeStart or enaWrite);
+			enaWrite     <= '1' when snMemConfigWP = '0' or serialAddress > '0' & x"03F" else '0'; -- first 64 bytes can be protected
+			snMemWPError <= enaWrite and fromDaqReg.serNumMemWrite;      -- send error if we try to write to protected mem location
 
 		end if;
 	end process updateCdcDC100;
@@ -316,7 +322,7 @@ begin
 			probe0(31 downto 24) => std_logic_vector(serialAddress(7 downto 0)),
 			probe0(23 downto 0)  => std_logic_vector(toDaqReg.serNum),
 			probe1(31 downto 30) => std_logic_vector(stateDbgCmd),
-			probe1(29) => '0',
+			probe1(29)           => '0',
 			probe1(28 downto 21) => std_logic_vector(wordCnt),
 			probe1(20 downto 17) => std_logic_vector(bitCnt),
 			probe1(16)           => memAddr,
@@ -336,19 +342,21 @@ begin
 	ila_4x32_inst100 : ila_4x32
 		PORT MAP (
 			clk                  => dwaClk100,
-			probe0(31 downto 15) => (others  =>  '0'),
+			probe0(31 downto 17) => (others => '0'),
+			probe0(16)           => enaWrite,
+			probe0(15)           => snMemWPError,
 			probe0(14 downto 11) => std_logic_vector(startupSeq),
 			probe0(10)           => fromDaqReg.serNumMemRead,
-			probe0(9)           => fromDaqReg.serNumMemAddrStrb,
-			probe0(8)           => fromDaqReg.serNumMemWrite,
-			probe0(7)           => writeDone,
-			probe0(6)           => initReadStrb,
-			probe0(5)           => initAddrStrb,
-			probe0(4)           => startupDone,
-			probe0(3)           => readDone,
-			probe0(2)           => readStart,
-			probe0(1)           => writeStart,
-			probe0(0)           => writeDone,
+			probe0(9)            => fromDaqReg.serNumMemAddrStrb,
+			probe0(8)            => fromDaqReg.serNumMemWrite,
+			probe0(7)            => writeDone,
+			probe0(6)            => initReadStrb,
+			probe0(5)            => initAddrStrb,
+			probe0(4)            => startupDone,
+			probe0(3)            => readDone,
+			probe0(2)            => readStart,
+			probe0(1)            => writeStart,
+			probe0(0)            => writeDone,
 			probe1               => (others => '0'),
 			probe2               => (others => '0'),
 			probe3               => (others => '0')

@@ -379,6 +379,7 @@ begin
       toDaqReg   => toDaqReg_serialPromInterface,
 
       snMemConfigWP => snMemConfigWP,
+      snMemWPError => toDaqReg.errors(0),
 
       sda       => SNUM_SDA,
       scl       => SNUM_SCL,
@@ -659,7 +660,7 @@ begin
 
     toDaqReg.serNumMemAddress <= toDaqReg_serialPromInterface.serNumMemAddress;
     toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
-    toDaqReg.errors           <= (others => '0'); -- all unsigned errors set to 0
+    toDaqReg.errors(23 downto 1)           <= (others => '0'); -- all unsigned errors set to 0
   end process selToDaq;
 
 end STRUCT;
