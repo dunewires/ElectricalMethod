@@ -180,9 +180,9 @@ begin
 			dummyWrite <= (memAddr or dummyWrite) and not readDone;
 			-- latch mem read and write daq strobes for slow FSM
 			memRead      <= (fromDaqReg.serNumMemRead or initReadStrb or memRead) and not readStart;
-			memWrite     <= (fromDaqReg.serNumMemWrite or memWrite) and (not writeStart or enaWrite);
+			memWrite     <= (fromDaqReg.serNumMemWrite or memWrite) and not writeStart and enaWrite;
 			enaWrite     <= '1' when snMemConfigWP = '0' or serialAddress > '0' & x"03F" else '0'; -- first 64 bytes can be protected
-			snMemWPError <= enaWrite and fromDaqReg.serNumMemWrite;      -- send error if we try to write to protected mem location
+			snMemWPError <= not enaWrite and fromDaqReg.serNumMemWrite;      -- send error if we try to write to protected mem location
 
 		end if;
 	end process updateCdcDC100;
