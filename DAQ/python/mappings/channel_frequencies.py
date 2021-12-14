@@ -236,7 +236,7 @@ def wire_range_data_constant(wire_layer: str, wire_freq_data):
     range_data = []
     for w in wire_freq_data:
         if wire_layer == "X" or wire_layer == "G":
-            f_range = [67, 90]
+            f_range = [70, 95]
         else:
             res_array = np.array(wire_freq_data[w])
             res_sub_200 = res_array[(res_array<200)]
