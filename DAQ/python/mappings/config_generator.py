@@ -62,7 +62,7 @@ def configure_gains(stim_freq_max: int, *,
             'digipot': format(digipot_config if digipot is None else digipot, '016X')}
 
 
-def configure_sampling(cycles_per_freq=2, samples_per_cycle=16):
+def configure_sampling(cycles_per_freq=1, samples_per_cycle=32):
     '''Return a dictionary of configuration values for the sampling parameters: the number of sampled cycles per stimulus frequency and the number of samples, equally spaced in time, per stimulus cycle.'''
     return {'cyclesPerFreq': format(cycles_per_freq, '06X'),
             'adcSamplesPerCycle': format(samples_per_cycle, '06X')}

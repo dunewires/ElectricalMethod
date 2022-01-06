@@ -156,10 +156,12 @@ from SietchConnect import SietchConnect
 
 sys.path.append('./mappings')
 sys.path.append('./database')
+sys.path.append('./fitting')
 import config_generator
 import channel_map
 import channel_frequencies
 import database_functions
+import resonance_fitting
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -222,7 +224,7 @@ DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUui
 # Recent scan list 
 SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid']
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
-N_RECENT_SCANS = 160
+N_RECENT_SCANS = 50
 
 TENSION_SPEC = 6.5 # Newtons
 TENSION_SPEC_MIN = TENSION_SPEC-1.0
@@ -1017,7 +1019,8 @@ class MainWindow(qtw.QMainWindow):
         self.pb_scanDataLoad.clicked.connect(self.loadArbitraryScanData)
         self.pb_scanDataSelectedLoad.clicked.connect(self.loadRecentScanData)
         for reg in self.registers:
-            getattr(self, f'le_resfreq_val_{reg}').editingFinished.connect(self._resFreqUserInputText)
+            for seg in range(3):
+                getattr(self, f'le_resfreq_val_{reg}_{seg}').editingFinished.connect(self._resFreqUserInputText)
         self.resFitPreDetrend.stateChanged.connect(self.resFitParameterUpdated)
         self.resFitBkgPoly.editingFinished.connect(self.resFitParameterUpdated)
         self.resFitWidth.editingFinished.connect(self.resFitParameterUpdated)
@@ -1025,7 +1028,7 @@ class MainWindow(qtw.QMainWindow):
         self.resFitKwargs.editingFinished.connect(self.resFitParameterUpdated)
         #
         # Resonance Tab
-        self.btnSubmitResonances.clicked.connect(self.submitResonancesThread)
+        self.btnSubmitResonances.clicked.connect(self.submitTensionsThread)
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensionsThread)
         self.btnSubmitTensions.clicked.connect(self.submitTensionsThread)
@@ -2450,18 +2453,29 @@ class MainWindow(qtw.QMainWindow):
         self._loadSavedAmpData(filename)
         self._configureResonancePlots()
         self.runResonanceAnalysis()
-        self.labelResonanceSubmitStatus.setText("Resonances have not been submitted")
+        self.labelResonanceSubmitStatus.setText("Tensions have not been submitted")
 
     @pyqtSlot()
     def _resFreqUserInputText(self):
         for reg in self.registers:
-            print(getattr(self, f'le_resfreq_val_{reg}').text())
+            for seg in range(3):
+                print(getattr(self, f'le_resfreq_val_{reg}_{seg}').text())
 
         # FIXME: add check for which channel's textbox this came from
         # and only update the f0 values and GUI display for that associated channel
+        print('self.resonantFreqs',self.resonantFreqs)
         for reg in self.registers:
-            fString = getattr(self, f'le_resfreq_val_{reg}').text()
-            self.resonantFreqs[reg.value] = self._freqsOfString(fString)
+            for seg in range(3):
+                if seg < len(self.resonantFreqs[reg.value]):
+                    try:
+                        tensionInput = float(getattr(self, f'le_resfreq_val_{reg}_{seg}').text())
+                        currentFreqs = np.array(self.expectedFreqs[reg.value][seg])
+                        newFreqs = currentFreqs*np.sqrt(tensionInput/TENSION_SPEC)
+                        self.resonantFreqs[reg.value][seg] = newFreqs.tolist()
+                        self.currentTensions[reg.value][seg] = tensionInput
+                    except:
+                        self.resonantFreqs[reg.value][seg] = []
+
         self.resFreqUpdateDisplay(chan=None)
 
     def _freqsOfString(self, fString):
@@ -2545,36 +2559,48 @@ class MainWindow(qtw.QMainWindow):
         print(f"self.resFitLines['raw'] = {self.resFitLines['raw']}")
         print(f"self.resFitLines['proc'] = {self.resFitLines['proc']}")
 
-        source = self._getInfLineSource(evt)
-        self._updateResFreqsFromLineLocations(source)
+        source, c, s, l = self._getInfLineSource(evt)
+        self._updateResFreqsFromLineLocations(source, c, s, l)
         self.resFreqUpdateDisplay(chan=None)  # update GUI
-        
+
     def _getInfLineSource(self, infLine):
         # Figure out which plot the line drag was in
         # Flatten the list of InfiniteLines and match to source of signal
-        rawLines = list(chain(*self.resFitLines['raw'].values()))
-        procLines = list(chain(*self.resFitLines['proc'].values()))
-        if infLine in rawLines:
-            source = 'raw'
-        elif infLine in procLines:
-            source = 'proc'
-        else:
-            print("ERROR: unknown source of signal: {infLine}")
-            print("      rawLines  = {rawLines}")
-            print("      procLines = {procLines}")
-            return
-        print(f"_f0LineMoved(): sender is from {source}")
-        return source
+        for source in ['raw', 'proc']:
+            for c in self.activeRegistersS:
+                chanLines = self.resFitLines[source][c]
+                for s,segLines in enumerate(chanLines):
+                    for l,line in enumerate(segLines):
+                        if line == infLine:
+                            return source, c, s, l
 
-    def _updateResFreqsFromLineLocations(self, source):
+        # rawLines = list(chain(*self.resFitLines['raw'].values()))
+        # procLines = list(chain(*self.resFitLines['proc'].values()))
+        # if infLine in rawLines:
+        #     source = 'raw'
+        # elif infLine in procLines:
+        #     source = 'proc'
+        # else:
+        #     print("ERROR: unknown source of signal: {infLine}")
+        #     print("      rawLines  = {rawLines}")
+        #     print("      procLines = {procLines}")
+        #     return
+        # print(f"_f0LineMoved(): sender is from {source}")
+        return None, None, None, None
+
+    def _updateResFreqsFromLineLocations(self, source, c, s, l):
         # source is either 'proc' or 'raw'
-        
+        movedLine = self.resFitLines[source][c][s][l]
+        newValue = movedLine.value()
+        oldValue = self.resonantFreqs[c][s][l]
+        self.resonantFreqs[c][s] = (newValue/oldValue)*np.array(self.resonantFreqs[c][s]) #self.resonantFreqs[c][s] + newValue - oldValue  
+        self.resFreqUpdateDisplay(chan=None)
         # loop over all channels. Get locations of lines
-        for reg in self.registers:
-            self.resonantFreqs[reg.value] = []  # start w/ empty list
-            for infLine in self.resFitLines[source][reg]: # re-create resFreq list
-                self.resonantFreqs[reg.value].append(infLine.value())
-                self.resonantFreqs[reg.value].sort()
+        # for reg in self.registers:
+        #     self.resonantFreqs[reg.value] = []  # start w/ empty list
+        #     for infLine in self.resFitLines[source][c]: # re-create resFreq list
+        #         self.resonantFreqs[reg.value].append(infLine.value())
+        #         self.resonantFreqs[reg.value].sort()
         
     @pyqtSlot()
     def viewStimulus(self):
@@ -2689,7 +2715,6 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def loadTensions(self):
-        print("loadTensions()")
 
         # Load sietch credentials #FIXME still using James's credentials
         sietch = SietchConnect("sietch.creds")
@@ -2713,28 +2738,19 @@ class MainWindow(qtw.QMainWindow):
         self.tensionTableView.resizeRowsToContents()
 
         for side in ["A", "B"]:
-            print("apaUuid, side, layer, stage")
-            print(apaUuid, side, layer, stage)
             layer_data = database_functions.get_layer_data(sietch, apaUuid, side, layer, stage)
             channels = [int(ch) for ch in layer_data.keys()]
-            print("layer_data")
-            print(layer_data)
             if not layer_data:
                 print(f"layer_data is empty... skipping layer, side = {layer}, {side}")
                 continue
             for ch in channels:
-                print(f"ch: {ch}")
                 wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
                 measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
-                print(f"expected_frequencies: {expected_frequencies}")
-                print(f"measured_frequencies: {measured_frequencies}")
                 #print(expected_frequencies,measured_frequencies)
                 if len(measured_frequencies) > 0:
                     mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
                     for i,w in enumerate(wires):
                         self.tensionData[side][w-1] = mapped[i]
-                        print(side,str(w),str(mapped[i]))
-                print("\n")
             self.curves['tension']['tensionOfWireNumber'][layer][side].setData(range(1, MAX_WIRE_SEGMENT[layer]+1), self.tensionData[side] )
             # FIXME: this should only happen once -- in _makeCurves()
             # Create the scatter plot and add it to the view
@@ -2753,37 +2769,66 @@ class MainWindow(qtw.QMainWindow):
         #self.tensionTableView.resizeColumnsToContents()  # probably don't need?
         
     def submitTensions(self):
-        # Load sietch credentials #FIXME still using James's credentials
+        self.labelResonanceSubmitStatus.setText("Submitting...")
+        # Load sietch credentials
         sietch = SietchConnect("sietch.creds")
-        pointerTableId = self.pointerTable["_id"]
-        apaUuid = self.pointerTable["data"]["apaUuid"]
-        stage = self.pointerTable["stage"]
+        apaUuid = self.ampDataS['apaUuid']
+        stage = self.ampDataS['stage']
+        layer = self.ampDataS['layer']
+        side = self.ampDataS['side']
         note = self.submitResonanceNoteLineEdit.text()
-        wireData = {
-            'X': {
-                'A': [],
-                'B': []
-            },
-            'U': {
-                'A': [],
-                'B': []
-            },
-            'V': {
-                'A': [],
-                'B': []
-            },
-            'G': {
-                'A': [],
-                'B': []
-            },
-        }
-        wireData[self.tensionLayer] = self.tensionData
+        scanId = self.recentScansNameOfLoadedScan.split('\\')[-1]
+        tensionTable = database_functions.get_tension_table(sietch, apaUuid, stage)
+        if tensionTable:
+            wireData = tensionTable['data']['wireSegments']
+        else:
+            wireData = {}
+            for l in APA_LAYERS:
+                wireData[l] = {}
+                for s in APA_SIDES:
+                    wireData[l][s] = {}
+                    for i in range(MAX_WIRE_SEGMENT[l]):
+                        wireData[l][s][str(i).zfill(5)] = {}
+
+        apaChannels = self.ampDataS['apaChannels']
+        for dwaChan,apaChan in enumerate(apaChannels):
+            if not apaChan: continue
+            wireSegments, _ = channel_frequencies.get_expected_resonances(layer,apaChan)
+            if wireData[layer][side] == []:
+                wireData[layer][side] = [-1]*MAX_WIRE_SEGMENT[layer]
+            for i, wireNum in enumerate(wireSegments):
+                currentTension = self.currentTensions[dwaChan][i]
+                if currentTension > 0:
+                    wireData[layer][side][str(wireNum).zfill(5)][scanId] = {'tension': currentTension}
+
+        # pointerTableId = self.pointerTable["_id"]
+        # apaUuid = self.pointerTable["data"]["apaUuid"]
+        # stage = self.pointerTable["stage"]
+        # note = self.submitResonanceNoteLineEdit.text()
+        # wireData = {
+        #     'X': {
+        #         'A': [],
+        #         'B': []
+        #     },
+        #     'U': {
+        #         'A': [],
+        #         'B': []
+        #     },
+        #     'V': {
+        #         'A': [],
+        #         'B': []
+        #     },
+        #     'G': {
+        #         'A': [],
+        #         'B': []
+        #     },
+        # }
+        # wireData[self.tensionLayer] = self.tensionData
         
         record_result = {
             "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, apaUuid),
             "formId": "Wire Tensions",
             "formName": "Wire Tensions",
-            "pointerTableUsed": pointerTableId,
             "stage": stage,
             "data": {
                 "version": "1.1",
@@ -2795,11 +2840,10 @@ class MainWindow(qtw.QMainWindow):
                 "note": note
             }
         }
-        print(record_result)
-        dbid= sietch.api('/test',record_result)
-
+        sietch.api('/test',record_result)
+        self.labelResonanceSubmitStatus.setText("Submitted!")
+        
     def saveResonanceData(self):
-        print("saveResonanceData()")
         resData = {}
 
         print(f'self.resonantFreqs = {self.resonantFreqs}')
@@ -2837,12 +2881,7 @@ class MainWindow(qtw.QMainWindow):
 
         note = self.submitResonanceNoteLineEdit.text()
         
-        print(f"sietch = {sietch}")
-        print(f"self.ampDataS['apaUuid'] = {self.ampDataS['apaUuid']}")
         out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"])
-        print(f"out = {out}")
-
-        print("Making pointer table...")
         #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
         pointerTable = database_functions.get_pointer_table(sietch, self.ampDataS['apaUuid'], self.ampDataS['stage'])
         if not pointerTable:
@@ -2853,7 +2892,6 @@ class MainWindow(qtw.QMainWindow):
                     wirePointersAllLayers[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT[layer]
         else:
             wirePointersAllLayers = pointerTable["data"]["wireSegments"]
-        print("Done making pointer table...")
 
         print("Writing resonance results to db")
         #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
@@ -2888,8 +2926,7 @@ class MainWindow(qtw.QMainWindow):
                     wirePointersAllLayers[self.ampDataS['layer']][self.ampDataS['side']][w-1] = {"testId": dbid}
                     #pointer_list[w] = {"testId": dbid}
         print("Done writing resonance results to db")
-        
-        print("Writing record_result to db")
+
         #pointer_lists[self.ampDataS["layer"]][self.ampDataS["side"]] = pointer_list  # BUG? should copy the list not reference it?
         record_result = {
             "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
@@ -2911,13 +2948,9 @@ class MainWindow(qtw.QMainWindow):
         # can't just use self.recentScansTableRowInUse because rows may have been added
         # to the scan since the A(f) data was loaded!
         # Even this approach is not foolproof (race condition)
-        print("Updating Submitted status in Recent Scans table")
-        #print(f"trying to match to: {self.recentScansNameOfLoadedScan}")
         tableData = self.recentScansTableModel.getData()
         for row in range(len(tableData)):
-            #print(f"row, scanName = {row}, {tableData[row]['scanName']}")
             if tableData[row]['scanName'] == self.recentScansNameOfLoadedScan:
-                #print("found match!")
                 self.recentScansTableModel.setSubmitted(row, Submitted.YES)
             
         #self.recentScansTableModel.setSubmitted(self.recentScansTableRowInUse, Submitted.YES)
@@ -3232,12 +3265,12 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers:
             #print(f"self.resFitLines['proc'][{reg}] = ")
             #print(self.resFitLines['proc'][reg])
-            for infLine in self.resFitLines['proc'][reg]:
-                self.resonanceProcessedPlots[reg].removeItem(infLine)
-            for infLine in self.resFitLines['raw'][reg]:
-                self.resonanceRawPlots[reg].removeItem(infLine)
-            for line in self.resFitLines['procDebug'][reg]:
-                self.resonanceProcessedPlots[reg].removeItem(line)
+            for segments in self.resFitLines['raw'][reg]:
+                for line in segments:
+                    self.resonanceRawPlots[reg].removeItem(line)
+            for segments in self.resFitLines['proc'][reg]:
+                for line in segments:
+                    self.resonanceProcessedPlots[reg].removeItem(line)
 
         self._initResonanceFitLines()
 
@@ -3274,8 +3307,8 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers:
             self.ampData[reg] = {'freq':[],  # stim freq in Hz
                                  'ampl':[] } # amplitude in ADC counts
-            self.resonantFreqs[reg.value] = []   # a list of f0 values for each wire
-            self.expectedFreqs[reg.value] = []
+            self.resonantFreqs[reg.value] = None   # a list of f0 values for each wire
+            self.expectedFreqs[reg.value] = None
 
         # Clear amplitude plots
         plotTypes = ['amplchan', 'amplgrid']
@@ -3313,23 +3346,29 @@ class MainWindow(qtw.QMainWindow):
 
     def _configureResonancePlots(self):
         for index in range(N_DWA_CHANS):
+            self.resonanceRawPlots[index].setTitle(f'DWA Chan: {index} APA Chan: N/A')
+            self.resonanceProcessedPlots[index].setTitle(f'DWA Chan: {index} APA Chan: N/A')
+            for seg in range(3):
+                getattr(self, f'lab_resfreq_{index}_{seg}').setText('None')
+                getattr(self, f'le_resfreq_val_{index}_{seg}').setText('')
+                getattr(self, f'le_resfreq_val_{index}_{seg}').setEnabled(False)
             if index in self.activeRegistersS:
                 apaChan = self.ampDataS['apaChannels'][index]
                 apaLayer = self.ampDataS['layer']
                 apaSide = self.ampDataS['side']
                 self.resonanceRawPlots[index].setTitle(f'DWA Chan: {index} APA Chan: {apaLayer}{apaSide}{apaChan}')
                 self.resonanceProcessedPlots[index].setTitle(f'DWA Chan: {index} APA Chan: {apaLayer}{apaSide}{apaChan}')
-            else:
-                self.resonanceRawPlots[index].setTitle(f'DWA Chan: {index} APA Chan: N/A')
-                self.resonanceProcessedPlots[index].setTitle(f'DWA Chan: {index} APA Chan: N/A')
+                segments, _ = channel_frequencies.get_expected_resonances(apaLayer,apaChan,200)
+                for seg in range(3):
+                    if seg < len(segments):
+                        wireNum = segments[seg]
+                        getattr(self, f'lab_resfreq_{index}_{seg}').setText(f'{apaLayer}{apaSide}{wireNum}')
+                        getattr(self, f'le_resfreq_val_{index}_{seg}').setEnabled(True)
 
     def _makeOutputFilenames(self):
         # Generate a unique filename for each register
         # Generate filehandles for each register
         # FIXME: move this to a higher level (only do it once...)
-        #def getUniqueFileroot():
-        #    return datetime.datetime.now().strftime("data/%Y%m%dT%H%M%S")
-        print("_makeOutputFilenames()")
         froot = os.path.join(self.scanRunDataDir, "rawData")
         self.logger.info(f"fileroot = {froot}")
         # create new output filenames
@@ -3980,81 +4019,136 @@ class MainWindow(qtw.QMainWindow):
         #        need only pass the self.ampDataS and self.resFitParams dictionaries
         
         print("runResonanceAnalysis():")
-        self.resFreqGetParams()
+        #self.resFreqGetParams()
         self.resFreqRunFit()
         self.resFreqUpdateDisplay(chan=None)
 
     def resFreqRunFit(self):
         
-        #for reg in self.registers:
-        for chan in self.activeRegistersS:
-            ##print(f'reg       = {reg}')
-            ##print(f'reg.value = {reg.value}')
-            #chan = reg.value
-            reg = chan
-            # FIXME: defunct...
-            if len(self.ampDataS[reg]['freq']) == 0:  # maybe a register has no data?
+        # #for reg in self.registers:
+        # for chan in self.activeRegistersS:
+        #     reg = chan
+        #     if len(self.ampDataS[reg]['freq']) == 0:  # maybe a register has no data?
+        #         continue
+
+        #     layer = self.ampDataS['layer']
+        #     apaCh = self.ampDataS['apaChannels'][reg]
+        #     opt_res = []
+        #     print("Channel ",apaCh)
+        #     if apaCh:
+        #         expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,200)
+        #         exFreq = expected_resonances[1]
+        #         wires = expected_resonances[0]
+        #         order = range(len(exFreq))
+        #         lengths = [len(x) for x in exFreq]
+        #         zipOrder = sorted(zip(lengths, order))
+        #         zipOrder.reverse()
+        #         order = [x for _, x in zipOrder]
+        #         self.expectedFreqs[reg] = expected_resonances
+        #         f = np.array(self.ampDataS[reg]['freq'])
+        #         a = np.array(self.ampDataS[reg]['ampl'])
+        #         if len(f)>250:
+                    
+        #             #if plot: fig,ax = plt.subplots(figsize=(4,2))
+        #             bsub = resonance_fitting.baseline_subtracted(np.cumsum(a))
+        #             bsubabs = np.abs(bsub)
+        #             smooth = savgol_filter(bsubabs, 51, 3)
+
+        #             if resonance_fitting.contains_resonances(bsub,layer):
+        #                 pks, _ = find_peaks(smooth,prominence=5)
+        #                 fpks = [f[pk] for pk in pks]
+        #                 opt_res, _ = resonance_fitting.optimize_res_placement(f,smooth,exFreq,fpks)
+        #             else:
+        #                 print("No resonances")
+        #         else:
+        #             print("Scan too short")
+
+        for reg in self.registers:
+            self.resonantFreqs[reg.value] = None
+            if reg.value not in self.activeRegistersS:
                 continue
-            #peakIds, _ = find_peaks(np.cumsum(self.ampDataS[reg]['ampl']))
-            #apaChan = self.ampDataS['apaChannels'][reg.value]
-            apaChan = self.ampDataS['apaChannels'][chan]
-            if not apaChan: continue
-            wires, expectedFreqs = channel_frequencies.get_expected_resonances(self.ampDataS["layer"], apaChan, thresh = 250.)
-            #expectedFreqs = [f for sublist in expectedFreqs for f in sublist]
-
-            # Make a copy of the data to work with
-            dataToFit = self.ampDataS[reg]['ampl'][:]
             
-            # subtract a line first?
-            if self.resFitParams['preprocess']['detrend']:
-                # remove linear fit
-                if self.verbose > 2:
-                    print("detrending")
-                dataToFit -= dwa.baseline(self.ampDataS[reg]['freq'], dataToFit, polyDeg=1)
+            layer = self.ampDataS['layer']
+            apaCh = self.ampDataS['apaChannels'][reg]
+            if not apaCh:
+                print(f"DWA Chan {reg.value}: No channel")
+                continue
+
+            segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,200)
+            self.resonantFreqs[reg.value] = [[] for _ in segments]
+            roundex = []
+            for seg in expected_resonances:
+                roundex.append([round(x,2) for x in seg])
+            expected_resonances = roundex
+            segments_nolim,ex_nolim = channel_frequencies.get_expected_resonances(layer,apaCh,9e9)
+            #if 351 not in segments: continue
+            #if 93 in segments: plot = True
+            #else: plot = False
+            #ex.sort(key=len,reverse=True)
+            self.expectedFreqs[reg.value] = expected_resonances
+            f = np.array(self.ampDataS[reg]['freq'])
+            a = np.array(self.ampDataS[reg]['ampl'])
+            opt_res_arr = [[] for _ in segments]
+            if len(f) == 0 or max(f) > 500: continue
             
-            # Cumulative sum, remove baseline, plot, fit peaks, annotate plot
-            # Vertical shift to start the y-values at zero
-            dataToFit -= np.min(dataToFit)
-            dataToFit  = scipy.integrate.cumtrapz(dataToFit, x=self.ampDataS[reg]['freq'], initial=0)
-
-            # User can disable this step by specifying a negative Baseline poly value
-            if self.resFitParams['find_peaks']['bkgPoly'] >= 0:
-                dataToFit -= dwa.baseline(self.ampDataS[reg]['freq'], dataToFit,
-                                          polyDeg=self.resFitParams['find_peaks']['bkgPoly'])
-            elif self.resFitParams['find_peaks']['bkgPoly'] < 0:
-                polyval = -1*int(self.resFitParams['find_peaks']['bkgPoly'])
-                savgolWindow = 101
-                if savgolWindow > len(dataToFit):
-                    savgolWindow = (int(len(dataToFit)/20)*2)+1
-                dataToFit -= savgol_filter(dataToFit, savgolWindow, polyval)
-                #print("RC background fit requested (not yet implemented)")
-
-            # plot fxn that is used for peakfinding
-            self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], dataToFit)
+            if len(f) < 250:
+                print(f"DWA Chan {reg.value}: Scan too short")
+                continue
+            #plot = True
+            #if plot: fig,ax = plt.subplots(figsize=(4,2))
+            bsub = resonance_fitting.baseline_subtracted(np.cumsum(a))
+            self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], bsub)
+            bsubabs = np.abs(bsub)
+            smooth = savgol_filter(bsubabs, 51, 3)
+            opt_reduced = smooth.copy()
             
-            # FIXME: set width based on frequency, not hard-coded number of samples!
-            peakIds, properties = find_peaks(dataToFit,
-                                             height=self.resFitParams['find_peaks']['height'],
-                                             threshold=self.resFitParams['find_peaks']['threshold'],
-                                             distance=self.resFitParams['find_peaks']['distance'],
-                                             prominence=self.resFitParams['find_peaks']['prominence'],
-                                             width=self.resFitParams['find_peaks']['width'],
-                                             wlen=self.resFitParams['find_peaks']['wlen'],
-                                             rel_height=self.resFitParams['find_peaks']['rel_height'],
-                                             plateau_size=self.resFitParams['find_peaks']['plateau_size']
-                                             )
-            self.resFitParamsOut[chan]['peaks'] = peakIds
-            self.resFitParamsOut[chan]['properties'] = properties
-            # FIXME: could add interpolation for better precision
+            #if plot: ax.plot(f,bsub)
+            if not resonance_fitting.contains_resonances(bsub,layer):
+                print(f"DWA Chan {reg.value}: No resonances")
+                continue
+        
+            colors = ['gold','deepskyblue','violet']
+            pks, _ = find_peaks(smooth,prominence=5)
+            fpks = [f[pk] for pk in pks]
+            placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
+            sorted_placements = np.array([x for _, x in sorted(zip(costs, placements))])
+            sorted_diffs = np.array([x for _, x in sorted(zip(costs, diffs))])
+            sorted_tensions = np.array([x for _, x in sorted(zip(costs, tensions))])
+            sorted_costs = np.array([x for _, x in sorted(zip(costs, costs))])
+            if len(sorted_costs) < 1: continue
+            lowest_cost = sorted_costs[0]
+            lowest_placement = sorted_placements[0]
+                
+            select_best = (sorted_costs < 1.2*lowest_cost)
+            best_tensions = sorted_tensions[select_best]
+            best_tensions_std = np.std(best_tensions,0)
 
-            # update the label:
-            peakFreqs = [ self.ampDataS[reg]['freq'][id] for id in peakIds ]
+            for s, seg_std in enumerate(best_tensions_std):
+                if seg_std > 0.2:
+                    opt_res_arr[s] = []
+                else:
+                    opt_res_arr[s] = lowest_placement[s].tolist()
 
-            # Store the resonant *frequencies* and then update the GUI based on that
-            #self.resonantFreqs[reg.value] = peakFreqs[:]
-            #self.expectedFreqs[reg.value] = expectedFreqs[:]
-            self.resonantFreqs[chan] = peakFreqs[:]
-            self.expectedFreqs[chan] = expectedFreqs[:]
+                            
+        #         bsub = resonance_fitting.baseline_subtracted(a)
+        #         if resonance_fitting.contains_resonances(bsub):
+        #             opt_res = [ [] for _ in range(len(exFreq)) ]
+        #             opt_reduced = bsub.copy()
+        #             colors = ['red','orange','yellow']
+        #             for i in order:
+        #                 wire_segment_res = exFreq[i]
+        #                 opt_res[i], _ = resonance_fitting.optimize_res_placement(f,opt_reduced,wire_segment_res)
+
+            # #peakIds, _ = find_peaks(np.cumsum(self.ampDataS[reg]['ampl']))
+            # #apaChan = self.ampDataS['apaChannels'][reg.value]
+            # apaChan = self.ampDataS['apaChannels'][chan]
+            # if not apaChan: continue
+            # wires, expectedFreqs = channel_frequencies.get_expected_resonances(self.ampDataS["layer"], apaChan, thresh = 250.)
+            # #expectedFreqs = [f for sublist in expectedFreqs for f in sublist]
+
+            
+            
+            self.resonantFreqs[reg.value] = opt_res_arr
 
         # Keep track of the fitted resonances, as determined by the peak-finding algorithm
         # Used only for outputting to resonanceData.json
@@ -4063,10 +4157,11 @@ class MainWindow(qtw.QMainWindow):
         self.resFitToLog['find_peaks'] = copy.deepcopy(self.resFitParams['find_peaks'])
         self.resFitToLog['resonances'] = {}
 
+        print(self.resonantFreqs)
         for reg in self.registers:
             apaChan = self.ampDataS['apaChannels'][reg.value]
             if not apaChan: continue
-            self.resFitToLog['resonances'][reg.value] = self.resonantFreqs[reg.value][:]
+            self.resFitToLog['resonances'][reg.value] = self.resonantFreqs[reg.value]
         
     def resFreqUpdateDisplay(self, chan=None):
         """ 
@@ -4083,57 +4178,82 @@ class MainWindow(qtw.QMainWindow):
         fPenBlue = [pg.mkPen(color='#0000FF', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#00AADD', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#008888', width=4, style=qtc.Qt.SolidLine)]
 
         debug = False
+        self.currentTensions = {}
         
-        #for reg in self.registers:
         for chan in self.activeRegistersS:
             #chan = reg.value
-            reg = chan
             #print(f'in update: {chan}: {self.resonantFreqs[chan]}')
-            labelStr = ', '.join([f'{ff:.3f}' for ff in self.resonantFreqs[chan]])
-            getattr(self, f'le_resfreq_val_{reg}').setText(labelStr)
+            self.currentTensions[chan] = [None for _ in range(3)]
+            if self.resonantFreqs[chan] is None: continue
+            for seg,measured in enumerate(self.resonantFreqs[chan]):
+                if len(measured) == 0:
+                    self.currentTensions[chan][seg] = -1
+                else:
+                    minMeasured = np.min(measured)
+                    minExpected = np.min(self.expectedFreqs[chan][seg])
+                    self.currentTensions[chan][seg] = TENSION_SPEC*(minMeasured/minExpected)**2
+            for seg in range(3):
+                if self.currentTensions[chan][seg] == None:
+                    getattr(self, f'le_resfreq_val_{chan}_{seg}').setEnabled(False)
+                    getattr(self, f'le_resfreq_val_{chan}_{seg}').setText('')
+                else:
+                    getattr(self, f'le_resfreq_val_{chan}_{seg}').setEnabled(True)
+                    if self.currentTensions[chan][seg] == -1:
+                        getattr(self, f'le_resfreq_val_{chan}_{seg}').setText("")
+                    else:
+                        getattr(self, f'le_resfreq_val_{chan}_{seg}').setText(str(round(self.currentTensions[chan][seg],2)))
             
             fitx, fity = self.curves['resProcFit'][chan].getData()
 
-            # Add expected resonances to plot
-            for i, wireSegmentFreqs in enumerate(self.expectedFreqs[chan]):
-                expectedFreqRounded = np.array([round(f,2) for f in wireSegmentFreqs])
-                expectedFreqRounded = np.unique(expectedFreqRounded)
-                for ii, ff in enumerate(expectedFreqRounded):
-                    self.resExpLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=False, pen=fPenBlue[i]) )
+            # # Add expected resonances to plot
+            # for i, wireSegmentFreqs in enumerate(self.expectedFreqs[chan]):
+            #     expectedFreqRounded = np.array([round(f,2) for f in wireSegmentFreqs])
+            #     expectedFreqRounded = np.unique(expectedFreqRounded)
+            #     for ii, ff in enumerate(expectedFreqRounded):
+            #         self.resExpLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=False, pen=fPenBlue[i]) )
 
             # Create/display new InfiniteLine instance for each resonant freq
             for ii, ff in enumerate(self.resonantFreqs[chan]):
-                # Plot vertical line from peak down to "baseline"
-                # And horizontal line showing width of fitted peak
-                # as in last example here:
-                # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
-                #try:
-                #    ymax = fity[self.resFitParamsOut[chan]['peaks'][ii]]
-                #    ymin = ymax - self.resFitParamsOut[chan]['properties']['prominences'][ii]
-                #    print(f'ymin, ymax = {ymin}, {ymax}')
-                #except:
-                #    print("\n\n\nERROR!!!!!!!!!\n\n\n")
 
-                if (debug):
-                    print(f"Chan, Freq = {chan}, {ii}, {ff}")
-                    ymax = fity[self.resFitParamsOut[chan]['peaks'][ii]]
-                    ymin = ymax - self.resFitParamsOut[chan]['properties']['prominences'][ii]
-                    xmin = fitx[int(np.floor(self.resFitParamsOut[chan]['properties']['left_ips'][ii]))]
-                    xmax = fitx[int(np.ceil(self.resFitParamsOut[chan]['properties']['right_ips'][ii]))] 
-                    ywidth = self.resFitParamsOut[chan]['properties']['width_heights'][ii]
-                    print(f'ymin, ymax = {ymin}, {ymax}')
-                    print("")
-                    self.resFitLines['procDebug'][reg].append( self.resonanceProcessedPlots[reg].plot(x=[ff,ff], y=[ymin,ymax]))
-                    self.resFitLines['procDebug'][reg].append( self.resonanceProcessedPlots[reg].plot(x=[xmin, xmax], y=[ywidth,ywidth]))
+                segmentLinesRaw = []
+                segmentLinesProc = []
+                for seg, f in enumerate(ff):
 
-                
-                self.resFitLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
-                # FIXME: should the next 2 lines really be commented out?
-                self.resFitLines['proc'][reg][-1].sigClicked.connect(self._f0LineClicked)
-                self.resFitLines['proc'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
-                self.resFitLines['raw'][reg].append( self.resonanceRawPlots[reg].addLine(x=ff, movable=True, pen=f0Pen) )
-                self.resFitLines['raw'][reg][-1].sigClicked.connect(self._f0LineClicked)
-                self.resFitLines['raw'][reg][-1].sigPositionChangeFinished.connect(self._f0LineMoved)
+                    # Plot vertical line from peak down to "baseline"
+                    # And horizontal line showing width of fitted peak
+                    # as in last example here:
+                    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
+                    #try:
+                    #    ymax = fity[self.resFitParamsOut[chan]['peaks'][ii]]
+                    #    ymin = ymax - self.resFitParamsOut[chan]['properties']['prominences'][ii]
+                    #    print(f'ymin, ymax = {ymin}, {ymax}')
+                    #except:
+                    #    print("\n\n\nERROR!!!!!!!!!\n\n\n")
+
+                    if (debug):
+                        print(f"Chan, Freq = {chan}, {ii}, {ff}")
+                        ymax = fity[self.resFitParamsOut[chan]['peaks'][ii]]
+                        ymin = ymax - self.resFitParamsOut[chan]['properties']['prominences'][ii]
+                        xmin = fitx[int(np.floor(self.resFitParamsOut[chan]['properties']['left_ips'][ii]))]
+                        xmax = fitx[int(np.ceil(self.resFitParamsOut[chan]['properties']['right_ips'][ii]))] 
+                        ywidth = self.resFitParamsOut[chan]['properties']['width_heights'][ii]
+                        print(f'ymin, ymax = {ymin}, {ymax}')
+                        print("")
+                        self.resFitLines['procDebug'][chan].append( self.resonanceProcessedPlots[chan].plot(x=[ff,ff], y=[ymin,ymax]))
+                        self.resFitLines['procDebug'][chan].append( self.resonanceProcessedPlots[chan].plot(x=[xmin, xmax], y=[ywidth,ywidth]))
+
+                    
+                    
+                    segmentLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=True, pen=fPenBlue[ii]) )
+                    # FIXME: should the next 2 lines really be commented out?
+                    segmentLinesProc[-1].sigClicked.connect(self._f0LineClicked)
+                    segmentLinesProc[-1].sigPositionChangeFinished.connect(self._f0LineMoved)
+                    segmentLinesRaw.append( self.resonanceRawPlots[chan].addLine(x=f, movable=True, pen=fPenBlue[ii]) )
+                    segmentLinesRaw[-1].sigClicked.connect(self._f0LineClicked)
+                    segmentLinesRaw[-1].sigPositionChangeFinished.connect(self._f0LineMoved)
+
+                self.resFitLines['proc'][chan].append(segmentLinesProc)
+                self.resFitLines['raw'][chan].append(segmentLinesRaw)
                 
     def cleanUp(self):
         self.logger.info("App quitting:")

@@ -40,6 +40,30 @@ def get_pointer_table(sietch, apa_uuid, stage):
         pointerTable = sietch.api("/test/"+mostRecentPointerTableDBid)
         return pointerTable
 
+def get_tension_table(sietch, apa_uuid, stage):
+    '''
+    Obtain most recent tension table entry.
+    '''
+    tension_frame_uuid = get_tension_frame_uuid_from_apa_uuid(sietch, apa_uuid)
+    mostRecentTensionTableLookup = ""
+    try:
+        mostRecentTensionTableLookup = sietch.api("/search/test?limit=1", {
+            "formId": "Wire Tensions", 
+            "componentUuid": tension_frame_uuid,
+            "stage": stage,
+            # "layer": layer
+        })
+    except:
+        # No pointer table found for UUID
+        # TODO: Make popup message
+        return
+
+    if mostRecentTensionTableLookup:
+        mostRecentTensionTableDBid = mostRecentTensionTableLookup[0]["_id"]
+        # Get table from database
+        tensionTable = sietch.api("/test/"+mostRecentTensionTableDBid)
+        return tensionTable
+
 def get_layer_data(sietch, apa_uuid, side, wire_layer, stage):
     '''
     Gets pointer table associated with the given tension frame, then loops over all the pointers for the given 
