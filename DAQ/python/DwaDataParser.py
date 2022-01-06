@@ -64,6 +64,16 @@ class DwaDataParser():
         if VERBOSE > 0:
             print(Frame)
         
+    # STATIC method
+    @staticmethod
+    def getAllLines(fname):
+        f = open(fname, "r")
+        # read all data into a list (without newlines)
+        # https://stackoverflow.com/questions/12330522/how-to-read-a-file-without-newlines
+        data = f.read().splitlines()
+        f.close()
+        return data
+
     def _makeFrameKeys(self):
         # create a dict of keys (dict of dict)
         self.frameKeys = {}
@@ -666,3 +676,5 @@ class DwaDataParser():
 
         return adcData
         
+
+    
