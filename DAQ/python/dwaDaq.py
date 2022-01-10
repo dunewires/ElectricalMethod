@@ -2971,6 +2971,7 @@ class MainWindow(qtw.QMainWindow):
             # Read the full file into memory
             lines = self._getAllLines(wireDataFilenames[chan])
             # Find where the UDP packet boundaries are in the file (lines starting with 'AAAA0')
+            # FIXME: replace with DwaDataParser static method findUdpPacketStartLines(lines)
             udpDelimIdxs = []
             for ii, line in enumerate(lines):
                 if line.startswith('AAAA0'):
