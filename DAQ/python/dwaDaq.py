@@ -857,6 +857,8 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansFilterProxy.setSourceModel(self.recentScansTableModel)
         self.recentScansTableView.setModel(self.recentScansFilterProxy)
 
+        self.recentScansTableView.setSortingEnabled(True)
+        
         nrows = self.recentScansTableModel.rowCount()
         nrows = 4
         ncols = 7 #self.recentScansTableModel.columnCount()):
