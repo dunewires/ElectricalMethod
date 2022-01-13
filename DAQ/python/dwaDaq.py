@@ -111,6 +111,7 @@
 # for logging info:
 # https://fangpenlin.com/posts/2012/08/26/good-logging-practice-in-python/
 
+import random
 import faulthandler   # helps debug segfaults
 faulthandler.enable()
 
@@ -285,8 +286,8 @@ class StimView(IntEnum):
     A_CHAN   = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
 
-TAB_ACTIVE_MAIN = MainView.STIMULUS
-#TAB_ACTIVE_MAIN = MainView.RESONANCE
+#TAB_ACTIVE_MAIN = MainView.STIMULUS
+TAB_ACTIVE_MAIN = MainView.RESONANCE
 #TAB_ACTIVE_MAIN = MainView.TENSION
 #TAB_ACTIVE_MAIN = MainView.EVTVWR
 TAB_ACTIVE_STIM = StimView.CONFIG
@@ -557,7 +558,30 @@ class RecentScansTableModel(qtc.QAbstractTableModel):
     def setSubmitted(self, index, val):
         self._data[index]['submitted'] = val
     
-            
+
+class SortFilterProxyModel(qtc.QSortFilterProxyModel):
+    def __init__(self, *args, **kwargs):
+        qtc.QSortFilterProxyModel.__init__(self, *args, **kwargs)
+        self.filters = {}
+
+    def setFilterByColumn(self, regex, column):
+        self.filters[column] = regex
+        self.invalidateFilter()
+
+    def filterAcceptsRow(self, source_row, source_parent):
+        for key, regex in self.filters.items():
+            ix = self.sourceModel().index(source_row, key, source_parent)
+            if ix.isValid():
+                text = self.sourceModel().data(ix)
+                if regex.indexIn(text) == -1:
+                    return False
+        return True
+
+def random_word():
+    letters = "abcdedfg"
+    word = "".join([random.choice(letters) for _ in range(random.randint(4, 7))])
+    return word
+
 class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -825,8 +849,56 @@ class MainWindow(qtw.QMainWindow):
         # #self.tensionTableView.resizeColumnsToContents()
         # self.tensionTableView.resizeRowsToContents()
         
-    
     def initRecentScanList(self):
+        scanTableColHdrs = ['Col1', 'Col2', 'Col3', 'Col4', 'Col5', 'Col6', 'Col7']
+        self.recentScansTableModel = qtg.QStandardItemModel()
+        self.recentScansTableModel.setHorizontalHeaderLabels(scanTableColHdrs)
+        self.recentScansFilterProxy = SortFilterProxyModel()
+        self.recentScansFilterProxy.setSourceModel(self.recentScansTableModel)
+        self.recentScansTableView.setModel(self.recentScansFilterProxy)
+
+        nrows = self.recentScansTableModel.rowCount()
+        nrows = 4
+        ncols = 7 #self.recentScansTableModel.columnCount()):
+        for i in range(nrows):
+            for j in range(ncols):
+                item = qtg.QStandardItem()
+                item.setData(random_word(), qtc.Qt.DisplayRole)
+                self.recentScansTableModel.setItem(i, j, item)
+
+        print(f"Nrows = {self.recentScansTableModel.rowCount()}")
+        print(f"Ncols = {self.recentScansTableModel.columnCount()}")
+
+        # Connect the LineEdit scan list filter boxes to slots
+        for ii in range(7):
+            le = getattr(self, f'le_filter{ii+1}')
+            le.setPlaceholderText(scanTableColHdrs[ii])
+            le.textChanged.connect(lambda text, col=ii:
+                                   self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(text,
+                                                                                             qtc.Qt.CaseSensitive,
+                                                                                             qtc.QRegExp.FixedString),
+                                                                                 col))
+
+        
+        #
+        #self.recentScansTableModel.appendRow([qtg.QStandardItem(it) for it in ['shion','Y','20210101']])
+        #self.recentScansTableModel.appendRow([qtg.QStandardItem(it) for it in ['james','N','20210102']])
+        #self.recentScansTableModel.appendRow([qtg.QStandardItem(it) for it in ['chris','N','20210103']])
+        #self.recentScansTableModel.appendRow([qtg.QStandardItem(it) for it in ['sebastien','Y','20210104']])
+        #self.recentScansTableView.setModel(self.recentScansTableModel)
+        ###
+        #RecentScansTableModel(tabledata, SCAN_LIST_TABLE_HDRS)
+        #self.recentScansTableView.resizeColumnsToContents()
+        #self.recentScansTableView.resizeRowsToContents()
+        ##self.recentScansTableView.setMaximumHeight(80)
+        #self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)  # clicking in cell selects entire row
+        #self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
+        ##https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
+        #self.recentScansTableView.doubleClicked.connect(self.recentScansRowDoubleClicked)
+        ##self.recentScansTableRowInUse = None
+        #self.recentScansNameOfLoadedScan = None
+        
+    def initRecentScanListOLD(self):
         scanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
                                           advDir=OUTPUT_DIR_SCAN_DATA_ADVANCED,
                                           sort=True)
