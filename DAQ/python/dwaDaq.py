@@ -859,6 +859,8 @@ class MainWindow(qtw.QMainWindow):
 
         self.recentScansTableView.setSortingEnabled(True)
         
+        self.configApaUuid = self.configApaUuidLineEdit.text()
+
         nrows = self.recentScansTableModel.rowCount()
         nrows = 4
         ncols = 7 #self.recentScansTableModel.columnCount()):
@@ -870,6 +872,8 @@ class MainWindow(qtw.QMainWindow):
 
         print(f"Nrows = {self.recentScansTableModel.rowCount()}")
         print(f"Ncols = {self.recentScansTableModel.columnCount()}")
+
+        
 
         # Connect the LineEdit scan list filter boxes to slots
         for ii in range(7):

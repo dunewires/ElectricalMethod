@@ -22,6 +22,59 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
     <item>
+     <widget class="QWidget" name="widget_25" native="true">
+      <layout class="QFormLayout" name="formLayout_7">
+       <item row="0" column="0">
+        <widget class="QLineEdit" name="configApaUuidLineEdit">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>250</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>250</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="focusPolicy">
+          <enum>Qt::StrongFocus</enum>
+         </property>
+         <property name="placeholderText">
+          <string>APA UUID</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="configStageComboBox">
+         <property name="minimumSize">
+          <size>
+           <width>250</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>250</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="currentText">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
      <widget class="QWidget" name="horizontalWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
@@ -296,7 +349,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -309,7 +362,7 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>2</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -325,36 +378,13 @@
                      <enum>QFormLayout::ExpandingFieldsGrow</enum>
                     </property>
                     <item row="1" column="0">
-                     <widget class="QLabel" name="stage_label">
-                      <property name="text">
-                       <string>Stage</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="1">
-                     <widget class="QComboBox" name="configStageComboBox">
-                      <property name="minimumSize">
-                       <size>
-                        <width>250</width>
-                        <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>250</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="2" column="0">
                      <widget class="QLabel" name="measure_by_label">
                       <property name="text">
                        <string>Measured By</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="2" column="1">
+                    <item row="1" column="1">
                      <widget class="QLineEdit" name="measuredByLineEdit">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -376,46 +406,14 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="3" column="0">
-                     <widget class="QLabel" name="apaId_label">
-                      <property name="text">
-                       <string>APA UUID</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="3" column="1">
-                     <widget class="QLineEdit" name="configApaUuidLineEdit">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>250</width>
-                        <height>0</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>250</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="focusPolicy">
-                       <enum>Qt::StrongFocus</enum>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="4" column="0">
+                    <item row="2" column="0">
                      <widget class="QLabel" name="layer_label">
                       <property name="text">
                        <string>Layer</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="4" column="1">
+                    <item row="2" column="1">
                      <widget class="QComboBox" name="configLayerComboBox">
                       <property name="minimumSize">
                        <size>
@@ -431,14 +429,14 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="5" column="0">
+                    <item row="3" column="0">
                      <widget class="QLabel" name="apaSide">
                       <property name="text">
                        <string>Side</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="5" column="1">
+                    <item row="3" column="1">
                      <widget class="QComboBox" name="SideComboBox">
                       <property name="minimumSize">
                        <size>
@@ -464,14 +462,14 @@
                       </item>
                      </widget>
                     </item>
-                    <item row="10" column="0">
+                    <item row="8" column="0">
                      <widget class="QLabel" name="scanTypeLabel">
                       <property name="text">
                        <string>Scan type</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="10" column="1">
+                    <item row="8" column="1">
                      <widget class="QWidget" name="widget_7" native="true">
                       <layout class="QHBoxLayout" name="horizontalLayout_16">
                        <property name="leftMargin">
@@ -585,7 +583,7 @@
                       </layout>
                      </widget>
                     </item>
-                    <item row="11" column="1">
+                    <item row="9" column="1">
                      <widget class="QPushButton" name="btnConfigureScans">
                       <property name="minimumSize">
                        <size>
@@ -604,7 +602,7 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="13" column="1">
+                    <item row="11" column="1">
                      <layout class="QVBoxLayout" name="verticalLayout_2">
                       <property name="leftMargin">
                        <number>6</number>
@@ -1256,8 +1254,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>717</width>
-                       <height>1724</height>
+                       <width>846</width>
+                       <height>1718</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1335,8 +1333,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>227</width>
-                       <height>1724</height>
+                       <width>199</width>
+                       <height>1718</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_20">
@@ -2819,7 +2817,7 @@
      <x>0</x>
      <y>0</y>
      <width>1313</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -2893,7 +2891,6 @@
   <tabstop>pw_grid_0</tabstop>
   <tabstop>pw_grid_4</tabstop>
   <tabstop>pw_grid_1</tabstop>
-  <tabstop>configStageComboBox</tabstop>
   <tabstop>pw_grid_5</tabstop>
   <tabstop>pw_grid_7</tabstop>
   <tabstop>outputText</tabstop>
@@ -2954,7 +2951,6 @@
   <tabstop>submitResonanceNoteLineEdit</tabstop>
   <tabstop>submitTensionNoteLineEdit</tabstop>
   <tabstop>evtVwr_openScan_pb</tabstop>
-  <tabstop>configApaUuidLineEdit</tabstop>
   <tabstop>measuredByLineEdit</tabstop>
   <tabstop>graphicsView</tabstop>
  </tabstops>
