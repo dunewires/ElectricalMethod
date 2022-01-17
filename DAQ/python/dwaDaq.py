@@ -224,7 +224,7 @@ DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUui
 # Recent scan list 
 SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid']
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
-N_RECENT_SCANS = 50
+N_RECENT_SCANS = 500
 
 TENSION_SPEC = 6.5 # Newtons
 TENSION_SPEC_MIN = TENSION_SPEC-1.0
@@ -4128,7 +4128,7 @@ class MainWindow(qtw.QMainWindow):
                 if seg_std > 0.2:
                     opt_res_arr[s] = []
                 else:
-                    opt_res_arr[s] = lowest_placement[s].tolist()
+                    opt_res_arr[s] = lowest_placement[s]
 
                             
         #         bsub = resonance_fitting.baseline_subtracted(a)
