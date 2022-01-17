@@ -850,7 +850,7 @@ class MainWindow(qtw.QMainWindow):
         # self.tensionTableView.resizeRowsToContents()
         
     def initRecentScanList(self):
-        scanTableColHdrs = ['Col1', 'Col2', 'Col3', 'Col4', 'Col5', 'Col6', 'Col7']
+        scanTableColHdrs = ['Wire Segment', 'Layer', 'Side', 'Tension', 'Measurement Time', 'Measurement Type', 'Status']
         self.recentScansTableModel = qtg.QStandardItemModel()
         self.recentScansTableModel.setHorizontalHeaderLabels(scanTableColHdrs)
         self.recentScansFilterProxy = SortFilterProxyModel()
@@ -859,16 +859,40 @@ class MainWindow(qtw.QMainWindow):
 
         self.recentScansTableView.setSortingEnabled(True)
         
-        self.configApaUuid = self.configApaUuidLineEdit.text()
-
+        sietch = SietchConnect("sietch.creds")
+        configApaUuid = "43cd3950-268d-11ec-b6f5-a70e70a44436" #self.configApaUuidLineEdit.text()
+        stage = "Installation (Top)" #self.tensionStageComboBox.currentText()
+        scanTable = database_functions.get_scan_table(sietch,configApaUuid,stage)
+        print("MMMMMMMMMMM",configApaUuid,stage,scanTable)
         nrows = self.recentScansTableModel.rowCount()
         nrows = 4
         ncols = 7 #self.recentScansTableModel.columnCount()):
-        for i in range(nrows):
-            for j in range(ncols):
-                item = qtg.QStandardItem()
-                item.setData(random_word(), qtc.Qt.DisplayRole)
-                self.recentScansTableModel.setItem(i, j, item)
+        i = 1
+        for layer in APA_LAYERS:
+            for side in APA_SIDES:
+                sideDict = scanTable["data"]["wireSegments"][layer][side]
+                for wireSegment in sideDict:
+                    #print(wireSegment)
+                    segmentDict = sideDict[wireSegment]
+                    #print(segmentDict)
+                    for scanId in segmentDict:
+                        scanDict = segmentDict[scanId]
+                        item = qtg.QStandardItem()
+                        item.setData(wireSegment, qtc.Qt.DisplayRole)
+                        self.recentScansTableModel.setItem(i, 0, item)
+                        item = qtg.QStandardItem()
+                        item.setData(layer, qtc.Qt.DisplayRole)
+                        self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Layer"), item)
+                        item = qtg.QStandardItem()
+                        item.setData(side, qtc.Qt.DisplayRole)
+                        self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Side"), item)
+                        if "tension" in scanDict.keys():
+                            item = qtg.QStandardItem()
+                            item.setData(scanDict["tension"], qtc.Qt.DisplayRole)
+                            self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Tension"), item)
+                        i += 1
+
+            
 
         print(f"Nrows = {self.recentScansTableModel.rowCount()}")
         print(f"Ncols = {self.recentScansTableModel.columnCount()}")
