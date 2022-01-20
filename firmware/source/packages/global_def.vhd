@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Oct 28 15:02:20 2021
+-- Last update : Tue Nov 30 14:10:19 2021
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -128,6 +128,7 @@ package global_def is
         relayUpdate       : boolean;--!! mask when realy registers are not correctly comfigured.
         relayAutoBreakEna : std_logic; --anything
         useAcStimTrig     : std_logic; -- anything
+        disableHV     : std_logic; -- anything
     end record; -- fromDaqRegType
 
 end global_def;
