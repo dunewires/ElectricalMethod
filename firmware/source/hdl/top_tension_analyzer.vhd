@@ -382,8 +382,7 @@ begin
       fromDaqReg => fromDaqReg,
       toDaqReg   => toDaqReg_serialPromInterface,
 
-      --snMemConfigWP => snMemConfigWP,
-      snMemConfigWP => vioOut9,
+      snMemConfigWP => snMemConfigWP,
       snMemWPError => toDaqReg.errors(0),
 
       sda       => SNUM_SDA,

@@ -1006,7 +1006,7 @@ begin
 				              --reg_data_out <= x"0397da03";-- & std_logic_vector(toDaqReg.serNum);
 				reg_data_out <= x"00" & std_logic_vector(toDaqReg.serNum);
 			when b"110001" => --sn addres reg 49
-				reg_data_out <= b"0000000000000000000" & std_logic_vector(toDaqReg.serNumMemAddress);
+				reg_data_out <= b"000000000000000000000" & std_logic_vector(toDaqReg.serNumMemAddress);
 			when b"110010" => --sn data reg 50
 				reg_data_out             <= std_logic_vector(toDaqReg.serNumMemData);
 				fromDaqReg.serNumMemRead <= slv_reg_rden; --tell dwa data was read
@@ -1125,7 +1125,7 @@ begin
 	fromDaqReg.statusPeriod         <= unsigned(slv_reg53(23 downto 0));
 	fromDaqReg.pktGenWatchdogPeriod <= unsigned(slv_reg54(23 downto 0));
 
-	fromDaqReg.serNumMemAddress <= unsigned(slv_reg49(12 downto 0));
+	fromDaqReg.serNumMemAddress <= unsigned(slv_reg49(9 downto 0));
 	fromDaqReg.serNumMemData    <= unsigned(slv_reg50);
 	fromDaqReg.serNum           <= toDaqReg.serNum;
 	fromDaqReg.serNumLocal      <= toDaqReg.serNumLocal;

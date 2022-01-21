@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Dec  2 09:19:38 2021
+-- Last update : Fri Jan 21 11:09:53 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -54,7 +54,7 @@ package global_def is
         ipLocal          : std_logic_vector(31 downto 0);
         macUword         : std_logic_vector(31 downto 0);
         macLword         : std_logic_vector(31 downto 0);
-        serNumMemAddress : unsigned(12 downto 0);
+        serNumMemAddress : unsigned(10 downto 0);
         serNumMemData    : unsigned(31 downto 0);
 
         ctrlStateDbg   : unsigned(3 downto 0);
@@ -94,7 +94,7 @@ package global_def is
         ipLocal          : std_logic_vector(31 downto 0);
         macUword         : std_logic_vector(31 downto 0);
         macLword         : std_logic_vector(31 downto 0);
-        serNumMemAddress : unsigned(12 downto 0); -- anything
+        serNumMemAddress : unsigned(10 downto 0); -- anything
         serNumMemData    : unsigned(31 downto 0); -- anything
 
         serNumMemRead     : std_logic;                           -- anything
