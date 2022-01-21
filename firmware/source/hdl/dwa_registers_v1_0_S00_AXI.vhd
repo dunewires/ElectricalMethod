@@ -1125,7 +1125,7 @@ begin
 	fromDaqReg.statusPeriod         <= unsigned(slv_reg53(23 downto 0));
 	fromDaqReg.pktGenWatchdogPeriod <= unsigned(slv_reg54(23 downto 0));
 
-	fromDaqReg.serNumMemAddress <= unsigned(slv_reg49(9 downto 0));
+	fromDaqReg.serNumMemAddress <= unsigned(slv_reg49(10 downto 0));
 	fromDaqReg.serNumMemData    <= unsigned(slv_reg50);
 	fromDaqReg.serNum           <= toDaqReg.serNum;
 	fromDaqReg.serNumLocal      <= toDaqReg.serNumLocal;
