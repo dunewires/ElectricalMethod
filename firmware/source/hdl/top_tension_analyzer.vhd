@@ -333,7 +333,7 @@ begin
       if fromDaqReg.auto then
         stimFreqReq   <= ctrlFreqSet;
         --acStim_enable <= ctrl_acStim_enable;
-        acStim_enable <= ctrl_acStim_enable and not vioOut9;
+        acStim_enable <= ctrl_acStim_enable;
         mCDelayReset  <= '0' when stimFreqReq = ctrlFreqSet else '1'; -- reset multicycle delay counter
       else
         stimFreqReq   <= fromDaqReg.stimFreqReq;
