@@ -180,6 +180,10 @@ architecture STRUCT of top_tension_analyzer is
   signal mCDelayCount : unsigned(7 downto 0) := (others => '0');
   signal mCDelayReset : std_logic            := '1';
 
+  signal mainsTrigTimerLatch : unsigned(31 downto 0) := (others => '0');
+
+  signal vioOut3, vioOut9 :std_logic := '0';
+
   signal
   toDaqReg_headerGenerator,
   toDaqReg_dpotInterface,
@@ -378,7 +382,8 @@ begin
       fromDaqReg => fromDaqReg,
       toDaqReg   => toDaqReg_serialPromInterface,
 
-      snMemConfigWP => snMemConfigWP,
+      --snMemConfigWP => snMemConfigWP,
+      snMemConfigWP => vioOut9,
       snMemWPError => toDaqReg.errors(0),
 
       sda       => SNUM_SDA,
@@ -430,6 +435,7 @@ begin
       stimFreqReq => stimFreqReq,
 
       mainsTrig => mainsTrig,
+      mainsTrigTimerLatch => mainsTrigTimerLatch,
 
       dwaClk100 => dwaClk100
 
@@ -618,18 +624,18 @@ begin
       probe_in0(3 downto 0)  => led,
       probe_in0(5 downto 4)  => fromDaqReg.netStatus(1 downto 0),
       probe_in0(31 downto 6) => (others => '0'),
-      probe_in1              => (others => '0'),
+      probe_in1              => std_logic_vector(mainsTrigTimerLatch),
       probe_in2              => (others => '0'),
       probe_out0             => open,
       probe_out1             => open,
       probe_out2             => open,
-      probe_out3             => open,
+      probe_out3(0)             => vioOut3,
       probe_out4             => open,
       probe_out5             => open,
       probe_out6             => open,
       probe_out7             => open,
       probe_out8             => open,
-      probe_out9             => open,
+      probe_out9(0)             => vioOut9,
       probe_out10            => open,
       probe_out11            => open
     );

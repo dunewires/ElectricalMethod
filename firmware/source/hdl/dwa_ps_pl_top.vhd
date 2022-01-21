@@ -375,8 +375,8 @@ begin
             led     => led,
             pButton => pButton,
 
-            snMemConfigWP  => gpio_3,
-            snMemConfigDefault  => gpio_1,
+            snMemConfigWP  => gpio_3,          -- gpio = 0 with jumpper (write enabled)
+            snMemConfigDefault  => not gpio_1, -- gpio = 0 with jumpper, (use default MAC address)
 
             acStimX200_obuf => acStimX200_obuf,
             mainsSquare     => mainsSquare,

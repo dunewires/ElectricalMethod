@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Sep  2 17:08:18 2021
--- Last update : Fri Sep 24 15:06:00 2021
+-- Last update : Fri Jan 21 09:33:28 2022
 -- Platform    : Dune DWA MicroZed
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -28,7 +28,8 @@ entity triggerMains is
     mainsSquare : in std_logic             := '0';
     stimFreqReq : in unsigned(23 downto 0) := (others => '1');
 
-    mainsTrig : out std_logic;
+    mainsTrig           : out std_logic;
+    mainsTrigTimerLatch : out unsigned(31 downto 0) := (others => '0');
 
     dwaClk100 : in std_logic
 
@@ -37,12 +38,12 @@ end entity triggerMains;
 
 architecture behav of triggerMains is
 
-  signal mainsSquare_del1, mainsSquare_del2 : std_logic := '0';
-  signal mainsTrig_filter                   : unsigned(17 downto 0) := (others  => '0');
-  signal trigPhaseCnt                       : unsigned(19 downto 0) := (others  => '0');
-  signal stimFreqReqOffset                  : unsigned(6 downto 0) := (others  => '0');
-  signal mainsTrigStart : std_logic := '0';
-
+  signal mainsSquare_del1, mainsSquare_del2 : std_logic             := '0';
+  signal mainsTrig_filter                   : unsigned(17 downto 0) := (others => '0');
+  signal trigPhaseCnt                       : unsigned(19 downto 0) := (others => '0');
+  signal stimFreqReqOffset                  : unsigned(6 downto 0)  := (others => '0');
+  signal mainsTrigStart                     : std_logic             := '0';
+  signal mainsTrigTimer                     : unsigned(31 downto 0) := (others => '0');
 begin
 
   trigGen : process (dwaClk100)
@@ -75,9 +76,12 @@ begin
       stimFreqReqOffset <= stimFreqReq(6 downto 0) - "0011001";
 
       if trigPhaseCnt = "00" & x"0001" then
-        mainsTrig <= '1';
+        mainsTrig           <= '1';
+        mainsTrigTimer      <= (others => '0');
+        mainsTrigTimerLatch <= mainsTrigTimer;
       else
-        mainsTrig <= '0' ;
+        mainsTrig      <= '0' ;
+        mainsTrigTimer <= mainsTrigTimer + 1;
       end if;
 
       if mainsTrigStart then
