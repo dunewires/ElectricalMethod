@@ -2465,6 +2465,7 @@ class MainWindow(qtw.QMainWindow):
         # and only update the f0 values and GUI display for that associated channel
         print('self.resonantFreqs',self.resonantFreqs)
         for reg in self.registers:
+            if not self.resonantFreqs[reg.value]: continue
             for seg in range(3):
                 if seg < len(self.resonantFreqs[reg.value]):
                     try:
