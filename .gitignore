@@ -5,6 +5,7 @@ DAQ/python/udpData/*
 DAQ/python/test/udpData/*
 DAQ/python/scanData/*
 DAQ/python/test/data/*
+sietch.creds
 vivado*.jou
 vivado*.str
 vivado*.log
