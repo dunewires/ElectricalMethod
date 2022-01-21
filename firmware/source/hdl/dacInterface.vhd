@@ -166,8 +166,9 @@ begin
 			odlyLd <= '0';
 			-- need the > to catch when the nPeriod decreases at the wrong time
 			if stimClkPeriodCnt >= clk200Step then
-				-- dont use the enable here to keep the filter working
-				stimClk200 <= not stimClk200;
+				-- previousy dont use the enable here to keep the filter working
+				-- enable put back for the noise collection but we should check that it is on throughout the scan
+				stimClk200 <= not stimClk200 when acStim_enable else '0';
 
 				stimClkPeriodCnt(stimClkPeriodCnt'left downto 1) <= (others => '0');
 				-- reset counter to 1 except during fine phase overflow reset to 0 for 1 extra clock cycle
