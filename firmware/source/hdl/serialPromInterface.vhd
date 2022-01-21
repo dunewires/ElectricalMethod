@@ -169,7 +169,7 @@ begin
 				serialAddress <= serialAddress + 4 when (serialAddress < '1' & x"FFC") else serialAddress;
 
 			elsif fromDaqReg.serNumMemAddrStrb then -- DAQ updated address
-				serialAddress <= fromDaqReg.serNumMemAddress & '00'; -- 32 bit register address to byte address
+				serialAddress <= fromDaqReg.serNumMemAddress & "00"; -- 32 bit register address to byte address
 			end if;
 
 			-- with a single read/write feedback, we can only have one read and write command request at a time
