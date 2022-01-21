@@ -2780,7 +2780,7 @@ class MainWindow(qtw.QMainWindow):
         note = self.submitResonanceNoteLineEdit.text()
         scanId = self.recentScansNameOfLoadedScan.split('\\')[-1]
         tensionTable = database_functions.get_tension_table(sietch, apaUuid, stage)
-        if tensionTable:
+        if False and tensionTable:
             wireData = tensionTable['data']['wireSegments']
         else:
             wireData = {}
@@ -2789,7 +2789,7 @@ class MainWindow(qtw.QMainWindow):
                 for s in APA_SIDES:
                     wireData[l][s] = {}
                     for i in range(MAX_WIRE_SEGMENT[l]):
-                        wireData[l][s][str(i).zfill(5)] = {}
+                        wireData[l][s][str(i).zfill(5)] = {"tension": {}, "continuity": {}}
 
         apaChannels = self.ampDataS['apaChannels']
         for dwaChan,apaChan in enumerate(apaChannels):
@@ -2800,7 +2800,7 @@ class MainWindow(qtw.QMainWindow):
             for i, wireNum in enumerate(wireSegments):
                 currentTension = self.currentTensions[dwaChan][i]
                 if currentTension > 0:
-                    wireData[layer][side][str(wireNum).zfill(5)][scanId] = {'tension': currentTension}
+                    wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': currentTension}
 
         # pointerTableId = self.pointerTable["_id"]
         # apaUuid = self.pointerTable["data"]["apaUuid"]
