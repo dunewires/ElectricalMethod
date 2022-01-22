@@ -856,6 +856,8 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansFilterProxy = SortFilterProxyModel()
         self.recentScansFilterProxy.setSourceModel(self.recentScansTableModel)
         self.recentScansTableView.setModel(self.recentScansFilterProxy)
+        #self.recentScansTableView.resizeColumnsToContents()
+        self.recentScansTableView.horizontalHeader().setResizeMode(qtw.QHeaderView.ResizeToContents) 
 
         self.recentScansTableView.setSortingEnabled(True)
         
@@ -863,7 +865,6 @@ class MainWindow(qtw.QMainWindow):
         configApaUuid = "43cd3950-268d-11ec-b6f5-a70e70a44436" #self.configApaUuidLineEdit.text()
         stage = "Installation (Top)" #self.tensionStageComboBox.currentText()
         scanTable = database_functions.get_scan_table(sietch,configApaUuid,stage)
-        print("MMMMMMMMMMM",configApaUuid,stage,scanTable)
         nrows = self.recentScansTableModel.rowCount()
         nrows = 4
         ncols = 7 #self.recentScansTableModel.columnCount()):
@@ -873,7 +874,7 @@ class MainWindow(qtw.QMainWindow):
                 sideDict = scanTable["data"]["wireSegments"][layer][side]
                 for wireSegment in sideDict:
                     #print(wireSegment)
-                    segmentDict = sideDict[wireSegment]
+                    segmentDict = sideDict[wireSegment]["tension"]
                     #print(segmentDict)
                     for scanId in segmentDict:
                         scanDict = segmentDict[scanId]
@@ -886,10 +887,32 @@ class MainWindow(qtw.QMainWindow):
                         item = qtg.QStandardItem()
                         item.setData(side, qtc.Qt.DisplayRole)
                         self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Side"), item)
+                        # Measurement Time
+                        item = qtg.QStandardItem()
+                        strdatetime = scanId[-15:]
+                        date_format = "%Y%m%dT%H%M%S"
+                        dtdatetime = datetime.datetime.strptime(strdatetime, date_format)
+                        item.setData(dtdatetime.strftime('%Y-%m-%d %H:%M:%S'), qtc.Qt.DisplayRole)
+                        self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Measurement Time"), item)
+                        # Measurement Time
+                        item = qtg.QStandardItem()
+                        item.setData('Tension', qtc.Qt.DisplayRole)
+                        self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Measurement Type"), item)
+                        # Tension
                         if "tension" in scanDict.keys():
+                            tension = scanDict["tension"]
                             item = qtg.QStandardItem()
-                            item.setData(scanDict["tension"], qtc.Qt.DisplayRole)
+                            item.setData(tension, qtc.Qt.DisplayRole)
                             self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Tension"), item)
+                            # Status
+                            if tension == 'Not Found':
+                                status = 'Not Found'
+                            elif tension > 0:
+                                status = 'Complete'
+                            item = qtg.QStandardItem()
+                            item.setData(status, qtc.Qt.DisplayRole)
+                            self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Status"), item)
+
                         i += 1
 
             
@@ -950,7 +973,7 @@ class MainWindow(qtw.QMainWindow):
                 
         self.recentScansTableModel = RecentScansTableModel(tabledata, SCAN_LIST_TABLE_HDRS)
         self.recentScansTableView.setModel(self.recentScansTableModel)
-        self.recentScansTableView.resizeColumnsToContents()
+        #self.recentScansTableView.resizeColumnsToContents()
         self.recentScansTableView.resizeRowsToContents()
         #self.recentScansTableView.setMaximumHeight(80)
         self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)  # clicking in cell selects entire row
@@ -2536,14 +2559,15 @@ class MainWindow(qtw.QMainWindow):
                 # Insert this scan into to the Recent Scans list
                 scanDir = os.path.dirname(scanFilename)
                 row = 0
-                self.insertScanIntoScanList(scanDir, row=row, submitted=None)
+                #self.insertScanIntoScanList(scanDir, row=row, submitted=None)
                 # and highlight the newly inserted row in the table
-                self.recentScansTableView.selectRow(row)
+                #self.recentScansTableView.selectRow(row)
                 #self.recentScansTableRowInUse = row
-                tableRowData = self.recentScansTableModel.getData()[row]
+                #tableRowData = self.recentScansTableModel.getData()[row]
                 #print(f"scanDir = {scanDir}")
                 #print(f"tableRowData['scanName'] = {tableRowData['scanName']}")
-                self.recentScansNameOfLoadedScan = tableRowData['scanName']
+                self.recentScansNameOfLoadedScan = scanFilename
+                self.loadedScanId = scanFilename.split('/')[-2]
                 
                 self.loadSavedScanData(scanFilename)
 
@@ -2568,6 +2592,7 @@ class MainWindow(qtw.QMainWindow):
         print('self.resonantFreqs',self.resonantFreqs)
         for reg in self.registers:
             for seg in range(3):
+                if reg.value not in self.resonantFreqs.keys() or self.resonantFreqs[reg.value] == None: continue
                 if seg < len(self.resonantFreqs[reg.value]):
                     try:
                         tensionInput = float(getattr(self, f'le_resfreq_val_{reg}_{seg}').text())
@@ -2879,9 +2904,9 @@ class MainWindow(qtw.QMainWindow):
         layer = self.ampDataS['layer']
         side = self.ampDataS['side']
         note = self.submitResonanceNoteLineEdit.text()
-        scanId = self.recentScansNameOfLoadedScan.split('\\')[-1]
+        scanId = self.loadedScanId #self.recentScansNameOfLoadedScan.split('\\')[-1]
         tensionTable = database_functions.get_tension_table(sietch, apaUuid, stage)
-        if False and tensionTable:
+        if tensionTable:
             wireData = tensionTable['data']['wireSegments']
         else:
             wireData = {}
@@ -2900,7 +2925,9 @@ class MainWindow(qtw.QMainWindow):
                 wireData[layer][side] = [-1]*MAX_WIRE_SEGMENT[layer]
             for i, wireNum in enumerate(wireSegments):
                 currentTension = self.currentTensions[dwaChan][i]
-                if currentTension > 0:
+                if currentTension == -1:
+                    wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'Not Found'}
+                elif currentTension > 0:
                     wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': currentTension}
 
         # pointerTableId = self.pointerTable["_id"]
@@ -4230,7 +4257,7 @@ class MainWindow(qtw.QMainWindow):
                 if seg_std > 0.2:
                     opt_res_arr[s] = []
                 else:
-                    opt_res_arr[s] = lowest_placement[s].tolist()
+                    opt_res_arr[s] = lowest_placement[s]
 
                             
         #         bsub = resonance_fitting.baseline_subtracted(a)
