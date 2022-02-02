@@ -2392,13 +2392,29 @@ class MainWindow(qtw.QMainWindow):
             self.uz.reset()
         except:
             self.logger.error("DWA reset failed")
+
+
+        try:
+            self.logger.info('======= dwa disable HV ===========')
+            self.uz.hvDisable()
+            time.sleep(0.5) # sleep to let HV drain
+        except:
+            self.logger.error("DWA hvDisable failed")
             
         try:
             self.logger.info('======= dwaConfig() ===========')
-            self.uz.scanConfigMulti(self.dwaConfigFile.config['FPGA']) # single TCP/IP call
-            #self.uz.scanConfig(self.dwaConfigFile.config['FPGA']) # many TCP/IP calls
+            self.uz.scanConfigMulti(self.dwaConfigFile.config['FPGA']) # single TCP/IP call -- many reg writes
+            #self.uz.scanConfig(self.dwaConfigFile.config['FPGA']) # many TCP/IP calls -- one reg write per call
         except:
             self.logger.error("DWA run configuration failed")
+
+        try:
+            self.logger.info('======= dwa enable HV ===========')
+            self.uz.hvEnable()
+            time.sleep(0.5) # sleep to let HV ramp up
+        except:
+            self.logger.error("DWA hvEnable failed")
+
             
         try:
             self.logger.info('======= dwaStart() ===========')

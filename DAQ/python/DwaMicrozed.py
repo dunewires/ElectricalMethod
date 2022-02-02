@@ -108,6 +108,22 @@ class DwaMicrozed():
         time.sleep(self.sleepPostWrite)
         self._tcpClose()
 
+    def hvEnable(self):
+        self._hvControl('00000000')
+        
+    def hvDisable(self):
+        self._hvControl('00000001')
+        
+    def _hvControl(self, val):
+        # It is accomplished by writing 1 to register address 0x38 (the HV-disable register).
+        # Writing 0 to it reenables the HV to reach the wires.
+        # val is a string: '00000001' or '00000000'
+        self._tcpOpen()
+        self._regWrite('00000038', val)
+        time.sleep(self.sleepPostWrite)
+        self._tcpClose()
+        pass
+    
     def scanConfig(self, cfg):
         self.config(cfg)
         
@@ -127,8 +143,9 @@ class DwaMicrozed():
         addVals += self.mainsSubtractionData(cfg)
         addVals += self.relayData(cfg)
         addVals += self.digipotData(cfg["digipot"])
-        print(addVals)
-        #
+        if (self.verbose > 0):
+            print(addVals)
+
         self._tcpOpen(persist=True, sleep=self.sleepPostOpen)
         self._regWriteMulti(addVals)
         self._tcpClose(force=True)
@@ -298,8 +315,40 @@ class DwaMicrozed():
 
 
     def disableAllRelays(self):
+        """ set all relays to be inactive (no connection from input to output) 
+        via a single TCP/IP transmission
+        """
+        print("DwaMicrozed: disableAllRelaysOneAtATime")
+        offState = '0000'
+        relayCfg = {
+            "relayWireBot0":offState,
+            "relayWireBot1":offState,
+            "relayWireBot2":offState,
+            "relayWireBot3":offState,
+            "relayBusBot0":offState,
+            "relayBusBot1":offState,
+            "relayWireTop0":offState,
+            "relayWireTop1":offState,
+            "relayWireTop2":offState,
+            "relayWireTop3":offState,
+            "relayBusTop0":offState,
+            "relayBusTop1":offState
+        }
+        
+        addVals = []  # list of lists [ [address0,data0], [address1,data1], ... [addressN,dataN] ]
+        addVals += self.relayData(relayCfg)
+
+        if (self.verbose > 0):
+            print(addVals)
+
+        self._tcpOpen(sleep=self.sleepPostOpen)
+        self._regWriteMulti(addVals)
+        self._tcpClose(force=True)
+
+        
+    def disableAllRelaysOneAtATime(self):
         """ set all relays to be inactive (no connection from input to output) """
-        print("DwaMicrozed: disableAllRelays")
+        print("DwaMicrozed: disableAllRelaysOneAtATime")
         offState = '0000'
         relayCfg = {
             "relayWireBot0":offState,
@@ -316,7 +365,7 @@ class DwaMicrozed():
             "relayBusTop1":offState
         }
         self.setRelays(relayCfg)
-        
+
     def relayData(self, cfg):
         return [ ['00000020', cfg["relayWireBot0"]], 
                  ['00000021', cfg["relayWireBot1"]],
@@ -559,20 +608,20 @@ class DwaMicrozed():
         cmds_flat = [item for sublist in cmds for item in sublist]
         cmds_flat.insert(0, PAYLOAD_TYPE)
         cmds_flat.insert(0, PAYLOAD_HEADER)
-        print("cmds_flat (strings) = ")
+        #print("cmds_flat (strings) = ")
         cmds_flat = [int(x, 16) for x in cmds_flat]  # convert to hex integers
         
         cmds_flat = tuple(cmds_flat)
-        print("cmds = ")
-        print(cmds)
-        print("cmds_flat = ")
-        print(cmds_flat)
+        #print("cmds = ")
+        #print(cmds)
+        #print("cmds_flat = ")
+        #print(cmds_flat)
         #values = ( int(PAYLOAD_HEADER,16), int(PAYLOAD_TYPE,16), 
 
         structFmt = '!'+"L "*len(cmds_flat)
-        print(f"pre-strip:  [{structFmt}]")
+        #print(f"pre-strip:  [{structFmt}]")
         structFmt = structFmt.rstrip()
-        print(f"post-strip: [{structFmt}]")
+        #print(f"post-strip: [{structFmt}]")
 
         try:
             packer = struct.Struct(structFmt)
