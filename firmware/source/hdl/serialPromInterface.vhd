@@ -125,29 +125,29 @@ begin
 				if not startupDone then --  read operation was initiated as part ofstartup sequence, let's set the configuraiton
 					case (startupSeq) is
 						when x"0" => -- first read is hard coded serial number
-							toDaqReg.serNum <= unsigned(shiftRegIn(23 downto 0));
+							toDaqReg.serNum <= unsigned(shiftRegIn(23 downto 0));  --hw 
 							deviceAddr      <= "1010000";       --after we are here once switch device address to memory;
 							serialAddress   <= (others => '0'); -- set to first init address
 							initAddrStrb    <= '1';             -- update mem address pointer to 0
 							startupSeq      <= startupSeq +1;
 
 						when x"1" =>
-							toDaqReg.serNumLocal <= shiftRegIn; --use for NW
+							toDaqReg.serNumLocal <= shiftRegIn(23 downto 0); -- user set 3 bytes
 							startupSeq           <= startupSeq +1;
 							initReadStrb         <= '1';
 
 						when x"2" =>
-							toDaqReg.ipLocal <= shiftRegIn; --use for NW
+							toDaqReg.ipLocal <= shiftRegIn; --4 bytes Hex encode
 							startupSeq       <= startupSeq +1;
 							initReadStrb     <= '1';
 
 						when x"3" =>
-							toDaqReg.macUword <= shiftRegIn; --use for NW
+							toDaqReg.macUword <= shiftRegIn(23 downto 0);--3 bytes of MAC
 							startupSeq        <= startupSeq +1;
 							initReadStrb      <= '1';
 
 						when x"4" =>
-							toDaqReg.macLword <= shiftRegIn; --use for NW
+							toDaqReg.macLword <= shiftRegIn(23 downto 0);--3 bytes of MAC
 							startupDone       <= '1';        -- do it once
 						when others =>
 							null;

@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Fri Jan 21 11:09:53 2022
+-- Last update : Mon Jan 24 15:27:02 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -50,10 +50,10 @@ package global_def is
         relayWireBot  : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);
 
         serNum           : unsigned(23 downto 0);
-        serNumLocal      : std_logic_vector(31 downto 0);
+        serNumLocal      : std_logic_vector(23 downto 0);
         ipLocal          : std_logic_vector(31 downto 0);
-        macUword         : std_logic_vector(31 downto 0);
-        macLword         : std_logic_vector(31 downto 0);
+        macUword         : std_logic_vector(23 downto 0);
+        macLword         : std_logic_vector(23 downto 0);
         serNumMemAddress : unsigned(10 downto 0);
         serNumMemData    : unsigned(31 downto 0);
 
@@ -90,10 +90,10 @@ package global_def is
         noiseBPFSetTime : unsigned(23 downto 0); -- anything
 
         serNum           : unsigned(23 downto 0); -- not from register
-        serNumLocal      : std_logic_vector(31 downto 0);
+        serNumLocal      : std_logic_vector(23 downto 0);
         ipLocal          : std_logic_vector(31 downto 0);
-        macUword         : std_logic_vector(31 downto 0);
-        macLword         : std_logic_vector(31 downto 0);
+        macUword         : std_logic_vector(23 downto 0);
+        macLword         : std_logic_vector(23 downto 0);
         serNumMemAddress : unsigned(10 downto 0); -- anything
         serNumMemData    : unsigned(31 downto 0); -- anything
 

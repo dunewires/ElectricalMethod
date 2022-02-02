@@ -655,10 +655,12 @@ begin
     toDaqReg.serNumLocal <= toDaqReg_serialPromInterface.serNumLocal;
 
     if snMemConfigDefault then
+      -- if "use default" is selected then
       toDaqReg.ipLocal     <= ipLocalDefault;
-      toDaqReg.macUword    <= x"0000" & macDefault(47 downto 32);
-      toDaqReg.macLword    <= macDefault(31 downto 0);
+      toDaqReg.macUword    <= macDefault(47 downto 24);
+      toDaqReg.macLword    <= macDefault(23 downto 0);
     else
+      -- take what was read from serial PROM
       toDaqReg.ipLocal     <= toDaqReg_serialPromInterface.ipLocal;
       toDaqReg.macUword    <= toDaqReg_serialPromInterface.macUword;
       toDaqReg.macLword    <= toDaqReg_serialPromInterface.macLword;
