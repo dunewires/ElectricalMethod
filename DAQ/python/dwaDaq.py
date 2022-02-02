@@ -157,12 +157,13 @@ from SietchConnect import SietchConnect
 
 sys.path.append('./mappings')
 sys.path.append('./database')
-sys.path.append('./fitting')
+sys.path.append('./processing')
 import config_generator
 import channel_map
 import channel_frequencies
 import database_functions
 import resonance_fitting
+import process_scan
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -180,7 +181,8 @@ APA_UUID_DUMMY_VAL = 'd976ed20-fc5d-11eb-b6f5-a70e70a44436'
 
 EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
-OUTPUT_DIR_SCAN_DATA = './scanData/'
+OUTPUT_DIR_SCAN_DATA = './scanData/raw/'
+OUTPUT_DIR_PROCESSED_DATA = './scanData/processed/'
 OUTPUT_DIR_SCAN_DATA_ADVANCED = './scanDataAdv/'
 OUTPUT_DIR_SCAN_STATUS = './scanStatus/'
 SCAN_OUTPUT_DIRS = [OUTPUT_DIR_SCAN_DATA, OUTPUT_DIR_SCAN_DATA_ADVANCED]
@@ -862,16 +864,18 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.setSortingEnabled(True)
         
         sietch = SietchConnect("sietch.creds")
-        configApaUuid = "43cd3950-268d-11ec-b6f5-a70e70a44436" #self.configApaUuidLineEdit.text()
+        self.configApaUuid = "43cd3950-268d-11ec-b6f5-a70e70a44436" #self.configApaUuidLineEdit.text()
+        self.resultsDict = self.getResultsDict()
+
         stage = "Installation (Top)" #self.tensionStageComboBox.currentText()
-        scanTable = database_functions.get_scan_table(sietch,configApaUuid,stage)
+        #scanTable = database_functions.get_scan_table(sietch,self.configApaUuid,stage)
         nrows = self.recentScansTableModel.rowCount()
         nrows = 4
         ncols = 7 #self.recentScansTableModel.columnCount()):
         i = 1
         for layer in APA_LAYERS:
             for side in APA_SIDES:
-                sideDict = scanTable["data"]["wireSegments"][layer][side]
+                sideDict = self.resultsDict[layer][side]
                 for wireSegment in sideDict:
                     #print(wireSegment)
                     segmentDict = sideDict[wireSegment]["tension"]
@@ -2545,19 +2549,60 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansNameOfLoadedScan = tableRowData['scanName']
         self.loadSavedScanData(scanFilename)
 
+    def getResultsDict(self):
+        apaUuid = self.getApaUuid()
+        try:
+            return self.resultsDict
+        except:
+            try: # Ensure that there is an amplitudeData.json file present!
+                with open(OUTPUT_DIR_PROCESSED_DATA + apaUuid + '.json', "r") as fh:
+                    resultsDict = json.load(fh)
+            except:
+                print(f"Could not results dictionary for APA UUID: {apaUuid}. Creating a new one.")
+                resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
+
+        return resultsDict
+    
+    def getApaUuid(self):
+        try:
+            if not self.configApaUuid:
+                return "test"
+            return self.configApaUuid
+        except:
+            return "test"
+
     def loadArbitraryScanData(self):
         # open a file selection dialog for user to input a scan filename
         options = qtw.QFileDialog.Options()
         #options |= qtw.QFileDialog.DontUseNativeDialog
-        scanFilenames, _ = qtw.QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileName()",
-                                                          "","All Files (*);;JSON Files (*.json)",
-                                                          options=options)
-        for scanFilename in scanFilenames:
-            if scanFilename:  # validate the selected filename (require .json?)
-                print(scanFilename)
+        # scanFilenames, _ = qtw.QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileName()",
+        #                                                   "","All Files (*);;JSON Files (*.json)",
+        #                                                   options=options)
+        self.resultsDict = self.getResultsDict()
+
+        file_dialog = qtw.QFileDialog()
+        file_dialog.setFileMode(qtw.QFileDialog.DirectoryOnly)
+        file_dialog.setOption(qtw.QFileDialog.DontUseNativeDialog, True)
+        file_view = file_dialog.findChild(qtw.QListView, 'listView')
+
+        # to make it possible to select multiple directories:
+        if file_view:
+            file_view.setSelectionMode(qtw.QAbstractItemView.MultiSelection)
+        f_tree_view = file_dialog.findChild(qtw.QTreeView)
+        if f_tree_view:
+            f_tree_view.setSelectionMode(qtw.QAbstractItemView.MultiSelection)
+
+        if file_dialog.exec():
+            paths = file_dialog.selectedFiles()
+            print(paths)
+            scanDirectories = paths
+    
+        for scanDirectory in scanDirectories:
+            if scanDirectory:  # validate the selected filename (require .json?)
+                print(scanDirectory)
 
                 # Insert this scan into to the Recent Scans list
-                scanDir = os.path.dirname(scanFilename)
+                scanDir = os.path.dirname(scanDirectory)
                 row = 0
                 #self.insertScanIntoScanList(scanDir, row=row, submitted=None)
                 # and highlight the newly inserted row in the table
@@ -2566,20 +2611,24 @@ class MainWindow(qtw.QMainWindow):
                 #tableRowData = self.recentScansTableModel.getData()[row]
                 #print(f"scanDir = {scanDir}")
                 #print(f"tableRowData['scanName'] = {tableRowData['scanName']}")
-                self.recentScansNameOfLoadedScan = scanFilename
-                self.loadedScanId = scanFilename.split('/')[-2]
+                self.recentScansNameOfLoadedScan = scanDirectory
+                self.configApaUuid = scanDirectory.split('/')[-2][4:]
+                self.loadedScanId = scanDirectory.split('/')[-1]
                 
-                self.loadSavedScanData(scanFilename)
+                process_scan.process_scan(self.resultsDict, scanDirectory)
+        with open(OUTPUT_DIR_PROCESSED_DATA + self.getApaUuid() + '.json', 'w') as f:
+            json.dump(self.resultsDict, f, indent=4, sort_keys=True)
 
     def loadSavedScanData(self, filename):
-        print("loadSavedScanData")
-        self._initSavedAmpDataPlots()
-        self._clearResonanceFitLines()
-        self._clearResonanceExpectedLines()
-        self._loadSavedAmpData(filename)
-        self._configureResonancePlots()
-        self.runResonanceAnalysis()
-        self.labelResonanceSubmitStatus.setText("Tensions have not been submitted")
+        print("loadSavedScanData",filename)
+
+        # self._initSavedAmpDataPlots()
+        # self._clearResonanceFitLines()
+        # self._clearResonanceExpectedLines()
+        # self._loadSavedAmpData(filename)
+        # self._configureResonancePlots()
+        # self.runResonanceAnalysis()
+        # self.labelResonanceSubmitStatus.setText("Tensions have not been submitted")
 
     @pyqtSlot()
     def _resFreqUserInputText(self):
@@ -2925,7 +2974,8 @@ class MainWindow(qtw.QMainWindow):
                 wireData[layer][side] = [-1]*MAX_WIRE_SEGMENT[layer]
             for i, wireNum in enumerate(wireSegments):
                 currentTension = self.currentTensions[dwaChan][i]
-                if currentTension == -1:
+                if not currentTension: continue
+                elif currentTension == -1:
                     wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'Not Found'}
                 elif currentTension > 0:
                     wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': currentTension}
@@ -4233,14 +4283,16 @@ class MainWindow(qtw.QMainWindow):
             opt_reduced = smooth.copy()
             
             #if plot: ax.plot(f,bsub)
-            if not resonance_fitting.contains_resonances(bsub,layer):
+            if not resonance_fitting.contains_resonances(f,bsub,layer):
                 print(f"DWA Chan {reg.value}: No resonances")
                 continue
         
             colors = ['gold','deepskyblue','violet']
             pks, _ = find_peaks(smooth,prominence=5)
-            fpks = [f[pk] for pk in pks]
+            fpks = np.array([f[pk] for pk in pks])
+            fpks = fpks[fpks>55] # TODO: Remove this once we solve the mains noise issue
             placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
+            print("peaks: ",fpks)
             sorted_placements = np.array([x for _, x in sorted(zip(costs, placements))])
             sorted_diffs = np.array([x for _, x in sorted(zip(costs, diffs))])
             sorted_tensions = np.array([x for _, x in sorted(zip(costs, tensions))])
@@ -4248,13 +4300,17 @@ class MainWindow(qtw.QMainWindow):
             if len(sorted_costs) < 1: continue
             lowest_cost = sorted_costs[0]
             lowest_placement = sorted_placements[0]
-                
+            
+            print("lowest: ",lowest_placement)
+            print("sorted costs: ",sorted_costs[:3]) 
+            print("sorted placements: ",sorted_placements[:3]) 
             select_best = (sorted_costs < 1.2*lowest_cost)
             best_tensions = sorted_tensions[select_best]
             best_tensions_std = np.std(best_tensions,0)
+            print("best std: ",best_tensions_std)
 
             for s, seg_std in enumerate(best_tensions_std):
-                if seg_std > 0.2:
+                if seg_std > 1.2:
                     opt_res_arr[s] = []
                 else:
                     opt_res_arr[s] = lowest_placement[s]
