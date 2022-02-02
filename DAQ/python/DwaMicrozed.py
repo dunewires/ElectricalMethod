@@ -111,6 +111,29 @@ class DwaMicrozed():
     def scanConfig(self, cfg):
         self.config(cfg)
         
+    def scanConfigMulti(self, cfg):
+        self.configMulti(cfg)
+
+    def configMulti(self, cfg):
+        """ set multiple registers in a single tcp/ip call
+        """
+        addVals = []  # list of lists [ [address0,data0], [address1,data1], ... [addressN,dataN] ]
+        print(f"verbose = {self.verbose}")
+        
+        # is this saying sweep vs. fixed freq?
+        #fromDaqReg.auto           <= slv_reg1(0)= '1';
+        addVals += [ ['00000001', cfg["auto"]] ]
+        addVals += self.stimParamData(cfg)
+        addVals += self.mainsSubtractionData(cfg)
+        addVals += self.relayData(cfg)
+        addVals += self.digipotData(cfg["digipot"])
+        print(addVals)
+        #
+        self._tcpOpen(persist=True, sleep=self.sleepPostOpen)
+        self._regWriteMulti(addVals)
+        self._tcpClose(force=True)
+
+        
     def config(self, cfg):
         """
         Args:
@@ -184,6 +207,20 @@ class DwaMicrozed():
         time.sleep(self.sleepPostWrite)
         self._tcpClose()
         
+
+    def stimParamData(self, cfg):
+        return [ ['00000003', cfg["stimFreqReq"]],  #fromDaqReg.stimFreqReq  <= unsigned(slv_reg3(23 downto 0));
+                 ['00000004', cfg["stimFreqMin"]],  #fromDaqReg.stimFreqMin  <= unsigned(slv_reg4(23 downto 0));
+                 ['00000005', cfg["stimFreqMax"]],  #fromDaqReg.stimFreqMax  <= unsigned(slv_reg5(23 downto 0));
+                 ['00000006', cfg["stimFreqStep"]], #fromDaqReg.stimFreqStep <= unsigned(slv_reg6(23 downto 0));
+                 ['00000007', cfg["stimTime"]],     #fromDaqReg.stimRampTime <= unsigned(slv_reg7(23 downto 0));
+                 ['00000008', cfg["stimMag"]],      #fromDaqReg.stimMag      <= unsigned(slv_reg8(23 downto 0));
+                 ['0000002C', cfg["stimTimeInitial"]],   # stimTimeInit
+                 ['0000000A', cfg["cyclesPerFreq"]], #fromDaqReg.nAdcStimPeriod <= unsigned(slv_reg10(23 downto 0));
+                 ['0000000B', cfg["adcSamplesPerCycle"]] #fromDaqReg.nAdcStimPeriodSamp <= unsigned(slv_reg11(23 downto 0));
+                 ]
+
+    
     def setStimParams(self, cfg):
 
         print("Setting stimFreq parameters")
@@ -223,6 +260,15 @@ class DwaMicrozed():
 
         self._tcpClose()
             
+    def mainsSubtractionData(self, cfg):
+        return [ ['00000019', cfg["noiseFreqMin"]], #fromDaqReg.noiseFreqMin  <= unsigned(slv_reg25(23 downto 0));
+                 ['0000001A', cfg["noiseFreqMax"]], #fromDaqReg.noiseFreqMax  <= unsigned(slv_reg26(23 downto 0));
+                 ['0000001B', cfg["noiseFreqStep"]], #fromDaqReg.noiseFreqStep <= unsigned(slv_reg27(23 downto 0));
+                 ['0000001C', cfg["noiseSamplingPeriod"]], #fromDaqReg.noiseSampPer  <= unsigned(slv_reg28(23 downto 0));
+                 ['0000001D', cfg["noiseAdcSamplesPerFreq"]], #fromDaqReg.noiseNCnv     <= unsigned(slv_reg29(23 downto 0));
+                 ['0000001E', cfg["noiseSettlingTime"]], #fromDaqReg.noiseBpfSetTime <= unsigned(slv_reg30(23 downto 0));
+                ]
+        
     def setMainsSubtraction(self, cfg):
 
         print("Setting mains subtraction parameters")
@@ -270,6 +316,29 @@ class DwaMicrozed():
             "relayBusTop1":offState
         }
         self.setRelays(relayCfg)
+        
+    def relayData(self, cfg):
+        return [ ['00000020', cfg["relayWireBot0"]], 
+                 ['00000021', cfg["relayWireBot1"]],
+                 ['00000022', cfg["relayWireBot2"]],
+                 ['00000023', cfg["relayWireBot3"]],
+                 # relayBusBot
+                 ['00000024', cfg["relayBusBot0"]], 
+                 ['00000025', cfg["relayBusBot1"]],
+                 # relayWireTop
+                 ['00000026', cfg["relayWireTop0"]],
+                 ['00000027', cfg["relayWireTop1"]],
+                 ['00000028', cfg["relayWireTop2"]],
+                 ['00000029', cfg["relayWireTop3"]],
+                 # relayBusTop
+                 ['0000002A', cfg["relayBusTop0"]],
+                 ['0000002B', cfg["relayBusTop1"]],
+                 # OK to write
+                 # The "update relays" signal is the third bit in register 0
+                 # This bit just needs to be written and not cleared.
+                 ['00000000', '00000004']
+                 ]
+
         
     def setRelays(self, cfg):
         # Relays
@@ -335,6 +404,17 @@ class DwaMicrozed():
         self._tcpClose()
 
    
+    def digipotData(self, cfgstr):
+        # Config string for even digipots
+        cfgEven = cfgstr[12:14]+cfgstr[ 8:10]+cfgstr[4:6]+cfgstr[0:2]
+        cfgOdd  = cfgstr[14:16]+cfgstr[10:12]+cfgstr[6:8]+cfgstr[2:4]
+        print(f"cfgEven = {cfgEven}")
+        print(f"cfgOdd  = {cfgOdd}")
+        return [ ['0000000F', cfgEven], # Even digipots
+                 ['00000010', cfgOdd]   # Odd digipots
+                 ]
+
+        
     def setDigipots(self, cfgstr):
         """ cfgstr is an 8-channel string: 8 x 8-bit values, one per digipot
         e.g. cfgstr = '0001020304050607'
@@ -468,7 +548,49 @@ class DwaMicrozed():
     
         return(unpacked_data)
     
-    
+
+    def _regWriteMulti(self, cmds):
+        # cmds is a list of lists with following format:
+        # [ [address0, value0], [address1, value1], ..., [addressN, valueN] ]
+        
+        PAYLOAD_HEADER = 'abcd1234'
+        PAYLOAD_TYPE = 'FE170002'      # For writing register
+
+        cmds_flat = [item for sublist in cmds for item in sublist]
+        cmds_flat.insert(0, PAYLOAD_TYPE)
+        cmds_flat.insert(0, PAYLOAD_HEADER)
+        print("cmds_flat (strings) = ")
+        cmds_flat = [int(x, 16) for x in cmds_flat]  # convert to hex integers
+        
+        cmds_flat = tuple(cmds_flat)
+        print("cmds = ")
+        print(cmds)
+        print("cmds_flat = ")
+        print(cmds_flat)
+        #values = ( int(PAYLOAD_HEADER,16), int(PAYLOAD_TYPE,16), 
+
+        structFmt = '!'+"L "*len(cmds_flat)
+        print(f"pre-strip:  [{structFmt}]")
+        structFmt = structFmt.rstrip()
+        print(f"post-strip: [{structFmt}]")
+
+        try:
+            packer = struct.Struct(structFmt)
+            msg = packer.pack(*cmds_flat)
+            if (self.verbose > 0):
+                print(f'PAYLOAD_HEADER, PAYLOAD_TYPE = {PAYLOAD_HEADER}, {PAYLOAD_TYPE}')
+                print(f'  cmds      = {cmds}')
+                print(f'  cmds_flat = {cmds_flat}')
+                
+            if (self.verbose > 0): print('Sending...', end='')
+            self.sock.sendall(msg)
+            time.sleep(0.2)
+            if (self.verbose > 0): print('Message sent successfully')
+        except socket.error:
+            #Send failed
+            print('_regWriteMulti(): Send failed')
+            #sys.exit()
+        
     def _regWrite(self, address, value):
         # address   Register address to write to 8 element hex string (e.g. '00000000')
         # value     Value to write to that address. 8 element hex string (e.g. 'A1000000')

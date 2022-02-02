@@ -2395,7 +2395,8 @@ class MainWindow(qtw.QMainWindow):
             
         try:
             self.logger.info('======= dwaConfig() ===========')
-            self.uz.scanConfig(self.dwaConfigFile.config['FPGA'])
+            self.uz.scanConfigMulti(self.dwaConfigFile.config['FPGA']) # single TCP/IP call
+            #self.uz.scanConfig(self.dwaConfigFile.config['FPGA']) # many TCP/IP calls
         except:
             self.logger.error("DWA run configuration failed")
             
