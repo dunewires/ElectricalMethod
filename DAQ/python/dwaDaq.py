@@ -579,6 +579,8 @@ class SortFilterProxyModel(qtc.QSortFilterProxyModel):
                     return False
         return True
 
+
+
 def random_word():
     letters = "abcdedfg"
     word = "".join([random.choice(letters) for _ in range(random.randint(4, 7))])
@@ -720,7 +722,6 @@ class MainWindow(qtw.QMainWindow):
         # Start listening for UDP data (different from TCP/IP connection to uzed)
         self.verbose = 1
         self.udpConnect()
-
         
     # end of __init__ for class MainWindow
 
@@ -852,7 +853,7 @@ class MainWindow(qtw.QMainWindow):
         # self.tensionTableView.resizeRowsToContents()
         
     def initRecentScanList(self):
-        scanTableColHdrs = ['Wire Segment', 'Layer', 'Side', 'Tension', 'Measurement Time', 'Measurement Type', 'Status']
+        scanTableColHdrs = [ 'Measurement Time', 'Wire Segment', 'Layer', 'Side', 'Tension', 'Measurement Type', 'Status']
         self.recentScansTableModel = qtg.QStandardItemModel()
         self.recentScansTableModel.setHorizontalHeaderLabels(scanTableColHdrs)
         self.recentScansFilterProxy = SortFilterProxyModel()
@@ -884,7 +885,7 @@ class MainWindow(qtw.QMainWindow):
                         scanDict = segmentDict[scanId]
                         item = qtg.QStandardItem()
                         item.setData(wireSegment, qtc.Qt.DisplayRole)
-                        self.recentScansTableModel.setItem(i, 0, item)
+                        self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Wire Segment"), item)
                         item = qtg.QStandardItem()
                         item.setData(layer, qtc.Qt.DisplayRole)
                         self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Layer"), item)
@@ -927,16 +928,28 @@ class MainWindow(qtw.QMainWindow):
         
 
         # Connect the LineEdit scan list filter boxes to slots
-        for ii in range(7):
-            le = getattr(self, f'le_filter{ii+1}')
-            le.setPlaceholderText(scanTableColHdrs[ii])
-            le.textChanged.connect(lambda text, col=ii:
-                                   self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(text,
-                                                                                             qtc.Qt.CaseSensitive,
-                                                                                             qtc.QRegExp.FixedString),
-                                                                                 col))
+        le = getattr(self, f'filterLineEditDate')
+        le.setPlaceholderText(scanTableColHdrs[0])
+        le.textChanged.connect(lambda text, col=0:
+                                self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(text,
+                                                                                            qtc.Qt.CaseSensitive,
+                                                                                            qtc.QRegExp.FixedString),
+                                                                                col))
 
-        
+        le = getattr(self, f'filterLineEditWireSegment')
+        le.setPlaceholderText(scanTableColHdrs[1])
+        le.textChanged.connect(lambda text, col=1:
+                                self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(text,
+                                                                                            qtc.Qt.CaseSensitive,
+                                                                                            qtc.QRegExp.FixedString),
+                                                                                col))
+
+        for layer in APA_LAYERS:
+            getattr(self, f'filterCheck{layer}').stateChanged.connect(self.filterLayerChanged)
+        for side in APA_SIDES:
+            getattr(self, f'filterCheck{side}').stateChanged.connect(self.filterSideChanged)
+        for type in ['Tension', 'Connectivity']:
+            getattr(self, f'filterCheckType{type}').stateChanged.connect(self.filterTypeChanged)
         #
         #self.recentScansTableModel.appendRow([qtg.QStandardItem(it) for it in ['shion','Y','20210101']])
         #self.recentScansTableModel.appendRow([qtg.QStandardItem(it) for it in ['james','N','20210102']])
@@ -954,7 +967,33 @@ class MainWindow(qtw.QMainWindow):
         #self.recentScansTableView.doubleClicked.connect(self.recentScansRowDoubleClicked)
         ##self.recentScansTableRowInUse = None
         #self.recentScansNameOfLoadedScan = None
-        
+    def filterLayerChanged(self):
+        filterString = ''
+        for layer in APA_LAYERS:
+            if getattr(self, f'filterCheck{layer}').isChecked():
+                filterString += f'{layer}|'
+        if len(filterString): filterString = filterString[:-1]
+        print(filterString)
+        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),2)
+
+    def filterSideChanged(self):
+        filterString = ''
+        for side in APA_SIDES:
+            if getattr(self, f'filterCheck{side}').isChecked():
+                filterString += f'{side}|'
+        if len(filterString): filterString = filterString[:-1]
+        print(filterString)
+        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),3)
+
+    def filterTypeChanged(self):
+        filterString = ''
+        for type in ['Tension', 'Connectivity']:
+            if getattr(self, f'filterCheckType{type}').isChecked():
+                filterString += f'{type}|'
+        if len(filterString): filterString = filterString[:-1]
+        print(filterString)
+        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),5)
+
     def initRecentScanListOLD(self):
         scanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
                                           advDir=OUTPUT_DIR_SCAN_DATA_ADVANCED,

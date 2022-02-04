@@ -1137,8 +1137,8 @@
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>1134</width>
-                 <height>38</height>
+                 <width>1041</width>
+                 <height>68</height>
                 </rect>
                </property>
                <layout class="QHBoxLayout" name="horizontalLayout_27">
@@ -1149,25 +1149,130 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QLineEdit" name="le_filter1"/>
+                 <widget class="QLineEdit" name="filterLineEditDate"/>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="le_filter2"/>
+                 <widget class="QLineEdit" name="filterLineEditWireSegment"/>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="le_filter3"/>
+                 <widget class="QGroupBox" name="groupBox">
+                  <property name="title">
+                   <string>Layer</string>
+                  </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_30">
+                   <item>
+                    <widget class="QCheckBox" name="filterCheckX">
+                     <property name="text">
+                      <string>X</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="filterCheckG">
+                     <property name="text">
+                      <string>G</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="filterCheckU">
+                     <property name="text">
+                      <string>U</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="filterCheckV">
+                     <property name="text">
+                      <string>V</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="le_filter4"/>
+                 <widget class="QGroupBox" name="groupBox_2">
+                  <property name="title">
+                   <string>Side</string>
+                  </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_31">
+                   <item>
+                    <widget class="QCheckBox" name="filterCheckA">
+                     <property name="text">
+                      <string>A</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="filterCheckB">
+                     <property name="text">
+                      <string>B</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="le_filter5"/>
+                 <widget class="QGroupBox" name="groupBox_3">
+                  <property name="title">
+                   <string>Type</string>
+                  </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_32">
+                   <item>
+                    <widget class="QCheckBox" name="filterCheckTypeTension">
+                     <property name="text">
+                      <string>Tension</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="filterCheckTypeConnectivity">
+                     <property name="text">
+                      <string>Connectivity</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="le_filter6"/>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="le_filter7"/>
+                 <widget class="QGroupBox" name="groupBox_4">
+                  <property name="title">
+                   <string>Confidence</string>
+                  </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_33">
+                   <item>
+                    <widget class="QCheckBox" name="filterCheckConfidenceHigh">
+                     <property name="text">
+                      <string>High</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="filterCheckConfidenceMedium">
+                     <property name="text">
+                      <string>Medium</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="filterCheckConfidenceLow">
+                     <property name="text">
+                      <string>Low</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="filterCheckConfidenceNotFound">
+                     <property name="text">
+                      <string>Not Found</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
                 </item>
                </layout>
               </widget>
@@ -1175,9 +1280,9 @@
                <property name="geometry">
                 <rect>
                  <x>0</x>
-                 <y>40</y>
+                 <y>70</y>
                  <width>1134</width>
-                 <height>800</height>
+                 <height>750</height>
                 </rect>
                </property>
                <property name="sizePolicy">
@@ -1240,7 +1345,7 @@
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>1112</width>
+                         <width>199</width>
                          <height>1718</height>
                         </rect>
                        </property>
