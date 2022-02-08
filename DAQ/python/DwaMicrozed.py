@@ -550,3 +550,23 @@ class DwaMicrozed():
 
 
         
+    def initialize_dwa(self, serial_number: str, ip_address: str, mac_address_msb: str, mac_address_lsb: str):
+        '''Initialize MAC address and IP address of DWA by writing to memory on analog board.'''
+        self._tcpOpen()
+        # Set memory address to beginning
+        self._regWrite('00000031', '00000000')
+        
+        # Set DWA serial number
+        self._regWrite('00000032', serial_number)
+
+        # Set local IP address
+        self._regWrite('00000032', ip_address)
+
+        # Set MSBs of MAC address
+        self._regWrite('00000032', mac_address_msb)
+
+        # Set LSBs of MAC address
+        self._regWrite('00000032', mac_address_lsb)
+
+        # Reset memory address to beginning
+        self._regWrite('00000031', '00000000')
