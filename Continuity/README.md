@@ -33,5 +33,5 @@ wireCapCalc.py YEAR TYPE
 
 * Here, YEAR is the year when the scan was taken (2020/2021/... etc), and TYPE should be either A or B. A and B stands for After and Before the calibration respectively. 
 
-* The result will be plotted, and also be saved as text file as  wireChannelResult_A.txt or wireChannelResult_B.txt
+* The result will be plotted, and also be saved as text file as  [wireChannelResult_A.txt](https://github.com/dunewires/ElectricalMethod/blob/development/Continuity/wireChannelResult_A.txt) or [wireChannelResult_B.txt](https://github.com/dunewires/ElectricalMethod/blob/development/Continuity/wireChannelResult_B.txt)
  
