@@ -3,7 +3,7 @@
 ## 1. Steps to get the calibration factors for each DWA
 * perform DWA scan with calibration board (47pF, 100pF. 150pF, 220pF) 
 
-* Organize the scan data following the structure guide at the top of makeTxt4Cap.py (example: JasonFiles2) 
+* Organize the scan data following the structure guide at the top of makeTxt4Cap.py (example: [JasonFiles2](https://github.com/dunewires/ElectricalMethod/tree/development/Continuity/JsonFiles2)) 
 
 * run 
 ```bash
