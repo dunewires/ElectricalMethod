@@ -853,7 +853,7 @@ class MainWindow(qtw.QMainWindow):
         # self.tensionTableView.resizeRowsToContents()
         
     def initRecentScanList(self):
-        scanTableColHdrs = [ 'Measurement Time', 'Wire Segment', 'Layer', 'Side', 'Tension', 'Measurement Type', 'Status']
+        scanTableColHdrs = [ 'Measurement Time', 'Wire Segment', 'Layer', 'Side', 'Tension', 'Measurement Type', 'Confidence']
         self.recentScansTableModel = qtg.QStandardItemModel()
         self.recentScansTableModel.setHorizontalHeaderLabels(scanTableColHdrs)
         self.recentScansFilterProxy = SortFilterProxyModel()
@@ -910,13 +910,19 @@ class MainWindow(qtw.QMainWindow):
                             item.setData(tension, qtc.Qt.DisplayRole)
                             self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Tension"), item)
                             # Status
-                            if tension == 'Not Found':
-                                status = 'Not Found'
+                            if tension == 'Not Found' or  tension == 'None':
+                                status = 'None'
                             elif tension > 0:
-                                status = 'Complete'
+                                std = scanDict["tension_std"]
+                                if std < 0.1:
+                                    status = 'High'
+                                elif std < 0.5:
+                                    status = 'Medium'
+                                else:
+                                    status = 'Low'
                             item = qtg.QStandardItem()
                             item.setData(status, qtc.Qt.DisplayRole)
-                            self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Status"), item)
+                            self.recentScansTableModel.setItem(i, scanTableColHdrs.index("Confidence"), item)
 
                         i += 1
 
@@ -950,6 +956,8 @@ class MainWindow(qtw.QMainWindow):
             getattr(self, f'filterCheck{side}').stateChanged.connect(self.filterSideChanged)
         for type in ['Tension', 'Connectivity']:
             getattr(self, f'filterCheckType{type}').stateChanged.connect(self.filterTypeChanged)
+        for conf in ['High', 'Medium', 'Low', 'None']:
+            getattr(self, f'filterCheckConfidence{conf}').stateChanged.connect(self.filterConfidenceChanged)
         #
         #self.recentScansTableModel.appendRow([qtg.QStandardItem(it) for it in ['shion','Y','20210101']])
         #self.recentScansTableModel.appendRow([qtg.QStandardItem(it) for it in ['james','N','20210102']])
@@ -993,6 +1001,15 @@ class MainWindow(qtw.QMainWindow):
         if len(filterString): filterString = filterString[:-1]
         print(filterString)
         self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),5)
+
+    def filterConfidenceChanged(self):
+        filterString = ''
+        for conf in ['High', 'Medium', 'Low', 'None']:
+            if getattr(self, f'filterCheckConfidence{conf}').isChecked():
+                filterString += f'{conf}|'
+        if len(filterString): filterString = filterString[:-1]
+        print(filterString)
+        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),6)
 
     def initRecentScanListOLD(self):
         scanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
@@ -3015,7 +3032,7 @@ class MainWindow(qtw.QMainWindow):
                 currentTension = self.currentTensions[dwaChan][i]
                 if not currentTension: continue
                 elif currentTension == -1:
-                    wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'Not Found'}
+                    wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'None'}
                 elif currentTension > 0:
                     wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': currentTension}
 

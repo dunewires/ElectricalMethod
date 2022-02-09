@@ -1265,9 +1265,9 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QCheckBox" name="filterCheckConfidenceNotFound">
+                    <widget class="QCheckBox" name="filterCheckConfidenceNone">
                      <property name="text">
-                      <string>Not Found</string>
+                      <string>None</string>
                      </property>
                     </widget>
                    </item>
