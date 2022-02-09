@@ -1,12 +1,37 @@
-Continuity Instruction/Steps 
+# Continuity Instruction/Steps 
 
-#1. 
-1-1. perform DWA scan with calibration board (47pF, 100pF. 150pF, 220pF)
-1-2. Organize the scan data following the structure guide at the top of makeTxt4Cap.py (example: JasonFiles2)
-1-3. run 'python makeTxt4Cap.py Json_Scan_File'
-1-4. This file will produce two text files (extractFromJson.txt and nameData.txt)
-1-5. The first file, extractFromJson.txt has the [Cap, Frequency, Amplitude] data 
-1-6. The second file, nameData.txt file just outputs the list of the name of the APA channel tested 
-1-7. run 'python CalibrationPickle.py' 
-1-8. it will create a dictionary, where key is the name of the APA channel and the contents is the calibration factor
-1-9. This result will be pickled as fit.picckle
+## 1. Steps to get the calibration factors for each DWA
+* perform DWA scan with calibration board (47pF, 100pF. 150pF, 220pF) 
+
+* Organize the scan data following the structure guide at the top of makeTxt4Cap.py (example: JasonFiles2) 
+
+* run 
+```bash
+python makeTxt4Cap.py Json_Scan_File
+```
+
+* This file will produce two text files (extractFromJson.txt and nameData.txt)
+
+* The first file, extractFromJson.txt has the {Cap, Frequency, Amplitude} data 
+
+* The second file, nameData.txt file just outputs the list of the name of the APA channel tested 
+
+* run 
+```bash
+python CalibrationPickle.py' 
+```
+
+* it will create a dictionary, where key is the name of the APA channel and the contents is the calibration factor
+
+* This result will be pickled as fit.picckle
+
+## 2. Steps to get theh calibrated capacitance values with DWA scan 
+* run 
+```bash
+wireCapCalc.py YEAR TYPE
+```
+
+* Here, YEAR is the year when the scan was taken (2020/2021/... etc), and TYPE should be either A or B. A and B stands for After and Before the calibration respectively. 
+
+* The result will be plotted, and also be saved as text file as  wireChannelResult_A.txt or wireChannelResult_B.txt
+ 
