@@ -863,6 +863,7 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.horizontalHeader().setResizeMode(qtw.QHeaderView.ResizeToContents) 
 
         self.recentScansTableView.setSortingEnabled(True)
+        self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows);
         
         sietch = SietchConnect("sietch.creds")
         self.configApaUuid = "43cd3950-268d-11ec-b6f5-a70e70a44436" #self.configApaUuidLineEdit.text()
