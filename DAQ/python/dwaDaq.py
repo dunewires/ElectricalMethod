@@ -153,7 +153,7 @@ import DwaConfigFile as dcf
 import DwaMicrozed as duz
 
 
-from SietchConnect import SietchConnect
+#from SietchConnect import SietchConnect
 
 sys.path.append('./mappings')
 sys.path.append('./database')
@@ -864,8 +864,8 @@ class MainWindow(qtw.QMainWindow):
 
         self.recentScansTableView.setSortingEnabled(True)
         
-        sietch = SietchConnect("sietch.creds")
-        self.configApaUuid = "43cd3950-268d-11ec-b6f5-a70e70a44436" #self.configApaUuidLineEdit.text()
+        #sietch = SietchConnect("sietch.creds")
+        #self.configApaUuid = "43cd3950-268d-11ec-b6f5-a70e70a44436" #self.configApaUuidLineEdit.text()
         self.resultsDict = self.getResultsDict()
 
         stage = "Installation (Top)" #self.tensionStageComboBox.currentText()
@@ -2947,7 +2947,7 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def loadTensions(self):
-
+        return # TODO: Get tensions from file
         # Load sietch credentials #FIXME still using James's credentials
         sietch = SietchConnect("sietch.creds")
         # Get APA UUID from text box
@@ -3001,6 +3001,7 @@ class MainWindow(qtw.QMainWindow):
         #self.tensionTableView.resizeColumnsToContents()  # probably don't need?
         
     def submitTensions(self):
+        return #TODO: Fix this so that it writes to file in scanData/processed/ instead of database
         self.labelResonanceSubmitStatus.setText("Submitting...")
         # Load sietch credentials
         sietch = SietchConnect("sietch.creds")
@@ -3107,6 +3108,7 @@ class MainWindow(qtw.QMainWindow):
         
     @pyqtSlot()
     def submitResonances(self):
+        return #TODO: Remove this, we no longer submit resonances
         self.labelResonanceSubmitStatus.setText("Submitting...")
 
         self.saveResonanceData()
