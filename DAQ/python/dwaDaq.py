@@ -2607,10 +2607,10 @@ class MainWindow(qtw.QMainWindow):
         self.loadSavedScanData(scanFilename)
 
     def getResultsDict(self):
-        apaUuid = self.getApaUuid()
         try:
             return self.resultsDict
         except:
+            apaUuid = self.getApaUuid()
             try: # Ensure that there is an amplitudeData.json file present!
                 with open(OUTPUT_DIR_PROCESSED_DATA + apaUuid + '.json', "r") as fh:
                     resultsDict = json.load(fh)
@@ -3814,6 +3814,10 @@ class MainWindow(qtw.QMainWindow):
                 self.updatePlots(force_all=True)
                 self.wrapUpStimulusScan()
                 self.scanType = None
+
+                # Process the scan
+                self.resultsDict = self.getResultsDict()
+                process_scan.process_scan(self.resultsDict, self.fnOfAmpData)
                 
             else:
                  print("ERROR: unknown value of runStatus:")   
