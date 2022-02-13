@@ -863,7 +863,8 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.horizontalHeader().setResizeMode(qtw.QHeaderView.ResizeToContents) 
 
         self.recentScansTableView.setSortingEnabled(True)
-        self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows);
+        self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)
+        self.recentScansTableView.doubleClicked.connect(self.recentScansRowDoubleClicked)
         
         #sietch = SietchConnect("sietch.creds")
         #self.configApaUuid = "43cd3950-268d-11ec-b6f5-a70e70a44436" #self.configApaUuidLineEdit.text()
@@ -1012,42 +1013,43 @@ class MainWindow(qtw.QMainWindow):
         print(filterString)
         self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),6)
 
-    def initRecentScanListOLD(self):
-        scanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
-                                          advDir=OUTPUT_DIR_SCAN_DATA_ADVANCED,
-                                          sort=True)
-        tabledata = []
-        
-        for sd in scanDirs:  # first entry in list is most recent
-            print(f"scanDir = {sd}")
-            if '.DS_Store' in sd:
-                print("directory contains .DS_STORE... ignoring")
-                continue
-            #tabledata.append(self.generateScanListEntry(sd, Submitted.UNKNOWN))  # add to end of table
-            entry = self.generateScanListEntry(sd, submitted=None)  # add to end of table
-            if not entry:
-                continue
-            tabledata.append(entry)  # add to end of table
-            
-            if len(tabledata) == N_RECENT_SCANS:
-                break
-                
-        self.recentScansTableModel = RecentScansTableModel(tabledata, SCAN_LIST_TABLE_HDRS)
-        self.recentScansTableView.setModel(self.recentScansTableModel)
-        #self.recentScansTableView.resizeColumnsToContents()
-        self.recentScansTableView.resizeRowsToContents()
-        #self.recentScansTableView.setMaximumHeight(80)
-        self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)  # clicking in cell selects entire row
-        self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
-        #https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
-        self.recentScansTableView.doubleClicked.connect(self.recentScansRowDoubleClicked)
-        #self.recentScansTableRowInUse = None
-        self.recentScansNameOfLoadedScan = None
+    #def initRecentScanListOLD(self):
+    #    scanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
+    #                                      advDir=OUTPUT_DIR_SCAN_DATA_ADVANCED,
+    #                                      sort=True)
+    #    tabledata = []
+    #    
+    #    for sd in scanDirs:  # first entry in list is most recent
+    #        print(f"scanDir = {sd}")
+    #        if '.DS_Store' in sd:
+    #            print("directory contains .DS_STORE... ignoring")
+    #            continue
+    #        #tabledata.append(self.generateScanListEntry(sd, Submitted.UNKNOWN))  # add to end of table
+    #        entry = self.generateScanListEntry(sd, submitted=None)  # add to end of table
+    #        if not entry:
+    #            continue
+    #        tabledata.append(entry)  # add to end of table
+    #        
+    #        if len(tabledata) == N_RECENT_SCANS:
+    #            break
+    #            
+    #    self.recentScansTableModel = RecentScansTableModel(tabledata, SCAN_LIST_TABLE_HDRS)
+    #    self.recentScansTableView.setModel(self.recentScansTableModel)
+    #    #self.recentScansTableView.resizeColumnsToContents()
+    #    self.recentScansTableView.resizeRowsToContents()
+    #    #self.recentScansTableView.setMaximumHeight(80)
+    #    self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)  # clicking in cell selects entire row
+    #    self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
+    #    #https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
+    #    self.recentScansTableView.doubleClicked.connect(self.recentScansRowDoubleClicked)
+    #    #self.recentScansTableRowInUse = None
+    #    self.recentScansNameOfLoadedScan = None
 
     def recentScansRowDoubleClicked(self, mi):
         print(f"double-clicked row: {mi.row()}")
         print(f"double-clicked col: {mi.column()}")
-        self.loadRecentScanData()
+        print("FIXME: NEED TO LOAD THE SCAN -- NOT YET IMPLEMENTED")
+        #self.loadRecentScanData()
         
     def initPlottingUpdater(self):
         self.plottingTimer = qtc.QTimer()
