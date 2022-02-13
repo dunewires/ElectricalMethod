@@ -866,6 +866,8 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)
         self.recentScansTableView.setEditTriggers(qtw.QTableView.NoEditTriggers)
         self.recentScansTableView.doubleClicked.connect(self.recentScansRowDoubleClicked)
+        self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
+        ##https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
         
         #sietch = SietchConnect("sietch.creds")
         #self.configApaUuid = "43cd3950-268d-11ec-b6f5-a70e70a44436" #self.configApaUuidLineEdit.text()
@@ -961,23 +963,7 @@ class MainWindow(qtw.QMainWindow):
             getattr(self, f'filterCheckType{type}').stateChanged.connect(self.filterTypeChanged)
         for conf in ['High', 'Medium', 'Low', 'None']:
             getattr(self, f'filterCheckConfidence{conf}').stateChanged.connect(self.filterConfidenceChanged)
-        #
-        #self.recentScansTableModel.appendRow([qtg.QStandardItem(it) for it in ['shion','Y','20210101']])
-        #self.recentScansTableModel.appendRow([qtg.QStandardItem(it) for it in ['james','N','20210102']])
-        #self.recentScansTableModel.appendRow([qtg.QStandardItem(it) for it in ['chris','N','20210103']])
-        #self.recentScansTableModel.appendRow([qtg.QStandardItem(it) for it in ['sebastien','Y','20210104']])
-        #self.recentScansTableView.setModel(self.recentScansTableModel)
-        ###
-        #RecentScansTableModel(tabledata, SCAN_LIST_TABLE_HDRS)
-        #self.recentScansTableView.resizeColumnsToContents()
-        #self.recentScansTableView.resizeRowsToContents()
-        ##self.recentScansTableView.setMaximumHeight(80)
-        #self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)  # clicking in cell selects entire row
-        #self.recentScansTableView.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
-        ##https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
-        #self.recentScansTableView.doubleClicked.connect(self.recentScansRowDoubleClicked)
-        ##self.recentScansTableRowInUse = None
-        #self.recentScansNameOfLoadedScan = None
+
     def filterLayerChanged(self):
         filterString = ''
         for layer in APA_LAYERS:
@@ -1050,7 +1036,7 @@ class MainWindow(qtw.QMainWindow):
         print(f"double-clicked row: {mi.row()}")
         print(f"double-clicked col: {mi.column()}")
         print("FIXME: NEED TO LOAD THE SCAN -- NOT YET IMPLEMENTED")
-        #self.loadRecentScanData()
+        self.loadRecentScanData()
         
     def initPlottingUpdater(self):
         self.plottingTimer = qtc.QTimer()
