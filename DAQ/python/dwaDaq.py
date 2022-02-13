@@ -864,6 +864,7 @@ class MainWindow(qtw.QMainWindow):
 
         self.recentScansTableView.setSortingEnabled(True)
         self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)
+        self.recentScansTableView.setEditTriggers(qtw.QTableView.NoEditTriggers)
         self.recentScansTableView.doubleClicked.connect(self.recentScansRowDoubleClicked)
         
         #sietch = SietchConnect("sietch.creds")
