@@ -254,17 +254,18 @@ PLOT_UPDATE_TIME_SEC = 0.5
 # Recent scan list
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum',
                        'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
-RESULTS_TABLE_HDRS = ['Measurement Time', 'Wire Segment', 'Layer', 'Side',
+RESULTS_TABLE_HDRS = ['Stage', 'Measurement Time', 'Wire Segment', 'Layer', 'Side',
                       'Tension', 'Measurement Type', 'Confidence', 'Scan']
 class Results(IntEnum):
-    MSRMT_TIME=0
-    WIRE_SEGMENT=1
-    LAYER=2
-    SIDE=3
-    TENSION=4
-    MSRMT_TYPE=5
-    CONFIDENCE=6
-    SCAN=7
+    STAGE=RESULTS_TABLE_HDRS.index('Stage')
+    MSRMT_TIME=RESULTS_TABLE_HDRS.index('Measurement Time')
+    WIRE_SEGMENT=RESULTS_TABLE_HDRS.index('Wire Segment')
+    LAYER=RESULTS_TABLE_HDRS.index('Layer')
+    SIDE=RESULTS_TABLE_HDRS.index('Side')
+    TENSION=RESULTS_TABLE_HDRS.index('Tension')
+    MSRMT_TYPE=RESULTS_TABLE_HDRS.index('Measurement Type')
+    CONFIDENCE=RESULTS_TABLE_HDRS.index('Confidence')
+    SCAN=RESULTS_TABLE_HDRS.index('Scan')
 
 class State(IntEnum):
     IDLE = 0             # Idle Waiting for the start of a test
@@ -874,64 +875,73 @@ class MainWindow(qtw.QMainWindow):
         # Populate the table with JSON data
         # should we sort the entries in the dict before populating the model?
         i = 0
-        for layer in APA_LAYERS:
-            for side in APA_SIDES:
-                sideDict = self.resultsDict[layer][side]
-                for wireSegment in sideDict: 
-                    #print(wireSegment)
-                    segmentDict = sideDict[wireSegment]["tension"]
-                    #print(segmentDict)
-                    for scanId in segmentDict:
-                        scanDict = segmentDict[scanId]
-                        # Wire segment
-                        item = qtg.QStandardItem()
-                        item.setData(wireSegment, qtc.Qt.DisplayRole)
-                        self.recentScansTableModel.setItem(i, Results.WIRE_SEGMENT, item)
-                        # Layer
-                        item = qtg.QStandardItem()
-                        item.setData(layer, qtc.Qt.DisplayRole)
-                        self.recentScansTableModel.setItem(i, Results.LAYER, item)
-                        # Side
-                        item = qtg.QStandardItem()
-                        item.setData(side, qtc.Qt.DisplayRole)
-                        self.recentScansTableModel.setItem(i, Results.SIDE, item)
-                        # Measurement Time
-                        item = qtg.QStandardItem()
-                        strdatetime = scanId[-15:]
-                        date_format = "%Y%m%dT%H%M%S"
-                        dtdatetime = datetime.datetime.strptime(strdatetime, date_format)
-                        item.setData(dtdatetime.strftime('%Y-%m-%d %H:%M:%S'), qtc.Qt.DisplayRole)
-                        self.recentScansTableModel.setItem(i, Results.MSRMT_TIME, item)
-                        # Measurement Type
-                        item = qtg.QStandardItem()
-                        item.setData('Tension', qtc.Qt.DisplayRole)
-                        self.recentScansTableModel.setItem(i, Results.MSRMT_TYPE, item)
-                        # Scan name
-                        item = qtg.QStandardItem()
-                        item.setData(scanId, qtc.Qt.DisplayRole)
-                        self.recentScansTableModel.setItem(i, Results.SCAN, item)
-                        # Tension
-                        if "tension" in scanDict.keys():
-                            tension = scanDict["tension"]
+        for stage in APA_TESTING_STAGES:
+            if stage not in self.resultsDict:
+                continue
+            stageDict = self.resultsDict[stage]
+            for layer in APA_LAYERS:
+                for side in APA_SIDES:
+                    #sideDict = self.resultsDict[layer][side]
+                    sideDict = stageDict[layer][side]
+                    for wireSegment in sideDict: 
+                        #print(wireSegment)
+                        segmentDict = sideDict[wireSegment]["tension"]
+                        #print(segmentDict)
+                        for scanId in segmentDict:
+                            scanDict = segmentDict[scanId]
+                            # Stage
                             item = qtg.QStandardItem()
-                            item.setData(tension, qtc.Qt.DisplayRole)
-                            self.recentScansTableModel.setItem(i, Results.TENSION, item)
-                            # Status
-                            if tension == 'Not Found' or  tension == 'None':
-                                status = 'None'
-                            elif tension > 0:
-                                std = scanDict["tension_std"]
-                                if std < 0.1:
-                                    status = 'High'
-                                elif std < 0.5:
-                                    status = 'Medium'
-                                else:
-                                    status = 'Low'
+                            item.setData(stage, qtc.Qt.DisplayRole)
+                            self.recentScansTableModel.setItem(i, Results.STAGE, item)
+                            # Wire segment
                             item = qtg.QStandardItem()
-                            item.setData(status, qtc.Qt.DisplayRole)
-                            self.recentScansTableModel.setItem(i, Results.CONFIDENCE, item)
-
-                        i += 1
+                            item.setData(wireSegment, qtc.Qt.DisplayRole)
+                            self.recentScansTableModel.setItem(i, Results.WIRE_SEGMENT, item)
+                            # Layer
+                            item = qtg.QStandardItem()
+                            item.setData(layer, qtc.Qt.DisplayRole)
+                            self.recentScansTableModel.setItem(i, Results.LAYER, item)
+                            # Side
+                            item = qtg.QStandardItem()
+                            item.setData(side, qtc.Qt.DisplayRole)
+                            self.recentScansTableModel.setItem(i, Results.SIDE, item)
+                            # Measurement Time
+                            item = qtg.QStandardItem()
+                            strdatetime = scanId[-15:]
+                            date_format = "%Y%m%dT%H%M%S"
+                            dtdatetime = datetime.datetime.strptime(strdatetime, date_format)
+                            item.setData(dtdatetime.strftime('%Y-%m-%d %H:%M:%S'), qtc.Qt.DisplayRole)
+                            self.recentScansTableModel.setItem(i, Results.MSRMT_TIME, item)
+                            # Measurement Type
+                            item = qtg.QStandardItem()
+                            item.setData('Tension', qtc.Qt.DisplayRole)
+                            self.recentScansTableModel.setItem(i, Results.MSRMT_TYPE, item)
+                            # Scan name
+                            item = qtg.QStandardItem()
+                            item.setData(scanId, qtc.Qt.DisplayRole)
+                            self.recentScansTableModel.setItem(i, Results.SCAN, item)
+                            # Tension
+                            if "tension" in scanDict.keys():
+                                tension = scanDict["tension"]
+                                item = qtg.QStandardItem()
+                                item.setData(tension, qtc.Qt.DisplayRole)
+                                self.recentScansTableModel.setItem(i, Results.TENSION, item)
+                                # Status
+                                if tension == 'Not Found' or  tension == 'None':
+                                    status = 'None'
+                                elif tension > 0:
+                                    std = scanDict["tension_std"]
+                                    if std < 0.1:
+                                        status = 'High'
+                                    elif std < 0.5:
+                                        status = 'Medium'
+                                    else:
+                                        status = 'Low'
+                                item = qtg.QStandardItem()
+                                item.setData(status, qtc.Qt.DisplayRole)
+                                self.recentScansTableModel.setItem(i, Results.CONFIDENCE, item)
+            
+                            i += 1
 
         print(f"Nrows = {self.recentScansTableModel.rowCount()}")
         print(f"Ncols = {self.recentScansTableModel.columnCount()}")
@@ -2579,28 +2589,18 @@ class MainWindow(qtw.QMainWindow):
         except:
             print(f"Could not open results JSON file for APA UUID: {self.configApaUuid}.")
             if make_new:
-                print(f"make_new = {make_new} (True) so creating a new results dictionary named:")
-                print(f"{filepath}")
-                self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
+                print(f"make_new = {make_new} (True) so creating a new results dictionary (in memory)")
+                #print(f"{filepath}")
+                self.makeNewResultsDict()
+                #self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
+                #self.resultsDict = process_scan.new_results_dict(APA_TESTING_STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
+                
 
-    def getResultsDictBAD(self):
-        print('self.getResultsDictBAD():')
-
-        if self.resultsDict is not None:
-            # FIXME: add check that results dict matches UUID in user entry box?
-            print('results dict is not none (assumed valid), so nothing to do...')
-            return
-        else:
-            print('results dict is None, so need to load or create one...')
-            apaUuid = self.getApaUuid()
-            try: # load the existing JSON file if it exists
-                filename = os.path.join(OUTPUT_DIR_PROCESSED_DATA, apaUuid, '.json')
-                with open(filename, "r") as fh:
-                    self.resultsDict = json.load(fh)
-            except: # otherwise, create one
-                print(f"Could not find JSON results file for APA UUID: {apaUuid}. Creating a new one.")
-                self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
-
+    def makeNewResultsDict(self):
+        self.resultsDict = process_scan.new_results_dict(APA_TESTING_STAGES, APA_LAYERS,
+                                                         APA_SIDES, MAX_WIRE_SEGMENT)
+        print(self.resultsDict.keys())
+        
     def getResultsDict(self):
         print('self.getResultsDict():')
 
@@ -2615,7 +2615,10 @@ class MainWindow(qtw.QMainWindow):
                 self.resultsDict = json.load(fh)
         except: # otherwise, create one
             print(f"Could not find JSON results file for APA UUID: {self.configApaUuid}. Creating a new dict.")
-            self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
+            self.makeNewResultsDict()
+            #self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
+            #self.resultsDict = process_scan.new_results_dict(APA_TESTING_STAGES, APA_LAYERS,
+            #                                                 APA_SIDES, MAX_WIRE_SEGMENT)
                 
     def getApaUuid(self):
         print('self.getApaUuid()')
@@ -4205,47 +4208,46 @@ class MainWindow(qtw.QMainWindow):
 
 
     # DEFUNCT
-    def updateRecentScanList(self):
-        print("\n\n\n")
-        print("updateRecentScanList:")
-        
-        allScanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
-                                             advDir=OUTPUT_DIR_SCAN_DATA_ADVANCED,
-                                             sort=True)[0]
-        mostRecentScan = allScanDirs
-        knownScans = [dd['scanName'] for dd in self.recentScansTableModel.getData()]
-
-        scanIsNew = mostRecentScan not in knownScans
-        
-        print(f'mostRecentScan = {mostRecentScan}')
-        print(f'knownScans     = {knownScans}')
-        print(f'scanIsNew      = {scanIsNew}')
-
-        if scanIsNew:
-            ampFilename = os.path.join(mostRecentScan, 'amplitudeData.json')
-            print(f"adding recent scan to list: {mostRecentScan}")
-            try:         # Ensure that there is an amplitudeData.json file present!
-                with open(ampFilename, "r") as fh:
-                    data = json.load(fh)
-                newdata = {'scanName':mostRecentScan,
-                           'side':data['side'],
-                           'layer':data['layer'],
-                           'headboardNum':data['headboardNum'],
-                           'apaUuid':data['apaUuid'],
-                           'stage':data['stage'],
-                           'measuredBy':data['measuredBy'],
-                           'submitted':submitted,
-                           #'wireSegments':data['wireSegments'],
-                           }
-            except:
-                print("Could not add new scan to list...")
-
-            self.recentScansTableModel.prepend(newdata)
-            self.recentScansTableModel.layoutChanged.emit()
-            print(self.recentScansTableModel._data)
-                
-        print("\n\n\n")
-        
+    #def updateRecentScanList(self):
+    #    print("\n\n\n")
+    #    print("updateRecentScanList:")
+    #    
+    #    allScanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
+    #                                         advDir=OUTPUT_DIR_SCAN_DATA_ADVANCED,
+    #                                         sort=True)[0]
+    #    mostRecentScan = allScanDirs
+    #    knownScans = [dd['scanName'] for dd in self.recentScansTableModel.getData()]
+    #
+    #    scanIsNew = mostRecentScan not in knownScans
+    #    
+    #    print(f'mostRecentScan = {mostRecentScan}')
+    #    print(f'knownScans     = {knownScans}')
+    #    print(f'scanIsNew      = {scanIsNew}')
+    #
+    #    if scanIsNew:
+    #        ampFilename = os.path.join(mostRecentScan, 'amplitudeData.json')
+    #        print(f"adding recent scan to list: {mostRecentScan}")
+    #        try:         # Ensure that there is an amplitudeData.json file present!
+    #            with open(ampFilename, "r") as fh:
+    #                data = json.load(fh)
+    #            newdata = {'scanName':mostRecentScan,
+    #                       'side':data['side'],
+    #                       'layer':data['layer'],
+    #                       'headboardNum':data['headboardNum'],
+    #                       'apaUuid':data['apaUuid'],
+    #                       'stage':data['stage'],
+    #                       'measuredBy':data['measuredBy'],
+    #                       'submitted':submitted,
+    #                       #'wireSegments':data['wireSegments'],
+    #                       }
+    #        except:
+    #            print("Could not add new scan to list...")
+    #
+    #        self.recentScansTableModel.prepend(newdata)
+    #        self.recentScansTableModel.layoutChanged.emit()
+    #        print(self.recentScansTableModel._data)
+    #            
+    #    print("\n\n\n")
         
     def runResonanceAnalysis(self):
         # get A(f) data for each channel

@@ -8,7 +8,7 @@ sys.path.append("../mappings")
 import channel_frequencies
 import resonance_fitting
 
-def new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
+def new_results_dictOLD(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
     resultsDict = {}
     for l in APA_LAYERS:
         resultsDict[l] = {}
@@ -18,20 +18,47 @@ def new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
                 resultsDict[l][s][str(i).zfill(5)] = {"tension": {}, "continuity": {}}
     return resultsDict
 
-def update_results_dict(resultsDict, layer, side, scanId, wireSegments, tensions, tension_stds):
+def new_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
+    resultsDict = {}
+    for stage in STAGES:
+        resultsDict[stage] = {}
+        for layer in APA_LAYERS:
+            resultsDict[stage][layer] = {}
+            for side in APA_SIDES:
+                resultsDict[stage][layer][side] = {}
+                for i in range(MAX_WIRE_SEGMENT[layer]):
+                    resultsDict[stage][layer][side][str(i).zfill(5)] = {"tension": {}, "continuity": {}}
+    return resultsDict
+
+def update_results_dict(resultsDict, stage, layer, side, scanId, wireSegments, tensions, tension_stds):
     for i, wireNum in enumerate(wireSegments):
         tension = tensions[i]
         tension_std = tension_stds[i]
         if not tension: continue
         elif tension == -1:
-            resultsDict[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'Not Found'}
+            resultsDict[stage][layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'Not Found'}
         elif tension > 0:
             #print(resultsDict.keys())
             #print(resultsDict[layer].keys())
             #print(resultsDict[layer][side].keys())
             #print(resultsDict[layer][side][str(wireNum).zfill(5)].keys())
-            resultsDict[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std}
+            resultsDict[stage][layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std}
 
+#def update_results_dict(resultsDict, layer, side, scanId, wireSegments, tensions, tension_stds):
+#    for i, wireNum in enumerate(wireSegments):
+#        tension = tensions[i]
+#        tension_std = tension_stds[i]
+#        if not tension: continue
+#        elif tension == -1:
+#            resultsDict[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'Not Found'}
+#        elif tension > 0:
+#            #print(resultsDict.keys())
+#            #print(resultsDict[layer].keys())
+#            #print(resultsDict[layer][side].keys())
+#            #print(resultsDict[layer][side][str(wireNum).zfill(5)].keys())
+#            resultsDict[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std}
+
+            
 def process_channel(layer, apaCh, f, a): 
     segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,200)
     roundex = []
@@ -83,7 +110,7 @@ def process_scan(resultsDict, dirName):
         print(f"Could not find scan (bad json file?) {dirName}...")
         return None
     
-    
+    stage = data['stage']
     layer = data['layer']
     side = data['side']
     scanId = dirName.split('/')[-1]
@@ -103,6 +130,5 @@ def process_scan(resultsDict, dirName):
             continue
 
         segments, best_tensions, best_tension_stds = process_channel(layer, apaCh, f, a)
-        update_results_dict(resultsDict, layer, side, scanId, segments, best_tensions, best_tension_stds)
-        
+        update_results_dict(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_stds)
         
