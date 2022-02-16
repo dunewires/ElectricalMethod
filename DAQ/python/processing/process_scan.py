@@ -1,3 +1,5 @@
+# FIXME: when combining/splitting paths, use os.path tools (like join, basename, etc.)
+# instead of string contatenation or splits... this protects against "\" vs "/" (among other things)
 import numpy as np
 import json
 import sys
