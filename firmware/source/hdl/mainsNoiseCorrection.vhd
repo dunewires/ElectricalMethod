@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu Sep 24 17:35:18 2020
--- Last update : Mon Sep 27 21:07:11 2021
+-- Last update : Thu Feb 17 09:36:49 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ architecture struct of mainsNoiseCorrection is
 
     signal noiseCorrSamp     : SIGNED_VEC_OF_VEC_TYPE(1 downto 0)(7 downto 0)(14 downto 0);
     signal noiseCorrSampDiff : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0);
-    signal noiseCorrMult     : SIGNED_VECTOR_TYPE(7 downto 0)(22 downto 0);
+    signal noiseCorrMult     : SIGNED_VECTOR_TYPE(7 downto 0)(23 downto 0);
     signal noiseCorr         : SIGNED_VECTOR_TYPE(7 downto 0)(14 downto 0);
 
 begin
@@ -134,11 +134,13 @@ begin
             freqInRange          <= (freqSet >= fromDaqReg.noiseFreqMin) and (freqSet < fromDaqReg.noiseFreqMax);
             senseWireMNSDataStrb <= '0';
             memWea               <= '0';
-            -- shifting freqSet by 7 will give a x128 interpolation, 6 bits for 64 indiviual frequencies
+            -- shifting freqSet by 7 will give a x128 interpolation, 6 bits for 64 individual frequencies
             -- keep track of the samples within a single frequency "cnvCnt"
             -- the default address is set to follow the frequency and conversion number.
             -- This is only overridden when getting the second noiseCorrSamp sample used for interpolation
-            freqPtr <= freqSet(12 downto 7);
+            --(changed noise step)
+            --freqPtr <= freqSet(12 downto 7);
+            freqPtr <= freqSet(13 downto 8); -- changed to 1 Hz,  probably don't need this freq range? use for oversampling?
             case (mnsState) is
 
                 -- all data is passed through
@@ -265,8 +267,11 @@ begin
         begin
             if rising_edge(dwaClk100) then
                 noiseCorrSampDiff(chan_i) <= noiseCorrSamp(1)(chan_i) - noiseCorrSamp(0)(chan_i);
-                noiseCorrMult(chan_i)     <= noiseCorrSampDiff(chan_i) * signed ('0' & freqSet(6 downto 0)); -- inferred mult requires both be signed, This is the correction between frequency samples
-                noiseCorr(chan_i)         <= noiseCorrSamp(0)(chan_i) + noiseCorrMult(chan_i)(21 downto 7);  -- divide by 128 -- 1/2 Hz freq noise step size.  does this need to be parameterized?
+                --(changed noise step)
+                --noiseCorrMult(chan_i)     <= noiseCorrSampDiff(chan_i) * signed ('0' & freqSet(6 downto 0)); -- inferred mult requires both be signed, This is the correction between frequency samples
+                --noiseCorr(chan_i)         <= noiseCorrSamp(0)(chan_i) + noiseCorrMult(chan_i)(21 downto 7);  -- divide by 128 -- 1/2 Hz freq noise step size.  does this need to be parameterized?
+                noiseCorrMult(chan_i)     <= noiseCorrSampDiff(chan_i) * signed ('0' & freqSet(7 downto 0)); -- inferred mult requires both be signed, This is the correction between frequency samples
+                noiseCorr(chan_i)         <= noiseCorrSamp(0)(chan_i) + noiseCorrMult(chan_i)(22 downto 8);  -- divide by 256 -- 1Hz freq noise step size.  does this need to be parameterized?
             end if;
         end process;
 

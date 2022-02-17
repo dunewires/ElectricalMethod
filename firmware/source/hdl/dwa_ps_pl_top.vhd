@@ -29,7 +29,10 @@ entity dwa_ps_pl_top is
         gpio_1: in std_logic := '1';
         gpio_2: out std_logic := '0';
         gpio_3: in std_logic := '1';
-
+        gpio_4: out std_logic := '0';
+        gpio_5: in std_logic := '1';
+        gpio_6: out std_logic := '0';
+        gpio_7: in std_logic := '1';
         acStimX200_obuf : out std_logic := '0';
 
         mainsSquare : in std_logic;
@@ -411,5 +414,10 @@ begin
             adcSrcSyncClk => adcSrcSyncClk
 
         );
+
+        -- the even pins of the 2 x 4 header are driven with 0
+        -- the odd pins are pulled up in the constraints
+        -- report "1" which of 4 jumppers are in the header
+        toDaqReg.gpioState <= not(gpio_7 & gpio_5 & gpio_3 & gpio_1);
 
 end STRUCTURE;
