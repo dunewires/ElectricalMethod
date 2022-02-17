@@ -215,6 +215,7 @@ SCAN_START = 1
 SCAN_END = 0
 
 APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Installation (Top)", "Installation (Bottom)", "Storage"]
+APA_TESTING_STAGES_SHORT = [ "Dev", "Winding", "PostWinding", "InstTop", "InstBot", "Storage"]
 APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
 MAX_WIRE_SEGMENT = {
@@ -828,6 +829,7 @@ class MainWindow(qtw.QMainWindow):
         ##https://doc.qt.io/qt-5/qabstractitemview.html#SelectionMode-enum
         
         # Connect the LineEdit scan list filter boxes to slots
+        # Measurement Time filter
         le = self.filterLineEditDate
         le.setPlaceholderText(RESULTS_TABLE_HDRS[Results.MSRMT_TIME])
         le.textChanged.connect(lambda text, col=Results.MSRMT_TIME:
@@ -836,6 +838,7 @@ class MainWindow(qtw.QMainWindow):
                                                                                             qtc.QRegExp.FixedString),
                                                                                 col))
 
+        # Wire segment filter
         le = getattr(self, f'filterLineEditWireSegment')
         le.setPlaceholderText(RESULTS_TABLE_HDRS[Results.WIRE_SEGMENT])
         le.textChanged.connect(lambda text, col=Results.WIRE_SEGMENT:
@@ -844,6 +847,8 @@ class MainWindow(qtw.QMainWindow):
                                                                                             qtc.QRegExp.FixedString),
                                                                                 col))
 
+        for stage in APA_TESTING_STAGES_SHORT:
+            getattr(self, f'filterStage{stage}').stateChanged.connect(self.filterStageChanged)
         for layer in APA_LAYERS:
             getattr(self, f'filterCheck{layer}').stateChanged.connect(self.filterLayerChanged)
         for side in APA_SIDES:
@@ -945,7 +950,22 @@ class MainWindow(qtw.QMainWindow):
 
         print(f"Nrows = {self.recentScansTableModel.rowCount()}")
         print(f"Ncols = {self.recentScansTableModel.columnCount()}")
-            
+
+
+
+    def filterStageChanged(self):
+        print("filterStateChanged")
+        filterString = ''
+        for stage in APA_TESTING_STAGES_SHORT:
+            if getattr(self, f'filterStage{stage}').isChecked():
+                # get full name of that stage
+                idx = APA_TESTING_STAGES_SHORT.index(stage)
+                fullstage = APA_TESTING_STAGES[idx]
+                filterString += f'{fullstage}|'
+        if len(filterString): filterString = filterString[:-1] # trim off the final "|" (should use rstrip...)
+        print(filterString)
+        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),Results.STAGE)
+        
     def filterLayerChanged(self):
         filterString = ''
         for layer in APA_LAYERS:
@@ -953,8 +973,8 @@ class MainWindow(qtw.QMainWindow):
                 filterString += f'{layer}|'
         if len(filterString): filterString = filterString[:-1]
         print(filterString)
-        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),2)
-
+        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),Results.LAYER)
+        
     def filterSideChanged(self):
         filterString = ''
         for side in APA_SIDES:
@@ -962,7 +982,7 @@ class MainWindow(qtw.QMainWindow):
                 filterString += f'{side}|'
         if len(filterString): filterString = filterString[:-1]
         print(filterString)
-        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),3)
+        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),Results.SIDE)
 
     def filterTypeChanged(self):
         filterString = ''
@@ -971,7 +991,7 @@ class MainWindow(qtw.QMainWindow):
                 filterString += f'{type}|'
         if len(filterString): filterString = filterString[:-1]
         print(filterString)
-        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),5)
+        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),Results.MSRMT_TYPE)
 
     def filterConfidenceChanged(self):
         filterString = ''
@@ -980,7 +1000,7 @@ class MainWindow(qtw.QMainWindow):
                 filterString += f'{conf}|'
         if len(filterString): filterString = filterString[:-1]
         print(filterString)
-        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),6)
+        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),Results.CONFIDENCE)
 
     def recentScansRowDoubleClicked(self, mi):
         print(f"double-clicked row: {mi.row()}")
