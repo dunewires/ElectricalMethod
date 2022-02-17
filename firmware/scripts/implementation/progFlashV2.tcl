@@ -8,8 +8,8 @@
 #set flashOfst 0x00c00000
 set myLocation [file normalize [info script]]
 
-set fsbl_elf $myLocation/../../sources/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/boot/fsbl.elf
-set lwip_elf $myLocation/../../sources/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+set fsbl_elf $myLocation/../../source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/boot/fsbl.elf
+set lwip_elf $myLocation/../../source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
 set boot_bin $myLocation/../../flash/BOOT.bin
 #set hardware_loc TCP:127.0.0.1:3121
 
