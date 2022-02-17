@@ -196,8 +196,8 @@ begin
   lightsAndButtons : process (dwaClk100)
   begin
     if rising_edge(dwaClk100) then
-      led(3) <= or(toDaqReg.errors);
-      led(0) <= not fromDaqReg.disableHV; -- 0 is off ?
+      ledDwa(3) <= or(toDaqReg.errors);
+      ledDwa(0) <= not fromDaqReg.disableHV; -- 0 is off ?
 
       --metastability 
       pButton_del <= pButton_del(0) & pButton;
@@ -221,14 +221,20 @@ begin
 
     end if;
   end process;
-
+  ledCheck_inst : entity duneDwa.ledCheck
+    port map (
+      fromDaqReg => fromDaqReg,
+      ledDwa     => ledDwa,
+      led        => led,
+      dwaClk100  => dwaClk100
+    );
 
   genLedScanStatus : process (dwaClk100)
   begin
     if rising_edge(dwaClk100) then
       if scanStatusCnt(27 downto 22) = "100110" then
         -- we are finished with the current frequency's blink, wait here for the next frequency
-        led(2) <= '1' when freqScanBusy else '0'; -- display scan status
+        ledDwa(2) <= '1' when freqScanBusy else '0'; -- display scan status
                                                   -- pulse once each time the ADC sequenced is activated
         if adcStart then
           -- scale requested frequency to a time range we can actually see ~ 1.5 sec to 150 ms
@@ -237,7 +243,7 @@ begin
 
       else
         -- when counting, pulse 0 for ~125 ms at the end of each count
-        led(2)        <= bool2sl(freqScanBusy) when (scanStatusCnt(27 downto 22) < "100011") else '0';
+        ledDwa(2)        <= bool2sl(freqScanBusy) when (scanStatusCnt(27 downto 22) < "100011") else '0';
         scanStatusCnt <= scanStatusCnt + 1;
       end if;
     end if;
@@ -247,7 +253,7 @@ begin
   begin
     if rising_edge(dwaClk100) then
 
-      led(1) <= '1' when and(netStatusCnt) else '0';
+      ledDwa(1) <= '1' when and(netStatusCnt) else '0';
       if not fromDaqReg.netStatus(0) then -- blink on transaction
         netStatusCnt <= (others => '0');
       elsif netStatusCnt /= (netStatusCnt'range => '1') then -- extend pulse ~150ms
