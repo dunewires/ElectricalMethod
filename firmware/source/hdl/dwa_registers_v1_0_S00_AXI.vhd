@@ -740,7 +740,7 @@ begin
 								end if;
 							end loop;
 
-						when b"111000" => --  reg 55 is used for PS network status in fromDaq direction, and controller state in toDaq direction
+						when b"111000" => --  reg 56 hvDisable bit 0
 							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 								if ( S_AXI_WSTRB(byte_index) = '1' ) then
 									-- Respective byte enables are asserted as per write strobes                   
@@ -1134,6 +1134,6 @@ begin
 	fromDaqReg.macLword         <= toDaqReg.macLword;
 
 	fromDaqReg.netStatus <= slv_reg55(7 downto 0); -- also used for controller status in toDaq direction
-	                                               -- User logic ends
+	fromDaqReg.disableHV <= slv_reg56(0); -- disable HV when switching relays
 
 end arch_imp;
