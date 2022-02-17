@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Nov  9 21:40:07 2021
+-- Last update : Thu Feb 17 11:20:46 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -109,7 +109,7 @@ architecture rtl of headerGenerator is
 
     ----------------------------
     ---- Setup for Header E
-    constant nHeadE      : integer                                         := 6; -- # of header words (incl. 2 delimiters)
+    constant nHeadE      : integer                                         := 7; -- # of header words (incl. 2 delimiters)
     constant nHeadElog   : integer                                         := integer(log2(real(nHeadE +1)));
     signal headEDataList : slv_vector_type(nHeadE-1 downto 0)(31 downto 0) := (others => (others => '0'));
 
@@ -183,7 +183,7 @@ begin
             x"FFFF" & std_logic_vector(to_unsigned(nHeadF-2, 16)), -- header delimiter (start)
             x"77" & x"00000" & "000" & BOOL2SL(freqScanBusy),
             x"00" & std_logic_vector(runOdometer),
-            x"01" & std_logic_vector(fromDaqReg.serNum),
+            x"01" & std_logic_vector(fromDaqReg.serNumLocal),
             x"02" & std_logic_vector(fromDaqReg.dateCode(47 downto 24)),         --24MSb
             x"03" & std_logic_vector(fromDaqReg.dateCode(23 downto 0)),          --24LSb
             x"04" & x"00" & std_logic_vector(fromDaqReg.hashCode(31 downto 16)), --16MSb
@@ -251,6 +251,7 @@ begin
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
             x"63" & statusDataSticky.errors,
             x"64" & x"00000" & statusDataSticky.pButton,
+            x"65" & x"00000" & "000" & fromDaqReg.disableHV,
             x"EEEEEEEE"
     );
 

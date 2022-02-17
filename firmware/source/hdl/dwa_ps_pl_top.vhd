@@ -29,7 +29,10 @@ entity dwa_ps_pl_top is
         gpio_1: in std_logic := '1';
         gpio_2: out std_logic := '0';
         gpio_3: in std_logic := '1';
-
+        gpio_4: out std_logic := '0';
+        gpio_5: in std_logic := '1';
+        gpio_6: out std_logic := '0';
+        gpio_7: in std_logic := '1';
         acStimX200_obuf : out std_logic := '0';
 
         mainsSquare : in std_logic;
@@ -355,7 +358,6 @@ begin
             clk_in1 => S_AXI_ACLK_100
         );
 
-
     top_tension_analyzer_1 : entity work.top_tension_analyzer
 
         port map (
@@ -371,12 +373,10 @@ begin
             --dwaClk10  => S_AXI_ACLK_10,
             dwaClk10 => plClk_10,
 
-
             led     => led,
             pButton => pButton,
 
-            snMemConfigWP  => gpio_3,          -- gpio = 0 with jumpper (write enabled)
-            snMemConfigDefault  => not gpio_1, -- gpio = 0 with jumpper, (use default MAC address)
+            gpioState => not(gpio_7 & gpio_5 & gpio_3 & gpio_1),
 
             acStimX200_obuf => acStimX200_obuf,
             mainsSquare     => mainsSquare,
@@ -411,5 +411,6 @@ begin
             adcSrcSyncClk => adcSrcSyncClk
 
         );
+
 
 end STRUCTURE;

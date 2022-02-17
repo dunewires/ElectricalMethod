@@ -22,8 +22,7 @@ entity top_tension_analyzer is
     led     : out std_logic_vector(3 downto 0) := (others => '0');
     pButton : in  std_logic_vector(3 downto 0);
 
-    snMemConfigWP      : in std_logic := '1';
-    snMemConfigDefault : in std_logic := '1';
+    gpioState : in std_logic_vector(3 downto 0) := (others => '0');
 
     acStimX200_obuf : out std_logic := '0';
     mainsSquare     : in  std_logic := '0';
@@ -180,9 +179,10 @@ architecture STRUCT of top_tension_analyzer is
   signal mCDelayCount : unsigned(7 downto 0) := (others => '0');
   signal mCDelayReset : std_logic            := '1';
 
-  signal mainsTrigTimerLatch : unsigned(31 downto 0) := (others => '0');
+  signal mainsTrigTimerLatch : unsigned(31 downto 0)        := (others => '0');
+  signal ledDwa              : std_logic_vector(3 downto 0) := (others => '0');
 
-  signal vioOut3, vioOut9 :std_logic := '0';
+  signal vioOut3, vioOut9 : std_logic := '0';
 
   signal
   toDaqReg_headerGenerator,
@@ -193,11 +193,12 @@ architecture STRUCT of top_tension_analyzer is
   toDaqReg_mainsNoiseCorrection : toDaqRegType;
 
 begin
+
   lightsAndButtons : process (dwaClk100)
   begin
     if rising_edge(dwaClk100) then
-      led(3) <= or(toDaqReg.errors);
-      led(0) <= not fromDaqReg.disableHV; -- 0 is off ?
+      ledDwa(3) <= or(toDaqReg.errors);
+      ledDwa(0) <= not fromDaqReg.disableHV; -- 0 is off ?
 
       --metastability 
       pButton_del <= pButton_del(0) & pButton;
@@ -221,15 +222,21 @@ begin
 
     end if;
   end process;
-
+  ledCheck_inst : entity duneDwa.ledCheck
+    port map (
+      fromDaqReg => fromDaqReg,
+      ledDwa     => ledDwa,
+      led        => led,
+      dwaClk100  => dwaClk100
+    );
 
   genLedScanStatus : process (dwaClk100)
   begin
     if rising_edge(dwaClk100) then
       if scanStatusCnt(27 downto 22) = "100110" then
         -- we are finished with the current frequency's blink, wait here for the next frequency
-        led(2) <= '1' when freqScanBusy else '0'; -- display scan status
-                                                  -- pulse once each time the ADC sequenced is activated
+        ledDwa(2) <= '1' when freqScanBusy else '0'; -- display scan status
+                                                     -- pulse once each time the ADC sequenced is activated
         if adcStart then
           -- scale requested frequency to a time range we can actually see ~ 1.5 sec to 150 ms
           scanStatusCnt <= (27 => '0', 26 downto 9 => stimFreqReq(17 downto 0), 8 downto 0 => '0');
@@ -237,7 +244,7 @@ begin
 
       else
         -- when counting, pulse 0 for ~125 ms at the end of each count
-        led(2)        <= bool2sl(freqScanBusy) when (scanStatusCnt(27 downto 22) < "100011") else '0';
+        ledDwa(2)     <= bool2sl(freqScanBusy) when (scanStatusCnt(27 downto 22) < "100011") else '0';
         scanStatusCnt <= scanStatusCnt + 1;
       end if;
     end if;
@@ -247,7 +254,7 @@ begin
   begin
     if rising_edge(dwaClk100) then
 
-      led(1) <= '1' when and(netStatusCnt) else '0';
+      ledDwa(1) <= '1' when and(netStatusCnt) else '0';
       if not fromDaqReg.netStatus(0) then -- blink on transaction
         netStatusCnt <= (others => '0');
       elsif netStatusCnt /= (netStatusCnt'range => '1') then -- extend pulse ~150ms
@@ -331,7 +338,7 @@ begin
   begin
     if rising_edge(dwaClk100) then
       if fromDaqReg.auto then
-        stimFreqReq   <= ctrlFreqSet;
+        stimFreqReq <= ctrlFreqSet;
         --acStim_enable <= ctrl_acStim_enable;
         acStim_enable <= ctrl_acStim_enable;
         mCDelayReset  <= '0' when stimFreqReq = ctrlFreqSet else '1'; -- reset multicycle delay counter
@@ -383,8 +390,8 @@ begin
       fromDaqReg => fromDaqReg,
       toDaqReg   => toDaqReg_serialPromInterface,
 
-      snMemConfigWP => snMemConfigWP,
-      snMemWPError => toDaqReg.errors(0),
+      snMemConfigWP => not gpioState(1), -- gpio = 1 with jumpper (write enabled),
+      snMemWPError  => toDaqReg.errors(0),
 
       sda       => SNUM_SDA,
       scl       => SNUM_SCL,
@@ -434,7 +441,7 @@ begin
       mainsSquare => mainsSquare,
       stimFreqReq => stimFreqReq,
 
-      mainsTrig => mainsTrig,
+      mainsTrig           => mainsTrig,
       mainsTrigTimerLatch => mainsTrigTimerLatch,
 
       dwaClk100 => dwaClk100
@@ -629,13 +636,13 @@ begin
       probe_out0             => open,
       probe_out1             => open,
       probe_out2             => open,
-      probe_out3(0)             => vioOut3,
+      probe_out3(0)          => vioOut3,
       probe_out4             => open,
       probe_out5             => open,
       probe_out6             => open,
       probe_out7             => open,
       probe_out8             => open,
-      probe_out9(0)             => vioOut9,
+      probe_out9(0)          => vioOut9,
       probe_out10            => open,
       probe_out11            => open
     );
@@ -652,23 +659,24 @@ begin
     toDaqReg.relayBusBot    <= toDaqReg_wireRelayInterface.relayBusBot;
     toDaqReg.relayWireBot   <= toDaqReg_wireRelayInterface.relayWireBot;
     toDaqReg.serNum         <= toDaqReg_serialPromInterface.serNum;
-    toDaqReg.serNumLocal <= toDaqReg_serialPromInterface.serNumLocal;
+    toDaqReg.serNumLocal    <= toDaqReg_serialPromInterface.serNumLocal;
+    toDaqReg.gpioState      <= gpioState;
 
-    if snMemConfigDefault then
-      -- if "use default" is selected then
-      toDaqReg.ipLocal     <= ipLocalDefault;
-      toDaqReg.macUword    <= macDefault(47 downto 24);
-      toDaqReg.macLword    <= macDefault(23 downto 0);
+    if gpioState(0) then -- gpio = 1 with jumpper, (use default MAC address
+                         -- if "use default" is selected then
+      toDaqReg.ipLocal  <= ipLocalDefault;
+      toDaqReg.macUword <= macDefault(47 downto 24);
+      toDaqReg.macLword <= macDefault(23 downto 0);
     else
       -- take what was read from serial PROM
-      toDaqReg.ipLocal     <= toDaqReg_serialPromInterface.ipLocal;
-      toDaqReg.macUword    <= toDaqReg_serialPromInterface.macUword;
-      toDaqReg.macLword    <= toDaqReg_serialPromInterface.macLword;
+      toDaqReg.ipLocal  <= toDaqReg_serialPromInterface.ipLocal;
+      toDaqReg.macUword <= toDaqReg_serialPromInterface.macUword;
+      toDaqReg.macLword <= toDaqReg_serialPromInterface.macLword;
     end if;
 
-    toDaqReg.serNumMemAddress <= toDaqReg_serialPromInterface.serNumMemAddress;
-    toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
-    toDaqReg.errors(23 downto 1)           <= (others => '0'); -- all unsigned errors set to 0
+    toDaqReg.serNumMemAddress    <= toDaqReg_serialPromInterface.serNumMemAddress;
+    toDaqReg.serNumMemData       <= toDaqReg_serialPromInterface.serNumMemData;
+    toDaqReg.errors(23 downto 1) <= (others => '0'); -- all unsigned errors set to 0
   end process selToDaq;
 
 end STRUCT;

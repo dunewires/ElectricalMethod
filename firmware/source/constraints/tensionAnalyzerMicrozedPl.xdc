@@ -207,6 +207,20 @@ set_property IOSTANDARD LVCMOS25 [get_ports gpio_3]
 set_property PACKAGE_PIN D20 [get_ports gpio_3]
 set_property PULLUP TRUE [get_ports gpio_3]
 
+set_property IOSTANDARD LVCMOS25 [get_ports gpio_4]
+set_property PACKAGE_PIN E18 [get_ports gpio_4]
+
+set_property IOSTANDARD LVCMOS25 [get_ports gpio_5]
+set_property PACKAGE_PIN F16 [get_ports gpio_5]
+set_property PULLUP TRUE [get_ports gpio_5]
+
+set_property IOSTANDARD LVCMOS25 [get_ports gpio_6]
+set_property PACKAGE_PIN E19 [get_ports gpio_6]
+
+set_property IOSTANDARD LVCMOS25 [get_ports gpio_7]
+set_property PACKAGE_PIN F17 [get_ports gpio_7]
+set_property PULLUP TRUE [get_ports gpio_7]
+
 set_property IOSTANDARD LVCMOS25 [get_ports adcCnv]
 set_property PACKAGE_PIN G17 [get_ports adcCnv]
 
