@@ -1024,7 +1024,7 @@ begin
 			when b"111000" => --reg 56 pButton
 				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
 			when b"111001" => --reg 57 NV mem config
-				reg_data_out <= "00" & std_logic_vector(toDaqReg.serNumLocal);
+				reg_data_out <= x"00" & std_logic_vector(toDaqReg.serNumLocal);
 			when b"111010" => --reg 58 NV mem config
 				reg_data_out <= std_logic_vector(toDaqReg.ipLocal);
 			when b"111011" => --reg 59 NV mem config
