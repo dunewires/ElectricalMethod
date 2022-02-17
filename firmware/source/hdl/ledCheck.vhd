@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Sep  2 17:08:18 2021
--- Last update : Thu Feb 17 08:08:06 2022
+-- Last update : Thu Feb 17 09:52:35 2022
 -- Platform    : Dune DWA MicroZed
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ entity ledCheck is
     fromDaqReg : in fromDaqRegType;
 
     ledDwa : in  std_logic_vector(3 downto 0) := (others => '0');
-    led    : out (3 downto 0)                 := (others => '0');
+    led    : out std_logic_vector(3 downto 0) := (others => '0');
 
     dwaClk100 : in std_logic
   );
