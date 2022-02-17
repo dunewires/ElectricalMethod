@@ -1021,8 +1021,8 @@ begin
 				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.pktGenWatchdogPeriod);
 			when b"110111" => --controller state reg 55 for read by daq (read only)  PS net status is used in fromdaq
 				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pktGenStateDbg);
-			when b"111000" => --reg 56 pButton
-				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
+			when b"111000" => --reg 56 disableHV
+				reg_data_out <= x"0000000"& "000" & fromDaqReg.disableHV;				
 			when b"111001" => --reg 57 NV mem config
 				reg_data_out <= x"00" & std_logic_vector(toDaqReg.serNumLocal);
 			when b"111010" => --reg 58 NV mem config
@@ -1031,6 +1031,8 @@ begin
 				reg_data_out <= x"00" & std_logic_vector(toDaqReg.macUword);
 			when b"111100" => --reg 60 NV mem config
 				reg_data_out <= x"00" & std_logic_vector(toDaqReg.macLword);
+			when b"111101" => --reg 61 pushbuttons
+				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
 			when b"111110" => --reg 62 NV mem jumpper setting
 				reg_data_out <= x"0000000" & toDaqReg.gpioState;				
 			when others =>
