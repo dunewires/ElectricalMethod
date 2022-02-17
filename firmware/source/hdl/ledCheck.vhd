@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Sep  2 17:08:18 2021
--- Last update : Thu Feb 17 09:56:09 2022
+-- Last update : Thu Feb 17 09:57:25 2022
 -- Platform    : Dune DWA MicroZed
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ architecture behav of ledCheck is
   signal twinkleReg : std_logic_vector(15 downto 0) := (others => '0') ;
   signal beatCnt    : unsigned(28 downto 0)         := (others => '1'); --29 bits is ~5sec,  initial all '1'
   signal waitCnt    : unsigned(23 downto 0)         := (others => '0');
-  signal taps std_logic_vector(3 downto 0) := (others => '0');
+  signal taps :std_logic_vector(3 downto 0) := (others => '0');
 begin
 
   -- max length tap locations from chart https://www.eetimes.com/tutorial-linear-feedback-shift-registers-lfsrs-part-1/#
