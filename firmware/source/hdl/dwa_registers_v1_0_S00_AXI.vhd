@@ -1028,9 +1028,9 @@ begin
 			when b"111010" => --reg 58 NV mem config
 				reg_data_out <= std_logic_vector(toDaqReg.ipLocal);
 			when b"111011" => --reg 59 NV mem config
-				reg_data_out <= "00" & std_logic_vector(toDaqReg.macUword);
+				reg_data_out <= x"00" & std_logic_vector(toDaqReg.macUword);
 			when b"111100" => --reg 60 NV mem config
-				reg_data_out <= "00" & std_logic_vector(toDaqReg.macLword);
+				reg_data_out <= x"00" & std_logic_vector(toDaqReg.macLword);
 			when b"111101" => --reg 61 NV mem jumpper setting
 				reg_data_out <= x"0000000" & toDaqReg.gpioState;				
 			when others =>
