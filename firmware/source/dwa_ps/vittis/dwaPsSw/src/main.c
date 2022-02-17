@@ -225,7 +225,7 @@ unsigned int ipLocal;
 	while(((echo_netif->ip_addr.addr) == 0) && (dhcp_timoutcntr > 0))
 		xemacif_input(echo_netif);
 
-	if (dhcp_timoutcntr <= 0)||(gpioState & (1<<3)) { //timeout or 3rd bit in gpio
+	if ((dhcp_timoutcntr <= 0)||(gpioState & (1<<3))) { //timeout or 3rd bit in gpio
 		if ((echo_netif->ip_addr.addr) == 0) {
 			
 			if (gpioState & (1<<3))
