@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Sep  2 17:08:18 2021
--- Last update : Thu Feb 17 09:57:25 2022
+-- Last update : Thu Feb 17 09:58:36 2022
 -- Platform    : Dune DWA MicroZed
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ begin
       if waitCnt /= x"FFFFFF" then
         waitCnt <= waitCnt + 1;     -- after power up wait for a bit
         if waitCnt = x"FFFFFE" then -- if we are almost done update the seed and let the party begin
-          twinkleReg <= fromDaqReg.serNum(15 downto 0);
+          twinkleReg <= std_logic_vector(fromDaqReg.serNum(15 downto 0));
           beatCnt    <= (beatCnt'range => '0');
         end if;
       end if;
