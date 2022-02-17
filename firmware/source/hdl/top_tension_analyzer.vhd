@@ -181,6 +181,7 @@ architecture STRUCT of top_tension_analyzer is
   signal mCDelayReset : std_logic            := '1';
 
   signal mainsTrigTimerLatch : unsigned(31 downto 0) := (others => '0');
+  signal ledDwa std_logic_vector(3 downto 0) := (others  => '0');
 
   signal vioOut3, vioOut9 :std_logic := '0';
 
