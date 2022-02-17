@@ -1031,7 +1031,7 @@ begin
 				reg_data_out <= x"00" & std_logic_vector(toDaqReg.macUword);
 			when b"111100" => --reg 60 NV mem config
 				reg_data_out <= x"00" & std_logic_vector(toDaqReg.macLword);
-			when b"111101" => --reg 61 NV mem jumpper setting
+			when b"111110" => --reg 62 NV mem jumpper setting
 				reg_data_out <= x"0000000" & toDaqReg.gpioState;				
 			when others =>
 				reg_data_out <= (others => '0');

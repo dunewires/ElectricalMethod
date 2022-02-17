@@ -358,7 +358,6 @@ begin
             clk_in1 => S_AXI_ACLK_100
         );
 
-
     top_tension_analyzer_1 : entity work.top_tension_analyzer
 
         port map (
@@ -374,12 +373,10 @@ begin
             --dwaClk10  => S_AXI_ACLK_10,
             dwaClk10 => plClk_10,
 
-
             led     => led,
             pButton => pButton,
 
-            snMemConfigWP  => gpio_3,          -- gpio = 0 with jumpper (write enabled)
-            snMemConfigDefault  => not gpio_1, -- gpio = 0 with jumpper, (use default MAC address)
+            gpioState => not(gpio_7 & gpio_5 & gpio_3 & gpio_1),
 
             acStimX200_obuf => acStimX200_obuf,
             mainsSquare     => mainsSquare,
@@ -415,9 +412,5 @@ begin
 
         );
 
-        -- the even pins of the 2 x 4 header are driven with 0
-        -- the odd pins are pulled up in the constraints
-        -- report "1" which of 4 jumppers are in the header
-        toDaqReg.gpioState <= not(gpio_7 & gpio_5 & gpio_3 & gpio_1);
 
 end STRUCTURE;

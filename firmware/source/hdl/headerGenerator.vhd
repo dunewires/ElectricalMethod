@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Feb 17 10:09:25 2022
+-- Last update : Thu Feb 17 11:20:46 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -183,7 +183,7 @@ begin
             x"FFFF" & std_logic_vector(to_unsigned(nHeadF-2, 16)), -- header delimiter (start)
             x"77" & x"00000" & "000" & BOOL2SL(freqScanBusy),
             x"00" & std_logic_vector(runOdometer),
-            x"01" & std_logic_vector(fromDaqReg.serNum),
+            x"01" & std_logic_vector(fromDaqReg.serNumLocal),
             x"02" & std_logic_vector(fromDaqReg.dateCode(47 downto 24)),         --24MSb
             x"03" & std_logic_vector(fromDaqReg.dateCode(23 downto 0)),          --24LSb
             x"04" & x"00" & std_logic_vector(fromDaqReg.hashCode(31 downto 16)), --16MSb

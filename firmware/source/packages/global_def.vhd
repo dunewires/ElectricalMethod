@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Feb 17 08:52:00 2022
+-- Last update : Thu Feb 17 11:21:00 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -61,6 +61,7 @@ package global_def is
         errors         : std_logic_vector(23 downto 0);
         pktGenStateDbg : unsigned(3 downto 0);
         pButton        : std_logic_vector(3 downto 0);
+
         gpioState      : std_logic_vector(3 downto 0);
     end record; -- toDaqRegType
 
