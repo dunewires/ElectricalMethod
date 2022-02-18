@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Sep  2 17:08:18 2021
--- Last update : Thu Feb 17 09:58:36 2022
+-- Last update : Fri Feb 18 11:54:47 2022
 -- Platform    : Dune DWA MicroZed
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -36,10 +36,12 @@ end entity ledCheck;
 
 architecture behav of ledCheck is
 
-  signal twinkleReg : std_logic_vector(15 downto 0) := (others => '0') ;
-  signal beatCnt    : unsigned(28 downto 0)         := (others => '1'); --29 bits is ~5sec,  initial all '1'
-  signal waitCnt    : unsigned(23 downto 0)         := (others => '0');
-  signal taps :std_logic_vector(3 downto 0) := (others => '0');
+  signal twinkleReg         : std_logic_vector(15 downto 0) := (others => '0') ;
+  signal beatCnt            : unsigned(28 downto 0)         := (others => '1'); --29 bits is ~5sec,  initial all '1'
+  signal waitCnt            : unsigned(23 downto 0)         := (others => '0');
+  signal taps               : std_logic_vector(3 downto 0)  := (others => '0');
+  signal ledParty, ledFlash : std_logic_vector(3 downto 0)  := (others => '0');
+  
 begin
 
   -- max length tap locations from chart https://www.eetimes.com/tutorial-linear-feedback-shift-registers-lfsrs-part-1/#
@@ -57,18 +59,28 @@ begin
       end if;
 
       if beatCnt /= (beatCnt'range => '1') then
-
+        -- get out the refreshments and warm up the dance shoes
         if beatCnt(23 downto 0) < x"000004" then -- shift 4 bits every ~0.1 sec
           twinkleReg <= twinkleReg(14 downto 0) & xor(taps);
         else
-          led <= twinkleReg(15 downto 12);
+          ledParty <= twinkleReg(15 downto 12);
         end if;
         beatCnt <= beatCnt+1;
 
       else
-        led <= ledDwa;
+        ledParty <= ledDwa;
       end if;
+
+      -- use the beat cnt to generate a simple flash, it's time to get back to work
+      if beatCnt < (28 downto 27 => '1', 26 downto 0 => '0') then
+        ledFlash <= (3 downto 0 => beatCnt(26)); --drive low then high 
+      else
+        ledFlash <= ledDwa;
+      end if;
+
     end if;
   end process;
+
+  led <= ledParty when fromDaqReg.danceParty else ledFlash;
 
 end architecture behav;

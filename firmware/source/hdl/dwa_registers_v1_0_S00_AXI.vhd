@@ -1075,6 +1075,7 @@ begin
 	fromDaqReg.mnsEna            <= slv_reg1(1)= '1';
 	fromDaqReg.relayAutoBreakEna <= slv_reg1(2);
 	fromDaqReg.useAcStimTrig     <= slv_reg1(3);
+	fromDaqReg.danceParty     <= slv_reg1(8);
 
 	-- udpDataDone when PS has read the status at the end of the data payload
 	fromDaqReg.udpDataDone        <= not udpReadBusy and udpReadBusy_del; --trailing edge

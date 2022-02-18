@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Feb 17 11:20:46 2022
+-- Last update : Fri Feb 18 12:11:33 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -127,19 +127,21 @@ architecture rtl of headerGenerator is
     signal watchdogTimerCnt : unsigned(31 downto 0) := (others => '0');
 
     type statusData_type is record
-        errors  : std_logic_vector(23 downto 0);
-        pButton : std_logic_vector(3 downto 0);
-        tState  : boolean;
+        disableHV : std_logic;
+        errors    : std_logic_vector(23 downto 0);
+        pButton   : std_logic_vector(3 downto 0);
+        tState    : boolean;
     end record;
 
     signal statusDataSticky,statusDataLatch : statusData_type := (
-            errors  => (others => '0'),
-            pButton => (others => '0'),
-            tState  => false);
+            disableHV => ('0'),
+            errors    => (others => '0'),
+            pButton   => (others => '0'),
+            tState    => false);
     signal sendStatus                 : boolean := false;
     signal statusBusy, statusBusy_del : boolean := false;
     signal statusTimeout              : boolean := false;
-    signal statusTrigLatch            : std_logic_vector(3 downto 0);
+    signal statusTrigLatch            : std_logic_vector(4 downto 0);
     signal statusTimerCnt             : unsigned(31 downto 0) := (others => '0');
     signal acStim_enable_del          : std_logic             := '0';
 
@@ -247,11 +249,11 @@ begin
     --STATUS Header
     headEDataList <= ( -- Status frame
             x"EEEE" & std_logic_vector(to_unsigned(nHeadE-2, 16)),
-            x"61" & x"00000" & statusTrigLatch,
+            x"61" & x"0000" & "000" & statusTrigLatch,
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
             x"63" & statusDataSticky.errors,
             x"64" & x"00000" & statusDataSticky.pButton,
-            x"65" & x"00000" & "000" & fromDaqReg.disableHV,
+            x"65" & x"00000" & "000" & statusDataSticky.disableHV,
             x"EEEEEEEE"
     );
 
@@ -287,7 +289,7 @@ begin
                 pktBuildBusy   <= state_reg /= idle_s;
 
             end if;
-            
+
             -- with the status packet being pushed we need to latch the other requests so they are not missed
             sendRunHdrLatch  <= (sendRunHdr or sendRunHdrLatch) and not sendRunHdrClear;
             sendAdcDataLatch <= (sendAdcData or sendAdcDataLatch) and not sendAdcDataClear;
@@ -458,19 +460,21 @@ begin
 
     statusTiming : process (dwaClk100) -- latch the packet data validated by the sendData strobe
 
-        variable statusErrorsTrig  : boolean := false;
-        variable statusPButtonTrig : boolean := false;
-        variable statusTStateTrig  : boolean := false;
-        variable statusDataTrig    : boolean := false;
+        variable statusErrorsTrig    : boolean := false;
+        variable statusPButtonTrig   : boolean := false;
+        variable statusDisableHVTrig : boolean := false;
+        variable statusTStateTrig    : boolean := false;
+        variable statusDataTrig      : boolean := false;
     begin
         if rising_edge(dwaClk100) then
             statusBusy_del    <= statusBusy;
             acStim_enable_del <= acStim_enable;
             --separate the status triggr to be used in status packet.
             -- a variable is used here so latched status will reflect trigger status and not the next cluck cycle status.
-            statusErrorsTrig  := statusDataSticky.errors /= statusDataLatch.errors;
-            statusPButtonTrig := statusDataSticky.pButton /= statusDataLatch.pButton;
-            statusTStateTrig  := (statusDataSticky.tState /= statusDataLatch.tState) or
+            statusDisableHVTrig := statusDataSticky.disableHV /= statusDataLatch.disableHV;
+            statusErrorsTrig    := statusDataSticky.errors /= statusDataLatch.errors;
+            statusPButtonTrig   := statusDataSticky.pButton /= statusDataLatch.pButton;
+            statusTStateTrig    := (statusDataSticky.tState /= statusDataLatch.tState) or
                 (acStim_enable = '1' and acStim_enable_del = '0'); --trigger at start of test
             statusDataTrig := statusErrorsTrig or statusTStateTrig or statusPButtonTrig;
 
@@ -480,22 +484,25 @@ begin
                 sendStatus      <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off
                 statusDataLatch <= statusDataSticky;
                 statusTrigLatch <= (
+                        4 => bool2sl(statusDisableHVTrig),
                         3 => bool2sl(statusErrorsTrig),
                         2 => bool2sl(statusPButtonTrig),
                         1 => bool2sl(statusTStateTrig),
                         0 => bool2sl(statusTimeout)
                 );
-                statusDataSticky.errors  <= fromDaqReg.errors;
-                statusDataSticky.pButton <= pButton;
-                statusDataSticky.tState  <= fromDaqReg.ctrlStateDbg /= x"0";
+                statusDataSticky.disableHV <= fromDaqReg.disableHV ;
+                statusDataSticky.errors    <= fromDaqReg.errors;
+                statusDataSticky.pButton   <= pButton;
+                statusDataSticky.tState    <= fromDaqReg.ctrlStateDbg /= x"0";
 
                 statusTimerCnt <= x"00000001";
             else
                 -- triggers are stickey so we don't miss one if busy sending a packet
-                statusDataSticky.errors  <= fromDaqReg.errors or statusDataSticky.errors;
-                statusDataSticky.pButton <= pButton or statusDataSticky.pButton;
-                statusDataSticky.tState  <= fromDaqReg.ctrlStateDbg /= x"0";
-                
+                statusDataSticky.disableHV <= fromDaqReg.disableHV or statusDataSticky.disableHV;
+                statusDataSticky.errors    <= fromDaqReg.errors or statusDataSticky.errors;
+                statusDataSticky.pButton   <= pButton or statusDataSticky.pButton;
+                statusDataSticky.tState    <= fromDaqReg.ctrlStateDbg /= x"0";
+
                 if not statusTimeout then -- keep from overflowing counter while we wait to send packet.
                     statusTimerCnt <= statusTimerCnt+1;
                 end if;
