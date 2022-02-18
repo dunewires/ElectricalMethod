@@ -118,7 +118,7 @@ architecture STRUCT of top_tension_analyzer is
     );
   END COMPONENT;
 
-
+  signal fromDaqRegType_values    : fromDaqRegType;
   signal checkBound_error         : std_logic;
 
 

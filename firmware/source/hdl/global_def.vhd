@@ -53,7 +53,7 @@ package global_def is
         serNumMemData    : unsigned(31 downto 0);
 
         ctrlStateDbg   : unsigned(3 downto 0);
-        errors         : std_logic_vector(23 downto 0);
+        errors         : std_logic_vector(23 downto 0)
         pktGenStateDbg : unsigned(3 downto 0);
         pButton        : std_logic_vector(3 downto 0);
 
@@ -131,8 +131,8 @@ package global_def is
         relayWireBot      : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);--TBD
         relayUpdate       : boolean;--!! mask when realy registers are not correctly comfigured.
         relayAutoBreakEna : std_logic; --anything
-        useAcStimTrig     : std_logic; -- anythin    
-end record; -- fromDaqRegType
+        useAcStimTrig     : std_logic; -- anything
+    end record; -- fromDaqRegType
 
 end global_def;
 

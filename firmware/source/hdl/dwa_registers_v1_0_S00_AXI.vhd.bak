@@ -1013,9 +1013,9 @@ begin
 			when b"111000" => --reg 56 pButton
 				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
 			when b"111001" => --reg 57 checkRegA
-				reg_data_out <= toDaqReg.checkRegA;
+				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
 			when b"111010" => --reg 58 checkRegB
-				reg_data_out <= toDaqReg.checkRegB;
+				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;
