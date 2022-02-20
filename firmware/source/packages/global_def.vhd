@@ -61,7 +61,10 @@ package global_def is
         errors         : std_logic_vector(23 downto 0);
         pktGenStateDbg : unsigned(3 downto 0);
         pButton        : std_logic_vector(3 downto 0);
-
+                                       
+        checkRegA     : std_logic_vector(31 downto 0);	
+        checkRegB     : std_logic_vector(31 downto 0);	
+                                       
         gpioState      : std_logic_vector(3 downto 0);
     end record; -- toDaqRegType
 

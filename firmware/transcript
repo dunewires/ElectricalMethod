@@ -1,0 +1,54 @@
+# //  Questa Sim-64
+# //  Version 2021.3_2 linux_x86_64 Sep 10 2021
+# //
+# //  Copyright 1991-2021 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  QuestaSim and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+pwd
+# /home/saidbounasser/projects/DUNE/ElectricalMethod/firmware
+cd sc
+# couldn't change working directory to "sc": no such file or directory
+cd scripts
+pwd
+# /home/saidbounasser/projects/DUNE/ElectricalMethod/firmware/scripts
+cd ..
+do scripts/headerMnsCompile_Said.do
+# Cannot open macro file: scripts/headerMnsCompile_Said.do
+pwd
+# /home/saidbounasser/projects/DUNE/ElectricalMethod/firmware
+ls
+# flash
+# ip_repo
+# scripts
+# simulation
+# source
+# transcript
+# vivadoProjects
+do scripts/headerMnsCompile_Said.do
+# Cannot open macro file: scripts/headerMnsCompile_Said.do
+do ./scripts/headerMnsCompile_Said.do
+# Cannot open macro file: ./scripts/headerMnsCompile_Said.do
+do /scripts/headerMnsCompile_Said.do
+# Cannot open macro file: /scripts/headerMnsCompile_Said.do
+cd scripts
+ls
+# implementation
+# ip_upgrade.log
+# min_area_pfile.tmp
+# NA
+# tight_setup_hold_pins.txt
+# usage_statistics_webtalk.html
+# usage_statistics_webtalk.xml
+# vivado_8367.backup.jou
+# vivado_8367.backup.log
+# vivado.jou
+# vivado.log
+# vivado_pid18104.str

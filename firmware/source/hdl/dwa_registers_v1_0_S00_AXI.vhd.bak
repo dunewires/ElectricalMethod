@@ -165,7 +165,6 @@ architecture arch_imp of dwa_registers_v1_0_S00_AXI is
 	signal slv_reg53       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg54       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg55       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-	signal slv_reg56       : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
 	signal slv_reg_rden    : std_logic;
 	signal slv_reg_wren    : std_logic;
 	signal reg_data_out    : std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
@@ -326,7 +325,6 @@ begin
 				slv_reg53 <= x"00000000"; -- 00000000 = power up off, 0005F5E1 = 1 sec
 				slv_reg54 <= x"00B2D05E"; -- 30 SEC
 				slv_reg55 <= (others => '0');
-				slv_reg56 <= (others => '0');
 			else
 				loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 				if (slv_reg_wren = '1') then
@@ -740,14 +738,6 @@ begin
 								end if;
 							end loop;
 
-						when b"111000" => --  reg 56 hvDisable bit 0
-							for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
-								if ( S_AXI_WSTRB(byte_index) = '1' ) then
-									-- Respective byte enables are asserted as per write strobes                   
-									-- slave registor 31
-									slv_reg56(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
-								end if;
-							end loop;
 						when others =>
 							slv_reg0  <= slv_reg0;
 							slv_reg1  <= slv_reg1;
@@ -799,7 +789,6 @@ begin
 							slv_reg53 <= slv_reg53;
 							slv_reg54 <= slv_reg54;
 							slv_reg55 <= slv_reg55;
-							slv_reg56 <= slv_reg56;
 					end case;
 				end if;
 			end if;
@@ -1006,7 +995,7 @@ begin
 				              --reg_data_out <= x"0397da03";-- & std_logic_vector(toDaqReg.serNum);
 				reg_data_out <= x"00" & std_logic_vector(toDaqReg.serNum);
 			when b"110001" => --sn addres reg 49
-				reg_data_out <= b"000000000000000000000" & std_logic_vector(toDaqReg.serNumMemAddress);
+				reg_data_out <= b"0000000000000000000" & std_logic_vector(toDaqReg.serNumMemAddress);
 			when b"110010" => --sn data reg 50
 				reg_data_out             <= std_logic_vector(toDaqReg.serNumMemData);
 				fromDaqReg.serNumMemRead <= slv_reg_rden; --tell dwa data was read
@@ -1021,25 +1010,12 @@ begin
 				reg_data_out <= x"00" & std_logic_vector(fromDaqReg.pktGenWatchdogPeriod);
 			when b"110111" => --controller state reg 55 for read by daq (read only)  PS net status is used in fromdaq
 				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pktGenStateDbg);
-			when b"111000" => --reg 56 disableHV
-				reg_data_out <= x"0000000"& "000" & fromDaqReg.disableHV;				
-			when b"111001" => --reg 57 NV mem config
-				reg_data_out <= x"00" & std_logic_vector(toDaqReg.serNumLocal);
-			when b"111010" => --reg 58 NV mem config
-				reg_data_out <= std_logic_vector(toDaqReg.ipLocal);
-			when b"111011" => --reg 59 NV mem config
-				reg_data_out <= x"00" & std_logic_vector(toDaqReg.macUword);
-			when b"111100" => --reg 60 NV mem config
-				reg_data_out <= x"00" & std_logic_vector(toDaqReg.macLword);
-			when b"111101" => --reg 61 pushbuttons
+			when b"111000" => --reg 56 pButton
 				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
-			when b"111110" => --reg 62 NV mem jumpper setting
-				reg_data_out <= x"0000000" & toDaqReg.gpioState;				
-      -- To be added back by expanding number of registers          
-        --	when b"111001" => --reg 57 checkRegA
-          --		reg_data_out <= toDaqReg.checkRegA;
-        --	when b"111010" => --reg 58 checkRegB
-          --		reg_data_out <= toDaqReg.checkRegB;
+			when b"111001" => --reg 57 checkRegA
+				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
+			when b"111010" => --reg 58 checkRegB
+				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;
@@ -1080,7 +1056,6 @@ begin
 	fromDaqReg.mnsEna            <= slv_reg1(1)= '1';
 	fromDaqReg.relayAutoBreakEna <= slv_reg1(2);
 	fromDaqReg.useAcStimTrig     <= slv_reg1(3);
-	fromDaqReg.danceParty     <= slv_reg1(8);
 
 	-- udpDataDone when PS has read the status at the end of the data payload
 	fromDaqReg.udpDataDone        <= not udpReadBusy and udpReadBusy_del; --trailing edge
@@ -1135,15 +1110,11 @@ begin
 	fromDaqReg.statusPeriod         <= unsigned(slv_reg53(23 downto 0));
 	fromDaqReg.pktGenWatchdogPeriod <= unsigned(slv_reg54(23 downto 0));
 
-	fromDaqReg.serNumMemAddress <= unsigned(slv_reg49(10 downto 0));
+	fromDaqReg.serNumMemAddress <= unsigned(slv_reg49(12 downto 0));
 	fromDaqReg.serNumMemData    <= unsigned(slv_reg50);
 	fromDaqReg.serNum           <= toDaqReg.serNum;
-	fromDaqReg.serNumLocal      <= toDaqReg.serNumLocal;
-	fromDaqReg.ipLocal          <= toDaqReg.ipLocal;
-	fromDaqReg.macUword         <= toDaqReg.macUword;
-	fromDaqReg.macLword         <= toDaqReg.macLword;
 
 	fromDaqReg.netStatus <= slv_reg55(7 downto 0); -- also used for controller status in toDaq direction
-	fromDaqReg.disableHV <= slv_reg56(0); -- disable HV when switching relays
+	-- User logic ends
 
 end arch_imp;

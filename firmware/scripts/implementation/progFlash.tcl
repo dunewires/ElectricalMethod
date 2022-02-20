@@ -13,6 +13,8 @@
 
 puts "program_flash -f  $boot_bin   -offset 0 -flash_type qspi-x4-single -fsbl  $fsbl_elf  -cable type xilinx_tcf url TCP:127.0.0.1:3121"
 exec program_flash -f $boot_bin  -offset 0 -flash_type qspi-x4-single -fsbl $fsbl_elf  -cable type xilinx_tcf url $hardware_loc 
+
+
 # optional reboot stuff
 #tw  open_hw_manager
 #tw  connect_hw_server -url 127.0.0.1:3124 -allow_non_jtag
