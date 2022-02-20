@@ -27,11 +27,12 @@ entity serialPromInterface is
 		fromDaqReg : in  fromDaqRegType;
 		toDaqReg   : out toDaqRegType;
 
+		snMemConfigWP : in std_logic := '1';
+		snMemWPError  : out std_logic := '0';
+
 		sda : inout std_logic := 'Z';
 
 		scl : out std_logic := '1';
-
-		vioUpdate : in std_logic := '0';
 
 		dwaClk100 : in std_logic := '0';
 		dwaClk10  : in std_logic := '0'
@@ -62,12 +63,13 @@ architecture STRUCT of serialPromInterface is
 	signal shiftRegOut,serString : std_logic_vector(56 downto 0);
 	signal shiftRegIn            : std_logic_vector(31 downto 0);
 
-	signal bitCnt   : unsigned(3 downto 0) := (others => '0');
-	signal wordCnt  : unsigned(7 downto 0) := (others => '0');
-	signal nWord    : unsigned(7 downto 0) := (others => '0');
-	signal nRxWord  : unsigned(7 downto 0) := (others => '0');
-	signal waitCnt  : unsigned(7 downto 0) := (others => '0');
-	signal stateDbg : unsigned(7 downto 0) := (others => '0');
+	signal bitCnt      : unsigned(3 downto 0) := (others => '0');
+	signal wordCnt     : unsigned(7 downto 0) := (others => '0');
+	signal nWord       : unsigned(7 downto 0) := (others => '0');
+	signal nRxWord     : unsigned(7 downto 0) := (others => '0');
+	signal waitCnt     : unsigned(7 downto 0) := (others => '0');
+	signal stateDbg    : unsigned(7 downto 0) := (others => '0');
+	signal startupSeq  : unsigned(3 downto 0) := (others => '0');
 	signal stateDbgCmd : unsigned(1 downto 0) := (others => '0');
 
 	signal clkCnt           : unsigned(4 downto 0) := (others => '0');
@@ -85,85 +87,105 @@ architecture STRUCT of serialPromInterface is
 
 	signal readBusy,readBusy_d, readStart,readDone      : std_logic := '0';
 	signal writeBusy,writeBusy_d, writeStart ,writeDone : std_logic := '0';
+	signal enaWrite : std_logic := '0';
 
 	signal vioUpdate_del1,vioUpdate_del2 : std_logic := '0';
-	signal snInitRead                    : std_logic := '0';
+	signal initAddrStrb                  : std_logic := '0';
+	signal initReadStrb                  : std_logic := '0';
 
-	signal dummyWrite : std_logic := '0';
-	signal snDone     : std_logic := '0';
+	signal dummyWrite  : std_logic := '0';
+	signal startupDone : std_logic := '0';
 begin
 
-
+	-- the strobe signals from the DAQ are dwaClk100, so we need to latch them
 	updateCdcDC100 : process (dwaClk100)
 	begin
 		if rising_edge(dwaClk100) then
 
+			if waitCnt /= (waitCnt'range => '1') then
+				waitCnt <= waitCnt + 1; -- after power up wait for a bit
+			end if;
+			-- default
+			initAddrStrb <= '1' when (waitCnt = (waitCnt'left downto 1 => '1', 0 => '0')) else '0'; --  get inital NV mem config at power up
+			initReadStrb <= '0';
+
+			-- dwaClk10 to dwaClk100 pulse generation
 			writeBusy_d <= writeBusy;
 			writeStart  <= writeBusy and not writeBusy_d;
 			writeDone   <= writeBusy_d and not writeBusy;
+			readBusy_d  <= readBusy;
+			readStart   <= readBusy and not readBusy_d;
+			readDone    <= readBusy_d and not readBusy;
 
-			readBusy_d                <= readBusy;
-			readStart                 <= readBusy and not readBusy_d;
-			readDone                  <= readBusy_d and not readBusy;
-			toDaqReg.serNumMemAddress <= serialAddress;
+			--track auto increment of address
+			toDaqReg.serNumMemAddress <= serialAddress(12 downto 2); -- byte address to DAQ 32 bit register address
 
 			if readDone then
 
-				if not snDone then -- sn read
-					               --toDaqReg.serNum <= unsigned(shiftRegIn(23 downto 0));
-					               -- fake old MAC address
-					toDaqReg.serNum <= x"97da03"; --use for default
-					--toDaqReg.serNum <= x"97da00"; --use for NW
-					
-					deviceAddr      <= "1010000"; --after we are here once switch device address to memory;
-					snDone          <= '1';       -- do it once
-				-- merge changes to read user selectable sn register
-				-- if this register is not 0x00, disable writing 
-				-- use normal register write path to set 
-				-- verify wiite register operation is still working with the auto increment
-				 	
+				if not startupDone then --  read operation was initiated as part ofstartup sequence, let's set the configuraiton
+					case (startupSeq) is
+						when x"0" => -- first read is hard coded serial number
+							toDaqReg.serNum <= unsigned(shiftRegIn(23 downto 0));  --hw 
+							deviceAddr      <= "1010000";       --after we are here once switch device address to memory;
+							serialAddress   <= (others => '0'); -- set to first init address
+							initAddrStrb    <= '1';             -- update mem address pointer to 0
+							startupSeq      <= startupSeq +1;
+
+						when x"1" =>
+							toDaqReg.serNumLocal <= shiftRegIn(23 downto 0); -- user set 3 bytes
+							startupSeq           <= startupSeq +1;
+							initReadStrb         <= '1';
+
+						when x"2" =>
+							toDaqReg.ipLocal <= shiftRegIn; --4 bytes Hex encode
+							startupSeq       <= startupSeq +1;
+							initReadStrb     <= '1';
+
+						when x"3" =>
+							toDaqReg.macUword <= shiftRegIn(23 downto 0);--3 bytes of MAC
+							startupSeq        <= startupSeq +1;
+							initReadStrb      <= '1';
+
+						when x"4" =>
+							toDaqReg.macLword <= shiftRegIn(23 downto 0);--3 bytes of MAC
+							startupDone       <= '1';        -- do it once
+						when others =>
+							null;
+					end case;
+
+
 				else
-					serialAddress          <= serialAddress + 4 when not dummyWrite;
+					-- setting the address will read the data and update the data register
+					-- the mem address pointer will be incremented but the serialAddress will
+					-- only increment on reads and writes
+					-- serialAddress is only used for write operations and contents accessible via DAQ
+					-- don't allow rollover to protected mem address to avoid potential corruption risk
+					serialAddress          <= serialAddress + 4 when (dummyWrite = '0' and serialAddress < '1' & x"FFC") else serialAddress;
 					toDaqReg.serNumMemData <= unsigned(shiftRegIn(31 downto 0)); -- tell the DWA
 				end if;
 
 			elsif writeDone then
-				serialAddress <= serialAddress +4;
+				-- don't allow rollover to protected mem address to avoid potential corruption risk
+				serialAddress <= serialAddress + 4 when (serialAddress < '1' & x"FFC") else serialAddress;
 
 			elsif fromDaqReg.serNumMemAddrStrb then -- DAQ updated address
-				serialAddress <= fromDaqReg.serNumMemAddress;
+				serialAddress <= fromDaqReg.serNumMemAddress & "00"; -- 32 bit register address to byte address
 			end if;
 
 			-- with a single read/write feedback, we can only have one read and write command request at a time
 			-- Spec minimum time between commands
 
-			memAddr <= (fromDaqReg.serNumMemAddrStrb or snInitRead or memAddr) and not readStart;
+			memAddr <= (fromDaqReg.serNumMemAddrStrb or initAddrStrb or memAddr) and not readStart;
 			-- latch memAddr dummy write operation until read is done
 			dummyWrite <= (memAddr or dummyWrite) and not readDone;
 			-- latch mem read and write daq strobes for slow FSM
-			memRead  <= (fromDaqReg.serNumMemRead or memRead) and not readStart;
-			memWrite <= (fromDaqReg.serNumMemWrite or memWrite) and not writeStart;
+			memRead      <= (fromDaqReg.serNumMemRead or initReadStrb or memRead) and not readStart;
+			memWrite     <= (fromDaqReg.serNumMemWrite or memWrite) and not writeStart and enaWrite;
+			enaWrite     <= '1' when snMemConfigWP = '0' or serialAddress > '0' & x"03F" else '0'; -- first 64 bytes can be protected
+			snMemWPError <= not enaWrite and fromDaqReg.serNumMemWrite;      -- send error if we try to write to protected mem location
 
 		end if;
 	end process updateCdcDC100;
-
-	updateCdcDC2 : process (dwaClk10)
-	begin
-		if rising_edge(dwaClk10) then
-
-			vioUpdate_del1 <= vioUpdate;
-			vioUpdate_del2 <= vioUpdate_del1;
-
-			if waitCnt /= (waitCnt'range => '1') then
-				waitCnt <= waitCnt + 1; -- after power up wait for a bit
-			end if;
-
-			snInitRead <= '1' when ((waitCnt = (waitCnt'left downto 1 => '1', 0 => '0'))
-					or (vioUpdate_del1 = '1' and vioUpdate_del2 = '0'))
-			else '0'; --  get serial number at power up, after some wait time 
-
-		end if;
-	end process updateCdcDC2;
 
 	commandSequence : process (all)
 	begin
@@ -181,15 +203,15 @@ begin
 				end if;
 
 			when cmdAddress_s => --set address pointer and read register, address will be auto incremented
-				-- serial string starts with 0 to generate start condition.
-				-- device address is followed by r/w bit, set address uses a dummy write
+				                 -- serial string starts with 0 to generate start condition.
+				                 -- device address is followed by r/w bit, set address uses a dummy write
 				serString(56 downto 32) <= '0' & std_logic_vector(deviceAddr) & "0000" & std_logic_vector(serialAddress);
 				serString(31 downto 0)  <= std_logic_vector(fromDaqReg.serNumMemData);
 				nWord                   <= x"03"; -- 3 words
 				nRxWord                 <= x"00"; -- write only
 				cmdStateNext            <= cmdRead_s;
 
-			when cmdRead_s =>-- read auto incremented  register and so on
+			when cmdRead_s => -- read auto incremented  register and so on
 				serString(56 downto 48) <= '0' & std_logic_vector(deviceAddr) & '1';
 				serString(47 downto 0)  <= (others => '0');
 				nWord                   <= x"05"; -- 5 words
@@ -293,23 +315,17 @@ begin
 	sda <= '0' when sdoEn_del and not sdo_del else 'Z';
 
 	stateDbgCmd <= to_unsigned(cmdState_t'POS(cmdState),stateDbgCmd'length);
-	stateDbg <= to_unsigned(sdaState_t'POS(sdaState),stateDbg'length);
-	ila_4x32_inst : ila_4x32
+	stateDbg    <= to_unsigned(sdaState_t'POS(sdaState),stateDbg'length);
+	ila_4x32_inst10 : ila_4x32
 		PORT MAP (
 			clk                  => dwaClk10,
 			probe0(31 downto 24) => std_logic_vector(serialAddress(7 downto 0)),
 			probe0(23 downto 0)  => std_logic_vector(toDaqReg.serNum),
-			probe1(31 downto 27) => (others => '0'),
-			probe1(26 downto 25) => std_logic_vector(stateDbgCmd),
-			probe1(24) => fromDaqReg.serNumMemRead,
-			probe1(23) => fromDaqReg.serNumMemAddrStrb,
-			probe1(22) => fromDaqReg.serNumMemWrite,
-			probe1(21) => memAddr,
-			probe1(20) => writeDone,
-			probe1(19) => snDone,
-			probe1(18) => readDone,
-			probe1(17)           => readStart,
-			probe1(16)           => writeStart,
+			probe1(31 downto 30) => std_logic_vector(stateDbgCmd),
+			probe1(29)           => '0',
+			probe1(28 downto 21) => std_logic_vector(wordCnt),
+			probe1(20 downto 17) => std_logic_vector(bitCnt),
+			probe1(16)           => memAddr,
 			probe1(15)           => memRead,
 			probe1(14)           => memRead,
 			probe1(13)           => memWrite,
@@ -323,4 +339,26 @@ begin
 			probe3               => serString(31 downto 0)
 		);
 
+	ila_4x32_inst100 : ila_4x32
+		PORT MAP (
+			clk                  => dwaClk100,
+			probe0(31 downto 17) => (others => '0'),
+			probe0(16)           => enaWrite,
+			probe0(15)           => snMemWPError,
+			probe0(14 downto 11) => std_logic_vector(startupSeq),
+			probe0(10)           => fromDaqReg.serNumMemRead,
+			probe0(9)            => fromDaqReg.serNumMemAddrStrb,
+			probe0(8)            => fromDaqReg.serNumMemWrite,
+			probe0(7)            => writeDone,
+			probe0(6)            => initReadStrb,
+			probe0(5)            => initAddrStrb,
+			probe0(4)            => startupDone,
+			probe0(3)            => readDone,
+			probe0(2)            => readStart,
+			probe0(1)            => writeStart,
+			probe0(0)            => writeDone,
+			probe1               => (others => '0'),
+			probe2               => (others => '0'),
+			probe3               => (others => '0')
+		);
 end architecture STRUCT;

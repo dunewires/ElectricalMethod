@@ -25,6 +25,14 @@ entity dwa_ps_pl_top is
         led     : out std_logic_vector(3 downto 0);
         pButton : in  std_logic_vector(3 downto 0);
 
+        gpio_0: out std_logic := '0';
+        gpio_1: in std_logic := '1';
+        gpio_2: out std_logic := '0';
+        gpio_3: in std_logic := '1';
+        gpio_4: out std_logic := '0';
+        gpio_5: in std_logic := '1';
+        gpio_6: out std_logic := '0';
+        gpio_7: in std_logic := '1';
         acStimX200_obuf : out std_logic := '0';
 
         mainsSquare : in std_logic;
@@ -350,7 +358,6 @@ begin
             clk_in1 => S_AXI_ACLK_100
         );
 
-
     top_tension_analyzer_1 : entity work.top_tension_analyzer
 
         port map (
@@ -366,9 +373,10 @@ begin
             --dwaClk10  => S_AXI_ACLK_10,
             dwaClk10 => plClk_10,
 
-
             led     => led,
             pButton => pButton,
+
+            gpioState => not(gpio_7 & gpio_5 & gpio_3 & gpio_1),
 
             acStimX200_obuf => acStimX200_obuf,
             mainsSquare     => mainsSquare,
@@ -403,5 +411,6 @@ begin
             adcSrcSyncClk => adcSrcSyncClk
 
         );
+
 
 end STRUCTURE;

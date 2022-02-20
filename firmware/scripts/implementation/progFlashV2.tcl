@@ -6,16 +6,23 @@
 # the bootloader is set to 0x61800000,
 # the flash offset set in the write_cfgmem is set to 0x00c00000
 #set flashOfst 0x00c00000
+set myLocation [file normalize [info script]]
+
+set fsbl_elf $myLocation/../../../source/dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/boot/fsbl.elf
+set lwip_elf $myLocation/../../../source/dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+set boot_bin $myLocation/../../../flash/BOOT.bin
+#set hardware_loc TCP:127.0.0.1:3121
+
 
 open_hw_manager
-connect_hw_server -url 127.0.0.1:3121 -allow_non_jtag
+connect_hw_server -url localhost:3121 -allow_non_jtag
  ## t #jeff
-    current_hw_target [get_hw_targets *]
-    set_property PARAM.FREQUENCY 6000000 [get_hw_targets *]
- ## t #nw
+    #current_hw_target [get_hw_targets */xilinx_tcf/Xilinx/00001c726cd801]
+    #set_property PARAM.FREQUENCY 6000000 [get_hw_targets */xilinx_tcf/Xilinx/00001c726cd801]
+ ## t if there is only one cable
 
-	# current_hw_target [get_hw_targets */xilinx_tcf/Digilent/210249A0D0C2]
-	# set_property PARAM.FREQUENCY 6000000 [get_hw_targets */xilinx_tcf/Digilent/210249A0D0C2]
+	current_hw_target [get_hw_targets *]
+	set_property PARAM.FREQUENCY 6000000 [get_hw_targets *]
 
 open_hw_target
 current_hw_device [get_hw_devices xc7z020_1]
@@ -31,7 +38,7 @@ set_property PROGRAM.CFG_PROGRAM  1 [ get_property PROGRAM.HW_CFGMEM [lindex [ge
 set_property PROGRAM.VERIFY  0 [ get_property PROGRAM.HW_CFGMEM [lindex [get_hw_devices xc7z020_1] 0]]
 set_property PROGRAM.CHECKSUM  0 [ get_property PROGRAM.HW_CFGMEM [lindex [get_hw_devices xc7z020_1] 0]]
 program_hw_cfgmem -hw_cfgmem [ get_property PROGRAM.HW_CFGMEM [lindex [get_hw_devices xc7z020_1] 0]]
-boot_hw_device  [lindex [get_hw_devices xc7z020_1] 0]
+#catch {boot_hw_device  [lindex [get_hw_devices xc7z020_1] 0]}
 close_hw_target
 close_hw_manager
 

@@ -1,3 +1,7 @@
+### This file will take the outPuts of makeTxt4Cap.py file (extractFromJson.txt and nameData.txt)
+### extractFromJson.txt has the data of [cap, frequency, amplitude]
+### nameData.txt has the list of the string of the name of channel
+
 import copy
 import sys
 import pickle
@@ -11,7 +15,8 @@ from numpy.polynomial import polynomial as P
 from defCalibration import pathGen, extract_data_json, plot3Ddata, getInterpolation
 import json
 
-
+fit = pickle.load(open( "fit.pickle", "rb" ) )
+fit = pickle.load(open( "fit.pickle", "rb" ) )
 
 # making idctionary
 class my_dictionary(dict):
@@ -51,17 +56,25 @@ def plotFitting(channelNum, capType):
     for freq in range(len(data_ex[:,0])):
         chi = ((data_ex[freq][1] - calcGain(data_ex[freq][0], cap, scale))**2)/calcGain(data_ex[freq][0], cap, scale)
         sumchi = sumchi + chi;
+    if capType == 0:
+            capStr = '47pF'
+    if capType == 1:
+            capStr = '100pF'
+    if capType == 2:
+            capStr = '150pF'
+    if capType == 3:
+            capStr = '220pF'
     plt.plot(x, ampExp, 'r')
-    plt.title('47pF fitting,  $\u03A7 ^2$ = ' + str(sumchi))
+    plt.title(capStr + ' fitting,  $\u03A7 ^2$ = ' + str(sumchi))
     
     
     
-ffArray = np.linspace(20, 1028.0239, num=22)
-capArray = np.array([47*1e-12, 100*1e-12, 150*1e-12, 220*1e-12])
+ffArray = np.linspace(20, 1028.0239, num=22) # array for the frequency used in measurement 
+capArray = np.array([47*1e-12, 100*1e-12, 150*1e-12, 220*1e-12]) ## arra for the cap values 
 
-XX = [];
-YY = [];
-ZZ = [];
+XX = [];    # cap array
+YY = [];    # frequency
+ZZ = [];    # expected amplitude
 data = [];
 R1=1e5
 R2=1e6
@@ -76,6 +89,7 @@ for CC in range(len(capArray)):
         ZZ.append(calcGain( ff, capArray[CC], 1 ))
 
 data = np.array(data)
+
 
 #fig1 = plt.figure()
 #ax = plt.axes(projection='3d')
@@ -107,7 +121,7 @@ there are 22 data points per capacitor
 
 
 '''
-formatedData = [channel(0-127)][cappacitance(0-3)]([0 = measured cap] or [freq, amp])
+formatedData = [channel(0-127)][cappacitance(0-3)]([0 = measured cap], [freq, amp])
 '''
 
 formatedData = [];
@@ -119,6 +133,12 @@ for dataPoint in range(len(jsonData)):
         formatedData[int(dataPoint/88)][int((dataPoint % 88)/22)].append([jsonData[dataPoint][0]])
     formatedData[int(dataPoint/88)][int((dataPoint % 88)/22)].append([jsonData[dataPoint][1], jsonData[dataPoint][2]])
         
+'''
+plotFitting(3,0)
+plotFitting(3,1)
+plotFitting(3,2)
+plotFitting(3,3)
+'''
 
 fit_dict = my_dictionary();
 
@@ -131,25 +151,29 @@ for channel in range(128):
     for capType in range(4):
         cap, scale = fitCapScale(channel, capType);
         #print(formatedData[channel][capType][0][0])
-        calculatedCap.append(cap);
+        calculatedCap.append(cap); # fitted cap
+        # we get calibrated cap with c_0 _+ c_1 * fittedCap
         measuredCap.append(formatedData[channel][capType][0][0]*1e-12)
     c, stats = P.polyfit(calculatedCap, measuredCap, 1, full = True)
     fit_dict.add(str(name), [c, channel])
 
-    
-    fig = plt.figure()
-    plt.plot(calculatedCap, measuredCap, 'b')
-    plt.plot(calculatedCap, measuredCap, 'o', color = 'b')
-    plt.plot(calculatedCap, c[0] + c[1]*np.array(calculatedCap), 'r')
-    plt.title('calculated vs measured for channel '+str(name))
-    plt.xlabel('calculated capacitance')
-    plt.ylabel('measured capacitance')
-    #THIS IS THE THING THAT I LOOP THROUGH THING, CLOSE WINDOW, AND NEW THING POPS UP
-    plt.show()
-    # clear axes and figures
-    plt.cla()
-    plt.clf()
-    plt.close()
+    if name == 'V16':
+        fig = plt.figure()
+        plt.plot(measuredCap, calculatedCap, 'b')
+        plt.plot(measuredCap, calculatedCap, 'o', color = 'b')
+        plt.plot(measuredCap, c[0] + c[1]*np.array(calculatedCap), 'o', color = 'k')
+        #plt.plot(calculatedCap, c[0] + c[1]*np.array(calculatedCap), 'r')
+        #plt.plot(measuredCap , measuredCap + (calculatedCap[0]-measuredCap[0]), 'r')
+        plt.plot(measuredCap , measuredCap, 'r')
+        plt.title('calculated vs measured for channel '+str(name))
+        plt.xlabel('calculated capacitance')
+        plt.ylabel('measured capacitance')
+        #THIS IS THE THING THAT I LOOP THROUGH THING, CLOSE WINDOW, AND NEW THING POPS UP
+        plt.show()
+        # clear axes and figures
+        plt.cla()
+        plt.clf()
+        plt.close()
     
 inde = 0
 # write string one by one adding newline

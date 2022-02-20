@@ -43,3 +43,5 @@ platform generate
 platform active {dwaPsHw}
 platform generate -domains 
 platform generate
+platform generate
+platform generate
