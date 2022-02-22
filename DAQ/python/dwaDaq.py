@@ -2672,6 +2672,7 @@ class MainWindow(qtw.QMainWindow):
         if f_tree_view:
             f_tree_view.setSelectionMode(qtw.QAbstractItemView.MultiSelection)
 
+        scanDirectories = []
         if file_dialog.exec():
             paths = file_dialog.selectedFiles()
             print(paths)
@@ -2685,6 +2686,7 @@ class MainWindow(qtw.QMainWindow):
             if sd:  # validate the selected filename (require .json?)
                 print(sd)
                 toks = os.path.normpath(sd).split(os.path.sep)
+                if (toks[-2][0:4] != 'APA_'): continue
                 uuid = toks[-2][4:] # remove "APA_" from start 
                 apaUuids.append(uuid)
                 scansToProcess.append(sd)
@@ -2721,12 +2723,12 @@ class MainWindow(qtw.QMainWindow):
     def loadSavedScanData(self, filename):
         print("loadSavedScanData",filename)
         self._initSavedAmpDataPlots()
-        # self._clearResonanceFitLines()
-        # self._clearResonanceExpectedLines()
+        self._clearResonanceFitLines()
+        self._clearResonanceExpectedLines()
         self._loadSavedAmpData(filename)
         self._configureResonancePlots()
-        # self.runResonanceAnalysis()
-        # self.labelResonanceSubmitStatus.setText("Tensions have not been submitted")
+        self.runResonanceAnalysis()
+        self.labelResonanceSubmitStatus.setText("Tensions have not been submitted")
 
     @pyqtSlot()
     def _resFreqUserInputText(self):
