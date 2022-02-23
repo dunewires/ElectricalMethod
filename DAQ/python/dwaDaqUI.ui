@@ -53,21 +53,15 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QComboBox" name="configStageComboBox">
-         <property name="minimumSize">
-          <size>
-           <width>250</width>
-           <height>0</height>
-          </size>
-         </property>
+        <widget class="QPushButton" name="btnLoadApaUuid">
          <property name="maximumSize">
           <size>
-           <width>250</width>
+           <width>100</width>
            <height>16777215</height>
           </size>
          </property>
-         <property name="currentText">
-          <string/>
+         <property name="text">
+          <string>Load</string>
          </property>
         </widget>
        </item>
@@ -349,7 +343,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -362,7 +356,7 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>5</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -406,14 +400,14 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="2" column="0">
+                    <item row="3" column="0">
                      <widget class="QLabel" name="layer_label">
                       <property name="text">
                        <string>Layer</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="2" column="1">
+                    <item row="3" column="1">
                      <widget class="QComboBox" name="configLayerComboBox">
                       <property name="minimumSize">
                        <size>
@@ -429,14 +423,14 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="3" column="0">
+                    <item row="4" column="0">
                      <widget class="QLabel" name="apaSide">
                       <property name="text">
                        <string>Side</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="3" column="1">
+                    <item row="4" column="1">
                      <widget class="QComboBox" name="SideComboBox">
                       <property name="minimumSize">
                        <size>
@@ -462,14 +456,14 @@
                       </item>
                      </widget>
                     </item>
-                    <item row="8" column="0">
+                    <item row="9" column="0">
                      <widget class="QLabel" name="scanTypeLabel">
                       <property name="text">
                        <string>Scan type</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="8" column="1">
+                    <item row="9" column="1">
                      <widget class="QWidget" name="widget_7" native="true">
                       <layout class="QHBoxLayout" name="horizontalLayout_16">
                        <property name="leftMargin">
@@ -583,7 +577,7 @@
                       </layout>
                      </widget>
                     </item>
-                    <item row="9" column="1">
+                    <item row="10" column="1">
                      <widget class="QPushButton" name="btnConfigureScans">
                       <property name="minimumSize">
                        <size>
@@ -602,7 +596,7 @@
                       </property>
                      </widget>
                     </item>
-                    <item row="11" column="1">
+                    <item row="12" column="1">
                      <layout class="QVBoxLayout" name="verticalLayout_2">
                       <property name="leftMargin">
                        <number>6</number>
@@ -646,6 +640,32 @@
                        </widget>
                       </item>
                      </layout>
+                    </item>
+                    <item row="2" column="1">
+                     <widget class="QComboBox" name="configStageComboBox">
+                      <property name="minimumSize">
+                       <size>
+                        <width>250</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>250</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="currentText">
+                       <string/>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="0">
+                     <widget class="QLabel" name="configStageLabel">
+                      <property name="text">
+                       <string>Stage</string>
+                      </property>
+                     </widget>
                     </item>
                    </layout>
                   </item>
@@ -1386,8 +1406,8 @@
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>1060</width>
-                         <height>1724</height>
+                         <width>199</width>
+                         <height>1718</height>
                         </rect>
                        </property>
                        <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1465,8 +1485,8 @@
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>1060</width>
-                         <height>1724</height>
+                         <width>199</width>
+                         <height>1718</height>
                         </rect>
                        </property>
                        <layout class="QVBoxLayout" name="verticalLayout_20">
@@ -2655,51 +2675,13 @@
            <item>
             <layout class="QFormLayout" name="formLayout_2">
              <item row="0" column="0">
-              <widget class="QLabel" name="apaUuidLabel">
-               <property name="text">
-                <string>APA UUID</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLineEdit" name="tensionApaUuid">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>300</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>300</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="autoFillBackground">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="placeholderText">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
               <widget class="QLabel" name="tensionStageLabel">
                <property name="text">
                 <string>Stage</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
+             <item row="0" column="1">
               <widget class="QComboBox" name="tensionStageComboBox">
                <property name="minimumSize">
                 <size>
@@ -2715,14 +2697,14 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
+             <item row="1" column="0">
               <widget class="QLabel" name="tensionLayerLabel">
                <property name="text">
                 <string>Layer</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
+             <item row="1" column="1">
               <widget class="QComboBox" name="tensionLayerComboBox">
                <property name="minimumSize">
                 <size>
@@ -2738,7 +2720,7 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="1">
+             <item row="2" column="1">
               <widget class="QPushButton" name="btnLoadTensions">
                <property name="minimumSize">
                 <size>
@@ -2774,7 +2756,7 @@
               </size>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab">
               <attribute name="title">
@@ -2997,7 +2979,7 @@
      <x>0</x>
      <y>0</y>
      <width>1492</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -3105,7 +3087,6 @@
   <tabstop>pw_amplchan_main</tabstop>
   <tabstop>pb_scanDataSelectedLoad</tabstop>
   <tabstop>pb_scanDataLoad</tabstop>
-  <tabstop>tensionApaUuid</tabstop>
   <tabstop>tensionStageComboBox</tabstop>
   <tabstop>tensionLayerComboBox</tabstop>
   <tabstop>btnLoadTensions</tabstop>

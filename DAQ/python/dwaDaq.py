@@ -577,7 +577,6 @@ class MainWindow(qtw.QMainWindow):
         self.heartPixmaps = [qtg.QPixmap('icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
         self.heartval = 0
         self.udpListening = False
-        self.tensionApaUuid.setText(APA_UUID_DUMMY_VAL)
         self.initApaUuidSuggestions()
        
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
@@ -812,7 +811,6 @@ class MainWindow(qtw.QMainWindow):
         # self.tensionTableView.resizeRowsToContents()
         
     def resultsTableInit(self):
-        self.resultsDict = None
         self.recentScansTableModel = qtg.QStandardItemModel()
         self.recentScansTableModel.setHorizontalHeaderLabels(RESULTS_TABLE_HDRS)
         self.recentScansFilterProxy = SortFilterProxyModel()
@@ -872,21 +870,22 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansTableModel.removeRows( 0, self.recentScansTableModel.rowCount() )
         
         # Fresh read of JSON file using user-entered APA UUID
-        self.readResultsJSON(make_new=False)
+        #self.readResultsJSON(make_new=False)
 
-        if self.resultsDict is None:
+        resultsDict = self.getResultsDict()
+        if resultsDict is None:
             return
         
         # Populate the table with JSON data
         # should we sort the entries in the dict before populating the model?
         i = 0
         for stage in APA_TESTING_STAGES:
-            if stage not in self.resultsDict:
+            if stage not in resultsDict:
                 continue
-            stageDict = self.resultsDict[stage]
+            stageDict = resultsDict[stage]
             for layer in APA_LAYERS:
                 for side in APA_SIDES:
-                    #sideDict = self.resultsDict[layer][side]
+                    #sideDict = resultsDict[layer][side]
                     sideDict = stageDict[layer][side]
                     for wireSegment in sideDict: 
                         #print(wireSegment)
@@ -1160,6 +1159,7 @@ class MainWindow(qtw.QMainWindow):
         self.tabWidgetStim.currentChanged.connect(self.tabChangedStim)
         # Top level
         self.configApaUuidLineEdit.returnPressed.connect(self.apaUuidChanged)
+        self.btnLoadApaUuid.clicked.connect(self.apaUuidChanged)
         #
         self.btnDwaConnect.clicked.connect(self.dwaConnect)
         self.configFileName.returnPressed.connect(self.configFileNameEnter)
@@ -2592,34 +2592,32 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansNameOfLoadedScan = tableRowData['scanName']
         self.loadSavedScanData(scanFilename)
 
-    def readResultsJSON(self, make_new=False):
-        # if make_new is True, then create a JSON file if it does not yet exist
-        self.resultsDict = None
+    # def readResultsJSON(self, make_new=False):
+    #     # if make_new is True, then create a JSON file if it does not yet exist
         
-        self.configApaUuid = self.configApaUuidLineEdit.text().strip()
-        if self.configApaUuid == "":
-            return
+    #     self.configApaUuid = self.configApaUuidLineEdit.text().strip()
+    #     if self.configApaUuid == "":
+    #         return
         
-        filename = f'{self.configApaUuid}.json'
-        filepath = os.path.join(OUTPUT_DIR_PROCESSED_DATA, filename)
-        try: # Ensure that there is an amplitudeData.json file present!
-            print(f'trying to load {filepath}')
-            with open(filepath, "r") as fh:
-                self.resultsDict = json.load(fh)
-        except:
-            print(f"Could not open results JSON file for APA UUID: {self.configApaUuid}.")
-            if make_new:
-                print(f"make_new = {make_new} (True) so creating a new results dictionary (in memory)")
-                #print(f"{filepath}")
-                self.makeNewResultsDict()
-                #self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
-                #self.resultsDict = process_scan.new_results_dict(APA_TESTING_STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
+    #     filename = f'{self.configApaUuid}.json'
+    #     filepath = os.path.join(OUTPUT_DIR_PROCESSED_DATA, filename)
+    #     try: # Ensure that there is an amplitudeData.json file present!
+    #         print(f'trying to load {filepath}')
+    #         with open(filepath, "r") as fh:
+    #             self.resultsDict = json.load(fh)
+    #     except:
+    #         print(f"Could not open results JSON file for APA UUID: {self.configApaUuid}.")
+    #         if make_new:
+    #             print(f"make_new = {make_new} (True) so creating a new results dictionary (in memory)")
+    #             #print(f"{filepath}")
+    #             self.newResultsDict()
+    #             #self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
+    #             #self.resultsDict = process_scan.new_results_dict(APA_TESTING_STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
                 
 
-    def makeNewResultsDict(self):
-        self.resultsDict = process_scan.new_results_dict(APA_TESTING_STAGES, APA_LAYERS,
+    def newResultsDict(self):
+        return process_scan.new_results_dict(APA_TESTING_STAGES, APA_LAYERS,
                                                          APA_SIDES, MAX_WIRE_SEGMENT)
-        print(self.resultsDict.keys())
         
     def getResultsDict(self):
         print('self.getResultsDict():')
@@ -2632,10 +2630,10 @@ class MainWindow(qtw.QMainWindow):
         try: # load the existing JSON file if it exists
             filename = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
             with open(filename, "r") as fh:
-                self.resultsDict = json.load(fh)
+                return json.load(fh)
         except: # otherwise, create one
             print(f"Could not find JSON results file for APA UUID: {self.configApaUuid}. Creating a new dict.")
-            self.makeNewResultsDict()
+            return self.newResultsDict()
             #self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
             #self.resultsDict = process_scan.new_results_dict(APA_TESTING_STAGES, APA_LAYERS,
             #                                                 APA_SIDES, MAX_WIRE_SEGMENT)
@@ -2704,17 +2702,17 @@ class MainWindow(qtw.QMainWindow):
             self.configApaUuidLineEdit.setText(self.configApaUuid)
                 
         # Prepare dictionary to hold results of scan analysis
-        self.getResultsDict()
+        resultsDict = self.getResultsDict()
         
         # process each scan
         for scan in scansToProcess:
-            process_scan.process_scan(self.resultsDict, scan)
+            process_scan.process_scan(resultsDict, scan)
 
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
         print(f'writing processed scan results to {outfile}')
         with open(outfile, 'w') as f:
-            json.dump(self.resultsDict, f, indent=4, sort_keys=True)
+            json.dump(resultsDict, f, indent=4, sort_keys=True)
 
         # update the results table
         self.resultsTableUpdate()
@@ -2979,20 +2977,24 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def loadTensions(self):
-        return # TODO: Get tensions from file
+        # TODO: Get tensions from file
         # Load sietch credentials #FIXME still using James's credentials
-        sietch = SietchConnect("sietch.creds")
-        # Get APA UUID from text box
-        apaUuid = self.tensionApaUuid.text()
+        # sietch = SietchConnect("sietch.creds")
+        # Get results dict
+        resultsDict = self.getResultsDict()
+        print('resultsDict',resultsDict.keys())
         # Get stage
         stage = self.tensionStageComboBox.currentText()
-        # Get pointer table info
-        self.pointerTable = database_functions.get_pointer_table(sietch, apaUuid, stage)
         # Get selected layer from GUI
         layer = self.tensionLayerComboBox.currentText()
         self.tensionLayer = layer
+        print(f'Loading tesions for {stage} layer {layer}')
         # Build dictionary and table
         self.tensionData = {
+            'A':[-1]*MAX_WIRE_SEGMENT[layer],
+            'B':[-1]*MAX_WIRE_SEGMENT[layer],
+        }
+        self.tensionDataLowConf = {
             'A':[-1]*MAX_WIRE_SEGMENT[layer],
             'B':[-1]*MAX_WIRE_SEGMENT[layer],
         }
@@ -3001,35 +3003,66 @@ class MainWindow(qtw.QMainWindow):
         #self.tensionTableView.resizeColumnsToContents()
         self.tensionTableView.resizeRowsToContents()
 
+
+        try:
+            layerData = resultsDict[stage][layer]
+        except:
+            print('Data for this stage and layer not found.')
+            return
+
         for side in ["A", "B"]:
-            layer_data = database_functions.get_layer_data(sietch, apaUuid, side, layer, stage)
-            channels = [int(ch) for ch in layer_data.keys()]
-            if not layer_data:
-                print(f"layer_data is empty... skipping layer, side = {layer}, {side}")
-                continue
-            for ch in channels:
-                wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
-                measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
-                #print(expected_frequencies,measured_frequencies)
-                if len(measured_frequencies) > 0:
-                    mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
-                    for i,w in enumerate(wires):
-                        self.tensionData[side][w-1] = mapped[i]
-            self.curves['tension']['tensionOfWireNumber'][layer][side].setData(range(1, MAX_WIRE_SEGMENT[layer]+1), self.tensionData[side] )
+            wireSegs = layerData[side]
+            for wireSeg in wireSegs:
+                wireSegDict = wireSegs[wireSeg]
+                tensionDict = wireSegDict["tension"]
+                if len(tensionDict.keys()) > 0:
+                    scanIds = tensionDict.keys()
+                    sortedScanIds = sorted(scanIds)
+                    latestScanId = sortedScanIds[-1]
+                    latestScan = tensionDict[latestScanId]
+                    tension = latestScan["tension"]
+                    try:
+                        tension_std = latestScan["tension_std"]
+                    except:
+                        tension_std = 0
+                    if tension == 'Not Found': tension = -2
+                    if tension_std < 0.1:
+                        self.tensionData[side][int(wireSeg)] = tension
+                    else:
+                        self.tensionDataLowConf[side][int(wireSeg)] = tension
+                    print(layer, side, wireSeg, tension, latestScan)
+
+            # channels = [int(ch) for ch in layer_data.keys()]
+            # if not layer_data:
+            #     print(f"layer_data is empty... skipping layer, side = {layer}, {side}")
+            #     continue
+            # for ch in channels:
+            #     wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
+            #     measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
+            #     #print(expected_frequencies,measured_frequencies)
+            #     if len(measured_frequencies) > 0:
+            #         mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
+            #         for i,w in enumerate(wires):
+            #             self.tensionData[side][w-1] = mapped[i]
+            # self.curves['tension']['tensionOfWireNumber'][layer][side].setData(range(1, MAX_WIRE_SEGMENT[layer]+1), self.tensionData[side] )
             # FIXME: this should only happen once -- in _makeCurves()
             # Create the scatter plot and add it to the view
-            #scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
-            #self.tensionPlots[side].addItem(scatter)
-            #pos = [{'pos': [i,self.tensionData[side][i]]} for i in range(len(self.tensionData[side]))]
-            #scatter.setData(pos)
+            scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='g'), symbol='o', size=1)
+            scatterLowConf = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
+            self.tensionPlots['tensionOfWireNumber'][layer][side].addItem(scatter)
+            self.tensionPlots['tensionOfWireNumber'][layer][side].addItem(scatterLowConf)
+            pos = [{'pos': [i,self.tensionData[side][i]]} for i in range(len(self.tensionData[side]))]
+            posLowConf = [{'pos': [i,self.tensionDataLowConf[side][i]]} for i in range(len(self.tensionDataLowConf[side]))]
+            scatter.setData(pos)
+            scatterLowConf.setData(posLowConf)
             
         # need to push new data into the tension table model and then alert the view that the data has changed
         # FIXME: is this the best way to push new tension data into the model?
         #  No... we want to have data for all layers...
         #  Also, we should push data into the model and then update the plots and table from the model!
-        self.tensionTableModel.setData(self.tensionData)
+        #self.tensionTableModel.setData(self.tensionData)
         #self.tensionTableView.resizeRowsToContents()
-        self.tensionTableModel.layoutChanged.emit()
+        #self.tensionTableModel.layoutChanged.emit()
         #self.tensionTableView.resizeColumnsToContents()  # probably don't need?
         
     def submitTensions(self):
@@ -3836,8 +3869,7 @@ class MainWindow(qtw.QMainWindow):
                 self.scanType = None
 
                 # Process the scan
-                self.getResultsDict()
-                process_scan.process_scan(self.resultsDict, self.fnOfAmpData)
+                process_scan.process_scan(self.getResultsDict(), self.fnOfAmpData)
                 
             else:
                  print("ERROR: unknown value of runStatus:")   
