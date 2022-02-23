@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1313</width>
-    <height>1112</height>
+    <height>1257</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -309,7 +309,7 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>2</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -1133,6 +1133,39 @@
             </widget>
            </item>
            <item>
+            <widget class="QWidget" name="scanFilters" native="true">
+             <layout class="QHBoxLayout" name="horizontalLayout_27">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QLineEdit" name="le_filter1"/>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="le_filter2"/>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="le_filter3"/>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="le_filter4"/>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="le_filter5"/>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="le_filter6"/>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="le_filter7"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
             <widget class="QTableView" name="recentScansTableView">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -1223,8 +1256,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>849</width>
-                       <height>1718</height>
+                       <width>717</width>
+                       <height>1724</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1302,8 +1335,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>199</width>
-                       <height>1718</height>
+                       <width>227</width>
+                       <height>1724</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="verticalLayout_20">
