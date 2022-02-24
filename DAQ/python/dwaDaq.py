@@ -214,8 +214,8 @@ GUI_Y_OFFSET = 0 #FIXME: remove this!
 SCAN_START = 1
 SCAN_END = 0
 
-APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Installation", "Storage"]
-APA_TESTING_STAGES_SHORT = [ "Dev", "Winding", "PostWinding", "Installation", "Storage"]
+APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Installation", "Installation (Top)", "Installation (Bottom)", "Storage"]
+APA_TESTING_STAGES_SHORT = [ "Dev", "Winding", "PostWinding", "Installation", "Installation", "Installation", "Storage"]
 APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
 MAX_WIRE_SEGMENT = {
@@ -3083,16 +3083,16 @@ class MainWindow(qtw.QMainWindow):
         resultsDict = self.getResultsDict()
         
 
-        for index in range(N_DWA_CHANS):
-            if index in self.activeRegistersS:
-                apaChan = self.ampDataS['apaChannels'][index]
+        for dwaChan in range(N_DWA_CHANS):
+            if dwaChan in self.activeRegistersS:
+                apaChan = self.ampDataS['apaChannels'][dwaChan]
                 apaLayer = self.ampDataS['layer']
                 apaSide = self.ampDataS['side']
                 segments, _ = channel_frequencies.get_expected_resonances(apaLayer,apaChan,200)
                 for seg in range(3):
                     if seg < len(segments):
                         wireSeg = segments[seg]
-                        resultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = self.resonantFreqs[index][seg]
+                        resultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1.}
 
 
         # save scan analysis results to JSON file
@@ -3138,23 +3138,24 @@ class MainWindow(qtw.QMainWindow):
         # }
         # wireData[self.tensionLayer] = self.tensionData
         
-        record_result = {
-            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, apaUuid),
-            "formId": "Wire Tensions",
-            "formName": "Wire Tensions",
-            "stage": stage,
-            "data": {
-                "version": "1.1",
-                "apaUuid": apaUuid,
-                "wireSegments": wireData,
-                "wires": wireData,
-                "saveAsDraft": True,
-                "submit": True,
-                "note": note
-            }
-        }
-        sietch.api('/test',record_result)
+        # record_result = {
+        #     "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, apaUuid),
+        #     "formId": "Wire Tensions",
+        #     "formName": "Wire Tensions",
+        #     "stage": stage,
+        #     "data": {
+        #         "version": "1.1",
+        #         "apaUuid": apaUuid,
+        #         "wireSegments": wireData,
+        #         "wires": wireData,
+        #         "saveAsDraft": True,
+        #         "submit": True,
+        #         "note": note
+        #     }
+        # }
+        # sietch.api('/test',record_result)
         self.labelResonanceSubmitStatus.setText("Submitted!")
+        self.resultsTableUpdate()
         
     def saveResonanceData(self):
         resData = {}
@@ -3464,6 +3465,9 @@ class MainWindow(qtw.QMainWindow):
         # FIXME: add check that the filename exists...
         with open(ampFilename, "r") as fh:
             data = json.load(fh)
+
+        self.loadedScanId = ampFilename.split('\\')[-2]
+        print('Setting scan id to.................. ',self.loadedScanId)
 
         self.activeRegistersS = []
         for reg in self.registers:
@@ -3882,6 +3886,7 @@ class MainWindow(qtw.QMainWindow):
 
                 # Process the scan
                 process_scan.process_scan(self.getResultsDict(), self.fnOfAmpData)
+                self.resultsTableUpdate()
                 
             else:
                  print("ERROR: unknown value of runStatus:")   
