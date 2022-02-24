@@ -214,8 +214,8 @@ GUI_Y_OFFSET = 0 #FIXME: remove this!
 SCAN_START = 1
 SCAN_END = 0
 
-APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Installation (Top)", "Installation (Bottom)", "Storage"]
-APA_TESTING_STAGES_SHORT = [ "Dev", "Winding", "PostWinding", "InstTop", "InstBot", "Storage"]
+APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Installation", "Storage"]
+APA_TESTING_STAGES_SHORT = [ "Dev", "Winding", "PostWinding", "Installation", "Storage"]
 APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
 MAX_WIRE_SEGMENT = {
@@ -895,6 +895,7 @@ class MainWindow(qtw.QMainWindow):
                             scanDict = segmentDict[scanId]
                             # Stage
                             item = qtg.QStandardItem()
+                            if stage == 'Installation (Top)' or stage == 'Installation (Bottom)': stage = 'Installation'
                             item.setData(stage, qtc.Qt.DisplayRole)
                             self.recentScansTableModel.setItem(i, Results.STAGE, item)
                             # Wire segment
@@ -3066,41 +3067,52 @@ class MainWindow(qtw.QMainWindow):
         #self.tensionTableView.resizeColumnsToContents()  # probably don't need?
         
     def submitTensions(self):
-        return #TODO: Fix this so that it writes to file in scanData/processed/ instead of database
+        #TODO: Fix this so that it writes to file in scanData/processed/ instead of database
         self.labelResonanceSubmitStatus.setText("Submitting...")
         # Load sietch credentials
-        sietch = SietchConnect("sietch.creds")
+        #sietch = SietchConnect("sietch.creds")
         apaUuid = self.ampDataS['apaUuid']
         stage = self.ampDataS['stage']
         layer = self.ampDataS['layer']
         side = self.ampDataS['side']
         note = self.submitResonanceNoteLineEdit.text()
         scanId = self.loadedScanId #self.recentScansNameOfLoadedScan.split('\\')[-1]
-        tensionTable = database_functions.get_tension_table(sietch, apaUuid, stage)
-        if tensionTable:
-            wireData = tensionTable['data']['wireSegments']
-        else:
-            wireData = {}
-            for l in APA_LAYERS:
-                wireData[l] = {}
-                for s in APA_SIDES:
-                    wireData[l][s] = {}
-                    for i in range(MAX_WIRE_SEGMENT[l]):
-                        wireData[l][s][str(i).zfill(5)] = {"tension": {}, "continuity": {}}
+        #tensionTable = database_functions.get_tension_table(sietch, apaUuid, stage)
+        #if tensionTable:
+        #    wireData = tensionTable['data']['wireSegments']
+        resultsDict = self.getResultsDict()
+        
 
-        apaChannels = self.ampDataS['apaChannels']
-        for dwaChan,apaChan in enumerate(apaChannels):
-            if not apaChan: continue
-            wireSegments, _ = channel_frequencies.get_expected_resonances(layer,apaChan)
-            if wireData[layer][side] == []:
-                wireData[layer][side] = [-1]*MAX_WIRE_SEGMENT[layer]
-            for i, wireNum in enumerate(wireSegments):
-                currentTension = self.currentTensions[dwaChan][i]
-                if not currentTension: continue
-                elif currentTension == -1:
-                    wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'None'}
-                elif currentTension > 0:
-                    wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': currentTension}
+        for index in range(N_DWA_CHANS):
+            if index in self.activeRegistersS:
+                apaChan = self.ampDataS['apaChannels'][index]
+                apaLayer = self.ampDataS['layer']
+                apaSide = self.ampDataS['side']
+                segments, _ = channel_frequencies.get_expected_resonances(apaLayer,apaChan,200)
+                for seg in range(3):
+                    if seg < len(segments):
+                        wireSeg = segments[seg]
+                        resultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = self.resonantFreqs[index][seg]
+
+
+        # save scan analysis results to JSON file
+        outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{apaUuid}.json')
+        print(f'writing processed scan results to {outfile}')
+        with open(outfile, 'w') as f:
+            json.dump(resultsDict, f, indent=4, sort_keys=True)
+        # apaChannels = self.ampDataS['apaChannels']
+        # for dwaChan,apaChan in enumerate(apaChannels):
+        #     if not apaChan: continue
+        #     wireSegments, _ = channel_frequencies.get_expected_resonances(layer,apaChan)
+        #     if wireData[layer][side] == []:
+        #         wireData[layer][side] = [-1]*MAX_WIRE_SEGMENT[layer]
+        #     for i, wireNum in enumerate(wireSegments):
+        #         currentTension = self.currentTensions[dwaChan][i]
+        #         if not currentTension: continue
+        #         elif currentTension == -1:
+        #             wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'None'}
+        #         elif currentTension > 0:
+        #             wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': currentTension}
 
         # pointerTableId = self.pointerTable["_id"]
         # apaUuid = self.pointerTable["data"]["apaUuid"]
