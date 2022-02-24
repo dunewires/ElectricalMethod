@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1492</width>
+    <width>1738</width>
     <height>1280</height>
    </rect>
   </property>
@@ -356,7 +356,7 @@
               <enum>QTabWidget::North</enum>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="tab_config">
               <attribute name="title">
@@ -749,213 +749,360 @@
                </item>
               </layout>
              </widget>
-             <widget class="QWidget" name="tab_3">
+             <widget class="QWidget" name="tab_advanced">
               <attribute name="title">
                <string>Advanced</string>
               </attribute>
-              <widget class="QWidget" name="layoutWidget">
+              <widget class="QWidget" name="widget_26" native="true">
                <property name="geometry">
                 <rect>
-                 <x>0</x>
-                 <y>0</y>
-                 <width>1151</width>
-                 <height>861</height>
+                 <x>89</x>
+                 <y>15</y>
+                 <width>1201</width>
+                 <height>741</height>
                 </rect>
                </property>
-               <layout class="QFormLayout" name="formLayout_8">
-                <property name="fieldGrowthPolicy">
-                 <enum>QFormLayout::ExpandingFieldsGrow</enum>
-                </property>
-                <item row="0" column="0">
-                 <widget class="QPushButton" name="btnScanCtrlAdv">
-                  <property name="text">
-                   <string>Start Scan</string>
-                  </property>
+               <layout class="QVBoxLayout" name="verticalLayout_28"/>
+              </widget>
+              <widget class="QWidget" name="verticalLayoutWidget">
+               <property name="geometry">
+                <rect>
+                 <x>30</x>
+                 <y>13</y>
+                 <width>1111</width>
+                 <height>821</height>
+                </rect>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_29" stretch="0">
+                <item>
+                 <widget class="QWidget" name="widget_34" native="true">
+                  <layout class="QVBoxLayout" name="verticalLayout_30">
+                   <item>
+                    <layout class="QFormLayout" name="formLayout_8">
+                     <property name="fieldGrowthPolicy">
+                      <enum>QFormLayout::ExpandingFieldsGrow</enum>
+                     </property>
+                     <item row="0" column="0">
+                      <widget class="QPushButton" name="btnScanCtrlAdv">
+                       <property name="text">
+                        <string>Start Scan</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="configFileName_label">
+                       <property name="text">
+                        <string>Scan config File:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QLineEdit" name="configFileName">
+                       <property name="autoFillBackground">
+                        <bool>false</bool>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="placeholderText">
+                        <string>Config file name</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="omitComments_label">
+                       <property name="text">
+                        <string>Omit comments:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="QCheckBox" name="omitComments_cb">
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                       <property name="tristate">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="0">
+                      <widget class="QLabel" name="configFileContents_label">
+                       <property name="text">
+                        <string>Config file contents:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="1">
+                      <widget class="QPlainTextEdit" name="configFileContents">
+                       <property name="enabled">
+                        <bool>true</bool>
+                       </property>
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>200</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>16777215</width>
+                         <height>200</height>
+                        </size>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="5" column="0">
+                      <widget class="QLabel" name="logFilename_label">
+                       <property name="text">
+                        <string>Log file:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="5" column="1">
+                      <widget class="QLabel" name="logFilename_val">
+                       <property name="text">
+                        <string>.....</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QFormLayout" name="formLayout_9">
+                     <item row="3" column="0">
+                      <widget class="QLabel" name="label_17">
+                       <property name="text">
+                        <string>Frequency step max (Hz)</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="4" column="0">
+                      <widget class="QLabel" name="label_12">
+                       <property name="text">
+                        <string>Frequency step size (Hz)</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="5" column="0">
+                      <widget class="QLabel" name="label_13">
+                       <property name="text">
+                        <string>Stimulation time (s)</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="6" column="0">
+                      <widget class="QLabel" name="label_14">
+                       <property name="text">
+                        <string>Initialization delay(s)</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="7" column="0">
+                      <widget class="QLabel" name="label_15">
+                       <property name="text">
+                        <string>Stimulus Amplitude</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="8" column="0">
+                      <widget class="QLabel" name="label_7">
+                       <property name="text">
+                        <string>Digipot Amplitude</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="9" column="0">
+                      <widget class="QLabel" name="disableAdvancedParametersLabel">
+                       <property name="text">
+                        <string>Disable Advanced Parameters</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="9" column="1">
+                      <widget class="QCheckBox" name="advDisableAdvancedParametersCheckBox"/>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QLabel" name="label_5">
+                       <property name="text">
+                        <string>Scan type</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="label_18">
+                       <property name="text">
+                        <string>Frequency step min (Hz)</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="QWidget" name="advFreqStepWdg" native="true">
+                       <layout class="QHBoxLayout" name="horizontalLayout_30">
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QLineEdit" name="advFreqMinLineEdit"/>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="advFreqMinContLineEdit"/>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QWidget" name="widget_27" native="true">
+                       <layout class="QHBoxLayout" name="horizontalLayout_10">
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QLabel" name="label_19">
+                          <property name="text">
+                           <string>Regular scan</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QLabel" name="label_20">
+                          <property name="text">
+                           <string>Continuity</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item row="3" column="1">
+                      <widget class="QWidget" name="widget_28" native="true">
+                       <layout class="QHBoxLayout" name="horizontalLayout_31">
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QLineEdit" name="advFreqMaxLineEdit"/>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="advFreqMaxContLineEdit"/>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item row="4" column="1">
+                      <widget class="QWidget" name="widget_29" native="true">
+                       <layout class="QHBoxLayout" name="horizontalLayout_32">
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QLineEdit" name="advFssLineEdit"/>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="advFssContLineEdit"/>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item row="5" column="1">
+                      <widget class="QWidget" name="widget_30" native="true">
+                       <layout class="QHBoxLayout" name="horizontalLayout_33">
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QLineEdit" name="advStimTimeLineEdit"/>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="advStimTimeContLineEdit"/>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item row="6" column="1">
+                      <widget class="QWidget" name="widget_31" native="true">
+                       <layout class="QHBoxLayout" name="horizontalLayout_34">
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QLineEdit" name="advInitDelayLineEdit"/>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="advInitDelayContLineEdit"/>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item row="7" column="1">
+                      <widget class="QWidget" name="widget_32" native="true">
+                       <layout class="QHBoxLayout" name="horizontalLayout_35">
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QLineEdit" name="advStimAmplitudeLineEdit"/>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="advStimAmplitudeContLineEdit"/>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item row="8" column="1">
+                      <widget class="QWidget" name="widget_33" native="true">
+                       <layout class="QHBoxLayout" name="horizontalLayout_36">
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QLineEdit" name="advDigipotAmplitudeLineEdit"/>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="advDigipotAmplitudeContLineEdit"/>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
                  </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="configFileName_label">
-                  <property name="text">
-                   <string>Scan config File:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1">
-                 <widget class="QLineEdit" name="configFileName">
-                  <property name="autoFillBackground">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="placeholderText">
-                   <string>Config file name</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="0">
-                 <widget class="QLabel" name="omitComments_label">
-                  <property name="text">
-                   <string>Omit comments:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="1">
-                 <widget class="QCheckBox" name="omitComments_cb">
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                  <property name="tristate">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="0">
-                 <widget class="QLabel" name="configFileContents_label">
-                  <property name="text">
-                   <string>Config file contents:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="1">
-                 <widget class="QPlainTextEdit" name="configFileContents">
-                  <property name="enabled">
-                   <bool>true</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>0</width>
-                    <height>200</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>16777215</width>
-                    <height>200</height>
-                   </size>
-                  </property>
-                 </widget>
-                </item>
-                <item row="5" column="0">
-                 <widget class="QLabel" name="logFilename_label">
-                  <property name="text">
-                   <string>Log file:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="5" column="1">
-                 <widget class="QLabel" name="logFilename_val">
-                  <property name="text">
-                   <string>.....</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="11" column="1">
-                 <layout class="QHBoxLayout" name="horizontalLayout_10"/>
-                </item>
-                <item row="12" column="0">
-                 <widget class="QLabel" name="label_18">
-                  <property name="text">
-                   <string>Frequency step min (Hz)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="12" column="1">
-                 <widget class="QLineEdit" name="advFreqMinLineEdit"/>
-                </item>
-                <item row="13" column="0">
-                 <widget class="QLabel" name="label_17">
-                  <property name="text">
-                   <string>Frequency step max (Hz)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="13" column="1">
-                 <widget class="QLineEdit" name="advFreqMaxLineEdit"/>
-                </item>
-                <item row="14" column="0">
-                 <widget class="QLabel" name="label_12">
-                  <property name="text">
-                   <string>Frequency step size (Hz)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="14" column="1">
-                 <widget class="QLineEdit" name="advFssLineEdit"/>
-                </item>
-                <item row="15" column="0">
-                 <widget class="QLabel" name="label_13">
-                  <property name="text">
-                   <string>Stimulation time (s)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="15" column="1">
-                 <widget class="QLineEdit" name="advStimTimeLineEdit"/>
-                </item>
-                <item row="16" column="0">
-                 <widget class="QLabel" name="label_14">
-                  <property name="text">
-                   <string>Initialization delay(s)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="16" column="1">
-                 <widget class="QLineEdit" name="advInitDelayLineEdit"/>
-                </item>
-                <item row="17" column="0">
-                 <widget class="QLabel" name="label_15">
-                  <property name="text">
-                   <string>Stimulus Amplitude</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="17" column="1">
-                 <widget class="QLineEdit" name="advStimAmplitudeLineEdit"/>
-                </item>
-                <item row="18" column="0">
-                 <widget class="QLabel" name="label_7">
-                  <property name="text">
-                   <string>Digipot Amplitude</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="18" column="1">
-                 <widget class="QLineEdit" name="advDigipotAmplitudeLineEdit"/>
-                </item>
-                <item row="19" column="0">
-                 <widget class="QLabel" name="disableAdvancedParametersLabel">
-                  <property name="text">
-                   <string>Disable Advanced Parameters</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="19" column="1">
-                 <widget class="QCheckBox" name="advDisableAdvancedParametersCheckBox"/>
                 </item>
                </layout>
-              </widget>
-              <widget class="QLabel" name="omitComments_label_2">
-               <property name="geometry">
-                <rect>
-                 <x>880</x>
-                 <y>850</y>
-                 <width>119</width>
-                 <height>19</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>Omit comments:</string>
-               </property>
               </widget>
              </widget>
              <widget class="QWidget" name="tab_timeseriesGrid">
@@ -1399,8 +1546,8 @@
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>199</width>
-                         <height>1718</height>
+                         <width>227</width>
+                         <height>1724</height>
                         </rect>
                        </property>
                        <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1478,8 +1625,8 @@
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>199</width>
-                         <height>1718</height>
+                         <width>227</width>
+                         <height>1724</height>
                         </rect>
                        </property>
                        <layout class="QVBoxLayout" name="verticalLayout_20">
@@ -2971,8 +3118,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1492</width>
-     <height>21</height>
+     <width>1738</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -3027,14 +3174,6 @@
   <tabstop>configFileName</tabstop>
   <tabstop>omitComments_cb</tabstop>
   <tabstop>configFileContents</tabstop>
-  <tabstop>advFreqMinLineEdit</tabstop>
-  <tabstop>advFreqMaxLineEdit</tabstop>
-  <tabstop>advFssLineEdit</tabstop>
-  <tabstop>advStimTimeLineEdit</tabstop>
-  <tabstop>advInitDelayLineEdit</tabstop>
-  <tabstop>advStimAmplitudeLineEdit</tabstop>
-  <tabstop>advDigipotAmplitudeLineEdit</tabstop>
-  <tabstop>advDisableAdvancedParametersCheckBox</tabstop>
   <tabstop>btnDwaConnect</tabstop>
   <tabstop>configLayerComboBox</tabstop>
   <tabstop>pw_grid_2</tabstop>
