@@ -697,18 +697,23 @@ class MainWindow(qtw.QMainWindow):
         #print(f"setDwaErrorStatus: {errorString}")
         if errorString is None:
             color = 'gray'
+            label = 'N/A'
         else:
             error = True if '1' in errorString else False
             print(f"error = {error}")
             if error:
                 color = 'red'
+                label = f'{int(errorString,2)}'
             else:
+                label = 'OK'
                 color = 'green'
             
         borderSize = 3
         style = f"border: {borderSize}px solid {color};"
         #print(f"tyle = {style}")
         # FIXME: add background color: e.g. "background-color green;"
+        # FIXME: add a tooltip (mouse hover) that explains the error code...
+        self.dwaErrorState_val.setText(label)
         self.dwaErrorState_val.setStyleSheet(style)
 
     def setPushButtonStatus(self, buttonId, buttonVal):
@@ -3987,7 +3992,8 @@ class MainWindow(qtw.QMainWindow):
             self.setPushButtonStatusAll(udpDict[ddp.Frame.STATUS]['buttonStatusList'])
 
     def updateErrorStatusInGui(self, errorBitsString):
-        # print(udpDict[ddp.Frame.STATUS]['statusErrorBits'])
+        #print("updateErrorStatusInGui()")
+        #print(f'errorBitsString = {errorBitsString}')
         # statusErrorBits looks like this: '000000000000000000000000'
         # not yet sure of the mapping...
         self.setDwaErrorStatus(errorBitsString)
