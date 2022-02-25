@@ -169,7 +169,7 @@ import process_scan
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
-DWA_DAQ_VERSION = "X.X.X"
+#DWA_DAQ_VERSION = "X.X.X"
 #
 DWA_CONFIG_FILE = "dwaConfigWC.ini"
 #DWA_CONFIG_FILE = "config/dwaConfigShortScan.ini"
@@ -1401,13 +1401,17 @@ class MainWindow(qtw.QMainWindow):
         statusFramePeriod_str = '{:.1f} s'.format(out[-1]*2.56e-6)
         self.statusFramePeriod_val.setText(statusFramePeriod_str)
 
-
         # Read DWA serial number
-        out = self.uz.readValue('00000030')
-        print(out)
+        #out = self.uz.readValue('00000030') #0x30 is the reg addr for the hardware serial #
+        out = self.uz.readValue('00000039')  #0x39 is the reg addr for the user-specified serial #
+        print(f"serial number = {out[-1]}")
         dwaSerialNumber_str = '{:06X}'.format(out[-1])
         self.dwaSerialNumber_val.setText(dwaSerialNumber_str)
-            
+
+        # Can get MAC address:
+        # Register Ox3B is the MSBs
+        # Register Ox3C is the LSBs
+        
     def _initResonanceFitLines(self):
         self.resFitLines = {'raw':{},  # hold instances of InfiniteLines for both
                             'proc':{},  # raw and processed A(f) plots
@@ -4585,7 +4589,7 @@ if __name__ == "__main__":
     pg.setConfigOptions(antialias=False)
     
     win = MainWindow()
-    win.setWindowTitle(f"DWA: DUNE Wire Analyzer v. {DWA_DAQ_VERSION}")
+    win.setWindowTitle(f"DWA: Digital Wire Analyzer")
     app.aboutToQuit.connect(win.cleanUp)
     app.exec_()
     #sys.exit(app.exec_())  # diff btw this and prev. line???
