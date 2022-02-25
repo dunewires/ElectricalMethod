@@ -684,49 +684,7 @@
                    </layout>
                   </item>
                   <item>
-                   <widget class="QTableWidget" name="scanTable">
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>400</height>
-                     </size>
-                    </property>
-                    <column>
-                     <property name="text">
-                      <string>Select</string>
-                     </property>
-                    </column>
-                    <column>
-                     <property name="text">
-                      <string>Scan #</string>
-                     </property>
-                    </column>
-                    <column>
-                     <property name="text">
-                      <string>Wires</string>
-                     </property>
-                    </column>
-                    <column>
-                     <property name="text">
-                      <string>Freq Min (Hz)</string>
-                     </property>
-                    </column>
-                    <column>
-                     <property name="text">
-                      <string>Freq Max (Hz)</string>
-                     </property>
-                    </column>
-                    <column>
-                     <property name="text">
-                      <string>Step Size (Hz)</string>
-                     </property>
-                    </column>
-                    <column>
-                     <property name="text">
-                      <string/>
-                     </property>
-                    </column>
-                   </widget>
+                   <widget class="QTableView" name="scanTable"/>
                   </item>
                   <item>
                    <widget class="QPushButton" name="btnScanCtrl">
@@ -3244,7 +3202,6 @@
   <tabstop>evtVwrTabs</tabstop>
   <tabstop>evtVwrPlotsGLW</tabstop>
   <tabstop>pw_chan_1</tabstop>
-  <tabstop>scanTable</tabstop>
   <tabstop>btnScanCtrl</tabstop>
   <tabstop>scanCtrlRunAll</tabstop>
   <tabstop>submitTensionNoteLineEdit</tabstop>

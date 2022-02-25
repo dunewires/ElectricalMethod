@@ -1,3 +1,18 @@
+# Continuity scan parameters
+#In hexadecimal (copied from a config file):
+#stimFreqMin = 006400
+#stimFreqMax = 03B600
+#stimFreqStep = 003200
+#stimTime = 010000
+#stimMag = 200
+#
+#Which correspond to in decimal:
+#Freq min: 100 Hz
+#Freq max: 950 Hz
+#Freq step: 50 Hz
+#Stimulus time: 0.16777216 s
+#Stimulus magnitude: 512 mV
+
 # FIXME/TODO:
 # * scan list is replaced by "results table" but all of the scan list updating code is still in play...
 # 
@@ -194,6 +209,7 @@ SCAN_OUTPUT_DIRS = [OUTPUT_DIR_SCAN_DATA, OUTPUT_DIR_SCAN_DATA_ADVANCED]
 #OUTPUT_DIR_UDP_DATA = './udpData/'
 #OUTPUT_DIR_AMP_DATA = './ampData/'        
 CLOCK_PERIOD_SEC = 1e8
+SCAN_FREQUENCY_STEP_DEFAULT = 1/16  # Hz
 STIM_VIEW_OFFSET = 0
 #
 UDP_RECV_BUF_SIZE = 16*2**20 # Bytes (2**20 Bytes is ~1MB)
@@ -241,6 +257,17 @@ TENSION_GOOD_COLOR = qtg.QColor(178, 251, 165)
 
 PLOT_UPDATE_TIME_SEC = 0.5
 
+
+continuityParams = {
+    'stimFreqMin':100.0,  # Hz
+    'stimFreqMax':950.0,  # Hz
+    'stimFreqStep':50.0,  # Hz
+    'stimTime':0.166666,  # s
+    'stimMag':0.512       # V
+}
+
+
+
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
 #    """ handle logging events -- display them in a text box in the gui"""
@@ -254,6 +281,16 @@ PLOT_UPDATE_TIME_SEC = 0.5
 #        #XStream.stdout().write("{}\n".format(record))
 
 
+SCAN_TABLE_HDRS = ['Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
+#SCAN_TABLE_HDRS = ['Scan #', 'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
+class Scans(IntEnum):
+    #SCAN_NUM  = SCAN_TABLE_HDRS.index('Scan #')
+    WIRES     = SCAN_TABLE_HDRS.index('Wires')
+    FREQ_MIN  = SCAN_TABLE_HDRS.index('Freq Min (Hz)')
+    FREQ_MAX  = SCAN_TABLE_HDRS.index('Freq Max (Hz)')
+    FREQ_STEP = SCAN_TABLE_HDRS.index('Step Size (Hz)')
+    
+#
 # Recent scan list
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum',
                        'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
@@ -576,6 +613,7 @@ class MainWindow(qtw.QMainWindow):
         self.setDwaErrorStatus(None)
         self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
         self.runStatusHeading_label.setStyleSheet("font-weight: bold;")
+        self.scanTableInit()
         self.resultsTableInit()
         self.initTensionTable()
         self.heartPixmaps = [qtg.QPixmap('icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
@@ -818,6 +856,19 @@ class MainWindow(qtw.QMainWindow):
         # self.tensionTableView.setModel(self.tensionTableModel)
         # #self.tensionTableView.resizeColumnsToContents()
         # self.tensionTableView.resizeRowsToContents()
+
+    def scanTableInit(self):
+        # change scanTable to QTableView
+        # Model:
+        self.scanTableModel = qtg.QStandardItemModel()
+        self.scanTableModel.setHorizontalHeaderLabels(SCAN_TABLE_HDRS)
+        self.scanTable.setModel(self.scanTableModel)
+        self.scanTable.horizontalHeader().setResizeMode(qtw.QHeaderView.ResizeToContents) 
+        self.scanTable.setSortingEnabled(False)
+        self.scanTable.setSelectionBehavior(qtw.QTableView.SelectRows)  # click highlights full row
+        self.scanTable.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
+        #self.scanTable.setEditTriggers(qtw.QTableView.NoEditTriggers)
+        #self.scanTable.doubleClicked.connect(self.scanTableRowDoubleClicked)
         
     def resultsTableInit(self):
         self.recentScansTableModel = qtg.QStandardItemModel()
@@ -1507,8 +1558,8 @@ class MainWindow(qtw.QMainWindow):
         configHeadboard = self.configHeadboardSpinBox.value()
 
         self.radioBtns = [] #list of radio button names
-        self.freqMinBox = [] 
-        self.freqMaxBox = [] #these are lists to hold the boxes for these values in the table, that way they can be looped later on
+        #self.freqMinBox = [] 
+        #self.freqMaxBox = [] #these are lists to hold the boxes for these values in the table, that way they can be looped later on
         self.range_data_list = []
         #The following loops through the headboards, channels, and wires, to find where the wire the user would to scan is
         #then it saves important data for the table and scan to variables
@@ -1565,14 +1616,14 @@ class MainWindow(qtw.QMainWindow):
             item.setTextAlignment(qtc.Qt.AlignHCenter)
             item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMin)))
             self.scanTable.resizeColumnsToContents()
-            self.freqMinBox.append(freqMin)
+            #self.freqMinBox.append(freqMin)
             #freq max column
             item = qtw.QTableWidgetItem()
             self.scanTable.setItem(0, 4, item)
             item.setTextAlignment(qtc.Qt.AlignHCenter)
             item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
             self.scanTable.resizeColumnsToContents()
-            self.freqMaxBox.append(freqMax)
+            #self.freqMaxBox.append(freqMax)
             #freq step size column
             advFss = self.advFssLineEdit.text() # Freq step size
             if advFss: advFss = float(advFss)
@@ -1586,7 +1637,7 @@ class MainWindow(qtw.QMainWindow):
             item.setTextAlignment(qtc.Qt.AlignHCenter)
             item.setText(qtc.QCoreApplication.translate("MainWindow", str(advFss)))
             self.scanTable.resizeColumnsToContents()
-            self.freqMaxBox.append(freqMax)
+            #self.freqMaxBox.append(freqMax)
             self.scanTable.setColumnCount(6)
 
             self.radioBtns[0].setChecked(True)
@@ -1597,87 +1648,72 @@ class MainWindow(qtw.QMainWindow):
             self._scanButtonEnable()
 
     def configureScans(self):
-        self.scanTable.clearContents()
+        self.scanTableModel.removeRows( 0, self.scanTableModel.rowCount() )
 
         configLayer = self.configLayerComboBox.currentText()
         configHeadboard = self.configHeadboardSpinBox.value()
         useAdvancedParameters = not self.advDisableAdvancedParametersCheckBox.isChecked()
 
         channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
-        scanNum = 1
-        self.radioBtns = [] #list of radio button names
-        self.freqMinBox = [] 
-        self.freqMaxBox = [] #these are lists to hold the boxes for these values in the table, that way they can be looped later on
         self.range_data_list = []
 
+        #BOBOBOBOBOB
+        row = 0
         for channels in channelGroups:
+            #print(f'channels = {channels}')
             range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
-            for rd in range_data:
-                self.range_data_list.append(rd)
-                wires = rd["wireSegments"]
-                wires.sort(key = int)
-                #table with scan details
-                self.scanTable.setRowCount(scanNum)
-                item = qtw.QTableWidgetItem()
-                self.scanTable.setVerticalHeaderItem(scanNum-1, item)
-                #select column...Radio buttons
-                item = qtw.QTableWidgetItem()
-                self.scanTable.setItem(scanNum-1, 0, item)
-                item = qtw.QRadioButton(self.scanTable)
-                self.scanTable.setCellWidget(scanNum-1, 0, item)
-                self.radioBtns.append(item)
-                #run number column
-                item = qtw.QTableWidgetItem()
-                self.scanTable.setItem(scanNum-1, 1, item)
-                item.setTextAlignment(qtc.Qt.AlignHCenter)
-                item.setText(qtc.QCoreApplication.translate("MainWindow", str(scanNum)))
-                self.scanTable.resizeColumnsToContents() 
-                #wires column
-                item = qtw.QTableWidgetItem()
-                self.scanTable.setItem(scanNum-1, 2, item)
-                item.setTextAlignment(qtc.Qt.AlignHCenter)
-                item.setText(qtc.QCoreApplication.translate("MainWindow", str(wires)))
-                self.scanTable.resizeColumnsToContents()
-                #freq min column
-                advFreqMin = self.advFreqMinLineEdit.text() # Freq step size
-                if advFreqMin and useAdvancedParameters: freqMin = float(advFreqMin)
-                else: freqMin = float(rd["range"][0])
-                item = qtw.QTableWidgetItem()
-                self.scanTable.setItem(scanNum-1, 3, item)
-                item.setTextAlignment(qtc.Qt.AlignHCenter)
-                item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMin)))
-                self.scanTable.resizeColumnsToContents()
-                self.freqMinBox.append(freqMin)
-                #freq max column
-                advFreqMax = self.advFreqMaxLineEdit.text() # Freq step size
-                if advFreqMax and useAdvancedParameters: freqMax = float(advFreqMax)
-                else: freqMax = float(rd["range"][1])
-                item = qtw.QTableWidgetItem()
-                self.scanTable.setItem(scanNum-1, 4, item)
-                item.setTextAlignment(qtc.Qt.AlignHCenter)
-                item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
-                self.scanTable.resizeColumnsToContents()
-                self.freqMaxBox.append(freqMax)
-                #freq step size column
-                advFss = self.advFssLineEdit.text() # Freq step size
-                if advFss and useAdvancedParameters: fss = float(advFss)
-                else: fss = 1/16
-                #if advFss: 
-                #    advFss = config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss)['stimFreqStep']
-                #else: 
-                #    advFss= config_generator.configure_scan_frequencies(freqMin, freqMax)['stimFreqStep']
-                item = qtw.QTableWidgetItem()
-                self.scanTable.setItem(scanNum-1, 5, item)
-                item.setTextAlignment(qtc.Qt.AlignHCenter)
-                item.setText(qtc.QCoreApplication.translate("MainWindow", str(fss)))
-                self.scanTable.resizeColumnsToContents()
-                self.scanTable.setColumnCount(6)
-
-
-                scanNum = scanNum + 1
-
-        self.radioBtns[0].setChecked(True)
-
+            #print(f'range_data = {range_data}')
+            rd = range_data[0]
+            self.range_data_list.append(rd)
+            #print(f'rd = {rd}')
+            #
+            # Wire numbers
+            wires = rd['wireSegments']
+            wires.sort(key = int)
+            #print(f'wires = {wires}')
+            item = qtg.QStandardItem()
+            item.setData(str(wires), qtc.Qt.DisplayRole)
+            item.setTextAlignment(qtc.Qt.AlignRight)
+            self.scanTableModel.setItem(row, Scans.WIRES, item)
+            #
+            # Frequency minimum
+            freqMin = float(rd['range'][0])
+            if useAdvancedParameters:
+                advFreqMin = self.advFreqMinLineEdit.text().strip()
+                if advFreqMin != "":
+                    freqMin = float(advFreqMin) # FIXME: this can cause crash if non-numeric entry...
+            item = qtg.QStandardItem()
+            item.setData(freqMin, qtc.Qt.DisplayRole)
+            item.setTextAlignment(qtc.Qt.AlignHCenter)
+            self.scanTableModel.setItem(row, Scans.FREQ_MIN, item)
+            self.scanTable.resizeColumnsToContents()
+            #
+            # Frequency maximum
+            freqMax = float(rd['range'][1])
+            if useAdvancedParameters:
+                advFreqMax = self.advFreqMaxLineEdit.text().strip()
+                if advFreqMax != "":
+                    freqMax = float(advFreqMax) # FIXME: this can cause crash if non-numeric entry...
+            item = qtg.QStandardItem()
+            item.setData(freqMax, qtc.Qt.DisplayRole)
+            item.setTextAlignment(qtc.Qt.AlignHCenter)
+            self.scanTableModel.setItem(row, Scans.FREQ_MAX, item)
+            self.scanTable.resizeColumnsToContents()
+            #
+            # Frequency step
+            freqStep = SCAN_FREQUENCY_STEP_DEFAULT
+            if useAdvancedParameters:
+                advFss = self.advFssLineEdit.text().strip()
+                if advFss != "":
+                    freqStep = float(advFss) # FIXME: this can cause crash if non-numeric entry...
+            item = qtg.QStandardItem()
+            item.setData(freqStep, qtc.Qt.DisplayRole)
+            item.setTextAlignment(qtc.Qt.AlignHCenter)
+            self.scanTableModel.setItem(row, Scans.FREQ_STEP, item)
+            self.scanTable.resizeColumnsToContents()
+            
+            row += 1
+            
         self.configureLabel.setText("")
         self.configure = True
         self._scanButtonEnable()
@@ -4094,11 +4130,12 @@ class MainWindow(qtw.QMainWindow):
         #self.heartbeat_val.setText(f"{self.heartval}")
 
     def doContinuityChanged(self):
-        self.doContinuity = True if self.doContinuityCb.checkState() == qtc.Qt.Checked else False
+        #self.doContinuity = True if self.doContinuityCb.checkState() == qtc.Qt.Checked else False
+        self.doContinuity = self.doContinuityCb.isChecked()
         #print(f"clicked check box: state = {self.doContinuityCb.checkState()}")
         #print(f"is unchecked:      {self.doContinuity == qtc.Qt.Unchecked}")
         #print(f"is   checked:      {self.doContinuity == qtc.Qt.Checked}")
-        #print(f"self.doContinuity: {self.doContinuity}")
+        print(f"self.doContinuity: {self.doContinuity}")
         
     def disableScanButtonForTime(self, disableDuration):
         """ disableDuration is a time in seconds """
@@ -4165,10 +4202,9 @@ class MainWindow(qtw.QMainWindow):
         self.btnScanCtrlAdv.setEnabled(False)
 
     def _scanButtonEnable(self, force=False):
-        #for scb in self.scanCtrlButtons:
-            #scb.setEnabled(state)
         if force or (self.connectedToUzed and self.idle and self.configure):
-            if len(self.radioBtns)>0:
+            print(f"number of table rows = {self.scanTableModel.rowCount()}")
+            if self.scanTableModel.rowCount() > 0:
                 self.btnScanCtrl.setEnabled(True)
         if force or (self.connectedToUzed and self.idle):
             self.btnScanCtrlAdv.setEnabled(True)
