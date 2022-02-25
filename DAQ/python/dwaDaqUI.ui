@@ -343,7 +343,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tabStimulus">
           <attribute name="title">
@@ -1323,27 +1323,6 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QCheckBox" name="filterStagePostWinding">
-                       <property name="text">
-                        <string>Post-Winding</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QCheckBox" name="filterStageInstTop">
-                       <property name="text">
-                        <string>Installation (Top)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QCheckBox" name="filterStageInstBot">
-                       <property name="text">
-                        <string>Installation (Bottom)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
                       <widget class="QCheckBox" name="filterStageWinding">
                        <property name="text">
                         <string>Winding</string>
@@ -1351,9 +1330,23 @@
                       </widget>
                      </item>
                      <item>
+                      <widget class="QCheckBox" name="filterStagePostWinding">
+                       <property name="text">
+                        <string>Post-Winding</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
                       <widget class="QCheckBox" name="filterStageStorage">
                        <property name="text">
                         <string>Storage</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QCheckBox" name="filterStageInstallation">
+                       <property name="text">
+                        <string>Installation</string>
                        </property>
                       </widget>
                      </item>
@@ -2882,7 +2875,7 @@
                 </size>
                </property>
                <property name="text">
-                <string>Fetch Resonances and Compute Tensions</string>
+                <string>Get Tensions</string>
                </property>
               </widget>
              </item>
