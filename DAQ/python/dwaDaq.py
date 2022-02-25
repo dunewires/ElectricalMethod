@@ -214,6 +214,8 @@ GUI_Y_OFFSET = 0 #FIXME: remove this!
 SCAN_START = 1
 SCAN_END = 0
 
+#APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Installation (Top)", "Installation (Bottom)", "Storage"]
+#APA_TESTING_STAGES_SHORT = [ "Dev", "Winding", "PostWinding", "InstTop", "InstBot", "Storage"]
 APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Installation", "Installation (Top)", "Installation (Bottom)", "Storage"]
 APA_TESTING_STAGES_SHORT = [ "Dev", "Winding", "PostWinding", "Installation", "Installation", "Installation", "Storage"]
 APA_LAYERS = ["G", "U", "V", "X"]
@@ -310,8 +312,8 @@ class ResultsView(IntEnum):
     PLOTS = 1
     
 
-#TAB_ACTIVE_MAIN = MainView.STIMULUS
-TAB_ACTIVE_MAIN = MainView.RESULTS
+TAB_ACTIVE_MAIN = MainView.STIMULUS
+#TAB_ACTIVE_MAIN = MainView.RESULTS
 #TAB_ACTIVE_MAIN = MainView.TENSION
 #TAB_ACTIVE_MAIN = MainView.EVTVWR
 TAB_ACTIVE_STIM = StimView.CONFIG
@@ -563,6 +565,8 @@ class MainWindow(qtw.QMainWindow):
         self.configFileContents.setReadOnly(True)
         self.scanCtrlButtons = [self.btnScanCtrl, self.btnScanCtrlAdv]
         self.scanType = None
+        self.doContinuity = False
+        self.doContinuityCb.setChecked(qtc.Qt.Checked if self.doContinuity else qtc.Qt.Unchecked)
         self._scanButtonDisable()
         self._submitResonanceButtonDisable()
         self._setScanButtonAction('START')
@@ -1181,6 +1185,7 @@ class MainWindow(qtw.QMainWindow):
         self.btnLoadTensions.clicked.connect(self.loadTensionsThread)
         self.btnSubmitTensions.clicked.connect(self.submitTensionsThread)
         # Config Tab
+        self.doContinuityCb.stateChanged.connect(self.doContinuityChanged)
         self.btnConfigureScans.clicked.connect(self.singleOrAllScans)
         for stage in APA_TESTING_STAGES:
             self.configStageComboBox.addItem(stage)
@@ -4081,6 +4086,13 @@ class MainWindow(qtw.QMainWindow):
         self.heartbeat_val.resize(self.heartPixmaps[self.heartval].width(),
                                   self.heartPixmaps[self.heartval].height())
         #self.heartbeat_val.setText(f"{self.heartval}")
+
+    def doContinuityChanged(self):
+        self.doContinuity = True if self.doContinuityCb.checkState() == qtc.Qt.Checked else False
+        #print(f"clicked check box: state = {self.doContinuityCb.checkState()}")
+        #print(f"is unchecked:      {self.doContinuity == qtc.Qt.Unchecked}")
+        #print(f"is   checked:      {self.doContinuity == qtc.Qt.Checked}")
+        #print(f"self.doContinuity: {self.doContinuity}")
         
     def disableScanButtonForTime(self, disableDuration):
         """ disableDuration is a time in seconds """
