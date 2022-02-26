@@ -258,15 +258,13 @@ TENSION_GOOD_COLOR = qtg.QColor(178, 251, 165)
 PLOT_UPDATE_TIME_SEC = 0.5
 
 
-continuityParams = {
+CONTINUITY_SCAN_PARAMS_DEFAULT = {
     'stimFreqMin':100.0,  # Hz
     'stimFreqMax':950.0,  # Hz
     'stimFreqStep':50.0,  # Hz
     'stimTime':0.166666,  # s
     'stimMag':0.512       # V
 }
-
-
 
 # Attempt to display logged events in a text window in the GUI
 #class QtHandler(logging.Handler):
@@ -281,14 +279,28 @@ continuityParams = {
 #        #XStream.stdout().write("{}\n".format(record))
 
 
-SCAN_TABLE_HDRS = ['Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
-#SCAN_TABLE_HDRS = ['Scan #', 'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
+SCAN_CONFIG_TABLE_HDRS = ['Type', 'Status', 'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
+#SCAN_CONFIG_TABLE_HDRS = ['Scan #', 'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
 class Scans(IntEnum):
-    #SCAN_NUM  = SCAN_TABLE_HDRS.index('Scan #')
-    WIRES     = SCAN_TABLE_HDRS.index('Wires')
-    FREQ_MIN  = SCAN_TABLE_HDRS.index('Freq Min (Hz)')
-    FREQ_MAX  = SCAN_TABLE_HDRS.index('Freq Max (Hz)')
-    FREQ_STEP = SCAN_TABLE_HDRS.index('Step Size (Hz)')
+    #SCAN_NUM  = SCAN_CONFIG_TABLE_HDRS.index('Scan #')
+    TYPE      = SCAN_CONFIG_TABLE_HDRS.index('Type')
+    STATUS    = SCAN_CONFIG_TABLE_HDRS.index('Status')
+    WIRES     = SCAN_CONFIG_TABLE_HDRS.index('Wires')
+    FREQ_MIN  = SCAN_CONFIG_TABLE_HDRS.index('Freq Min (Hz)')
+    FREQ_MAX  = SCAN_CONFIG_TABLE_HDRS.index('Freq Max (Hz)')
+    FREQ_STEP = SCAN_CONFIG_TABLE_HDRS.index('Step Size (Hz)')
+
+#class ScanConfigStatus(IntEnum):
+#    DONE = 0
+#    RUNNING = 1
+#    PENDING = 2
+#
+#ScanConfigStatusString = {
+#    ScanConfigStatus.DONE:'Done',
+#    ScanConfigStatus.RUNNING:'Running',
+#    ScanConfigStatus.PENDING:'Pending'
+#}
+
     
 #
 # Recent scan list
@@ -613,7 +625,7 @@ class MainWindow(qtw.QMainWindow):
         self.setDwaErrorStatus(None)
         self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
         self.runStatusHeading_label.setStyleSheet("font-weight: bold;")
-        self.scanTableInit()
+        self.scanConfigTableInit()
         self.resultsTableInit()
         self.initTensionTable()
         self.heartPixmaps = [qtg.QPixmap('icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
@@ -857,18 +869,18 @@ class MainWindow(qtw.QMainWindow):
         # #self.tensionTableView.resizeColumnsToContents()
         # self.tensionTableView.resizeRowsToContents()
 
-    def scanTableInit(self):
-        # change scanTable to QTableView
+    def scanConfigTableInit(self):
+        # change scanConfigTable to QTableView
         # Model:
-        self.scanTableModel = qtg.QStandardItemModel()
-        self.scanTableModel.setHorizontalHeaderLabels(SCAN_TABLE_HDRS)
-        self.scanTable.setModel(self.scanTableModel)
-        self.scanTable.horizontalHeader().setResizeMode(qtw.QHeaderView.ResizeToContents) 
-        self.scanTable.setSortingEnabled(False)
-        self.scanTable.setSelectionBehavior(qtw.QTableView.SelectRows)  # click highlights full row
-        self.scanTable.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
-        #self.scanTable.setEditTriggers(qtw.QTableView.NoEditTriggers)
-        #self.scanTable.doubleClicked.connect(self.scanTableRowDoubleClicked)
+        self.scanConfigTableModel = qtg.QStandardItemModel()
+        self.scanConfigTableModel.setHorizontalHeaderLabels(SCAN_CONFIG_TABLE_HDRS)
+        self.scanConfigTable.setModel(self.scanConfigTableModel)
+        self.scanConfigTable.horizontalHeader().setResizeMode(qtw.QHeaderView.ResizeToContents) 
+        self.scanConfigTable.setSortingEnabled(False)
+        self.scanConfigTable.setSelectionBehavior(qtw.QTableView.SelectRows)  # click highlights full row
+        self.scanConfigTable.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
+        #self.scanConfigTable.setEditTriggers(qtw.QTableView.NoEditTriggers)
+        #self.scanConfigTable.doubleClicked.connect(self.scanConfigTableRowDoubleClicked)
         
     def resultsTableInit(self):
         self.recentScansTableModel = qtg.QStandardItemModel()
@@ -1552,7 +1564,7 @@ class MainWindow(qtw.QMainWindow):
 
     def configureSingleScans(self):
         #TODO: Not poroperly taking into account some advances tab parameters
-        self.scanTable.clearContents()
+        self.scanConfigTable.clearContents()
 
         configLayer = self.configLayerComboBox.currentText()
         configHeadboard = self.configHeadboardSpinBox.value()
@@ -1589,40 +1601,40 @@ class MainWindow(qtw.QMainWindow):
         else:
             self.headboardLabel.setText("Connect to headboard #"+str(self.singleConfigHeadboard))
             #table with scan detailss
-            self.scanTable.setRowCount(1)
+            self.scanConfigTable.setRowCount(1)
             item = qtw.QTableWidgetItem()
-            self.scanTable.setVerticalHeaderItem(0, item)
+            self.scanConfigTable.setVerticalHeaderItem(0, item)
             #select column...Radio buttons
             item = qtw.QTableWidgetItem()
-            self.scanTable.setItem(0, 0, item)
-            item = qtw.QRadioButton(self.scanTable)
-            self.scanTable.setCellWidget(0, 0, item)
+            self.scanConfigTable.setItem(0, 0, item)
+            item = qtw.QRadioButton(self.scanConfigTable)
+            self.scanConfigTable.setCellWidget(0, 0, item)
             self.radioBtns.append(item)
             #run number column
             item = qtw.QTableWidgetItem()
-            self.scanTable.setItem(0, 1, item)
+            self.scanConfigTable.setItem(0, 1, item)
             item.setTextAlignment(qtc.Qt.AlignHCenter)
             item.setText(qtc.QCoreApplication.translate("MainWindow", str(1)))
-            self.scanTable.resizeColumnsToContents() 
+            self.scanConfigTable.resizeColumnsToContents() 
             #wires column
             item = qtw.QTableWidgetItem()
-            self.scanTable.setItem(0, 2, item)
+            self.scanConfigTable.setItem(0, 2, item)
             item.setTextAlignment(qtc.Qt.AlignHCenter)
             item.setText(qtc.QCoreApplication.translate("MainWindow", str(self.wireNum)))
-            self.scanTable.resizeColumnsToContents()
+            self.scanConfigTable.resizeColumnsToContents()
             #freq min column
             item = qtw.QTableWidgetItem()
-            self.scanTable.setItem(0, 3, item)
+            self.scanConfigTable.setItem(0, 3, item)
             item.setTextAlignment(qtc.Qt.AlignHCenter)
             item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMin)))
-            self.scanTable.resizeColumnsToContents()
+            self.scanConfigTable.resizeColumnsToContents()
             #self.freqMinBox.append(freqMin)
             #freq max column
             item = qtw.QTableWidgetItem()
-            self.scanTable.setItem(0, 4, item)
+            self.scanConfigTable.setItem(0, 4, item)
             item.setTextAlignment(qtc.Qt.AlignHCenter)
             item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
-            self.scanTable.resizeColumnsToContents()
+            self.scanConfigTable.resizeColumnsToContents()
             #self.freqMaxBox.append(freqMax)
             #freq step size column
             advFss = self.advFssLineEdit.text() # Freq step size
@@ -1633,12 +1645,12 @@ class MainWindow(qtw.QMainWindow):
             else: 
                 advFss= config_generator.configure_scan_frequencies(freqMin, freqMax)['stimFreqStep']
             item = qtw.QTableWidgetItem()
-            self.scanTable.setItem(0, 5, item)
+            self.scanConfigTable.setItem(0, 5, item)
             item.setTextAlignment(qtc.Qt.AlignHCenter)
             item.setText(qtc.QCoreApplication.translate("MainWindow", str(advFss)))
-            self.scanTable.resizeColumnsToContents()
+            self.scanConfigTable.resizeColumnsToContents()
             #self.freqMaxBox.append(freqMax)
-            self.scanTable.setColumnCount(6)
+            self.scanConfigTable.setColumnCount(6)
 
             self.radioBtns[0].setChecked(True)
             #need to enable the start button, I think this is sufficient
@@ -1647,17 +1659,107 @@ class MainWindow(qtw.QMainWindow):
             self.configure = True
             self._scanButtonEnable()
 
+
+    def scanConfigTableAddRow(self, rd, row, scanType='resonance', useAdvanced=False):
+        # scanType: 'resonance' or 'continuity'
+        # useAdvanced: boolean (for use advanced parameters)
+        #print(f'rd = {rd}')
+
+        if scanType not in ['resonance', 'continuity']:
+            print(f"ERROR: scanType not recognized: {scanType}")
+            print("returning...")
+            return
+        
+        # Scan type
+        item = qtg.QStandardItem()
+        ty = 'Res' if scanType == 'resonance' else 'Cont'
+        item.setData(ty, qtc.Qt.DisplayRole)
+        item.setTextAlignment(qtc.Qt.AlignLeft)
+        self.scanConfigTableModel.setItem(row, Scans.TYPE, item)
+
+        # Status type
+        item = qtg.QStandardItem()
+        #item.setData(ScanConfigStatusString[ScanConfigStatus.PENDING], qtc.Qt.DisplayRole)
+        item.setData('Pending', qtc.Qt.DisplayRole)
+        item.setTextAlignment(qtc.Qt.AlignLeft)
+        self.scanConfigTableModel.setItem(row, Scans.STATUS, item)
+        
+        # Wire numbers
+        wires = rd['wireSegments']
+        wires.sort(key = int)
+        #print(f'wires = {wires}')
+        item = qtg.QStandardItem()
+        item.setData(str(wires), qtc.Qt.DisplayRole)
+        item.setTextAlignment(qtc.Qt.AlignRight)
+        self.scanConfigTableModel.setItem(row, Scans.WIRES, item)
+
+        # Determine values
+        # Frequency minimum, max, step
+        if scanType == 'resonance':
+            freqMin = float(rd['range'][0])
+            freqMax = float(rd['range'][1])
+            freqStep = SCAN_FREQUENCY_STEP_DEFAULT
+            if useAdvanced:
+                advFreqMin = self.advFreqMinLineEdit.text().strip()
+                if advFreqMin != "":
+                    freqMin = float(advFreqMin) # FIXME: this can cause crash if non-numeric entry...
+
+                advFreqMax = self.advFreqMaxLineEdit.text().strip()
+                if advFreqMax != "":
+                    freqMax = float(advFreqMax) # FIXME: this can cause crash if non-numeric entry...
+
+                advFss = self.advFssLineEdit.text().strip()
+                if advFss != "":
+                    freqStep = float(advFss) # FIXME: this can cause crash if non-numeric entry...
+                    
+        elif scanType == 'continuity':
+            freqMin  = CONTINUITY_SCAN_PARAMS_DEFAULT['stimFreqMin']
+            freqMax  = CONTINUITY_SCAN_PARAMS_DEFAULT['stimFreqMax']
+            freqStep = CONTINUITY_SCAN_PARAMS_DEFAULT['stimFreqStep']
+            if useAdvanced:
+                advFreqMin = self.advFreqMinContLineEdit.text().strip()
+                if advFreqMin != "":
+                    freqMin = float(advFreqMin) # FIXME: this can cause crash if non-numeric entry...
+
+                advFreqMax = self.advFreqMaxContLineEdit.text().strip()
+                if advFreqMax != "":
+                    freqMax = float(advFreqMax) # FIXME: this can cause crash if non-numeric entry...
+
+                advFss = self.advFssContLineEdit.text().strip()
+                if advFss != "":
+                    freqStep = float(advFss) # FIXME: this can cause crash if non-numeric entry...
+                    
+        # Populate table
+        # Freq min
+        item = qtg.QStandardItem()
+        item.setData(freqMin, qtc.Qt.DisplayRole)
+        item.setTextAlignment(qtc.Qt.AlignHCenter)
+        self.scanConfigTableModel.setItem(row, Scans.FREQ_MIN, item)
+        self.scanConfigTable.resizeColumnsToContents()
+        # Freq max
+        item = qtg.QStandardItem()
+        item.setData(freqMax, qtc.Qt.DisplayRole)
+        item.setTextAlignment(qtc.Qt.AlignHCenter)
+        self.scanConfigTableModel.setItem(row, Scans.FREQ_MAX, item)
+        self.scanConfigTable.resizeColumnsToContents()
+        # Freq step
+        item = qtg.QStandardItem()
+        item.setData(freqStep, qtc.Qt.DisplayRole)
+        item.setTextAlignment(qtc.Qt.AlignHCenter)
+        self.scanConfigTableModel.setItem(row, Scans.FREQ_STEP, item)
+        self.scanConfigTable.resizeColumnsToContents()
+    
     def configureScans(self):
-        self.scanTableModel.removeRows( 0, self.scanTableModel.rowCount() )
+        self.scanConfigTableModel.removeRows( 0, self.scanConfigTableModel.rowCount() )
 
         configLayer = self.configLayerComboBox.currentText()
         configHeadboard = self.configHeadboardSpinBox.value()
-        useAdvancedParameters = not self.advDisableAdvancedParametersCheckBox.isChecked()
+        useAdvancedParamsRes  = not self.advDisableResParamCb.isChecked()
+        useAdvancedParamsCont = not self.advDisableContParamCb.isChecked()
 
         channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
         self.range_data_list = []
 
-        #BOBOBOBOBOB
         row = 0
         for channels in channelGroups:
             #print(f'channels = {channels}')
@@ -1665,55 +1767,17 @@ class MainWindow(qtw.QMainWindow):
             #print(f'range_data = {range_data}')
             rd = range_data[0]
             self.range_data_list.append(rd)
-            #print(f'rd = {rd}')
-            #
-            # Wire numbers
-            wires = rd['wireSegments']
-            wires.sort(key = int)
-            #print(f'wires = {wires}')
-            item = qtg.QStandardItem()
-            item.setData(str(wires), qtc.Qt.DisplayRole)
-            item.setTextAlignment(qtc.Qt.AlignRight)
-            self.scanTableModel.setItem(row, Scans.WIRES, item)
-            #
-            # Frequency minimum
-            freqMin = float(rd['range'][0])
-            if useAdvancedParameters:
-                advFreqMin = self.advFreqMinLineEdit.text().strip()
-                if advFreqMin != "":
-                    freqMin = float(advFreqMin) # FIXME: this can cause crash if non-numeric entry...
-            item = qtg.QStandardItem()
-            item.setData(freqMin, qtc.Qt.DisplayRole)
-            item.setTextAlignment(qtc.Qt.AlignHCenter)
-            self.scanTableModel.setItem(row, Scans.FREQ_MIN, item)
-            self.scanTable.resizeColumnsToContents()
-            #
-            # Frequency maximum
-            freqMax = float(rd['range'][1])
-            if useAdvancedParameters:
-                advFreqMax = self.advFreqMaxLineEdit.text().strip()
-                if advFreqMax != "":
-                    freqMax = float(advFreqMax) # FIXME: this can cause crash if non-numeric entry...
-            item = qtg.QStandardItem()
-            item.setData(freqMax, qtc.Qt.DisplayRole)
-            item.setTextAlignment(qtc.Qt.AlignHCenter)
-            self.scanTableModel.setItem(row, Scans.FREQ_MAX, item)
-            self.scanTable.resizeColumnsToContents()
-            #
-            # Frequency step
-            freqStep = SCAN_FREQUENCY_STEP_DEFAULT
-            if useAdvancedParameters:
-                advFss = self.advFssLineEdit.text().strip()
-                if advFss != "":
-                    freqStep = float(advFss) # FIXME: this can cause crash if non-numeric entry...
-            item = qtg.QStandardItem()
-            item.setData(freqStep, qtc.Qt.DisplayRole)
-            item.setTextAlignment(qtc.Qt.AlignHCenter)
-            self.scanTableModel.setItem(row, Scans.FREQ_STEP, item)
-            self.scanTable.resizeColumnsToContents()
-            
+
+            self.scanConfigTableAddRow(rd, row, scanType='resonance', useAdvanced=useAdvancedParamsRes)
             row += 1
-            
+            if self.doContinuity:
+                # advanced params?
+                useAdvancedParamsCont = not self.advDisableContParamCb.isChecked()
+                self.scanConfigTableAddRow(rd, row, scanType='continuity', useAdvanced=useAdvancedParamsCont)
+                row += 1
+
+        # Select the first row
+        self.scanConfigTable.selectRow(0)
         self.configureLabel.setText("")
         self.configure = True
         self._scanButtonEnable()
@@ -2150,15 +2214,6 @@ class MainWindow(qtw.QMainWindow):
         self.btnScanCtrl.setStyleSheet("background-color : orange")
         self.btnScanCtrl.setText("Configuring DWA...")
         self.setDwaStatusLabel('configuring')
-
-        for i, btn in enumerate(self.radioBtns):
-            if btn.isChecked():
-                #logging.info("Changing color of row "+str(i))
-                for c in range(0, self.scanTable.columnCount()):
-                    self.scanTable.item(i,c).setBackground(qtg.QColor(255,140,0))
-            else:
-                #logging.info("Row "+str(i)+"has not been selected")
-                pass
     
     def startScanThreadComplete(self):
         self.setDwaStatusLabel('connected')
@@ -2172,37 +2227,38 @@ class MainWindow(qtw.QMainWindow):
         if not runAllScans:
             print('"Run all scans" box is not checked... no more scans to run')
             return
-        #buttonStatus = [btn.isChecked() for btn in self.radioBtns]
-        #print(f'buttonStatus = {buttonStatus}')
-        #print(f'self.radioBtns[-1].isChecked() = {self.radioBtns[-1].isChecked()}')
-        if self.autoScansRemain:
-            self.autoScansRemain = not self.radioBtns[-1].isChecked()
-            self.startScanThread()
-        else:
-            print("final scan has completed...")
 
+        # If the selected row is already marked "Done" then stop
+        # FIXME: May need better logic here, depending on desired behaviour...
+        # currently, after last row is scanned, selection is set to the top row
+        statusText = self.scanConfigTableModel.item(self.scanConfigRowToScan, Scans.STATUS).text()
+        if statusText == 'Done':
+            print("final scan has completed...")
+        else:
+            print("auto-starting next scan...")
+            self.startScanThread()
+        
     @pyqtSlot()
     def startScanThreadHandler(self):
         # Launch either one scan or all scans
-        self.autoScansRemain = not self.radioBtns[-1].isChecked()
-        self.startScanThread()
-        ## Get the checkbox status (one or all scans):
-        #runAllScans = self.scanCtrlRunAll.isChecked()
-        #print(f"runAllScans = {runAllScans}")
-        #if not runAllScans:
-        #    self.startScanThread()
-        #
-        #else:
-        #    print("not yet implemented")
-        #    # Get a list of scans to run
-        #    print(self.radioBtns)
-        #    nScans = len(self.radioBtns)
-        #    scansToRun = list(range(nScans))
-        #    for iscan in scansToRun:
-        #        print(f'activating radio button {iscan}')
-        #        self.radioBtns[iscan].setChecked(True)
-        #        self.startScanThread()
+        print('startScanThreadHandler')
 
+        # Get the selected row of the scan config table. Start with that scan
+        indices = self.scanConfigTable.selectedIndexes()
+        # Only one row cna be selected at a time, so get the row from the first cell
+        self.scanConfigRowToScan = indices[0].row()
+        print(f'row to scan: {self.scanConfigRowToScan}')
+
+        # Check to see if status is "Done" for all rows
+        self.autoScansRemain = False
+        for row in range(self.scanConfigTableModel.rowCount()):
+            statusText = self.scanConfigTableModel.item(row, Scans.STATUS).text()
+            if statusText != 'Done':
+                self.autoScansRemain = True
+                break
+        print(f"self.autoScansRemain = {self.autoScansRemain}")
+
+        self.startScanThread()
             
     def startScanThread(self):
         print("User has requested a new AUTO scan (DWA is IDLE)")
@@ -2319,25 +2375,36 @@ class MainWindow(qtw.QMainWindow):
 
         self.updateApaUuidListModel()  
         
-        useAdvancedParameters = not self.advDisableAdvancedParametersCheckBox.isChecked()
-        advStimTime = self.advStimTimeLineEdit.text() # Stimulation time
-        advInitDelay = self.advInitDelayLineEdit.text() # Init delay
-        advStimAmplitude = self.advStimAmplitudeLineEdit.text() # Amplitude
-        advDigipotAmplitude = self.advDigipotAmplitudeLineEdit.text() # Digipot amplitude
+        useAdvParamsRes  = not self.advDisableResParamCb.isChecked()
+        useAdvParamsCont = not self.advDisableContParamCb.isChecked()
+        useAdv = useAdvParamsRes or useAdvParamsCont
         
-        scanIndex = -1
-        logging.info(self.radioBtns)
-        for i, btn in enumerate(self.radioBtns):
-            logging.info(btn.isChecked())
-            if btn.isChecked():
-                scanIndex = i
-        if scanIndex < 0: return
-        
-        # This gets values from the table for scan configurations
-        freqMax = float(self.scanTable.item(scanIndex, 4).text())
-        freqMin = float(self.scanTable.item(scanIndex, 3).text())
-        freqStep = float(self.scanTable.item(scanIndex, 5).text())
-        
+        # What kind of scan is this (resonance or continuity)?
+        row = self.scanConfigRowToScan
+        scanType = self.scanConfigTableModel.item(row, Scans.TYPE).text()
+        # 'Res' or 'Cont'
+        if scanType not in ['Res', 'Cont']:
+            print(f"ERROR: unrecognized scan type: {scanType}")
+            print(f"       expected 'Res' or 'Cont'")
+            print(f"       returning...")
+            return
+
+        # Get values from scan config table (may be overwritten by advanced parameters later)
+        freqMin = float(self.scanConfigTableModel.item(row,  Scans.FREQ_MIN).text())
+        freqMax = float(self.scanConfigTableModel.item(row,  Scans.FREQ_MAX).text())
+        freqStep = float(self.scanConfigTableModel.item(row, Scans.FREQ_STEP).text())
+
+        if scanType == 'Res':
+            advStimTime = self.advStimTimeLineEdit.text().strip() # Stimulation time
+            advInitDelay = self.advInitDelayLineEdit.text().strip() # Init delay
+            advStimAmplitude = self.advStimAmplitudeLineEdit.text().strip() # Amplitude
+            advDigipotAmplitude = self.advDigipotAmplitudeLineEdit.text().strip() # Digipot amplitude
+        elif scanType == 'Cont':
+            advStimTime = self.advStimTimeContLineEdit.text().strip() # Stimulation time
+            advInitDelay = self.advInitDelayContLineEdit.text().strip() # Init delay
+            advStimAmplitude = self.advStimAmplitudeContLineEdit.text().strip() # Amplitude
+            advDigipotAmplitude = self.advDigipotAmplitudeContLineEdit.text().strip() # Digipot amplitude
+
         # TODO: Make sure inputs can be safely converted to floats
         # TODO: Grab default values if undefined
         if advStimTime: advStimTime = float(advStimTime)
@@ -2345,8 +2412,7 @@ class MainWindow(qtw.QMainWindow):
         if advStimAmplitude: advStimAmplitude = int(advStimAmplitude)
         if advDigipotAmplitude: advDigipotAmplitude = int(advDigipotAmplitude)
 
-
-        rd = self.range_data_list[scanIndex]
+        rd = self.range_data_list[row]
         #need to impliment list of all -1 for channels not being used
         #this makes it so for a single scan it just lists the one apa channel used, and then sorts all apa channels for an all wire scan
         if self.configRadioSingle.isChecked():
@@ -2361,12 +2427,13 @@ class MainWindow(qtw.QMainWindow):
         dwaChannels = range(8)
         self.apaChannels = [None]*len(dwaChannels)
         for apaChannel in channels:
-            dwaChannel = channel_map.apa_channel_to_dwa_channel(self.configLayer, apaChannel, is_flex_connection_winderlike)
+            dwaChannel = channel_map.apa_channel_to_dwa_channel(self.configLayer, apaChannel,
+                                                                is_flex_connection_winderlike)
             self.apaChannels[dwaChannel] = apaChannel
 
         self.activeRegisters = [ii for ii in range(len(self.apaChannels)) if self.apaChannels[ii]]  # Which DWA channels have data?
             
-        self.wires.sort(key = int)
+        self.wires.sort(key = int) # redundant?
 
         fpgaConfig = config_generator.configure_default()
         
@@ -2377,7 +2444,7 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
         fpgaConfig.update(config_generator.configure_fixed_frequency())
 
-        if useAdvancedParameters:
+        if useAdv:
             if advInitDelay: 
                 if advStimTime: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay, advStimTime))
                 else: fpgaConfig.update(config_generator.configure_wait_times(advInitDelay))
@@ -2392,14 +2459,14 @@ class MainWindow(qtw.QMainWindow):
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels, is_flex_connection_winderlike))
-        #print(f'\n\nAfter Relays:\n  fpgaConfig: {fpgaConfig}')
+        print(f'\n\nAfter Relays:\n  fpgaConfig: {fpgaConfig}')
         
         dataConfig = {"apaChannels": self.apaChannels, "wireSegments": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
         "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
 
         self._loadDaqConfig()
 
-        self.combinedConfig = {"FPGA": fpgaConfig, "DATABASE": dataConfig, "DAQ": self.daqConfig}
+        #self.combinedConfig = {"FPGA": fpgaConfig, "DATABASE": dataConfig, "DAQ": self.daqConfig}
         
         fpgaConfig.update(config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step = freqStep))
         fpgaConfig.update(config_generator.configure_noise_subtraction(freqMin, freqMax))
@@ -2425,11 +2492,11 @@ class MainWindow(qtw.QMainWindow):
         self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
         #above makes the scan directory for auto scans, below gives the final scan directory its name
         if self.configRadioSingle.isChecked():
-            self.wires = self.wires[0]
+            wires = self.wires[0]
         else:
-            self.wires = "-".join([str(w) for w in self.wires])
+            wires = "-".join([str(w) for w in self.wires])
         self.scanRunDataDir = os.path.join(dataDir, self.configLayer + "_" + self.configApaSide + 
-        "_" + str(self.configHeadboard) + "_" + str(self.wires) + "_" + self.timeString)
+        "_" + str(self.configHeadboard) + "_" + str(wires) + "_" + self.timeString)
         os.makedirs(self.scanRunDataDir)
      
     def startScanAdv(self):
@@ -2493,6 +2560,9 @@ class MainWindow(qtw.QMainWindow):
             
     def runScan(self):
 
+        # Update text in table to indicate that scan is running
+        self.scanConfigTableModel.item(self.scanConfigRowToScan, Scans.STATUS).setText('Running')
+        
         # runScan() is in a thread...  need to get logger?
         logger = logging.getLogger(__name__)
         logger.info(self.configFile)
@@ -3906,27 +3976,21 @@ class MainWindow(qtw.QMainWindow):
                 self.disableRelaysThread()
                 
                 #if the scan is auto, then when it finishes and the scan is over this
-                #finds what row was scanned and changes it green, 
-                #this also selects the next radio button
+                #finds what row was scanned and updates the status for that row
+                #this also selects the next row
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
-                    for i, btn in enumerate(self.radioBtns):
-                        if btn.isChecked(): 
-                            btnNum = i
-                    for c in range(0, self.scanTable.columnCount()):
-                        self.scanTable.item(btnNum,c).setBackground(qtg.QColor(3,205,0))
-                    # select the next row
-                    nextBtn = btnNum + 1
-                    if nextBtn > (len(self.radioBtns)-1):
-                        nextBtn = len(self.radioBtns)-1
-                    #if len(self.radioBtns)>(btnNum+1):
-                    #    nextBtn = btnNum+1
-                    #else: 
-                    #    nextBtn = len(self.radioBtns)-1
-                    item = qtw.QRadioButton(self.scanTable)
-                    self.scanTable.setCellWidget(nextBtn, 0, item)
-                    item.setChecked(True)
-                    self.radioBtns[nextBtn]=item
+                    #BOBOBOB
 
+                    row = self.scanConfigRowToScan
+                    self.scanConfigTableModel.item(row, Scans.STATUS).setText('Done')
+                    for c in range(0, self.scanConfigTableModel.columnCount()):
+                        self.scanConfigTableModel.item(row,c).setBackground(qtg.QColor(3,205,0))
+                    if row == self.scanConfigTableModel.rowCount()-1:
+                        self.scanConfigRowToScan = 0
+                    else:
+                        self.scanConfigRowToScan += 1
+                    self.scanConfigTable.selectRow(self.scanConfigRowToScan)
+                    
                 #self.updateAmplitudePlots()
                 #self.updateTimeseriesPlots()
                 print("UPDATING PLOTS ONE LAST TIME")
@@ -4203,8 +4267,8 @@ class MainWindow(qtw.QMainWindow):
 
     def _scanButtonEnable(self, force=False):
         if force or (self.connectedToUzed and self.idle and self.configure):
-            print(f"number of table rows = {self.scanTableModel.rowCount()}")
-            if self.scanTableModel.rowCount() > 0:
+            print(f"number of table rows = {self.scanConfigTableModel.rowCount()}")
+            if self.scanConfigTableModel.rowCount() > 0:
                 self.btnScanCtrl.setEnabled(True)
         if force or (self.connectedToUzed and self.idle):
             self.btnScanCtrlAdv.setEnabled(True)
@@ -4310,6 +4374,10 @@ class MainWindow(qtw.QMainWindow):
         self.insertScanIntoScanList(scanDir, submitted=Submitted.NO, row=0)  # put at the top of the list
 
     def insertScanIntoScanList(self, scanDir, row=None, submitted=None):
+        # a do-nothing function for now...
+        pass
+    
+    def insertScanIntoScanListOld(self, scanDir, row=None, submitted=None):
         '''
         scanDir:   e.g. ./scanData/APA_<UUID>/<LAYER>_<SIDE>_<HEADBOARD>_<WIRESEGMENTLIST>_<TIMESTAMP>
         row:       which row to insert this entry into
@@ -4331,52 +4399,9 @@ class MainWindow(qtw.QMainWindow):
             print("ERROR adding scanDir to Recent Scans table")
             print(f"scanDir = {scanDir}")
             return
-        self.recentScansTableModel.insert(row, entry)
+        self.recentScansTableModel.insertRow(row, entry)
         self.recentScansTableModel.layoutChanged.emit()
         self.recentScansTableView.resizeColumnsToContents()
-
-
-    # DEFUNCT
-    #def updateRecentScanList(self):
-    #    print("\n\n\n")
-    #    print("updateRecentScanList:")
-    #    
-    #    allScanDirs = dwa.getScanDataFolders(autoDir=OUTPUT_DIR_SCAN_DATA,
-    #                                         advDir=OUTPUT_DIR_SCAN_DATA_ADVANCED,
-    #                                         sort=True)[0]
-    #    mostRecentScan = allScanDirs
-    #    knownScans = [dd['scanName'] for dd in self.recentScansTableModel.getData()]
-    #
-    #    scanIsNew = mostRecentScan not in knownScans
-    #    
-    #    print(f'mostRecentScan = {mostRecentScan}')
-    #    print(f'knownScans     = {knownScans}')
-    #    print(f'scanIsNew      = {scanIsNew}')
-    #
-    #    if scanIsNew:
-    #        ampFilename = os.path.join(mostRecentScan, 'amplitudeData.json')
-    #        print(f"adding recent scan to list: {mostRecentScan}")
-    #        try:         # Ensure that there is an amplitudeData.json file present!
-    #            with open(ampFilename, "r") as fh:
-    #                data = json.load(fh)
-    #            newdata = {'scanName':mostRecentScan,
-    #                       'side':data['side'],
-    #                       'layer':data['layer'],
-    #                       'headboardNum':data['headboardNum'],
-    #                       'apaUuid':data['apaUuid'],
-    #                       'stage':data['stage'],
-    #                       'measuredBy':data['measuredBy'],
-    #                       'submitted':submitted,
-    #                       #'wireSegments':data['wireSegments'],
-    #                       }
-    #        except:
-    #            print("Could not add new scan to list...")
-    #
-    #        self.recentScansTableModel.prepend(newdata)
-    #        self.recentScansTableModel.layoutChanged.emit()
-    #        print(self.recentScansTableModel._data)
-    #            
-    #    print("\n\n\n")
         
     def runResonanceAnalysis(self):
         # get A(f) data for each channel

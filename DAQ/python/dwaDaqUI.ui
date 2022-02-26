@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>2048</width>
+    <width>2000</width>
     <height>1259</height>
    </rect>
   </property>
@@ -684,7 +684,7 @@
                    </layout>
                   </item>
                   <item>
-                   <widget class="QTableView" name="scanTable"/>
+                   <widget class="QTableView" name="scanConfigTable"/>
                   </item>
                   <item>
                    <widget class="QPushButton" name="btnScanCtrl">
@@ -851,88 +851,11 @@
                    </item>
                    <item>
                     <layout class="QFormLayout" name="formLayout_9">
-                     <item row="3" column="0">
-                      <widget class="QLabel" name="label_17">
-                       <property name="text">
-                        <string>Frequency step max (Hz)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="4" column="0">
-                      <widget class="QLabel" name="label_12">
-                       <property name="text">
-                        <string>Frequency step size (Hz)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="5" column="0">
-                      <widget class="QLabel" name="label_13">
-                       <property name="text">
-                        <string>Stimulation time (s)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="6" column="0">
-                      <widget class="QLabel" name="label_14">
-                       <property name="text">
-                        <string>Initialization delay(s)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="7" column="0">
-                      <widget class="QLabel" name="label_15">
-                       <property name="text">
-                        <string>Stimulus Amplitude</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="8" column="0">
-                      <widget class="QLabel" name="label_7">
-                       <property name="text">
-                        <string>Digipot Amplitude</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="9" column="0">
-                      <widget class="QLabel" name="disableAdvancedParametersLabel">
-                       <property name="text">
-                        <string>Disable Advanced Parameters</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="9" column="1">
-                      <widget class="QCheckBox" name="advDisableAdvancedParametersCheckBox"/>
-                     </item>
                      <item row="1" column="0">
                       <widget class="QLabel" name="label_5">
                        <property name="text">
                         <string>Scan type</string>
                        </property>
-                      </widget>
-                     </item>
-                     <item row="2" column="0">
-                      <widget class="QLabel" name="label_18">
-                       <property name="text">
-                        <string>Frequency step min (Hz)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="2" column="1">
-                      <widget class="QWidget" name="advFreqStepWdg" native="true">
-                       <layout class="QHBoxLayout" name="horizontalLayout_30">
-                        <property name="topMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="bottomMargin">
-                         <number>0</number>
-                        </property>
-                        <item>
-                         <widget class="QLineEdit" name="advFreqMinLineEdit"/>
-                        </item>
-                        <item>
-                         <widget class="QLineEdit" name="advFreqMinContLineEdit"/>
-                        </item>
-                       </layout>
                       </widget>
                      </item>
                      <item row="1" column="1">
@@ -961,6 +884,38 @@
                        </layout>
                       </widget>
                      </item>
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="label_18">
+                       <property name="text">
+                        <string>Frequency min (Hz)</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="QWidget" name="advFreqStepWdg" native="true">
+                       <layout class="QHBoxLayout" name="horizontalLayout_30">
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QLineEdit" name="advFreqMinLineEdit"/>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="advFreqMinContLineEdit"/>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item row="3" column="0">
+                      <widget class="QLabel" name="label_17">
+                       <property name="text">
+                        <string>Frequency max (Hz)</string>
+                       </property>
+                      </widget>
+                     </item>
                      <item row="3" column="1">
                       <widget class="QWidget" name="widget_28" native="true">
                        <layout class="QHBoxLayout" name="horizontalLayout_31">
@@ -977,6 +932,13 @@
                          <widget class="QLineEdit" name="advFreqMaxContLineEdit"/>
                         </item>
                        </layout>
+                      </widget>
+                     </item>
+                     <item row="4" column="0">
+                      <widget class="QLabel" name="label_12">
+                       <property name="text">
+                        <string>Frequency step (Hz)</string>
+                       </property>
                       </widget>
                      </item>
                      <item row="4" column="1">
@@ -997,6 +959,13 @@
                        </layout>
                       </widget>
                      </item>
+                     <item row="5" column="0">
+                      <widget class="QLabel" name="label_13">
+                       <property name="text">
+                        <string>Stimulation time (s)</string>
+                       </property>
+                      </widget>
+                     </item>
                      <item row="5" column="1">
                       <widget class="QWidget" name="widget_30" native="true">
                        <layout class="QHBoxLayout" name="horizontalLayout_33">
@@ -1013,6 +982,13 @@
                          <widget class="QLineEdit" name="advStimTimeContLineEdit"/>
                         </item>
                        </layout>
+                      </widget>
+                     </item>
+                     <item row="6" column="0">
+                      <widget class="QLabel" name="label_14">
+                       <property name="text">
+                        <string>Initialization delay(s)</string>
+                       </property>
                       </widget>
                      </item>
                      <item row="6" column="1">
@@ -1033,6 +1009,13 @@
                        </layout>
                       </widget>
                      </item>
+                     <item row="7" column="0">
+                      <widget class="QLabel" name="label_15">
+                       <property name="text">
+                        <string>Stimulus Amplitude</string>
+                       </property>
+                      </widget>
+                     </item>
                      <item row="7" column="1">
                       <widget class="QWidget" name="widget_32" native="true">
                        <layout class="QHBoxLayout" name="horizontalLayout_35">
@@ -1051,6 +1034,13 @@
                        </layout>
                       </widget>
                      </item>
+                     <item row="8" column="0">
+                      <widget class="QLabel" name="label_7">
+                       <property name="text">
+                        <string>Digipot Amplitude</string>
+                       </property>
+                      </widget>
+                     </item>
                      <item row="8" column="1">
                       <widget class="QWidget" name="widget_33" native="true">
                        <layout class="QHBoxLayout" name="horizontalLayout_36">
@@ -1065,6 +1055,39 @@
                         </item>
                         <item>
                          <widget class="QLineEdit" name="advDigipotAmplitudeContLineEdit"/>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item row="9" column="0">
+                      <widget class="QLabel" name="disableAdvancedParametersLabel">
+                       <property name="text">
+                        <string>Disable Advanced Parameters</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="9" column="1">
+                      <widget class="QWidget" name="widget_35" native="true">
+                       <layout class="QHBoxLayout" name="horizontalLayout_37">
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QCheckBox" name="advDisableResParamCb">
+                          <property name="text">
+                           <string>Resonance scan</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QCheckBox" name="advDisableContParamCb">
+                          <property name="text">
+                           <string>Continuity</string>
+                          </property>
+                         </widget>
                         </item>
                        </layout>
                       </widget>
@@ -3090,7 +3113,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>2048</width>
+     <width>2000</width>
      <height>22</height>
     </rect>
    </property>
