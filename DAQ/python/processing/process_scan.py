@@ -7,6 +7,7 @@ from scipy.signal import savgol_filter, find_peaks
 sys.path.append("../mappings")
 import channel_frequencies
 import resonance_fitting
+import os
 
 def new_results_dictOLD(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
     resultsDict = {}
@@ -113,7 +114,7 @@ def process_scan(resultsDict, dirName):
     stage = data['stage']
     layer = data['layer']
     side = data['side']
-    scanId = dirName.split('/')[-1]
+    scanId = os.path.basename(dirName)
     
     for reg in range(8):
         dwaCh = str(reg)

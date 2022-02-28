@@ -207,7 +207,7 @@ PUSH_BUTTON_LIST = [1, 2] # PB0 is deprecated
 #INTER_SCAN_DELAY_SEC = 2  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
 
 # DEBUGGING FLAGS
-AUTO_CHANGE_TAB = False # False for debugging
+AUTO_CHANGE_TAB = True # False for debugging
 GUI_Y_OFFSET = 0 #FIXME: remove this!
 
 # FIXME: these should go in DwaDataParser.py
@@ -2986,6 +2986,7 @@ class MainWindow(qtw.QMainWindow):
             #print(self.ampData)
             with open(self.fnOfAmpData, 'w') as outfile:
                 json.dump(self.ampData, outfile)
+            print(f"Saved as {self.fnOfAmpData}")
             self.logger.info(f"Saved as {self.fnOfAmpData}") 
         else:
             self.logger.info(f"No run to save.") 
@@ -3897,10 +3898,6 @@ class MainWindow(qtw.QMainWindow):
                 self.updatePlots(force_all=True)
                 self.wrapUpStimulusScan()
                 self.scanType = None
-
-                # Process the scan
-                process_scan.process_scan(self.getResultsDict(), self.fnOfAmpData)
-                self.resultsTableUpdate()
                 
             else:
                  print("ERROR: unknown value of runStatus:")   
@@ -4269,11 +4266,24 @@ class MainWindow(qtw.QMainWindow):
             self.currentViewStage = MainView.RESULTS
             self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
 
-        # Add this scan to the list of scans in the Resonance tab
-        scanDir = os.path.dirname(self.fnOfAmpData)
-        self.insertScanIntoScanList(scanDir, submitted=Submitted.NO, row=0)  # put at the top of the list
+        # Process the scan and update the results table
+        print("Processing scan")
+
+        resultsDict = self.getResultsDict()
+        process_scan.process_scan(resultsDict, os.path.dirname(self.fnOfAmpData))
+
+        # save scan analysis results to JSON file
+        outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
+        print(f'writing processed scan results to {outfile}')
+        with open(outfile, 'w') as f:
+            json.dump(resultsDict, f, indent=4, sort_keys=True)
+        print("Processed scan")
+
+        # Update the results table
+        self.resultsTableUpdate()
 
     def insertScanIntoScanList(self, scanDir, row=None, submitted=None):
+        # DEFUNCT: not used anymore.. vestige of "recent scans" table, which no longer exists
         '''
         scanDir:   e.g. ./scanData/APA_<UUID>/<LAYER>_<SIDE>_<HEADBOARD>_<WIRESEGMENTLIST>_<TIMESTAMP>
         row:       which row to insert this entry into
