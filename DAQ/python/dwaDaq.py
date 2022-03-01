@@ -926,9 +926,7 @@ class MainWindow(qtw.QMainWindow):
         le = getattr(self, f'filterLineEditHeadboard')
         le.setPlaceholderText(RESULTS_TABLE_HDRS[Results.HEADBOARD])
         le.textChanged.connect(lambda text, col=Results.HEADBOARD:
-                                self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(text,
-                                                                                            qtc.Qt.CaseSensitive,
-                                                                                            qtc.QRegExp.FixedString),
+                                self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp('^'+text+'$'),
                                                                                 col))
 
         for stage in APA_TESTING_STAGES_SHORT:
@@ -1273,7 +1271,7 @@ class MainWindow(qtw.QMainWindow):
         self.btnSubmitTensions.clicked.connect(self.submitTensionsThread)
         # Config Tab
         self.doContinuityCb.stateChanged.connect(self.doContinuityChanged)
-        self.btnConfigureScans.clicked.connect(self.singleOrAllScans)
+        self.btnConfigureScans.clicked.connect(self.configureScans)
         for stage in APA_TESTING_STAGES:
             self.configStageComboBox.addItem(stage)
         for layer in APA_LAYERS:
@@ -1573,14 +1571,9 @@ class MainWindow(qtw.QMainWindow):
     def hexString(self, val):
         return str(hex(int(val))).upper()[2:].zfill(N_DWA_CHANS)
 
-    def singleOrAllScans(self):
-        if self.configRadioAll.isChecked():
-            self.configureScans()
-        elif self.configRadioSingle.isChecked():
-            self.configureSingleScans()
 
     def configureSingleScans(self):
-        #TODO: Not poroperly taking into account some advances tab parameters
+        #DEFUNCT: Protocol is to redo all 8 wires
         self.scanConfigTable.clearContents()
 
         configLayer = self.configLayerComboBox.currentText()
