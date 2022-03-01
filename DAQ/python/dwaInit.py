@@ -21,9 +21,11 @@ relays['relayBusTop0'] = '0000BBBB'
 relays['relayBusTop1'] = '0000CCCC'
 
 print('Writing values for digipots, AC amplitude and relays to firmware...')
+devnull_file = open(devnull, 'w')
 with redirect_stdout(devnull_file):
     # Use default IP address, triggered by hardware jumper between pins 0 and 1 on 2x4 header
     uz = duz.DwaMicrozed(ip='140.247.123.186')
+    uz.sleepPostWrite = 0.5
     uz.setDigipots(digipots)
     uz.setStimMag(stimMag)
     uz.setRelays(relays)
@@ -50,11 +52,11 @@ with redirect_stdout(devnull_file):
 print('Done.')
 
 values_written = (digipots, stimMag, relays)
-values_read = (digipots_high + digipots_low, stimMag_read, relays_read)
+values_read = (digipots_read_high + digipots_read_low, stimMag_read, relays_read)
 if values_written == values_read:
     print('Values successfully written and read back.')
 else:
-    raise ValueError(f'Values not successfully written and read back: {values_written=} not equal to {values_read=}')
+    raise ValueError(f'Values not successfully written and read back: {values_written = } not equal to {values_read = }')
 
 print('End of hardware test.')
 
@@ -70,7 +72,7 @@ while serial_number_int < 31 or serial_number_int > 40:
 
 serial_number = format(serial_number_int, '08X')
 
-# IP adress starts with 192.168.140 to be compatible with PLC (avoid ending with .10 or .11)
+# IP adress starts with 192.168.140 to be compatible with PLC (avoid ending with .10 or .11 for possible conflict with winder computers)
 ip_address = 'C0A88C'+format(serial_number_int, '02X')
 
 # Use similar MAC address to default one but with ending changed
@@ -79,10 +81,8 @@ mac_address_lsb = '0097DA'+format(serial_number_int, '02X')
 
 print('Initializing DWA serial number, local IP address and MAC address...')
 
-devnull_file open(devnull, 'w')
 with redirect_stdout(devnull_file):
     # Use default IP address, triggered by hardware jumper between pins 0 and 1 on 2x4 header
-    uz = duz.DwaMicrozed(ip='140.247.123.186')
     uz.dwaInitialize(serial_number, ip_address, mac_address_msb, mac_address_lsb)
 print('Done.')
 
@@ -90,9 +90,9 @@ print('Reading back values for DWA serial number, local IP address and MAC addre
 # Read back values and convert
 with redirect_stdout(devnull_file):
     serial_number_read = format(uz.readValue('00000032')[2], '08X')
-    ip_adress_read = format(uz.readValue('00000032')[2], '08X')
-    mac_adress_msb_read = format(uz.readValue('00000032')[2], '08X')
-    mac_adress_lsb_read = format(uz.readValue('00000032')[2], '08X')
+    ip_address_read = format(uz.readValue('00000032')[2], '08X')
+    mac_address_msb_read = format(uz.readValue('00000032')[2], '08X')
+    mac_address_lsb_read = format(uz.readValue('00000032')[2], '08X')
 print('Done.')
 
 values_written = (serial_number, ip_address, mac_address_msb, mac_address_lsb)
@@ -102,7 +102,6 @@ if values_written == values_read:
     mac_address = mac_address_msb[2:] + mac_address_lsb[2:]
     mac_address_split = [mac_address[i:i+2] for i in range(0, len(mac_address), 2)]
     print('Values successfully written and read back.')
-    print('Please record the following values for this DWA.')
     print('DWA serial number: ' + serial_number_input)
     print('Local IP address: ' + '.'.join(ip_address_split))
     print('MAC address: ' + ':'.join(mac_address_split))

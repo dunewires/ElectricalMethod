@@ -582,6 +582,7 @@ class DwaMicrozed():
         self._tcpClose()
 
     def setStimMag(self, gain):
+        '''Set stimMag parameter.'''
         self._tcpOpen(sleep=self.sleepPostOpen)
 
         self._regWrite('00000008', gain)
