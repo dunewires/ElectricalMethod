@@ -27,24 +27,27 @@ def reduce_surrounding(f,a,f0):
     mult = -gaus + 1
     a[idx1:idx2] = a[idx1:idx2]*mult
 
-def contains_resonances(arr,layer):
+def contains_resonances(f,a,layer):
     '''Checks if a scan contains resonances by sliding a window across the scan and looking for variation in r2.'''
-    abso = np.abs(arr)
+    a = a[f>f[0]+5]
+    abso = np.abs(a)
     maxval = np.max(abso)
+    r2l = get_r2(a)/len(a)
     if maxval < 10: 
         print("Max val too small")
         return False
-    if maxval > 150: 
-        print("Max val too large")
-        return False
-    r2l = get_r2(arr)/len(arr)
-    if r2l < 20: return False
-    if layer in ['G','X'] and r2l > 1000: 
-        print("R-squared too large")
-        return False
-    if layer in ['U','V'] and r2l > 200: 
-        print("R-squared too large")
-        return False
+    # if maxval > 150: 
+    #     print("Max val too large")
+    #     return False
+    # if r2l < 20: 
+    #     print("R-squared too small")
+    #     return False
+    # if layer in ['G','X'] and r2l > 1000: 
+    #     print("R-squared too large")
+    #     return False
+    # if layer in ['U','V'] and r2l > 800: 
+    #     print("R-squared too large")
+    #     return False
     return True
     
 def shift_res_seg_to_f0(res_seg, res, f0):

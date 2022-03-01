@@ -64,7 +64,8 @@ class DwaDataParser():
         if VERBOSE > 0:
             print(Frame)
         
-    # STATIC method
+    #########################
+    # Start STATIC methods
     @staticmethod
     def getAllLines(fname):
         f = open(fname, "r")
@@ -73,6 +74,36 @@ class DwaDataParser():
         data = f.read().splitlines()
         f.close()
         return data
+
+    @staticmethod
+    def findUdpPacketStartLines(lines):
+        # Find where the UDP packet boundaries are in the file (lines starting with 'AAAA0')
+        udpDelimIdxs = []
+        for ii, line in enumerate(lines):
+            if line.startswith('AAAA0'):
+                udpDelimIdxs.append(ii)
+
+        return udpDelimIdxs
+
+    @staticmethod
+    def loadUdpPackets(lines, idxs):
+        # idxs is the list of UDP packet start indexes returned by findUdpPacketStartLines
+        # lines are the lines of a rawData_XX.txt file
+        
+        # Make a list of lists. Outer level list is one entry per UDP packet
+        # inner level of list is one entry per line of that UDP packet
+        mylist = [ lines[idxs[ii]:idxs[ii+1]]
+                   for ii in range(len(idxs)-1) ]
+        mylist.append(lines[idxs[-1]:])
+        #for ii in range(len(idxs)-1):
+        #    udpData[chan] = [ lines[idxs[ii]:idxs[ii+1]]
+        #                      for ii in range(len(idxs)-1) ]
+        #    udpData[chan].append(lines[udpDelimIdxs[-1]:])
+        return mylist
+
+    
+    # End STATIC methods
+    #########################
 
     def _makeFrameKeys(self):
         # create a dict of keys (dict of dict)

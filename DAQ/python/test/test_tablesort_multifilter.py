@@ -34,6 +34,8 @@ def random_word():
     return word
 
 
+
+
 class Widget(QWidget):
     def __init__(self, *args, **kwargs):
         QWidget.__init__(self, *args, **kwargs)
@@ -41,28 +43,36 @@ class Widget(QWidget):
 
         tv1 = QTableView(self)
         tv2 = QTableView(self)
-        model = QStandardItemModel(8, 4, self)
+        self.model = QStandardItemModel(8, 4, self)
         proxy = SortFilterProxyModel(self)
-        proxy.setSourceModel(model)
-        tv1.setModel(model)
+        proxy.setSourceModel(self.model)
+        tv1.setModel(self.model)
         tv2.setModel(proxy)
         self.layout().addWidget(tv1)
         self.layout().addWidget(tv2)
+        
 
-        for i in range(model.rowCount()):
-            for j in range(model.columnCount()):
+        for i in range(self.model.rowCount()):
+            for j in range(self.model.columnCount()):
                 item = QStandardItem()
                 item.setData(random_word(), Qt.DisplayRole)
-                model.setItem(i, j, item)
+                self.model.setItem(i, j, item)
 
         flayout = QFormLayout()
         self.layout().addLayout(flayout)
-        for i in range(model.columnCount()):
+        for i in range(self.model.columnCount()):
             le = QLineEdit(self)
             flayout.addRow("column: {}".format(i+1), le)
             le.textChanged.connect(lambda text, col=i:
                                    proxy.setFilterByColumn(QRegExp(text, Qt.CaseSensitive, QRegExp.FixedString),
                                                            col))
+
+    def load_dwa_data(self, dwa_data):
+        for i in range(self.model.rowCount()):
+            for j in range(self.model.columnCount()):
+                item = QStandardItem()
+                item.setData(random_word(), Qt.DisplayRole)
+                self.model.setItem(i, j, item)
 
 
 if __name__ == '__main__':
