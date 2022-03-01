@@ -203,7 +203,7 @@ def configure_noise_subtraction(stim_freq_min, stim_freq_max, *,
                                 noise_freq_min=None, noise_freq_max=None, noise_freq_step=1, noise_settling_time=0.01, noise_samples_per_freq=32, noise_sampling_period=1/55/32):
     '''Return a dictionary of configuration values for the noise-subtraction parameters, i.e. the minimum and maximum frequencies and the frequency step size for sampling noise, the wait time before noise sampling, the total number of samples per frequency and the sampling period, given the scan minimum and maximum frequencies in hertz. Configuration values, in hertz and seconds, can also be provided directly, bypassing the determination based on the scan minimum and maximum frequencies.'''
 
-    unit_factor_freq = 16
+    unit_factor_freq = 256
     unit_factor_time = 1/2.56e-6
     unit_factor_period = 1/10e-9
 
@@ -232,10 +232,6 @@ def configure_noise_subtraction(stim_freq_min, stim_freq_max, *,
         raise ValueError('Noise-subtraction minimum frequency is larger than noise-subtraction maximum frequency.')
 
     noise_sampling_period = 1 / ((NOISE_MAX + NOISE_MIN)/2) / noise_samples_per_freq
-
-    # Force no noise subtraction
-    # TODO: should be removed
-    noise_freq_min = noise_freq_max = 50
 
     return {'noiseFreqMin': format(int(noise_freq_min * unit_factor_freq), '06X'),
             'noiseFreqMax': format(int(noise_freq_max * unit_factor_freq), '06X'),
