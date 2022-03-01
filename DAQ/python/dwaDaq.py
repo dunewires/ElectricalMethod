@@ -223,7 +223,7 @@ PUSH_BUTTON_LIST = [1, 2] # PB0 is deprecated
 #INTER_SCAN_DELAY_SEC = 2  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
 
 # DEBUGGING FLAGS
-AUTO_CHANGE_TAB = False # False for debugging
+AUTO_CHANGE_TAB = True # False for debugging
 GUI_Y_OFFSET = 0 #FIXME: remove this!
 
 # FIXME: these should go in DwaDataParser.py
@@ -310,7 +310,7 @@ class Scans(IntEnum):
 # Recent scan list
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum',
                        'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
-RESULTS_TABLE_HDRS = ['Stage', 'Measurement Time', 'Wire Segment', 'Layer', 'Side',
+RESULTS_TABLE_HDRS = ['Stage', 'Measurement Time', 'Wire Segment', 'Layer', 'Side', 'Headboard',
                       'Tension', 'Measurement Type', 'Confidence', 'Scan']
 class Results(IntEnum):
     STAGE=RESULTS_TABLE_HDRS.index('Stage')
@@ -318,6 +318,7 @@ class Results(IntEnum):
     WIRE_SEGMENT=RESULTS_TABLE_HDRS.index('Wire Segment')
     LAYER=RESULTS_TABLE_HDRS.index('Layer')
     SIDE=RESULTS_TABLE_HDRS.index('Side')
+    HEADBOARD=RESULTS_TABLE_HDRS.index('Headboard')
     TENSION=RESULTS_TABLE_HDRS.index('Tension')
     MSRMT_TYPE=RESULTS_TABLE_HDRS.index('Measurement Type')
     CONFIDENCE=RESULTS_TABLE_HDRS.index('Confidence')
@@ -669,6 +670,7 @@ class MainWindow(qtw.QMainWindow):
         self.currentViewStim = TAB_ACTIVE_STIM
         self.currentViewResults = TAB_ACTIVE_RESULTS
         self.updateTabView()
+        self.horizontalWidget.setVisible(False)
         #self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
         #self.tabWidgetStim.setCurrentIndex(self.currentViewStim)
         self.DATA_TO_PLOT = False
@@ -920,6 +922,14 @@ class MainWindow(qtw.QMainWindow):
                                                                                             qtc.Qt.CaseSensitive,
                                                                                             qtc.QRegExp.FixedString),
                                                                                 col))
+        # Headboard filter
+        le = getattr(self, f'filterLineEditHeadboard')
+        le.setPlaceholderText(RESULTS_TABLE_HDRS[Results.HEADBOARD])
+        le.textChanged.connect(lambda text, col=Results.HEADBOARD:
+                                self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(text,
+                                                                                            qtc.Qt.CaseSensitive,
+                                                                                            qtc.QRegExp.FixedString),
+                                                                                col))
 
         for stage in APA_TESTING_STAGES_SHORT:
             getattr(self, f'filterStage{stage}').stateChanged.connect(self.filterStageChanged)
@@ -986,6 +996,11 @@ class MainWindow(qtw.QMainWindow):
                             item = qtg.QStandardItem()
                             item.setData(side, qtc.Qt.DisplayRole)
                             self.recentScansTableModel.setItem(i, Results.SIDE, item)
+                            # Headboard
+                            headboard = scanId.split("_")[2]
+                            item = qtg.QStandardItem()
+                            item.setData(headboard, qtc.Qt.DisplayRole)
+                            self.recentScansTableModel.setItem(i, Results.HEADBOARD, item)
                             # Measurement Time
                             item = qtg.QStandardItem()
                             strdatetime = scanId[-15:]
@@ -1264,8 +1279,6 @@ class MainWindow(qtw.QMainWindow):
         for layer in APA_LAYERS:
             self.configLayerComboBox.addItem(layer)
 
-        self.headboardLabel.setText("Connect to headboard #"+str(self.spinBox.value()))
-        self.headboardLabel.setStyleSheet("color : rgb(3,205,0)")
         self.connectLabel.setStyleSheet("color : red")
         self.connectLabel.setText("DWA is not connected")
         self.configureLabel.setStyleSheet("color : red")
@@ -2692,6 +2705,8 @@ class MainWindow(qtw.QMainWindow):
         self.configApaUuid = self.configApaUuidLineEdit.text().strip()
         print(f"[{self.configApaUuid}]")
 
+        self.horizontalWidget.setVisible(True)
+        self.widgetUuid.setEnabled(False)
         # Load the results table using the specified UUID
         self.resultsTableUpdate()
 
@@ -3114,6 +3129,7 @@ class MainWindow(qtw.QMainWindow):
             #print(self.ampData)
             with open(self.fnOfAmpData, 'w') as outfile:
                 json.dump(self.ampData, outfile)
+            print(f"Saved as {self.fnOfAmpData}")
             self.logger.info(f"Saved as {self.fnOfAmpData}") 
         else:
             self.logger.info(f"No run to save.") 
@@ -4019,10 +4035,6 @@ class MainWindow(qtw.QMainWindow):
                 self.updatePlots(force_all=True)
                 self.wrapUpStimulusScan()
                 self.scanType = None
-
-                # Process the scan
-                process_scan.process_scan(self.getResultsDict(), self.fnOfAmpData)
-                self.resultsTableUpdate()
                 
             else:
                  print("ERROR: unknown value of runStatus:")   
@@ -4391,9 +4403,21 @@ class MainWindow(qtw.QMainWindow):
             self.currentViewStage = MainView.RESULTS
             self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
 
-        # Add this scan to the list of scans in the Resonance tab
-        scanDir = os.path.dirname(self.fnOfAmpData)
-        self.insertScanIntoScanList(scanDir, submitted=Submitted.NO, row=0)  # put at the top of the list
+        # Process the scan and update the results table
+        print("Processing scan")
+
+        resultsDict = self.getResultsDict()
+        process_scan.process_scan(resultsDict, os.path.dirname(self.fnOfAmpData))
+
+        # save scan analysis results to JSON file
+        outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
+        print(f'writing processed scan results to {outfile}')
+        with open(outfile, 'w') as f:
+            json.dump(resultsDict, f, indent=4, sort_keys=True)
+        print("Processed scan")
+
+        # Update the results table
+        self.resultsTableUpdate()
 
     def insertScanIntoScanList(self, scanDir, row=None, submitted=None):
         # a do-nothing function for now...
