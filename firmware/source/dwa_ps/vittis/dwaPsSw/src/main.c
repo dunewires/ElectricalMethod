@@ -122,6 +122,7 @@ int main()
 {
 unsigned int macUword;
 unsigned int macLword;
+unsigned int gpioState;
 unsigned int ipLocal;
 #if LWIP_IPV6==0
 	ip_addr_t ipaddr, netmask, gw;
@@ -135,6 +136,7 @@ unsigned int ipLocal;
 	ipLocal = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (58 << 2));
 	macUword = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (59 << 2));
 	macLword = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (60 << 2));
+	gpioState = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (62 << 2));  //check state of GPIO
 	xil_printf("MAC address %x, %x, %x, %x, %x, %x \r\n", macUwordB[2], macUwordB[1], macUwordB[0], macLwordB[2], macLwordB[1], macLwordB[0]);
 	unsigned char mac_ethernet_address[] =
 	//{ 0x84, 0x2b, 0x2b, 0x97, 0xda, 0x00}; //"Jeff" microzed"
@@ -223,9 +225,14 @@ unsigned int ipLocal;
 	while(((echo_netif->ip_addr.addr) == 0) && (dhcp_timoutcntr > 0))
 		xemacif_input(echo_netif);
 
-	if (dhcp_timoutcntr <= 0) {
+	if ((dhcp_timoutcntr <= 0)||(gpioState & (1<<3))) { //timeout or 3rd bit in gpio
 		if ((echo_netif->ip_addr.addr) == 0) {
-			xil_printf("DHCP Timeout\r\n");
+			
+			if (gpioState & (1<<3))
+				xil_printf("DHCP Disabled on DWA, using local IP \r\n");
+			else
+				xil_printf("DHCP Timeout, using local IP\r\n");
+
 			xil_printf("Configuring default IP %x %x %x %x\r\n", ipLocalB[3], ipLocalB[2], ipLocalB[1], ipLocalB[0]);
 			IP4_ADDR(&(echo_netif->ip_addr),  ipLocalB[3], ipLocalB[2], ipLocalB[1], ipLocalB[0]);
 			//IP4_ADDR(&(echo_netif->ip_addr),  128, 103,   100, 173);

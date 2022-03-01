@@ -72,7 +72,8 @@ vcom -64 -2008 -work duneDwa  \
 "../source/hdl/adc_dds_io.vhd" \
 "../source/hdl/adcReadout.vhd" \
 "../source/hdl/headerGenerator.vhd" \
-"../source/hdl/mainsNoiseCorrection.vhd" 
+"../source/hdl/mainsNoiseCorrection.vhd" \
+"../source/hdl/CheckReg.vhd" 
 
 
 vcom -64 -2008 -work duneDwa   \

@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Mon Jan 24 15:27:02 2022
+-- Last update : Fri Feb 18 11:33:11 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -28,8 +28,8 @@ package global_def is
     --set emulated data
     constant useAdcEmu : boolean := false;
     --constant useAdcEmu   : boolean := true;
-    constant ipLocalDefault     : std_logic_vector(31 downto 0) := x"C0AB0107"; --192.168.1.7
-    constant macDefault         : std_logic_vector(47 downto 0) := x"842B2B97DA03";
+    constant ipLocalDefault : std_logic_vector(31 downto 0) := x"C0AB0107"; --192.168.1.7
+    constant macDefault     : std_logic_vector(47 downto 0) := x"842B2B97DA03";
 
     type SLV_VECTOR_TYPE is array (natural range <>) of std_logic_vector;
     type SLV_VEC_OF_VEC_TYPE is array (natural range <>) of SLV_VECTOR_TYPE;
@@ -61,6 +61,11 @@ package global_def is
         errors         : std_logic_vector(23 downto 0);
         pktGenStateDbg : unsigned(3 downto 0);
         pButton        : std_logic_vector(3 downto 0);
+                                       
+        checkRegA     : std_logic_vector(31 downto 0);	
+        checkRegB     : std_logic_vector(31 downto 0);	
+                                       
+        gpioState      : std_logic_vector(3 downto 0);
     end record; -- toDaqRegType
 
     type fromDaqRegType is record
@@ -121,24 +126,25 @@ package global_def is
 
         ctrlStateDbg         : unsigned(3 downto 0);
         errors               : std_logic_vector(23 downto 0);
-        statusPeriod         : unsigned(23 downto 0); --anyvalue
-        pktGenWatchdogPeriod : unsigned(23 downto 0); --anyvalue
-        --- Channel mask indicating which sense channels are active (8bit)
-        activeChannels : std_logic_vector(7 downto 0);  -- !! unused, remove from firmware.
-        --- Mask indicating which relays are active
-        --- in v2 this is 32 bits.  In v3 will be 192 bits!!!
-        relayMask : std_logic_vector(31 downto 0); --!! unused remove from firmware.
-        --adcSamplingPeriod  : unsigned(23 downto 0);
-        netStatus : std_logic_vector(7 downto 0);
-        relayBusTop       : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);--TBD
-        relayWireTop      : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);--TBD
-        relayBusBot       : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0);--TBD
-        relayWireBot      : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0);--TBD
-        relayUpdate       : boolean;--!! mask when realy registers are not correctly comfigured.
-        relayAutoBreakEna : std_logic; --anything
-        useAcStimTrig     : std_logic; -- anything
-        disableHV     : std_logic; -- anything
-    end record; -- fromDaqRegType
+        statusPeriod         : unsigned(23 downto 0);  --anyvalue
+        pktGenWatchdogPeriod : unsigned(23 downto 0);  --anyvalue
+                                                       --- Channel mask indicating which sense channels are active (8bit)
+        activeChannels : std_logic_vector(7 downto 0); -- !! unused, remove from firmware.
+                                                       --- Mask indicating which relays are active
+                                                       --- in v2 this is 32 bits.  In v3 will be 192 bits!!!
+        relayMask : std_logic_vector(31 downto 0);     --!! unused remove from firmware.
+                                                       --adcSamplingPeriod  : unsigned(23 downto 0);
+        netStatus         : std_logic_vector(7 downto 0);
+        relayBusTop       : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0); --TBD
+        relayWireTop      : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0); --TBD
+        relayBusBot       : SLV_VECTOR_TYPE(1 downto 0)(15 downto 0); --TBD
+        relayWireBot      : SLV_VECTOR_TYPE(3 downto 0)(15 downto 0); --TBD
+        relayUpdate       : boolean;                                  --!! mask when realy registers are not correctly comfigured.
+        relayAutoBreakEna : std_logic;                                --anything
+        useAcStimTrig     : std_logic;                                -- anything
+        danceParty        : std_logic;                                -- anything
+        disableHV         : std_logic;                                -- anything
+    end record;                                                       -- fromDaqRegType
 
 end global_def;
 

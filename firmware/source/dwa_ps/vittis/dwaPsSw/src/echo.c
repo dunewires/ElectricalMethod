@@ -37,7 +37,7 @@ int transfer_data() {
 }
 
 void print_app_header() {
-  xil_printf("\n\r\n\r-----DUNE DWA PSV 2022, Jan 21 ------\n\r");
+  xil_printf("\n\r\n\r-----DUNE DWA PSV 2022, Feb 18 ------\n\r");
 }
 int *ptr = 0xc2000000;
 err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {

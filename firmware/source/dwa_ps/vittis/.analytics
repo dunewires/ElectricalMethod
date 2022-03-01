@@ -196,3 +196,13 @@ timestamp=[2022-01-21 11:14:04], mode=BUILD, duration=0:00:01.174, duration_ms=1
 timestamp=[2022-01-21 11:14:10], mode=BUILD, duration=0:00:05.834, duration_ms=5834, data={name=dwaPsSw_system, configuration=Release, clean_build=false}
 timestamp=[2022-01-21 11:15:36], mode=BUILD, duration=0:00:00.264, duration_ms=264, data={name=dwaPsSw, configuration=Release, clean_build=false}
 timestamp=[2022-01-21 11:15:42], mode=BUILD, duration=0:00:05.528, duration_ms=5528, data={name=dwaPsSw_system, configuration=Release, clean_build=false}
+timestamp=[2022-02-17 09:45:12], mode=WORKBENCH_START, duration=0:00:17.014, duration_ms=17014, data={}
+timestamp=[2022-02-17 09:45:12], mode=PLATFORM_REPOSITORY_INIT, duration=0:00:00.035, duration_ms=35, data={}
+timestamp=[2022-02-17 09:45:17], mode=WORKBENCH_UI_INIT, duration=0:00:05.259, duration_ms=5259, data={editors_count=2, platform_editors_count=0, projects_count=4, platform_projects_count=1, active_platform_editor=false, projects=RemoteSystemsTempFiles,dwaPsHw,dwaPsSw,dwaPsSw_system}
+timestamp=[2022-02-17 09:46:47], mode=BUILD, duration=0:00:01.480, duration_ms=1480, data={name=dwaPsSw, configuration=Release, clean_build=false}
+timestamp=[2022-02-17 09:47:51], mode=BUILD, duration=0:00:00.715, duration_ms=715, data={name=dwaPsSw, configuration=Release, clean_build=false}
+timestamp=[2022-02-17 09:48:49], mode=BUILD, duration=0:00:00.169, duration_ms=169, data={name=dwaPsSw, configuration=Release, clean_build=false}
+timestamp=[2022-02-18 12:32:00], mode=WORKBENCH_START, duration=0:00:08.463, duration_ms=8463, data={}
+timestamp=[2022-02-18 12:32:00], mode=PLATFORM_REPOSITORY_INIT, duration=0:00:00.013, duration_ms=13, data={}
+timestamp=[2022-02-18 12:32:03], mode=WORKBENCH_UI_INIT, duration=0:00:02.790, duration_ms=2790, data={editors_count=2, platform_editors_count=0, projects_count=4, platform_projects_count=1, active_platform_editor=false, projects=RemoteSystemsTempFiles,dwaPsHw,dwaPsSw,dwaPsSw_system}
+timestamp=[2022-02-18 12:33:13], mode=BUILD, duration=0:00:00.290, duration_ms=290, data={name=dwaPsSw, configuration=Release, clean_build=false}
