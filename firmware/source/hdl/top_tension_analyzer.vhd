@@ -63,20 +63,19 @@ architecture STRUCT of top_tension_analyzer is
 
   COMPONENT fifo_autoDatacollection
     PORT (
-      rst         : IN  STD_LOGIC;
-      wr_clk      : IN  STD_LOGIC;
-      rd_clk      : IN  STD_LOGIC;
-      din         : IN  STD_LOGIC_VECTOR(15 DOWNTO 0);
-      wr_en       : IN  STD_LOGIC;
-      rd_en       : IN  STD_LOGIC;
-      dout        : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
-      full        : OUT STD_LOGIC;
-      empty       : OUT STD_LOGIC;
-      prog_full   : OUT STD_LOGIC;
-      wr_rst_busy : OUT STD_LOGIC;
-      rd_rst_busy : OUT STD_LOGIC
+      clk           : IN  STD_LOGIC;
+      srst          : IN  STD_LOGIC;
+      din           : IN  STD_LOGIC_VECTOR(15 DOWNTO 0);
+      wr_en         : IN  STD_LOGIC;
+      rd_en         : IN  STD_LOGIC;
+      dout          : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+      full          : OUT STD_LOGIC;
+      empty         : OUT STD_LOGIC;
+      wr_data_count : OUT STD_LOGIC_VECTOR(12 DOWNTO 0);
+      prog_full     : OUT STD_LOGIC
     );
   END COMPONENT;
+
 
   COMPONENT ila_4x32
     PORT (
@@ -555,28 +554,23 @@ begin
 
   --for each of the 8 channels
   adcFifoGen : for adc_i in 7 downto 0 generate
-
-
     -- store data for AXI read
     fifoAdcData_ch : fifo_autoDatacollection
       PORT MAP (
-        rst    => bool2Sl(fromDaqReg.reset),
-        wr_clk => dwaClk100,
-        rd_clk => dwaClk100,
-        din    => '0' & std_logic_vector(senseWireMNSData(adc_i)),
-        wr_en  => senseWireMNSDataStrb,
+        clk  => dwaClk100,
+        srst => bool2Sl(fromDaqReg.reset),
 
-        rd_en => fifoAdcData_ren(adc_i),
-        -- MNS eval
-        --rd_en => bool2sl(not noiseReadoutBusy),
+        din  => '0' & std_logic_vector(senseWireMNSData(adc_i)),
+        wr_en => senseWireMNSDataStrb,
+        
         dout => adcData(adc_i),
+        rd_en => fifoAdcData_ren(adc_i),
 
         -- ADC full bits are the second set of 8 bits
-        full        => fifoAdcData_ff(adc_i),
-        empty       => fifoAdcData_ef(adc_i),
-        prog_full   => fifoAdcData_pf(adc_i),
-        wr_rst_busy => open,
-        rd_rst_busy => open
+        full          => fifoAdcData_ff(adc_i),
+        empty         => fifoAdcData_ef(adc_i),
+        wr_data_count => wr_data_count(adc_i),
+        prog_full     => fifoAdcData_pf(adc_i)
       );
 
   end generate adcFifoGen;
