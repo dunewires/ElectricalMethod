@@ -2395,7 +2395,7 @@ class MainWindow(qtw.QMainWindow):
         row = self.scanConfigRowToScan
         scanType = self.scanConfigTableModel.item(row, Scans.TYPE).text()
         # 'Res' or 'Cont'
-        if scanType not in ['Res', 'Cont']:
+        if scanType not in ['Tension', 'Continuity']:
             print(f"ERROR: unrecognized scan type: {scanType}")
             print(f"       expected 'Res' or 'Cont'")
             print(f"       returning...")
@@ -2406,12 +2406,12 @@ class MainWindow(qtw.QMainWindow):
         freqMax = float(self.scanConfigTableModel.item(row,  Scans.FREQ_MAX).text())
         freqStep = float(self.scanConfigTableModel.item(row, Scans.FREQ_STEP).text())
 
-        if scanType == 'Res':
+        if scanType == 'Tension':
             advStimTime = self.advStimTimeLineEdit.text().strip() # Stimulation time
             advInitDelay = self.advInitDelayLineEdit.text().strip() # Init delay
             advStimAmplitude = self.advStimAmplitudeLineEdit.text().strip() # Amplitude
             advDigipotAmplitude = self.advDigipotAmplitudeLineEdit.text().strip() # Digipot amplitude
-        elif scanType == 'Cont':
+        elif scanType == 'Continuity':
             advStimTime = self.advStimTimeContLineEdit.text().strip() # Stimulation time
             advInitDelay = self.advInitDelayContLineEdit.text().strip() # Init delay
             advStimAmplitude = self.advStimAmplitudeContLineEdit.text().strip() # Amplitude
