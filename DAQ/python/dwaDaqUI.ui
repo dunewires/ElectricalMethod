@@ -639,24 +639,24 @@
                            </property>
                           </widget>
                          </item>
+                         <item row="16" column="1">
+                          <widget class="QPushButton" name="btnScanCtrl">
+                           <property name="text">
+                            <string>Start next scan</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="17" column="1">
+                          <widget class="QCheckBox" name="scanCtrlRunAll">
+                           <property name="text">
+                            <string>Automate scanning</string>
+                           </property>
+                          </widget>
+                         </item>
                         </layout>
                        </item>
                        <item>
                         <widget class="QTableView" name="scanConfigTable"/>
-                       </item>
-                       <item>
-                        <widget class="QPushButton" name="btnScanCtrl">
-                         <property name="text">
-                          <string>Start next scan</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QCheckBox" name="scanCtrlRunAll">
-                         <property name="text">
-                          <string>Automate scanning</string>
-                         </property>
-                        </widget>
                        </item>
                       </layout>
                      </widget>
@@ -3202,8 +3202,6 @@
   <tabstop>evtVwrTabs</tabstop>
   <tabstop>evtVwrPlotsGLW</tabstop>
   <tabstop>pw_chan_1</tabstop>
-  <tabstop>btnScanCtrl</tabstop>
-  <tabstop>scanCtrlRunAll</tabstop>
   <tabstop>submitTensionNoteLineEdit</tabstop>
   <tabstop>evtVwr_openScan_pb</tabstop>
   <tabstop>measuredByLineEdit</tabstop>

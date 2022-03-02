@@ -244,7 +244,7 @@ MAX_WIRE_SEGMENT = {
 }
 
 # FIXME: these should be read from somewhere else (DwaConfigFile)...
-DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
+DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side', 'type']
 
 # Recent scan list 
 SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid']
@@ -619,8 +619,10 @@ class MainWindow(qtw.QMainWindow):
         self.configFileContents.setReadOnly(True)
         self.scanCtrlButtons = [self.btnScanCtrl, self.btnScanCtrlAdv]
         self.scanType = None
-        self.doContinuity = False
+        self.doContinuity = True
+        self.doTension = True
         self.doContinuityCb.setChecked(qtc.Qt.Checked if self.doContinuity else qtc.Qt.Unchecked)
+        self.doTensionCb.setChecked(qtc.Qt.Checked if self.doTension else qtc.Qt.Unchecked)
         self._scanButtonDisable()
         self._submitResonanceButtonDisable()
         self._setScanButtonAction('START')
@@ -1271,6 +1273,7 @@ class MainWindow(qtw.QMainWindow):
         self.btnSubmitTensions.clicked.connect(self.submitTensionsThread)
         # Config Tab
         self.doContinuityCb.stateChanged.connect(self.doContinuityChanged)
+        self.doTensionCb.stateChanged.connect(self.doTensionChanged)
         self.btnConfigureScans.clicked.connect(self.configureScans)
         for stage in APA_TESTING_STAGES:
             self.configStageComboBox.addItem(stage)
@@ -1785,8 +1788,9 @@ class MainWindow(qtw.QMainWindow):
                 self.scanConfigTableAddRow(rd, row, scanType='Continuity', useAdvanced=useAdvancedParamsCont)
                 row += 1
                 
-            self.scanConfigTableAddRow(rd, row, scanType='Tension', useAdvanced=useAdvancedParamsRes)
-            row += 1
+            if self.doTension:
+                self.scanConfigTableAddRow(rd, row, scanType='Tension', useAdvanced=useAdvancedParamsRes)
+                row += 1
 
         # Select the first row
         self.scanConfigTable.selectRow(0)
@@ -2257,7 +2261,7 @@ class MainWindow(qtw.QMainWindow):
 
         # Get the selected row of the scan config table. Start with that scan
         indices = self.scanConfigTable.selectedIndexes()
-        # Only one row cna be selected at a time, so get the row from the first cell
+        # Only one row can be selected at a time, so get the row from the first cell
         self.scanConfigRowToScan = indices[0].row()
         print(f'row to scan: {self.scanConfigRowToScan}')
 
@@ -2395,7 +2399,7 @@ class MainWindow(qtw.QMainWindow):
         row = self.scanConfigRowToScan
         scanType = self.scanConfigTableModel.item(row, Scans.TYPE).text()
         # 'Res' or 'Cont'
-        if scanType not in ['Res', 'Cont']:
+        if scanType not in ['Tension', 'Continuity']:
             print(f"ERROR: unrecognized scan type: {scanType}")
             print(f"       expected 'Res' or 'Cont'")
             print(f"       returning...")
@@ -2406,12 +2410,12 @@ class MainWindow(qtw.QMainWindow):
         freqMax = float(self.scanConfigTableModel.item(row,  Scans.FREQ_MAX).text())
         freqStep = float(self.scanConfigTableModel.item(row, Scans.FREQ_STEP).text())
 
-        if scanType == 'Res':
+        if scanType == 'Tension':
             advStimTime = self.advStimTimeLineEdit.text().strip() # Stimulation time
             advInitDelay = self.advInitDelayLineEdit.text().strip() # Init delay
             advStimAmplitude = self.advStimAmplitudeLineEdit.text().strip() # Amplitude
             advDigipotAmplitude = self.advDigipotAmplitudeLineEdit.text().strip() # Digipot amplitude
-        elif scanType == 'Cont':
+        elif scanType == 'Continuity':
             advStimTime = self.advStimTimeContLineEdit.text().strip() # Stimulation time
             advInitDelay = self.advInitDelayContLineEdit.text().strip() # Init delay
             advStimAmplitude = self.advStimAmplitudeContLineEdit.text().strip() # Amplitude
@@ -2468,9 +2472,14 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels, is_flex_connection_winderlike))
         print(f'\n\nAfter Relays:\n  fpgaConfig: {fpgaConfig}')
-        
-        dataConfig = {"apaChannels": self.apaChannels, "wireSegments": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
-        "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
+
+        # FIXME: should these keys match DATABASE_FIELDS?
+        dataConfig = {"apaChannels": self.apaChannels, "wireSegments": self.wires,
+                      "measuredBy": self.configMeasuredBy, "stage": self.configStage,
+                      "apaUuid": self.configApaUuid, 
+                      "layer": self.configLayer, "headboardNum": self.configHeadboard,
+                      "side": self.configApaSide, "type": scanType
+                      }
 
         self._loadDaqConfig()
 
@@ -2480,6 +2489,8 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_noise_subtraction(freqMin, freqMax))
 
         self.combinedConfig = {"FPGA": fpgaConfig, "DATABASE": dataConfig, "DAQ": self.daqConfig}
+
+        print(self.combinedConfig)
         
         self.makeScanOutputDir()
         config_generator.write_config(self.combinedConfig, 'dwaConfig.ini', self.scanRunDataDir) #self.configFileDir
@@ -4006,7 +4017,6 @@ class MainWindow(qtw.QMainWindow):
                 #finds what row was scanned and updates the status for that row
                 #this also selects the next row
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
-                    #BOBOBOB
 
                     row = self.scanConfigRowToScan
                     self.scanConfigTableModel.item(row, Scans.STATUS).setText('Done')
@@ -4223,6 +4233,10 @@ class MainWindow(qtw.QMainWindow):
         #print(f"is unchecked:      {self.doContinuity == qtc.Qt.Unchecked}")
         #print(f"is   checked:      {self.doContinuity == qtc.Qt.Checked}")
         print(f"self.doContinuity: {self.doContinuity}")
+        
+    def doTensionChanged(self):
+        self.doTension = self.doTensionCb.isChecked()
+        print(f"self.doTension: {self.doTension}")
         
     def disableScanButtonForTime(self, disableDuration):
         """ disableDuration is a time in seconds """

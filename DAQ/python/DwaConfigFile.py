@@ -67,7 +67,7 @@ class DwaConfigFile():
                                      "noiseSettlingTime", "noiseSamplingPeriod", "noiseAdcSamplesPerFreq",
                                      "relayWireTop", "relayWireBot", "relayBusTop", "relayBusBot",
                                      ]
-        self.validOptions["DATABASE"] = ["wireSegments", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side", "apaChannels"]
+        self.validOptions["DATABASE"] = ["wireSegments", "measuredBy", "stage", "apaUuid", "layer", "headboardNum", "side", "apaChannels", "type"]
 
         self.validOptions["DAQ"] = ["DWA_IP", "statusPeriodSec", "verbose", "client_IP", "guiUpdatePeriodSec"]
 
