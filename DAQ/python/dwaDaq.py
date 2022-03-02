@@ -1488,18 +1488,30 @@ class MainWindow(qtw.QMainWindow):
 
         # Read status frame period (0x35)
         out = self.uz.readValue('00000035') 
-        print("Read-back status frame period")
-        print(out)
+        print(f"Read-back status frame period: {out}")
         statusFramePeriod_str = '{:.1f} s'.format(out[-1]*2.56e-6)
         self.statusFramePeriod_val.setText(statusFramePeriod_str)
 
         # Read DWA serial number
         #out = self.uz.readValue('00000030') #0x30 is the reg addr for the hardware serial #
         out = self.uz.readValue('00000039')  #0x39 is the reg addr for the user-specified serial #
-        print(f"serial number = {out[-1]}")
+        #print(f"Read-back serial number = {out[-1]}")
+        print(f"Read-back serial number = {out}")
         dwaSerialNumber_str = '{:06X}'.format(out[-1])
+        print(f"dwaSerialNumber_str = {dwaSerialNumber_str}")
         self.dwaSerialNumber_val.setText(dwaSerialNumber_str)
 
+
+        # Read DWA MAC address
+        outLSB = self.uz.readValue('0000003C')
+        outMSB = self.uz.readValue('0000003B')
+        print(f"Read-back MAC = {outMSB}, {outLSB}")
+        mac = f'{outMSB[-1]:06X}{outLSB[-1]:06X}'
+        dwaMac_str = ':'.join(mac[ii:ii+2] for ii in range(0,len(mac),2) ) # insert : every 2 characters
+        print(f"dwaMac_str = {dwaMac_str}")
+        self.dwaMacAddress_val.setText(dwaMac_str)
+
+        
         # Can get MAC address:
         # Register Ox3B is the MSBs
         # Register Ox3C is the LSBs

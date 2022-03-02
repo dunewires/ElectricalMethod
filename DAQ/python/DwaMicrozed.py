@@ -507,7 +507,7 @@ class DwaMicrozed():
         print("====_regRead")
         val = self._regRead(address)
         time.sleep(self.sleepPostWrite)
-        print(f"val = {val}")
+        #print(f"val = {val}")
         print("====_tcpClose()")
         self._tcpClose()
         return val
@@ -537,11 +537,11 @@ class DwaMicrozed():
         try :
             packer = struct.Struct(packerString)
             packed_data = packer.pack(*values)
-            print(f'payload_header, payload_type, address, value, values = {payload_header}, {payload_type}, {address}, {value}, {values}')
-            print('PAYLOAD_HEADER = {0:s}'.format(payload_header))
-            print('PAYLOAD_TYPE = {0:s}'.format(payload_type))
-            print('ADDRESS = {0:s}'.format(address))
-            print('values = {}'.format(values))
+            #print('PAYLOAD_HEADER = {0:s}'.format(payload_header))
+            #print('PAYLOAD_TYPE = {0:s}'.format(payload_type)) 
+            #print('ADDRESS = {0:s}'.format(address))
+            #print('values = {}'.format(values))
+            print(f'PAYLOAD_HEADER, PAYLOAD_TYPE, ADDRESS, values = {payload_header}, {payload_type}, {address}, {values}')
             #
             print('Sending...',end='')
             self.sock.sendall(packed_data)
@@ -551,6 +551,7 @@ class DwaMicrozed():
         except socket.error:
             #Send failed
             print('Send failed')
+            print(socket.error)
             #sys.exit()
         
         #get reply and print
@@ -570,7 +571,8 @@ class DwaMicrozed():
         # make socket non blocking
         # https://docs.python.org/2/library/socket.html#socket.socket.setblocking
         # FIXME: should this be non-blocking???
-        self.sock.setblocking(0)
+        #self.sock.setblocking(0)
+        self.sock.setblocking(True)
     
         # receive/unpack
         unpacker = struct.Struct('!L L L')
@@ -586,14 +588,16 @@ class DwaMicrozed():
         data_bin = data[8:]      # third  4 bytes
     
         # FIXME: add verbose check
-        print('type(data) = {}'.format(type(data)))
-        print('binascii.hexlify(header_bin) = {}'.format(binascii.hexlify(header_bin)))
-        print('binascii.hexlify(address_bin) = {}'.format(binascii.hexlify(address_bin)))
-        print('binascii.hexlify(data_bin) = {}'.format(binascii.hexlify(data_bin)))
-        print('received: {}'.format(binascii.hexlify(data)))
+        #print('type(data) = {}'.format(type(data)))
+        #print('binascii.hexlify(header_bin) = {}'.format(binascii.hexlify(header_bin)))
+        #print('binascii.hexlify(address_bin) = {}'.format(binascii.hexlify(address_bin)))
+        #print('binascii.hexlify(data_bin) = {}'.format(binascii.hexlify(data_bin)))
+        print(f'binascii.hexlify: header_bin, address_bin, data_bin: {binascii.hexlify(header_bin)}, {binascii.hexlify(address_bin)}, {binascii.hexlify(data_bin)}')
+
         unpacked_data = unpacker.unpack(data)
-        print('unpacked:')
-        print(unpacked_data)
+        print(f'received, unpacked: {binascii.hexlify(data)}, {unpacked_data}')
+        #print('unpacked:')
+        #print(unpacked_data)
     
         return(unpacked_data)
     

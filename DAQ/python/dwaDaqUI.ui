@@ -87,129 +87,143 @@
           </item>
           <item>
            <layout class="QFormLayout" name="formLayout_13">
-            <item row="0" column="0">
+            <item row="1" column="0">
              <widget class="QLabel" name="dwaIp_label">
               <property name="text">
                <string>DWA IP</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
+            <item row="1" column="1">
              <widget class="QLabel" name="dwaIp_val">
               <property name="text">
                <string>N/A</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
+            <item row="2" column="0">
              <widget class="QLabel" name="clientIp_label">
               <property name="text">
                <string>Client IP</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
+            <item row="2" column="1">
              <widget class="QLabel" name="clientIp_val">
               <property name="text">
                <string>N/A</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="0">
+            <item row="3" column="0">
              <widget class="QLabel" name="dwaSerialNumber_label">
               <property name="text">
                <string>Serial #</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="1">
+            <item row="3" column="1">
              <widget class="QLabel" name="dwaSerialNumber_val">
               <property name="text">
                <string>N/A</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="0">
+            <item row="4" column="0">
              <widget class="QLabel" name="dwaFirmwareDate_label">
               <property name="text">
                <string>Firmware</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="1">
+            <item row="4" column="1">
              <widget class="QLabel" name="dwaFirmwareDate_val">
               <property name="text">
                <string>N/A</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="0">
+            <item row="5" column="0">
              <widget class="QLabel" name="statusFramePeriod_label">
               <property name="text">
                <string>Period</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="1">
+            <item row="5" column="1">
              <widget class="QLabel" name="statusFramePeriod_val">
               <property name="text">
                <string>N/A</string>
               </property>
              </widget>
             </item>
-            <item row="5" column="0">
+            <item row="6" column="0">
              <widget class="QLabel" name="dwaControllerState_label">
               <property name="text">
                <string>State</string>
               </property>
              </widget>
             </item>
-            <item row="5" column="1">
+            <item row="6" column="1">
              <widget class="QLabel" name="dwaControllerState_val">
               <property name="text">
                <string>N/A</string>
               </property>
              </widget>
             </item>
-            <item row="6" column="0">
+            <item row="7" column="0">
              <widget class="QLabel" name="dwaPB1Status">
               <property name="text">
                <string>HV AC</string>
               </property>
              </widget>
             </item>
-            <item row="6" column="1">
+            <item row="7" column="1">
              <widget class="QLabel" name="dwaPB2Status">
               <property name="text">
                <string>HV DC</string>
               </property>
              </widget>
             </item>
-            <item row="7" column="0">
+            <item row="8" column="0">
              <widget class="QLabel" name="dwaErrorState_label">
               <property name="text">
                <string>Error state</string>
               </property>
              </widget>
             </item>
-            <item row="7" column="1">
+            <item row="8" column="1">
              <widget class="QLabel" name="dwaErrorState_val">
               <property name="text">
                <string>N/A</string>
               </property>
              </widget>
             </item>
-            <item row="8" column="0">
-             <widget class="QLabel" name="label">
+            <item row="9" column="0">
+             <widget class="QLabel" name="heartbeat_label">
               <property name="text">
                <string>Heartbeat</string>
               </property>
              </widget>
             </item>
-            <item row="8" column="1">
+            <item row="9" column="1">
              <widget class="QLabel" name="heartbeat_val">
               <property name="text">
                <string>*</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="dwaMacAddress_label">
+              <property name="text">
+               <string>DWA MAC</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="dwaMacAddress_val">
+              <property name="text">
+               <string>N/A</string>
               </property>
              </widget>
             </item>
@@ -1550,8 +1564,8 @@
                              <rect>
                               <x>0</x>
                               <y>0</y>
-                              <width>199</width>
-                              <height>1718</height>
+                              <width>227</width>
+                              <height>1724</height>
                              </rect>
                             </property>
                             <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1629,8 +1643,8 @@
                              <rect>
                               <x>0</x>
                               <y>0</y>
-                              <width>199</width>
-                              <height>1718</height>
+                              <width>227</width>
+                              <height>1724</height>
                              </rect>
                             </property>
                             <layout class="QVBoxLayout" name="verticalLayout_20">
@@ -3096,7 +3110,7 @@
      <x>0</x>
      <y>0</y>
      <width>1345</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
