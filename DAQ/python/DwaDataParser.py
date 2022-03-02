@@ -182,6 +182,7 @@ class DwaDataParser():
         self.frameKeys[Frame.STATUS]["62"] = "controllerState"
         self.frameKeys[Frame.STATUS]["63"] = "statusErrorBits"
         self.frameKeys[Frame.STATUS]["64"] = "buttonStatus"
+        self.frameKeys[Frame.STATUS]["65"] = "hvDisable"
         
         ##################################
         # TO ADD (Frame.RUN)
@@ -277,6 +278,7 @@ class DwaDataParser():
             "controllerState":self._parseInfoLineAsInt,
             "statusErrorBits":self._parseInfoLineAsBits,
             "buttonStatus":self._parseInfoLineAsBits,
+            "hvDisable":self._parseInfoLineAsInt,
         }
 
         self._frameParserSelector = {
@@ -516,7 +518,7 @@ class DwaDataParser():
         dd['trgStateChange']  = bool(dd['statusTrigger'] & 0b0010)
         dd['trgButtonChange'] = bool(dd['statusTrigger'] & 0b0100)
         dd['trgErrorChange']  = bool(dd['statusTrigger'] & 0b1000)
-        
+
         return dd
 
 
