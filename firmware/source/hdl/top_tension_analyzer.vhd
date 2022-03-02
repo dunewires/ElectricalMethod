@@ -63,12 +63,12 @@ end top_tension_analyzer;
 architecture STRUCT of top_tension_analyzer is
 
   component Check_Range
-  port (
-    fromDaqReg : in  fromDaqRegType;
-    dwaClk10                 : in  std_logic;
-    checkBound_error         : out std_logic;
-    toDaqReg                 : out toDaqRegType
-  );
+    port (
+      fromDaqReg       : in  fromDaqRegType;
+      dwaClk10         : in  std_logic;
+      checkBound_error : out std_logic;
+      toDaqReg         : out toDaqRegType
+    );
   end component Check_Range;
 
   COMPONENT fifo_autoDatacollection
@@ -121,7 +121,7 @@ architecture STRUCT of top_tension_analyzer is
   END COMPONENT;
 
 
-  signal checkBound_error         : std_logic;
+  signal checkBound_error : std_logic;
 
 
   signal auto       : std_logic := '0';
@@ -197,6 +197,8 @@ architecture STRUCT of top_tension_analyzer is
   signal ledDwa              : std_logic_vector(3 downto 0) := (others => '0');
 
   signal vioOut3, vioOut9 : std_logic := '0';
+  
+  signal snMemWPError : std_logic := '0';
 
   signal
   toDaqReg_headerGenerator,
@@ -247,12 +249,12 @@ begin
 
 
   Check_Range_i : Check_Range
-  port map (
-    fromDaqReg               => fromDaqReg,
-    dwaClk10                 => dwaClk10,
-    checkBound_error         => checkBound_error,
-    toDaqReg                 => toDaqReg_CheckReg
-  );
+    port map (
+      fromDaqReg       => fromDaqReg,
+      dwaClk10         => dwaClk10,
+      checkBound_error => checkBound_error,
+      toDaqReg         => toDaqReg_CheckReg
+    );
 
 
   genLedScanStatus : process (dwaClk100)
@@ -416,7 +418,7 @@ begin
       toDaqReg   => toDaqReg_serialPromInterface,
 
       snMemConfigWP => not gpioState(1), -- gpio = 1 with jumpper (write enabled),
-      snMemWPError  => toDaqReg.errors(0),
+      snMemWPError  => snMemWPError,
 
       sda       => SNUM_SDA,
       scl       => SNUM_SCL,
@@ -700,12 +702,12 @@ begin
       toDaqReg.macUword <= toDaqReg_serialPromInterface.macUword;
       toDaqReg.macLword <= toDaqReg_serialPromInterface.macLword;
     end if;
-                                                
-    toDaqReg.serNumMemAddress    <= toDaqReg_serialPromInterface.serNumMemAddress;
-    toDaqReg.serNumMemData       <= toDaqReg_serialPromInterface.serNumMemData;
-    toDaqReg.errors           <= (23 => checkBound_error, others  => '0'); -- all unsigned errors set to 0
-    toDaqReg.checkRegA   <= toDaqReg_CheckReg.checkRegA;
-    toDaqReg.checkRegB   <= toDaqReg_CheckReg.checkRegB; 
+
+    toDaqReg.serNumMemAddress <= toDaqReg_serialPromInterface.serNumMemAddress;
+    toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
+    toDaqReg.errors           <= (23 => checkBound_error, 22 downto 1 => '0', 0 => snMemWPError); -- all unsigned errors set to 0
+    toDaqReg.checkRegA        <= toDaqReg_CheckReg.checkRegA;
+    toDaqReg.checkRegB        <= toDaqReg_CheckReg.checkRegB;
   end process selToDaq;
 
 end STRUCT;

@@ -976,6 +976,7 @@ begin
 				reg_data_out <= slv_reg30;
 			when b"011111" =>
 				reg_data_out <= slv_reg31;
+
 			when b"101011" =>
 				reg_data_out <= x"0000" & toDaqReg.relayBusTop(1);
 			when b"101010" =>
@@ -1000,10 +1001,16 @@ begin
 				reg_data_out <= x"0000" & toDaqReg.relayWireBot(1);
 			when b"100000" =>
 				reg_data_out <= x"0000" & toDaqReg.relayWireBot(0);
-			when b"101100" =>
+
+			when b"101100" => --reg 44
 				reg_data_out <= slv_reg44;
+
+			when b"101101" => --reg 45 checkRegA
+				reg_data_out <= toDaqReg.checkRegA;
+			when b"101110" => --reg 46 checkRegB
+				reg_data_out <= toDaqReg.checkRegB;
+
 			when b"110000" => -- sn reg 48
-				              --reg_data_out <= x"0397da03";-- & std_logic_vector(toDaqReg.serNum);
 				reg_data_out <= x"00" & std_logic_vector(toDaqReg.serNum);
 			when b"110001" => --sn addres reg 49
 				reg_data_out <= b"000000000000000000000" & std_logic_vector(toDaqReg.serNumMemAddress);
@@ -1022,7 +1029,7 @@ begin
 			when b"110111" => --controller state reg 55 for read by daq (read only)  PS net status is used in fromdaq
 				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pktGenStateDbg);
 			when b"111000" => --reg 56 disableHV
-				reg_data_out <= x"0000000"& "000" & fromDaqReg.disableHV;				
+				reg_data_out <= x"0000000"& "000" & fromDaqReg.disableHV;
 			when b"111001" => --reg 57 NV mem config
 				reg_data_out <= x"00" & std_logic_vector(toDaqReg.serNumLocal);
 			when b"111010" => --reg 58 NV mem config
@@ -1034,12 +1041,7 @@ begin
 			when b"111101" => --reg 61 pushbuttons
 				reg_data_out <= x"0000000" & std_logic_vector(toDaqReg.pButton);
 			when b"111110" => --reg 62 NV mem jumpper setting
-				reg_data_out <= x"0000000" & toDaqReg.gpioState;				
-      -- To be added back by expanding number of registers          
-        --	when b"111001" => --reg 57 checkRegA
-          --		reg_data_out <= toDaqReg.checkRegA;
-        --	when b"111010" => --reg 58 checkRegB
-          --		reg_data_out <= toDaqReg.checkRegB;
+				reg_data_out <= x"0000000" & toDaqReg.gpioState;
 			when others =>
 				reg_data_out <= (others => '0');
 		end case;
@@ -1080,7 +1082,7 @@ begin
 	fromDaqReg.mnsEna            <= slv_reg1(1)= '1';
 	fromDaqReg.relayAutoBreakEna <= slv_reg1(2);
 	fromDaqReg.useAcStimTrig     <= slv_reg1(3);
-	fromDaqReg.danceParty     <= slv_reg1(8);
+	fromDaqReg.danceParty        <= slv_reg1(8);
 
 	-- udpDataDone when PS has read the status at the end of the data payload
 	fromDaqReg.udpDataDone        <= not udpReadBusy and udpReadBusy_del; --trailing edge
@@ -1144,6 +1146,6 @@ begin
 	fromDaqReg.macLword         <= toDaqReg.macLword;
 
 	fromDaqReg.netStatus <= slv_reg55(7 downto 0); -- also used for controller status in toDaq direction
-	fromDaqReg.disableHV <= slv_reg56(0); -- disable HV when switching relays
+	fromDaqReg.disableHV <= slv_reg56(0);          -- disable HV when switching relays
 
 end arch_imp;
