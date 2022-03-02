@@ -2427,14 +2427,10 @@ class MainWindow(qtw.QMainWindow):
         rd = self.range_data_list[row]
         #need to impliment list of all -1 for channels not being used
         #this makes it so for a single scan it just lists the one apa channel used, and then sorts all apa channels for an all wire scan
-        if self.configRadioSingle.isChecked():
-            self.configHeadboard = self.singleConfigHeadboard
-            self.wires = self.wireNum
-            channels = channel_map.wire_to_apa_channel(self.configLayer, self.wires)
-        else:
-            self.wires = rd["wireSegments"]
-            self.wires.sort(key = int)
-            channels = rd["apaChannels"]
+
+        self.wires = rd["wireSegments"]
+        self.wires.sort(key = int)
+        channels = rd["apaChannels"]
         #sorting apa channels list to follow increasing order of dwa channels
         dwaChannels = range(8)
         self.apaChannels = [None]*len(dwaChannels)
@@ -2503,10 +2499,8 @@ class MainWindow(qtw.QMainWindow):
         
         self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
         #above makes the scan directory for auto scans, below gives the final scan directory its name
-        if self.configRadioSingle.isChecked():
-            wires = self.wires[0]
-        else:
-            wires = "-".join([str(w) for w in self.wires])
+
+        wires = "-".join([str(w) for w in self.wires])
         self.scanRunDataDir = os.path.join(dataDir, self.configLayer + "_" + self.configApaSide + 
         "_" + str(self.configHeadboard) + "_" + str(wires) + "_" + self.timeString)
         os.makedirs(self.scanRunDataDir)
