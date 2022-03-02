@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1345</width>
-    <height>1539</height>
+    <height>1285</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -505,36 +505,63 @@
                            </item>
                           </widget>
                          </item>
-                         <item row="10" column="1">
-                          <widget class="QWidget" name="widget_7" native="true">
-                           <layout class="QHBoxLayout" name="horizontalLayout_16">
-                            <property name="leftMargin">
-                             <number>0</number>
-                            </property>
-                            <property name="topMargin">
-                             <number>0</number>
-                            </property>
-                            <property name="rightMargin">
-                             <number>0</number>
-                            </property>
-                            <property name="bottomMargin">
-                             <number>0</number>
-                            </property>
-                           </layout>
+                         <item row="5" column="0">
+                          <widget class="QLabel" name="scanTypeLabel">
+                           <property name="text">
+                            <string>Headboard</string>
+                           </property>
                           </widget>
                          </item>
-                         <item row="12" column="0">
+                         <item row="5" column="1">
+                          <widget class="QSpinBox" name="configHeadboardSpinBox">
+                           <property name="minimumSize">
+                            <size>
+                             <width>20</width>
+                             <height>0</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>40</width>
+                             <height>16777215</height>
+                            </size>
+                           </property>
+                           <property name="minimum">
+                            <number>1</number>
+                           </property>
+                           <property name="maximum">
+                            <number>10</number>
+                           </property>
+                           <property name="value">
+                            <number>1</number>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="11" column="0">
                           <widget class="QLabel" name="doContinuityLabel">
                            <property name="text">
-                            <string>Do continuity</string>
+                            <string>Type</string>
                            </property>
                           </widget>
                          </item>
-                         <item row="12" column="1">
-                          <widget class="QCheckBox" name="doContinuityCb">
-                           <property name="text">
-                            <string/>
-                           </property>
+                         <item row="11" column="1">
+                          <widget class="QWidget" name="widget_7" native="true">
+                           <layout class="QHBoxLayout" name="horizontalLayout_16">
+                            <item>
+                             <widget class="QCheckBox" name="doContinuityCb">
+                              <property name="text">
+                               <string>Continuity</string>
+                              </property>
+                             </widget>
+                            </item>
+                            <item>
+                             <widget class="QCheckBox" name="doTensionCb">
+                              <property name="text">
+                               <string>Tension</string>
+                              </property>
+                             </widget>
+                            </item>
+                           </layout>
                           </widget>
                          </item>
                          <item row="13" column="1">
@@ -600,38 +627,6 @@
                             </widget>
                            </item>
                           </layout>
-                         </item>
-                         <item row="5" column="1">
-                          <widget class="QSpinBox" name="configHeadboardSpinBox">
-                           <property name="minimumSize">
-                            <size>
-                             <width>20</width>
-                             <height>0</height>
-                            </size>
-                           </property>
-                           <property name="maximumSize">
-                            <size>
-                             <width>40</width>
-                             <height>16777215</height>
-                            </size>
-                           </property>
-                           <property name="minimum">
-                            <number>1</number>
-                           </property>
-                           <property name="maximum">
-                            <number>10</number>
-                           </property>
-                           <property name="value">
-                            <number>1</number>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="5" column="0">
-                          <widget class="QLabel" name="scanTypeLabel">
-                           <property name="text">
-                            <string>Headboard</string>
-                           </property>
-                          </widget>
                          </item>
                         </layout>
                        </item>
@@ -1511,8 +1506,8 @@
                              <rect>
                               <x>0</x>
                               <y>0</y>
-                              <width>199</width>
-                              <height>1718</height>
+                              <width>227</width>
+                              <height>1724</height>
                              </rect>
                             </property>
                             <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1590,8 +1585,8 @@
                              <rect>
                               <x>0</x>
                               <y>0</y>
-                              <width>199</width>
-                              <height>1718</height>
+                              <width>227</width>
+                              <height>1724</height>
                              </rect>
                             </property>
                             <layout class="QVBoxLayout" name="verticalLayout_20">
@@ -3089,7 +3084,7 @@
      <x>0</x>
      <y>0</y>
      <width>1345</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">

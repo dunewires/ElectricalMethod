@@ -619,8 +619,10 @@ class MainWindow(qtw.QMainWindow):
         self.configFileContents.setReadOnly(True)
         self.scanCtrlButtons = [self.btnScanCtrl, self.btnScanCtrlAdv]
         self.scanType = None
-        self.doContinuity = False
+        self.doContinuity = True
+        self.doTension = True
         self.doContinuityCb.setChecked(qtc.Qt.Checked if self.doContinuity else qtc.Qt.Unchecked)
+        self.doTensionCb.setChecked(qtc.Qt.Checked if self.doTension else qtc.Qt.Unchecked)
         self._scanButtonDisable()
         self._submitResonanceButtonDisable()
         self._setScanButtonAction('START')
@@ -1271,6 +1273,7 @@ class MainWindow(qtw.QMainWindow):
         self.btnSubmitTensions.clicked.connect(self.submitTensionsThread)
         # Config Tab
         self.doContinuityCb.stateChanged.connect(self.doContinuityChanged)
+        self.doTensionCb.stateChanged.connect(self.doTensionChanged)
         self.btnConfigureScans.clicked.connect(self.configureScans)
         for stage in APA_TESTING_STAGES:
             self.configStageComboBox.addItem(stage)
@@ -1785,8 +1788,9 @@ class MainWindow(qtw.QMainWindow):
                 self.scanConfigTableAddRow(rd, row, scanType='Continuity', useAdvanced=useAdvancedParamsCont)
                 row += 1
                 
-            self.scanConfigTableAddRow(rd, row, scanType='Tension', useAdvanced=useAdvancedParamsRes)
-            row += 1
+            if self.doTension:
+                self.scanConfigTableAddRow(rd, row, scanType='Tension', useAdvanced=useAdvancedParamsRes)
+                row += 1
 
         # Select the first row
         self.scanConfigTable.selectRow(0)
@@ -4223,6 +4227,10 @@ class MainWindow(qtw.QMainWindow):
         #print(f"is unchecked:      {self.doContinuity == qtc.Qt.Unchecked}")
         #print(f"is   checked:      {self.doContinuity == qtc.Qt.Checked}")
         print(f"self.doContinuity: {self.doContinuity}")
+        
+    def doTensionChanged(self):
+        self.doTension = self.doTensionCb.isChecked()
+        print(f"self.doTension: {self.doTension}")
         
     def disableScanButtonForTime(self, disableDuration):
         """ disableDuration is a time in seconds """
