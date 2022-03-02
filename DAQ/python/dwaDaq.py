@@ -1670,19 +1670,20 @@ class MainWindow(qtw.QMainWindow):
             self._scanButtonEnable()
 
 
-    def scanConfigTableAddRow(self, rd, row, scanType='resonance', useAdvanced=False):
-        # scanType: 'resonance' or 'continuity'
+    def scanConfigTableAddRow(self, rd, row, scanType='Tension', useAdvanced=False):
+        # scanType: 'Tension' or 'Continuity'
         # useAdvanced: boolean (for use advanced parameters)
         #print(f'rd = {rd}')
 
-        if scanType not in ['resonance', 'continuity']:
+        if scanType not in ['Tension', 'Continuity']:
             print(f"ERROR: scanType not recognized: {scanType}")
             print("returning...")
             return
         
         # Scan type
         item = qtg.QStandardItem()
-        ty = 'Res' if scanType == 'resonance' else 'Cont'
+        #ty = 'Tension' if scanType == 'tension' else 'Continuity'
+        ty = scanType
         item.setData(ty, qtc.Qt.DisplayRole)
         item.setTextAlignment(qtc.Qt.AlignLeft)
         self.scanConfigTableModel.setItem(row, Scans.TYPE, item)
@@ -1705,7 +1706,7 @@ class MainWindow(qtw.QMainWindow):
 
         # Determine values
         # Frequency minimum, max, step
-        if scanType == 'resonance':
+        if scanType == 'Tension':
             freqMin = float(rd['range'][0])
             freqMax = float(rd['range'][1])
             freqStep = SCAN_FREQUENCY_STEP_DEFAULT
@@ -1722,7 +1723,7 @@ class MainWindow(qtw.QMainWindow):
                 if advFss != "":
                     freqStep = float(advFss) # FIXME: this can cause crash if non-numeric entry...
                     
-        elif scanType == 'continuity':
+        elif scanType == 'Continuity':
             freqMin  = CONTINUITY_SCAN_PARAMS_DEFAULT['stimFreqMin']
             freqMax  = CONTINUITY_SCAN_PARAMS_DEFAULT['stimFreqMax']
             freqStep = CONTINUITY_SCAN_PARAMS_DEFAULT['stimFreqStep']
@@ -1778,13 +1779,14 @@ class MainWindow(qtw.QMainWindow):
             rd = range_data[0]
             self.range_data_list.append(rd)
 
-            self.scanConfigTableAddRow(rd, row, scanType='resonance', useAdvanced=useAdvancedParamsRes)
-            row += 1
             if self.doContinuity:
                 # advanced params?
                 useAdvancedParamsCont = not self.advDisableContParamCb.isChecked()
-                self.scanConfigTableAddRow(rd, row, scanType='continuity', useAdvanced=useAdvancedParamsCont)
+                self.scanConfigTableAddRow(rd, row, scanType='Continuity', useAdvanced=useAdvancedParamsCont)
                 row += 1
+                
+            self.scanConfigTableAddRow(rd, row, scanType='Tension', useAdvanced=useAdvancedParamsRes)
+            row += 1
 
         # Select the first row
         self.scanConfigTable.selectRow(0)
