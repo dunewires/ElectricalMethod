@@ -244,7 +244,7 @@ MAX_WIRE_SEGMENT = {
 }
 
 # FIXME: these should be read from somewhere else (DwaConfigFile)...
-DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side']
+DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side', 'type']
 
 # Recent scan list 
 SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid']
@@ -2261,7 +2261,7 @@ class MainWindow(qtw.QMainWindow):
 
         # Get the selected row of the scan config table. Start with that scan
         indices = self.scanConfigTable.selectedIndexes()
-        # Only one row cna be selected at a time, so get the row from the first cell
+        # Only one row can be selected at a time, so get the row from the first cell
         self.scanConfigRowToScan = indices[0].row()
         print(f'row to scan: {self.scanConfigRowToScan}')
 
@@ -2472,9 +2472,14 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
         fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels, is_flex_connection_winderlike))
         print(f'\n\nAfter Relays:\n  fpgaConfig: {fpgaConfig}')
-        
-        dataConfig = {"apaChannels": self.apaChannels, "wireSegments": self.wires, "measuredBy": self.configMeasuredBy, "stage": self.configStage, "apaUuid": self.configApaUuid, 
-        "layer": self.configLayer, "headboardNum": self.configHeadboard, "side": self.configApaSide}
+
+        # FIXME: should these keys match DATABASE_FIELDS?
+        dataConfig = {"apaChannels": self.apaChannels, "wireSegments": self.wires,
+                      "measuredBy": self.configMeasuredBy, "stage": self.configStage,
+                      "apaUuid": self.configApaUuid, 
+                      "layer": self.configLayer, "headboardNum": self.configHeadboard,
+                      "side": self.configApaSide, "type": scanType
+                      }
 
         self._loadDaqConfig()
 
@@ -2484,6 +2489,8 @@ class MainWindow(qtw.QMainWindow):
         fpgaConfig.update(config_generator.configure_noise_subtraction(freqMin, freqMax))
 
         self.combinedConfig = {"FPGA": fpgaConfig, "DATABASE": dataConfig, "DAQ": self.daqConfig}
+
+        print(self.combinedConfig)
         
         self.makeScanOutputDir()
         config_generator.write_config(self.combinedConfig, 'dwaConfig.ini', self.scanRunDataDir) #self.configFileDir
@@ -4010,7 +4017,6 @@ class MainWindow(qtw.QMainWindow):
                 #finds what row was scanned and updates the status for that row
                 #this also selects the next row
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
-                    #BOBOBOB
 
                     row = self.scanConfigRowToScan
                     self.scanConfigTableModel.item(row, Scans.STATUS).setText('Done')
