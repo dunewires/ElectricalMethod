@@ -35,7 +35,7 @@
         <height>1000</height>
        </size>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_39">
+      <layout class="QHBoxLayout" name="horizontalLayout_39" stretch="2,10">
        <item>
         <widget class="QWidget" name="controls" native="true">
          <property name="minimumSize">
@@ -46,7 +46,7 @@
          </property>
          <property name="maximumSize">
           <size>
-           <width>110</width>
+           <width>16777215</width>
            <height>16777215</height>
           </size>
          </property>
@@ -411,7 +411,7 @@
                    <attribute name="title">
                     <string>Config</string>
                    </attribute>
-                   <layout class="QHBoxLayout" name="horizontalLayout_6">
+                   <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="6,0,3">
                     <item>
                      <widget class="QWidget" name="widget_2" native="true">
                       <layout class="QVBoxLayout" name="verticalLayout_19">
