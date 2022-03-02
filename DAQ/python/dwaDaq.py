@@ -311,7 +311,7 @@ class Scans(IntEnum):
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum',
                        'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
 RESULTS_TABLE_HDRS = ['Stage', 'Measurement Time', 'Wire Segment', 'Layer', 'Side', 'Headboard',
-                      'Tension', 'Measurement Type', 'Confidence', 'Scan']
+                      'Result', 'Measurement Type', 'Confidence', 'Scan']
 class Results(IntEnum):
     STAGE=RESULTS_TABLE_HDRS.index('Stage')
     MSRMT_TIME=RESULTS_TABLE_HDRS.index('Measurement Time')
@@ -319,7 +319,7 @@ class Results(IntEnum):
     LAYER=RESULTS_TABLE_HDRS.index('Layer')
     SIDE=RESULTS_TABLE_HDRS.index('Side')
     HEADBOARD=RESULTS_TABLE_HDRS.index('Headboard')
-    TENSION=RESULTS_TABLE_HDRS.index('Tension')
+    RESULT=RESULTS_TABLE_HDRS.index('Result')
     MSRMT_TYPE=RESULTS_TABLE_HDRS.index('Measurement Type')
     CONFIDENCE=RESULTS_TABLE_HDRS.index('Confidence')
     SCAN=RESULTS_TABLE_HDRS.index('Scan')
@@ -1019,7 +1019,7 @@ class MainWindow(qtw.QMainWindow):
                                 tension = scanDict["tension"]
                                 item = qtg.QStandardItem()
                                 item.setData(tension, qtc.Qt.DisplayRole)
-                                self.recentScansTableModel.setItem(i, Results.TENSION, item)
+                                self.recentScansTableModel.setItem(i, Results.RESULT, item)
                                 # Status
                                 if tension == 'Not Found' or  tension == 'None':
                                     status = 'None'
