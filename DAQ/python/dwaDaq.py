@@ -230,10 +230,30 @@ GUI_Y_OFFSET = 0 #FIXME: remove this!
 SCAN_START = 1
 SCAN_END = 0
 
-#APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Installation (Top)", "Installation (Bottom)", "Storage"]
-#APA_TESTING_STAGES_SHORT = [ "Dev", "Winding", "PostWinding", "InstTop", "InstBot", "Storage"]
-APA_TESTING_STAGES = [ "DWA Development", "Winding", "Post-Winding", "Installation", "Installation (Top)", "Installation (Bottom)", "Storage"]
-APA_TESTING_STAGES_SHORT = [ "Dev", "Winding", "PostWinding", "Installation", "Installation", "Installation", "Storage"]
+APA_STAGES_KEYS = ["Dev", "Winding", "PostWinding", "Installation", "Storage"]
+APA_STAGES = {}
+for stage in APA_STAGES_KEYS:
+    stageShort = stage
+    scans = [stage]
+    if stage == "Dev":
+        scans = ["DWA Development"]
+    if stage == "Installation":
+        scans = ['Installation (Top)', 'Installation (Bottom)']
+    APA_STAGES[stage] = {
+        'short':stageShort, # used for referencing UI elements
+        'scan':scans,       # used for labeling scans (and for loading Results table)
+        'tension':scans     # used for tension table
+    }
+APA_STAGES_SHORT = []
+APA_STAGES_SCANS = []
+APA_STAGES_TENSIONS = []
+for key in APA_STAGES_KEYS:
+    APA_STAGES_SHORT.append(APA_STAGES[key]['short'])
+    for val in APA_STAGES[key]['scan']:
+        APA_STAGES_SCANS.append(val)
+    for val in APA_STAGES[key]['tension']:
+        APA_STAGES_TENSIONS.append(val)
+
 APA_LAYERS = ["G", "U", "V", "X"]
 APA_SIDES = ["A", "B"]
 MAX_WIRE_SEGMENT = {
@@ -591,13 +611,6 @@ class SortFilterProxyModel(qtc.QSortFilterProxyModel):
                     return False
         return True
 
-
-
-def random_word():
-    letters = "abcdedfg"
-    word = "".join([random.choice(letters) for _ in range(random.randint(4, 7))])
-    return word
-
 class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -930,8 +943,7 @@ class MainWindow(qtw.QMainWindow):
         le.textChanged.connect(lambda text, col=Results.HEADBOARD:
                                 self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp('^'+text+'$'),
                                                                                 col))
-
-        for stage in APA_TESTING_STAGES_SHORT:
+        for stage in APA_STAGES_SHORT:
             getattr(self, f'filterStage{stage}').stateChanged.connect(self.filterStageChanged)
         for layer in APA_LAYERS:
             getattr(self, f'filterCheck{layer}').stateChanged.connect(self.filterLayerChanged)
@@ -965,7 +977,7 @@ class MainWindow(qtw.QMainWindow):
         # Populate the table with JSON data
         # should we sort the entries in the dict before populating the model?
         i = 0
-        for stage in APA_TESTING_STAGES:
+        for stage in APA_STAGES_SCANS:
             if stage not in resultsDict:
                 continue
             stageDict = resultsDict[stage]
@@ -1047,13 +1059,15 @@ class MainWindow(qtw.QMainWindow):
     def filterStageChanged(self):
         print("filterStateChanged")
         filterString = ''
-        for stage in APA_TESTING_STAGES_SHORT:
-            if getattr(self, f'filterStage{stage}').isChecked():
-                # get full name of that stage
-                idx = APA_TESTING_STAGES_SHORT.index(stage)
-                fullstage = APA_TESTING_STAGES[idx]
-                filterString += f'{fullstage}|'
-        if len(filterString): filterString = filterString[:-1] # trim off the final "|" (should use rstrip...)
+        #BOBOBOB
+        for idx, stage in enumerate(APA_STAGES_KEYS):
+            stageShort = APA_STAGES[stage]['short']
+            if getattr(self, f'filterStage{stageShort}').isChecked():
+                val = APA_STAGES[stage]['scan'][0]
+                if "Installation" in val:
+                    val = "Installation"
+                filterString += f'{val}|'
+        filterString = filterString.rstrip("|")
         print(filterString)
         self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),Results.STAGE)
         
@@ -1241,7 +1255,7 @@ class MainWindow(qtw.QMainWindow):
         self.show()
 
     def _configureTensionTab(self):
-        for stage in APA_TESTING_STAGES:
+        for stage in APA_STAGES_TENSIONS:
             self.tensionStageComboBox.addItem(stage)
         for layer in APA_LAYERS:
             self.tensionLayerComboBox.addItem(layer)
@@ -1275,8 +1289,13 @@ class MainWindow(qtw.QMainWindow):
         self.doContinuityCb.stateChanged.connect(self.doContinuityChanged)
         self.doTensionCb.stateChanged.connect(self.doTensionChanged)
         self.btnConfigureScans.clicked.connect(self.configureScans)
-        for stage in APA_TESTING_STAGES:
+        for stage in APA_STAGES_SCANS:
             self.configStageComboBox.addItem(stage)
+            #if stage == "Installation":
+            #    self.configStageComboBox.addItem(stage+" (Top)")
+            #    self.configStageComboBox.addItem(stage+" (Bottom)")
+            #else:
+            #    self.configStageComboBox.addItem(stage)
         for layer in APA_LAYERS:
             self.configLayerComboBox.addItem(layer)
 
@@ -2717,8 +2736,12 @@ class MainWindow(qtw.QMainWindow):
     def apaUuidChanged(self):
         print("uuid enter pressed")
         # Save the user-entered UUID
-        self.configApaUuid = self.configApaUuidLineEdit.text().strip()
-        print(f"[{self.configApaUuid}]")
+        val = self.configApaUuidLineEdit.text().strip()
+        if val == "":
+            return
+        
+        self.configApaUuid = val
+        print(f"self.configApaUuid = [{self.configApaUuid}]")
 
         self.horizontalWidget.setVisible(True)
         self.widgetUuid.setEnabled(False)
@@ -2784,11 +2807,11 @@ class MainWindow(qtw.QMainWindow):
     #             #print(f"{filepath}")
     #             self.newResultsDict()
     #             #self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
-    #             #self.resultsDict = process_scan.new_results_dict(APA_TESTING_STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
+    #             #self.resultsDict = process_scan.new_results_dict(APA_STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
                 
 
     def newResultsDict(self):
-        return process_scan.new_results_dict(APA_TESTING_STAGES, APA_LAYERS,
+        return process_scan.new_results_dict(APA_STAGES_SCANS, APA_LAYERS,
                                                          APA_SIDES, MAX_WIRE_SEGMENT)
         
     def getResultsDict(self):
@@ -2807,7 +2830,7 @@ class MainWindow(qtw.QMainWindow):
             print(f"Could not find JSON results file for APA UUID: {self.configApaUuid}. Creating a new dict.")
             return self.newResultsDict()
             #self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
-            #self.resultsDict = process_scan.new_results_dict(APA_TESTING_STAGES, APA_LAYERS,
+            #self.resultsDict = process_scan.new_results_dict(APA_STAGES_SCANS, APA_LAYERS,
             #                                                 APA_SIDES, MAX_WIRE_SEGMENT)
                 
     def getApaUuid(self):
