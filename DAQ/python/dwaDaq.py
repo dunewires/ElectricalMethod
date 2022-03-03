@@ -1605,105 +1605,6 @@ class MainWindow(qtw.QMainWindow):
     def hexString(self, val):
         return str(hex(int(val))).upper()[2:].zfill(N_DWA_CHANS)
 
-
-    def configureSingleScans(self):
-        #DEFUNCT: Protocol is to redo all 8 wires
-        self.scanConfigTable.clearContents()
-
-        configLayer = self.configLayerComboBox.currentText()
-        configHeadboard = self.configHeadboardSpinBox.value()
-
-        self.radioBtns = [] #list of radio button names
-        #self.freqMinBox = [] 
-        #self.freqMaxBox = [] #these are lists to hold the boxes for these values in the table, that way they can be looped later on
-        self.range_data_list = []
-        #The following loops through the headboards, channels, and wires, to find where the wire the user would to scan is
-        #then it saves important data for the table and scan to variables
-        for configHeadboard in range(1,11):
-            channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
-            for channels in channelGroups:
-                range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
-                for rd in range_data:
-                    self.range_data_list.append(rd)
-                    wires = rd["wireSegments"]
-                    for wire in wires:
-                        if wire == self.spinBox.value():
-                            valid = True
-                            self.singleConfigHeadboard = configHeadboard
-                            self.wireNum = [wire]
-                            freqMin = float(rd["range"][0])
-                            freqMax = float(rd["range"][1])
-
-        try:
-            valid
-        except:
-            logging.info("Please make sure the wire in the spin box is valid, and that the wire is not too short")
-            wire = qtw.QMessageBox()
-            wire.setWindowTitle("Check Wire")
-            wire.setText("Please make sure the wire in the spin box is valid, and that the wire is not too short")
-            wire.exec_()
-        else:
-            self.headboardLabel.setText("Connect to headboard #"+str(self.singleConfigHeadboard))
-            #table with scan detailss
-            self.scanConfigTable.setRowCount(1)
-            item = qtw.QTableWidgetItem()
-            self.scanConfigTable.setVerticalHeaderItem(0, item)
-            #select column...Radio buttons
-            item = qtw.QTableWidgetItem()
-            self.scanConfigTable.setItem(0, 0, item)
-            item = qtw.QRadioButton(self.scanConfigTable)
-            self.scanConfigTable.setCellWidget(0, 0, item)
-            self.radioBtns.append(item)
-            #run number column
-            item = qtw.QTableWidgetItem()
-            self.scanConfigTable.setItem(0, 1, item)
-            item.setTextAlignment(qtc.Qt.AlignHCenter)
-            item.setText(qtc.QCoreApplication.translate("MainWindow", str(1)))
-            self.scanConfigTable.resizeColumnsToContents() 
-            #wires column
-            item = qtw.QTableWidgetItem()
-            self.scanConfigTable.setItem(0, 2, item)
-            item.setTextAlignment(qtc.Qt.AlignHCenter)
-            item.setText(qtc.QCoreApplication.translate("MainWindow", str(self.wireNum)))
-            self.scanConfigTable.resizeColumnsToContents()
-            #freq min column
-            item = qtw.QTableWidgetItem()
-            self.scanConfigTable.setItem(0, 3, item)
-            item.setTextAlignment(qtc.Qt.AlignHCenter)
-            item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMin)))
-            self.scanConfigTable.resizeColumnsToContents()
-            #self.freqMinBox.append(freqMin)
-            #freq max column
-            item = qtw.QTableWidgetItem()
-            self.scanConfigTable.setItem(0, 4, item)
-            item.setTextAlignment(qtc.Qt.AlignHCenter)
-            item.setText(qtc.QCoreApplication.translate("MainWindow", str(freqMax)))
-            self.scanConfigTable.resizeColumnsToContents()
-            #self.freqMaxBox.append(freqMax)
-            #freq step size column
-            advFss = self.advFssLineEdit.text() # Freq step size
-            if advFss: advFss = float(advFss)
-            else: pass
-            if advFss: 
-                advFss = config_generator.configure_scan_frequencies(freqMin, freqMax, stim_freq_step=advFss)['stimFreqStep']
-            else: 
-                advFss= config_generator.configure_scan_frequencies(freqMin, freqMax)['stimFreqStep']
-            item = qtw.QTableWidgetItem()
-            self.scanConfigTable.setItem(0, 5, item)
-            item.setTextAlignment(qtc.Qt.AlignHCenter)
-            item.setText(qtc.QCoreApplication.translate("MainWindow", str(advFss)))
-            self.scanConfigTable.resizeColumnsToContents()
-            #self.freqMaxBox.append(freqMax)
-            self.scanConfigTable.setColumnCount(6)
-
-            self.radioBtns[0].setChecked(True)
-            #need to enable the start button, I think this is sufficient
-
-            self.configureLabel.setText("")
-            self.configure = True
-            self._scanButtonEnable()
-
-
     def scanConfigTableAddRow(self, rd, row, scanType='Tension', useAdvanced=False):
         # scanType: 'Tension' or 'Continuity'
         # useAdvanced: boolean (for use advanced parameters)
@@ -3663,8 +3564,7 @@ class MainWindow(qtw.QMainWindow):
             data = json.load(fh)
 
         toks = os.path.normpath(ampFilename).split(os.path.sep)
-        self.loadedScanId = toks[-2]#ampFilename.split('\\')[-2]
-        #self.loadedScanId = ampFilename.split('\\')[-2]
+        self.loadedScanId = toks[-2]
         print('Setting scan id to.................. ',self.loadedScanId)
 
         self.activeRegistersS = []
