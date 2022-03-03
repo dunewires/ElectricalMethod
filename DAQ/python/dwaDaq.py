@@ -331,7 +331,7 @@ class Scans(IntEnum):
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum',
                        'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
 RESULTS_TABLE_HDRS = ['Stage', 'Measurement Time', 'Wire Segment', 'Layer', 'Side', 'Headboard',
-                      'Result', 'Measurement Type', 'Confidence', 'Scan']
+                      'Result', 'Measurement Type', 'Confidence', 'Scan ID']
 class Results(IntEnum):
     STAGE=RESULTS_TABLE_HDRS.index('Stage')
     MSRMT_TIME=RESULTS_TABLE_HDRS.index('Measurement Time')
@@ -342,7 +342,7 @@ class Results(IntEnum):
     RESULT=RESULTS_TABLE_HDRS.index('Result')
     MSRMT_TYPE=RESULTS_TABLE_HDRS.index('Measurement Type')
     CONFIDENCE=RESULTS_TABLE_HDRS.index('Confidence')
-    SCAN=RESULTS_TABLE_HDRS.index('Scan')
+    SCAN=RESULTS_TABLE_HDRS.index('Scan ID')
 
 class State(IntEnum):
     IDLE = 0             # Idle Waiting for the start of a test
@@ -3662,7 +3662,9 @@ class MainWindow(qtw.QMainWindow):
         with open(ampFilename, "r") as fh:
             data = json.load(fh)
 
-        self.loadedScanId = ampFilename.split('\\')[-2]
+        toks = os.path.normpath(ampFilename).split(os.path.sep)
+        self.loadedScanId = toks[-2]#ampFilename.split('\\')[-2]
+        #self.loadedScanId = ampFilename.split('\\')[-2]
         print('Setting scan id to.................. ',self.loadedScanId)
 
         self.activeRegistersS = []
@@ -4127,6 +4129,8 @@ class MainWindow(qtw.QMainWindow):
                 print(f"\n FOUND STATUS FRAME {datetime.datetime.now()}")
                 print(udpDict[ddp.Frame.STATUS])
 
+            #print(f"hvDisable = {udpDict[ddp.Frame.STATUS]['hvDisable']}")
+                
             # some status frames should be logged...
             # see DwaDataParser.py for details
             # e.g. 'trgTimeout', 'trgStateChange', 'trgButtonChange', 'trgErrorChange'
