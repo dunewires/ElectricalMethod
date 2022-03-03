@@ -26,3 +26,4 @@ python CalibrationPickle.py'
 * This result will be pickled as [fit.picckle](https://github.com/dunewires/ElectricalMethod/blob/development/DAQ/python/Continuity/fit.pickle)
 
 ## 2. Steps to get theh calibrated capacitance values and pass/fail for the continuity test with DWA scan 
+* [capacitanceFile.py](https://github.com/dunewires/ElectricalMethod/blob/development/DAQ/python/Continuity/capacitanceFile.py) has a function 'connectivityTest' which returns an array of [channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr]
