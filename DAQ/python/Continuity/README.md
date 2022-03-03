@@ -7,7 +7,7 @@
 
 * run 
 ```bash
-python makeTxt4Cap.py Json_Scan_File
+python makeTxt4Cap.py continuityScan
 ```
 
 * This file will produce two text files ([extractFromJson.txt](https://github.com/dunewires/ElectricalMethod/blob/development/DAQ/python/Continuity/example/extractFromJson.txt) and [nameData.txt](https://github.com/dunewires/ElectricalMethod/blob/development/DAQ/python/Continuity/example/nameData.txt))
