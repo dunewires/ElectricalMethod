@@ -758,7 +758,7 @@ class MainWindow(qtw.QMainWindow):
             label = 'N/A'
         else:
             error = True if '1' in errorString else False
-            print(f"error = {error}")
+            #print(f"error = {error}")
             if error:
                 color = 'red'
                 label = f'{int(errorString,2)}'
@@ -2612,6 +2612,7 @@ class MainWindow(qtw.QMainWindow):
 
         try:
             self.logger.info('======= dwaReset() ===========')
+            print('======= dwaReset() ===========')
             self.uz.reset()
         except:
             self.logger.error("DWA reset failed")
@@ -2619,6 +2620,7 @@ class MainWindow(qtw.QMainWindow):
 
         try:
             self.logger.info('======= dwa disable HV ===========')
+            print('======= dwa disable HV ===========')
             self.uz.hvDisable()
             time.sleep(0.5) # sleep to let HV drain
         except:
@@ -2626,6 +2628,7 @@ class MainWindow(qtw.QMainWindow):
             
         try:
             self.logger.info('======= dwaConfig() ===========')
+            print('======= dwaConfig() ===========')
             self.uz.scanConfigMulti(self.dwaConfigFile.config['FPGA']) # single TCP/IP call -- many reg writes
             #self.uz.scanConfig(self.dwaConfigFile.config['FPGA']) # many TCP/IP calls -- one reg write per call
         except:
@@ -2633,6 +2636,7 @@ class MainWindow(qtw.QMainWindow):
 
         try:
             self.logger.info('======= dwa enable HV ===========')
+            print('======= dwa enable HV ===========')
             self.uz.hvEnable()
             time.sleep(0.5) # sleep to let HV ramp up
         except:
@@ -2641,12 +2645,11 @@ class MainWindow(qtw.QMainWindow):
             
         try:
             self.logger.info('======= dwaStart() ===========')
+            print('======= dwaStart() ===========')
             self.uz.start()
             self.logger.info('======= DONE WITH dwaStart() ===========')
-            
             #logger.info('\n\n======= dwaStat() ===========')
             #self.uz.stat()
-
         except:
             self.logger.error("DWA run start failed")
             
@@ -4042,7 +4045,7 @@ class MainWindow(qtw.QMainWindow):
                     
                 #self.updateAmplitudePlots()
                 #self.updateTimeseriesPlots()
-                print("UPDATING PLOTS ONE LAST TIME")
+                #print("UPDATING PLOTS ONE LAST TIME")
                 self.updatePlots(force_all=True)
                 self.wrapUpStimulusScan()
                 self.scanType = None
