@@ -711,8 +711,6 @@ class MainWindow(qtw.QMainWindow):
         self._makeCurves()
         self._plotDummyAmpl()
         self._plotDummyTimeseries()
-        #self._plotDummyGrid()
-        #self._plotDummyChan()
         self._plotDummyTension()
 
         # Establish keyboard shortcuts and associated signals/slots
@@ -1979,16 +1977,6 @@ class MainWindow(qtw.QMainWindow):
             # A(f) data, chan view (small plots)
             self.curves['amplchan'][ii].setData(self.dummyDataAmpl[ii]['x'],
                                                 self.dummyDataAmpl[ii]['y'])
-
-            
-    #def _plotDummyGrid(self, dummy=False):
-    #    ''' plot data in Grid view '''
-    #    # V(t) data, grid view
-    #    keys = sorted(self.curves['grid'])  # keys sorted (0, 1, ..., 7)
-    #    print(keys)
-    #    for ii, kk in enumerate(keys):
-    #        self.curves['grid'][kk].setData(self.dummyData[ii]['x'],
-    #                                        self.dummyData[ii]['y'])
             
     def _plotDummyTimeseries(self):
         ''' plot data in channel mode
@@ -3968,8 +3956,6 @@ class MainWindow(qtw.QMainWindow):
                         self.scanConfigRowToScan += 1
                     self.scanConfigTable.selectRow(self.scanConfigRowToScan)
                     
-                #self.updateAmplitudePlots()
-                #self.updateTimeseriesPlots()
                 #print("UPDATING PLOTS ONE LAST TIME")
                 self.updatePlots(force_all=True)
                 self.wrapUpStimulusScan()
@@ -4252,33 +4238,6 @@ class MainWindow(qtw.QMainWindow):
         if force or (self.connectedToUzed and self.idle):
             self.btnScanCtrlAdv.setEnabled(True)
             
-    ##def updateTimeseriesPlots(self):
-    #    # when a scan is done, ensure that the V(t) data shows the last received data
-    #    # (those plots are not updated unless that tab is active)
-    #    #
-    #    ## FIXME: need to keep the last V(t) data in memory (create self.lastTimeSeriesData somewhere...)
-    #    #pTypes = ['grid', 'chan']
-    #    #for reg in self.registers:
-    #    #    regId = reg
-    #    #    for pt in pTypes:
-    #    #        self.curves[pt][regId].setData(self.lastTimeseriesData[regId]['times'],
-    #    #                                       self.lastTimeseriesData[regId]['adcVals'])
-    #    #    if regId == self.chanViewMain:
-    #    #        self.curves['chan']['main'].setData(self.lastTimeseriesData[regId]['times'],
-    #    #                                            self.lastTimeseriesData[regId]['adcVals'])
-    #    pass
-    
-    #def updateAmplitudePlots(self):
-    #    # This should only update the plots on the STIMULUS tab
-    #    # other A(f) plots are updated elsewhere
-    #    for reg in self.registers:
-    #        regId = reg
-    #        # Stimulus tab plots
-    #        self.curves['amplgrid'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-    #        self.curves['amplgrid']['all'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-    #        self.curves['amplchan'][regId].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
-    #        if regId == self.chanViewMainAmpl:
-    #            self.curves['amplchan']['main'].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
             
     def _resFreqSetDefaultParams(self):
         #height=None, threshold=None, distance=None, prominence=None, width=None, wlen=None, rel_height=0.5, plateau_size=None
