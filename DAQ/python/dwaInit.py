@@ -64,13 +64,11 @@ print('End of hardware test.')
 print('Beginning of DWA initializtion.')
 
 serial_number_int = 0
-
 while serial_number_int < 31 or serial_number_int > 40:
-    print('Enter serial number of analog board (31-40):')
-    serial_number_input = input()
-    serial_number_int = int(serial_number_input)
+    serial_number_str = input('Enter serial number of analog board (31-40): ')
+    serial_number_int = int(serial_number_str)
 
-serial_number = format(serial_number_int, '08X')
+serial_number_hex = format(serial_number_int, '08X')
 
 # IP adress starts with 192.168.140 to be compatible with PLC (avoid ending with .10 or .11 for possible conflict with winder computers)
 ip_address = 'C0A88C'+format(serial_number_int, '02X')
@@ -83,7 +81,7 @@ print('Initializing DWA serial number, local IP address and MAC address...')
 
 with redirect_stdout(devnull_file):
     # Use default IP address, triggered by hardware jumper between pins 0 and 1 on 2x4 header
-    uz.dwaInitialize(serial_number, ip_address, mac_address_msb, mac_address_lsb)
+    uz.dwaInitialize(serial_number_hex, ip_address, mac_address_msb, mac_address_lsb)
 print('Done.')
 
 print('Reading back values for DWA serial number, local IP address and MAC address from firmware...')
@@ -95,14 +93,14 @@ with redirect_stdout(devnull_file):
     mac_address_lsb_read = format(uz.readValue('00000032')[2], '08X')
 print('Done.')
 
-values_written = (serial_number, ip_address, mac_address_msb, mac_address_lsb)
+values_written = (serial_number_hex, ip_address, mac_address_msb, mac_address_lsb)
 values_read = (serial_number_read, ip_address_read, mac_address_msb_read, mac_address_lsb_read)
 if values_written == values_read:
     ip_address_split = [str(int(ip_address[i:i+2], 16)) for i in range(0, len(ip_address), 2)]
     mac_address = mac_address_msb[2:] + mac_address_lsb[2:]
     mac_address_split = [mac_address[i:i+2] for i in range(0, len(mac_address), 2)]
     print('Values successfully written and read back.')
-    print('DWA serial number: ' + serial_number_input)
+    print('DWA serial number: ' + serial_number_str)
     print('Local IP address: ' + '.'.join(ip_address_split))
     print('MAC address: ' + ':'.join(mac_address_split))
 else:

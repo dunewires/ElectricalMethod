@@ -11,10 +11,6 @@
 #
 # /////////////////////////////////////////////////////////////////
 
-# These variables can be changed
-pickled_fit = 'fit.pickle'			# pickled file for the specific DWA
-year = '2021'						# year when theh scan was taken 
-
 import numpy as np
 import os
 import re
@@ -36,9 +32,8 @@ class MyCustomUnpickler(pickle.Unpickler):
 
 
 def getWireSegment(num, dirName):
-	a = re.search(year, dirName).span()			# find when the time stamp begins
-	wireSegments = dirName[num:a[0]-1]			# extracting only the part of ##-##-##- in th string
-	wireArr = wireSegments.split("-")			# array with just wire segment number
+	wireSegments = '_'.join(dirName.split('_')[:-1])	# extracting only the part of ##-##-##- in th string
+	wireArr = wireSegments.split("-")					# array with just wire segment number
 	return wireArr
 
 def calcGain(ff, CC, scale):
@@ -53,9 +48,8 @@ def returnCap(i, data):
 	popt, pcov =  curve_fit(calcGain, frequency, amp, [100*1e-12, 5000])
 	return popt[0]
 
-
-#def connectivityTest(json_dir):
-def connectivityTest():
+def continuityTest(json_dir, pickled_fit):
+	'''Structure of input: json_dir = 'scanData/APA_.../...' (without trailing "/"), pickled_fit = 'Continuity/.../fit.pickle' '''
 	
 	channelNameArr_all = []								# array to store the name of ALL channels in this file
 	uncalibratedCapArr_all = []							# array to store the uncalibrated capacitance value of ALL the channels in this file
@@ -64,7 +58,7 @@ def connectivityTest():
 	calibratedCapArr = []								# array to store the calibrated capacitance value in this file
 	booleanArr = []										# array to store the pass/fail result from the connectivity test
 
-	json_dir = "CERNscan/X_B_2_82-84-86-88-90-92-94-96_20211026T090254";
+	# json_dir = "CERNscan/X_B_2_82-84-86-88-90-92-94-96_20211026T090254";
 	dir_name = ntpath.basename(json_dir)				# name of the directory where json ampitude file is stored
 	#fit = pickle.load(open( pickled_fit, "rb" ))
 	#fit = CustomUnpickler(open(pickled_fit, 'rb')).load()
