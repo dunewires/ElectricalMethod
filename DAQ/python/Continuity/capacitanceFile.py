@@ -49,7 +49,7 @@ def returnCap(i, data):
 	return popt[0]
 
 def continuityTest(json_dir, pickled_fit):
-	'''Structure of input: json_dir = 'scanData/APA_.../...' (without trailing "/"), pickled_fit = 'Continuity/.../fit.pickle' '''
+	'''Example of structure of input: json_dir = 'scanData/APA_.../...' (folder without trailing "/"), pickled_fit = 'Continuity/.../fit.pickle' '''
 	
 	channelNameArr_all = []								# array to store the name of ALL channels in this file
 	uncalibratedCapArr_all = []							# array to store the uncalibrated capacitance value of ALL the channels in this file
