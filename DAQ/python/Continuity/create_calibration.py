@@ -9,10 +9,11 @@ def create_structure():
     # Ensure script is run from expected directory
     cwd = os.getcwd()
 
-    if cwd.find('ElectricalMethod/DAQ/python/Continuity') == -1:
-        raise RuntimeError('Wrong current working directory, move to "ElectricalMethod/DAQ/python/Continuity" and run script again.')
+    expected_path = os.path.join('ElectricalMethod', 'DAQ', 'python', 'Continuity')
+    if cwd.find(expected_path) == -1:
+        raise RuntimeError(f'Wrong current working directory, move to {expected_path} and run script again.')
 
-    scan_top_folder = '../scanData'
+    scan_top_folder = os.path.join('..', 'scanData')
     scan_parent_folders = os.listdir(scan_top_folder)
 
     ids_analog = []
@@ -41,7 +42,7 @@ def create_structure():
             # Create folder specific to specified hardware
             dwa_folder = 'Analog_'+id_analog+'_Flex_'+id_flex
             dwa_folders.append(dwa_folder)
-            continuity_scan_folder = dwa_folder+'/continuityScan'
+            continuity_scan_folder = os.path.join(dwa_folder, 'continuityScan')
             continuity_scan_folder_raw = continuity_scan_folder+'_raw'
 
             if os.path.exists(dwa_folder):
@@ -56,8 +57,8 @@ def create_structure():
             sides = {'L': ['U1', 'U2', 'V17', 'V18', 'V33', 'V34', 'X17', 'X18' ], 'R': ['U17', 'U18', 'U33', 'U34', 'V1', 'V2', 'X1', 'X2', 'X33', 'X34']}
             for value in capacitor_values:
                 # Get scans for each load board
-                scan_parent_folder = scan_top_folder+'/'+ key_prefix + key_analog + id_analog + key_flex + id_flex + key_load + value
-                shutil.copytree(scan_parent_folder, continuity_scan_folder_raw+'/'+key_load[1:]+value)
+                scan_parent_folder = os.path.join(scan_top_folder, key_prefix + key_analog + id_analog + key_flex + id_flex + key_load + value)
+                shutil.copytree(scan_parent_folder, os.path.join(continuity_scan_folder_raw, key_load[1:]+value))
 
                 scan_folders = os.listdir(scan_parent_folder)
                 for folder in scan_folders:
@@ -69,16 +70,16 @@ def create_structure():
                     abbreviation = folder[0]+folder.split('_')[3].split('-')[0]
                     for side in sides:
                         # Create folder structure expected by continuity scripts
-                        destination_folder = continuity_scan_folder+'/'+value+side
+                        destination_folder = os.path.join(continuity_scan_folder, value+side)
                         if not os.path.exists(destination_folder):
                             os.mkdir(destination_folder)
                         # Sort scans into new folders
                         if abbreviation in sides[side]:
-                            destination_file = destination_folder+'/'+value+abbreviation+'.json'
+                            destination_file = os.path.join(destination_folder, value+abbreviation+'.json')
                             if os.path.exists(destination_file):
                                 print(f'Skipping creation of {destination_file} as it already exists.')
                                 continue
-                            shutil.copy2(scan_parent_folder+'/'+folder+'/'+'amplitudeData.json', destination_file)
+                            shutil.copy2(os.path.join(scan_parent_folder, folder, 'amplitudeData.json'), destination_file)
 
     return dwa_folders
 
@@ -89,12 +90,12 @@ def main():
 
     for folder in dwa_folders:
         print(f'Creating pickle file for {folder}')
-        makeTxt4Cap.main(folder+'/continuityScan')
+        makeTxt4Cap.main(os.path.join(folder, 'continuityScan'))
         CalibrationPickle.main()
 
         # Move pickle file and remove temporary files
         pickle_name = 'fit.pickle'
-        os.rename(pickle_name, folder+'/'+pickle_name)
+        os.rename(pickle_name, os.path.join(folder, pickle_name))
         os.remove('extractFromJson.txt')
         os.remove('nameData.txt')
     print('All done.')
