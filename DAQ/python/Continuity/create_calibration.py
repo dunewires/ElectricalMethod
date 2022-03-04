@@ -55,9 +55,8 @@ def create_structure():
             sides = {'L': ['U1', 'U2', 'V17', 'V18', 'V33', 'V34', 'X17', 'X18' ], 'R': ['U17', 'U18', 'U33', 'U34', 'V1', 'V2', 'X1', 'X2', 'X33', 'X34']}
             for value in capacitor_values:
                 # Get scans for each load board
-                parent_folder = key_prefix + key_analog + id_analog + key_flex + id_flex + key_load + value
-                scan_parent_folder = scan_top_folder+'/'+parent_folder
-                shutil.copytree(scan_parent_folder, continuity_scan_folder_raw+'/'+parent_folder)
+                scan_parent_folder = scan_top_folder+'/'+ key_prefix + key_analog + id_analog + key_flex + id_flex + key_load + value
+                shutil.copytree(scan_parent_folder, continuity_scan_folder_raw+'/'+key_load[1:]+value)
 
                 scan_folders = os.listdir(scan_parent_folder)
                 for folder in scan_folders:
