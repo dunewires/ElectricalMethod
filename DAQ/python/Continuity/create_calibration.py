@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+sys.path.append('../mappings')
 import makeTxt4Cap
 import CalibrationPickle
 
