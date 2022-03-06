@@ -1046,6 +1046,15 @@ class MainWindow(qtw.QMainWindow):
                                 item = qtg.QStandardItem()
                                 item.setData(status, qtc.Qt.DisplayRole)
                                 self.recentScansTableModel.setItem(i, Results.CONFIDENCE, item)
+                            elif "continuous" in scanDict.keys():
+                                continuous = scanDict["continuous"]
+                                item = qtg.QStandardItem()
+                                item.setData(continuous, qtc.Qt.DisplayRole)
+                                self.recentScansTableModel.setItem(i, Results.RESULT, item)
+                                # Status
+                                item = qtg.QStandardItem()
+                                item.setData("N/A", qtc.Qt.DisplayRole)
+                                self.recentScansTableModel.setItem(i, Results.CONFIDENCE, item)
             
                             i += 1
 

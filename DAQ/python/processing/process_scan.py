@@ -5,6 +5,8 @@ import json
 import sys
 from scipy.signal import savgol_filter, find_peaks
 sys.path.append("../mappings")
+sys.path.append("../Continuity")
+import connectivityTest
 import channel_frequencies
 import resonance_fitting
 import os
@@ -31,7 +33,7 @@ def new_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
                     resultsDict[stage][layer][side][str(i).zfill(5)] = {"tension": {}, "continuity": {}}
     return resultsDict
 
-def update_results_dict(resultsDict, stage, layer, side, scanId, wireSegments, tensions, tension_stds):
+def update_results_dict_tension(resultsDict, stage, layer, side, scanId, wireSegments, tensions, tension_stds):
     for i, wireNum in enumerate(wireSegments):
         tension = tensions[i]
         tension_std = tension_stds[i]
@@ -39,11 +41,11 @@ def update_results_dict(resultsDict, stage, layer, side, scanId, wireSegments, t
         elif tension == -1:
             resultsDict[stage][layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'Not Found'}
         elif tension > 0:
-            #print(resultsDict.keys())
-            #print(resultsDict[layer].keys())
-            #print(resultsDict[layer][side].keys())
-            #print(resultsDict[layer][side][str(wireNum).zfill(5)].keys())
             resultsDict[stage][layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std}
+
+def update_results_dict_continuity(resultsDict, stage, layer, side, scanId, wireSegments, continuous, capacitanceCal, capacitanceUnCal):
+    for wireNum in wireSegments:
+        resultsDict[stage][layer][side][str(wireNum).zfill(5)]["continuity"][scanId] = {'continuous': continuous, 'capacitance_cal': capacitanceCal, "capacitance_un_cal": capacitanceUnCal}
 
 #def update_results_dict(resultsDict, layer, side, scanId, wireSegments, tensions, tension_stds):
 #    for i, wireNum in enumerate(wireSegments):
@@ -115,21 +117,31 @@ def process_scan(resultsDict, dirName):
     layer = data['layer']
     side = data['side']
     scanId = os.path.basename(dirName)
-    
-    for reg in range(8):
-        dwaCh = str(reg)
-        #print(data[dwaCh].keys())
-        apaCh = data['apaChannels'][reg]
-        if not apaCh:
-            print(f"DWA Chan {reg}: No channel")
-            continue
-            
-        f = np.array(data[dwaCh]['freq'])
-        a = np.array(data[dwaCh]['ampl'])
-        if len(f) == 0 or max(f) > 500 or len(f) < 250:
-            print(f"DWA Chan {reg}: Not a valid scan")
-            continue
+    scanType = data['type']
 
-        segments, best_tensions, best_tension_stds = process_channel(layer, apaCh, f, a)
-        update_results_dict(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_stds)
-        
+    if scanType == 'Continuity':
+        channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr = connectivityTest(dirName)
+        for i, apaChan in enumerate(channelNameArr):
+            segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan,200)
+            continuous = booleanArr[i]
+            capacitanceCal = calibratedCapArr[i]
+            capacitanceUnCal = uncalibratedCapArr[i]
+            update_results_dict_continuity(resultsDict, stage, layer, side, scanId, segments, continuous, capacitanceCal, capacitanceUnCal)
+
+    else:
+        for reg in range(8):
+            dwaCh = str(reg)
+            #print(data[dwaCh].keys())
+            apaCh = data['apaChannels'][reg]
+            if not apaCh:
+                print(f"DWA Chan {reg}: No channel")
+                continue
+                
+            f = np.array(data[dwaCh]['freq'])
+            a = np.array(data[dwaCh]['ampl'])
+            if len(f) == 0 or max(f) > 500 or len(f) < 250:
+                print(f"DWA Chan {reg}: Not a valid scan")
+                continue
+
+            segments, best_tensions, best_tension_stds = process_channel(layer, apaCh, f, a)
+            update_results_dict(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_stds)

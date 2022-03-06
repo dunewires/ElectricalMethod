@@ -54,8 +54,8 @@ def returnCap(i, data):
 	return popt[0]
 
 
-#def connectivityTest(json_dir):
-def connectivityTest():
+def connectivityTest(json_dir):
+#def connectivityTest():
 	
 	channelNameArr_all = []								# array to store the name of ALL channels in this file
 	uncalibratedCapArr_all = []							# array to store the uncalibrated capacitance value of ALL the channels in this file
@@ -64,7 +64,7 @@ def connectivityTest():
 	calibratedCapArr = []								# array to store the calibrated capacitance value in this file
 	booleanArr = []										# array to store the pass/fail result from the connectivity test
 
-	json_dir = "CERNscan/X_B_2_82-84-86-88-90-92-94-96_20211026T090254";
+	#json_dir = "CERNscan/X_B_2_82-84-86-88-90-92-94-96_20211026T090254";
 	dir_name = ntpath.basename(json_dir)				# name of the directory where json ampitude file is stored
 	#fit = pickle.load(open( pickled_fit, "rb" ))
 	#fit = CustomUnpickler(open(pickled_fit, 'rb')).load()
@@ -104,4 +104,4 @@ def connectivityTest():
 	calibratedCapArr.append(val)
 	uncalibratedCapArr.append(uncalibratedCapArr_all[i]*(10**12))
 	#print(booleanArr)
-	return [channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr]
+	return channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr
