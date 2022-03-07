@@ -5,7 +5,6 @@ import pandas as pd
 import copy
 from mpl_toolkits import mplot3d
 import scipy as sp
-from scipy.interpolate import RBFInterpolator
 import json
 from scipy.interpolate import Rbf
 from channel_map import apa_channel_to_board_channel

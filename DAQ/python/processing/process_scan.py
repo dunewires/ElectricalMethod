@@ -6,7 +6,7 @@ import sys
 from scipy.signal import savgol_filter, find_peaks
 sys.path.append("../mappings")
 sys.path.append("../Continuity")
-import connectivityTest
+import capacitanceFile
 import channel_frequencies
 import resonance_fitting
 import os
@@ -120,7 +120,7 @@ def process_scan(resultsDict, dirName):
     scanType = data['type']
 
     if scanType == 'Continuity':
-        channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr = connectivityTest(dirName)
+        channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr = capacitanceFile.connectivityTest(dirName)
         for i, apaChan in enumerate(channelNameArr):
             segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan,200)
             continuous = booleanArr[i]

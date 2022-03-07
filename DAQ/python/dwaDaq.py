@@ -175,6 +175,7 @@ import DwaMicrozed as duz
 sys.path.append('./mappings')
 sys.path.append('./database')
 sys.path.append('./processing')
+sys.path.append('./Continuity')
 import config_generator
 import channel_map
 import channel_frequencies
