@@ -1,9 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d
-import pandas as pd
 import copy
-from mpl_toolkits import mplot3d
 import scipy as sp
 import json
 from scipy.interpolate import Rbf
@@ -428,24 +424,6 @@ def interpolate3Ddata(data):
     spline =sp.interpolate.Rbf(x,y,z,function='multiquadric',epsilon = 1, smooth = 1)
     Z = spline(B1, B2)
     return B1, B2, Z, spline
-
-
-def plot3Ddata(section, configNum, chanNum, datas):
-    data, title = channelData(section,configNum,chanNum, datas)
-    fig = plt.figure(figsize=(10,6),num=title)
-    ax = axes3d.Axes3D(fig)
-    
-    P1, P2, P3, func = interpolate3Ddata(data)
-    
-    ax.set_zlabel('capacitance (pF)')
-    ax.set_ylabel('frequency (Hz)')
-    ax.set_xlabel('amplitude ($10^{-1}$ kV)')
-    ax.plot_wireframe(P1, P2, P3)
-    ax.plot_surface(P1, P2, P3,alpha=0.2)
-    #plot_3d(P1, P2, P3)
-    ax.scatter3D(x,y,z, c='r')
-    
-    plt.show()
 
 
 def capReturn(section, configNum, chanNum, freq, amp, datas):

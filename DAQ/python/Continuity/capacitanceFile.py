@@ -21,9 +21,6 @@ import re
 import sys
 from defCalibration import extract_data_json, extract_channel, my_dictionary
 from scipy.optimize import curve_fit
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d
-from matplotlib.colors import ListedColormap
 import pickle
 import ntpath
 
