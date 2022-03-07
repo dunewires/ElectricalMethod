@@ -66,8 +66,8 @@ def connectivityTest(json_dir):
 
 	path = json_dir + '/amplitudeData.json'
 	data = extract_data_json(path)				# data has the format of (freq)(amp_1)(amp_2)...(amp_4/8)
-	board_channel = extract_channel(path)[0]				# channel name ["U1","U2",...]
-	apa_channel = extract_channel(path)[1]
+	board_channel = extract_channel(path)[:,0]				# channel name ["U1","U2",...]
+	apa_channel = extract_channel(path)[:,1]
 	for i in range(len(board_channel)):
 		channelNameArr_all.append(board_channel[i])
 		uncalibratedCapArr_all.append(returnCap(i,data))
