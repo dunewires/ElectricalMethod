@@ -76,11 +76,8 @@ def connectivityTest(json_dir):
 			coeff = fit[channelNameArr_all[i]]
 
 		else:
-			channelNum = int(str(channelNameArr_all[i])[1:])-1
-			if(channelNum == 0):
-				channelName = 'X1'
-			else:
-				channelName = 'X' + str(channelNum)
+			channelNum = int(str(channelNameArr_all[i])[1:])
+			channelName = 'X' + str(channelNum)
 			coeff = fit[channelName]
 
 		val = (coeff[0][0] + coeff[0][1]*uncalibratedCapArr_all[i])*(10**12)	

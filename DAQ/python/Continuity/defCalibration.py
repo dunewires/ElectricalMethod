@@ -125,6 +125,10 @@ def extract_channel(path):
         channelNum = contents['apaChannels'][:4]
 
     for i in channelNum:
+        if layer == 'G':
+            if i != '1':
+                i = str(int(i)-1);
+
         channelArr.append(str(layer + str(apa_channel_to_board_channel(layer,i))))
     return channelArr
 
