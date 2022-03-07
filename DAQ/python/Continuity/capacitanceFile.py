@@ -74,15 +74,24 @@ def connectivityTest(json_dir):
 	for i in range(len(channelNameArr_all)):
 		if channelNameArr_all[i] in fit:
 			coeff = fit[channelNameArr_all[i]]
-			val = (coeff[0][0] + coeff[0][1]*uncalibratedCapArr_all[i])*(10**12)
 
-			if uncalibratedCapArr_all[i]*(10**12) < 150:
-				booleanArr.append(False)
+		else:
+			channelNum = int(str(channelNameArr_all[i])[1:])-1
+			if(channelNum == 0):
+				channelName = 'X1'
 			else:
-				booleanArr.append(True)
+				channelName = 'X' + str(channelNum)
+			coeff = fit[channelName]
 
-			channelNameArr.append(channelNameArr_all[i])
-			calibratedCapArr.append(val)
-			uncalibratedCapArr.append(uncalibratedCapArr_all[i]*(10**12))
-	#print(booleanArr)
+		val = (coeff[0][0] + coeff[0][1]*uncalibratedCapArr_all[i])*(10**12)	
+			
+		if uncalibratedCapArr_all[i]*(10**12) < 150:
+			booleanArr.append(False)
+		else:
+			booleanArr.append(True)
+
+		channelNameArr.append(channelNameArr_all[i])
+		calibratedCapArr.append(val)
+		uncalibratedCapArr.append(uncalibratedCapArr_all[i]*(10**12))
+
 	return channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr
