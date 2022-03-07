@@ -53,7 +53,7 @@ def connectivityTest(json_dir):
 	uncalibratedCapArr = []								# array to store the uncalibrated capacitance value of calibrated channels in this file
 	calibratedCapArr = []								# array to store the calibrated capacitance value in this file
 	booleanArr = []										# array to store the pass/fail result from the connectivity test
-
+	apaChannelArr = []
 	#json_dir = "CERNscan/X_B_2_82-84-86-88-90-92-94-96_20211026T090254";
 
 	dir_name = ntpath.basename(json_dir)				# name of the directory where json ampitude file is stored
@@ -66,10 +66,12 @@ def connectivityTest(json_dir):
 
 	path = json_dir + '/amplitudeData.json'
 	data = extract_data_json(path)				# data has the format of (freq)(amp_1)(amp_2)...(amp_4/8)
-	channel = extract_channel(path)				# channel name ["U1","U2",...]
-	for i in range(len(channel)):
-		channelNameArr_all.append(channel[i])
+	board_channel = extract_channel(path)[0]				# channel name ["U1","U2",...]
+	apa_channel = extract_channel(path)[1]
+	for i in range(len(board_channel)):
+		channelNameArr_all.append(board_channel[i])
 		uncalibratedCapArr_all.append(returnCap(i,data))
+		apaChannelArr.append(apa_channel[i])
 
 	for i in range(len(channelNameArr_all)):
 		if channelNameArr_all[i] in fit:
@@ -87,8 +89,7 @@ def connectivityTest(json_dir):
 		else:
 			booleanArr.append(True)
 
-		channelNameArr.append(channelNameArr_all[i])
 		calibratedCapArr.append(val)
 		uncalibratedCapArr.append(uncalibratedCapArr_all[i]*(10**12))
 
-	return channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr
+	return apaChannelArr, booleanArr, uncalibratedCapArr, calibratedCapArr

@@ -129,7 +129,7 @@ def extract_channel(path):
             if i != 1:
                 i = i-1
 
-        channelArr.append(str(layer + str(apa_channel_to_board_channel(layer,i))))
+        channelArr.append([str(layer + str(apa_channel_to_board_channel(layer,i))), layer + str(i)])
     return channelArr
 
 
