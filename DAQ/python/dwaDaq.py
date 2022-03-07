@@ -982,12 +982,10 @@ class MainWindow(qtw.QMainWindow):
             stageDict = resultsDict[stage]
             for layer in APA_LAYERS:
                 for side in APA_SIDES:
-                    #sideDict = resultsDict[layer][side]
                     sideDict = stageDict[layer][side]
                     for wireSegment in sideDict: 
-                        #print(wireSegment)
-                        segmentDict = sideDict[wireSegment]["tension"]
-                        #print(segmentDict)
+                        # Combine tension and continuity scans
+                        segmentDict = {**sideDict[wireSegment]["tension"], **sideDict[wireSegment]["continuity"]}
                         for scanId in segmentDict:
                             scanDict = segmentDict[scanId]
                             # Stage

@@ -12,8 +12,8 @@
 # /////////////////////////////////////////////////////////////////
 
 # These variables can be changed
-pickled_fit = 'fit.pickle'			# pickled file for the specific DWA
-year = '2021'						# year when theh scan was taken 
+pickled_fit = './Continuity/fit.pickle'			# pickled file for the specific DWA
+year = '2022'						# year when theh scan was taken 
 
 import numpy as np
 import os
@@ -30,13 +30,6 @@ class MyCustomUnpickler(pickle.Unpickler):
         if module == "__main__":
             module = "defCalibration"
         return super().find_class(module, name)
-
-
-def getWireSegment(num, dirName):
-	a = re.search(year, dirName).span()			# find when the time stamp begins
-	wireSegments = dirName[num:a[0]-1]			# extracting only the part of ##-##-##- in th string
-	wireArr = wireSegments.split("-")			# array with just wire segment number
-	return wireArr
 
 def calcGain(ff, CC, scale):
     #return (2 * np.pi * ff * R2 * CC)/np.sqrt(1 + (2 * np.pi * ff * (R1+R2)* CC) ** 2 )
@@ -62,30 +55,21 @@ def connectivityTest(json_dir):
 	booleanArr = []										# array to store the pass/fail result from the connectivity test
 
 	#json_dir = "CERNscan/X_B_2_82-84-86-88-90-92-94-96_20211026T090254";
+
 	dir_name = ntpath.basename(json_dir)				# name of the directory where json ampitude file is stored
 	#fit = pickle.load(open( pickled_fit, "rb" ))
 	#fit = CustomUnpickler(open(pickled_fit, 'rb')).load()
+
 	with open(pickled_fit, 'rb') as f:
 		unpickler = MyCustomUnpickler(f)
 		fit = unpickler.load()
 
-	if dir_name[5] == '_':								# pick up the wire segment numbers sandwitched by '_', for the case headboard < 10
-		wireArr = getWireSegment(6, dir_name)
-		#path = dir_name + '/amplitudeData.json'
-		path = json_dir + '/amplitudeData.json'
-		data = extract_data_json(path)				# data has the format of (freq)(amp_1)(amp_2)...(amp_4/8)
-		channel = extract_channel(path)				# channel name
-		for i in range(len(channel)):
-			channelNameArr_all.append(channel[i])
-			uncalibratedCapArr_all.append(returnCap(i,data))
-	if dir_name[6] == '_':							# pick up the wire segment numbers sandwitched by '_', for the case headboard = 10
-		wireArr = getWireSegment(7, dir_name)
-		path = dir_name + '/amplitudeData.json'
-		data = extract_data_json(path)				# data has the format of (freq)(amp_1)(amp_2)...(amp_4/8)
-		channel = extract_channel(path)				# channel name
-		for i in range(len(channel)):
-			channelNameArr_all.append(channel[i])
-			uncalibratedCapArr_all.append(returnCap(i,data))
+	path = json_dir + '/amplitudeData.json'
+	data = extract_data_json(path)				# data has the format of (freq)(amp_1)(amp_2)...(amp_4/8)
+	channel = extract_channel(path)				# channel name ["U1","U2",...]
+	for i in range(len(channel)):
+		channelNameArr_all.append(channel[i])
+		uncalibratedCapArr_all.append(returnCap(i,data))
 
 	for i in range(len(channelNameArr_all)):
 		if channelNameArr_all[i] in fit:
@@ -97,8 +81,8 @@ def connectivityTest(json_dir):
 			else:
 				booleanArr.append(True)
 
-	channelNameArr.append(channelNameArr_all[i])
-	calibratedCapArr.append(val)
-	uncalibratedCapArr.append(uncalibratedCapArr_all[i]*(10**12))
+			channelNameArr.append(channelNameArr_all[i])
+			calibratedCapArr.append(val)
+			uncalibratedCapArr.append(uncalibratedCapArr_all[i]*(10**12))
 	#print(booleanArr)
 	return channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr

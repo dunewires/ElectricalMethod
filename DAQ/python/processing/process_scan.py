@@ -45,6 +45,7 @@ def update_results_dict_tension(resultsDict, stage, layer, side, scanId, wireSeg
 
 def update_results_dict_continuity(resultsDict, stage, layer, side, scanId, wireSegments, continuous, capacitanceCal, capacitanceUnCal):
     for wireNum in wireSegments:
+        print("Writing ",stage,layer,side,scanId,wireNum,continuous,capacitanceCal, capacitanceUnCal)
         resultsDict[stage][layer][side][str(wireNum).zfill(5)]["continuity"][scanId] = {'continuous': continuous, 'capacitance_cal': capacitanceCal, "capacitance_un_cal": capacitanceUnCal}
 
 #def update_results_dict(resultsDict, layer, side, scanId, wireSegments, tensions, tension_stds):
@@ -118,11 +119,15 @@ def process_scan(resultsDict, dirName):
     side = data['side']
     scanId = os.path.basename(dirName)
     scanType = data['type']
+    print("Processing ",stage,layer,side,scanId,scanType)
 
     if scanType == 'Continuity':
         channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr = capacitanceFile.connectivityTest(dirName)
-        for i, apaChan in enumerate(channelNameArr):
-            segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan,200)
+        print("Continuity results")
+        print(booleanArr)
+        for i, chanName in enumerate(channelNameArr):
+            apaChan = int(chanName[1:]) # Converts "U1" to 1
+            segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan)
             continuous = booleanArr[i]
             capacitanceCal = calibratedCapArr[i]
             capacitanceUnCal = uncalibratedCapArr[i]
