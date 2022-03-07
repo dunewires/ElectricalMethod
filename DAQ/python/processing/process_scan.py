@@ -149,4 +149,4 @@ def process_scan(resultsDict, dirName):
                 continue
 
             segments, best_tensions, best_tension_stds = process_channel(layer, apaCh, f, a)
-            update_results_dict(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_stds)
+            update_results_dict_tension(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_stds)
