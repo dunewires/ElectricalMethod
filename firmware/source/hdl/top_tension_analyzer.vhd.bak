@@ -81,6 +81,7 @@ architecture STRUCT of top_tension_analyzer is
       full          : OUT STD_LOGIC;
       empty         : OUT STD_LOGIC;
       wr_data_count : OUT STD_LOGIC_VECTOR (12 downto 0);
+      wr_data_count
       prog_full     : OUT STD_LOGIC
     );
   END COMPONENT;

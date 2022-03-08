@@ -59,12 +59,15 @@ entity headerGenerator is
         stimPeriodCounter : in unsigned(23 downto 0); -- track how many freqs
                                                       -- have been done in
                                                       -- this run.   FIXME: bits???
+
+        wr_data_count    : out  slv_vector_type (7 downto 0)(12 downto 0);
+	--wr_data_count     : SLV_VECTOR_TYPE (12 downto 0);
         adcSamplingPeriod : in unsigned(23 downto 0);
 
         -- For ADC data access
         adcDataRdy : in  std_logic_vector(7 downto 0);
         adcDataRen : out std_logic_vector(7 downto 0) := (others => '0');
-        adcData    : in  slv_vector_type(7 downto 0)(31 downto 0);
+        adcData    : in  slv_vector_type (7 downto 0)(31 downto 0);
 
         dwaClk100 : in std_logic -- := '0'
     );
@@ -112,6 +115,8 @@ architecture rtl of headerGenerator is
     constant nHeadE      : integer                                         := 7; -- # of header words (incl. 2 delimiters)
     constant nHeadElog   : integer                                         := integer(log2(real(nHeadE +1)));
     signal headEDataList : slv_vector_type(nHeadE-1 downto 0)(31 downto 0) := (others => (others => '0'));
+
+    ----------------------------
 
     -- FIXME: headCnt_reg and _next should use the largest of nHeadA, nHeadC, nHeadE, nHeadF
     constant nHeadLog : integer := integer(ceil(log2(real(nHeadF))));
@@ -243,7 +248,7 @@ begin
             x"52" & x"00" & "0" & std_logic_vector(stimPeriodActive_reg(30 downto 16)),
             x"53" & x"00" & std_logic_vector(stimPeriodActive_reg(15 downto 0)),
             x"CCCCCCCC",
-            x"DDDD" & x"5151" -- FIXME: this shoould be in the genDFrame_s...
+            x"DDDD" & "000" & wr_data_count(adcIdx)  
     );
 
     --STATUS Header
@@ -256,6 +261,7 @@ begin
             x"65" & x"00000" & "000" & statusDataSticky.disableHV,
             x"EEEEEEEE"
     );
+
 
     -- combinatorial logic of other signals
     adcSamplesPerFreq <= fromDaqReg.adcSamplesPerCycle * fromDaqReg.cyclesPerFreq;
@@ -426,6 +432,8 @@ begin
                     adcDataRen(adcIdx) <= BOOL2SL(fromDaqReg.udpDataRen);
                     -- mux adcIdx channels to udpDataWord
                     toDaqReg.udpDataWord <= adcData(adcIdx);
+
+         
                 else
                     toDaqReg.udpDataWord <= x"DDDDDDDD";
                     if fromDaqReg.udpDataRen then
