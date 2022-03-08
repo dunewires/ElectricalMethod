@@ -136,6 +136,8 @@ architecture STRUCT of top_tension_analyzer is
   signal fifoAdcData_pf     : std_logic_vector(7 downto 0)             := (others => '0');
   signal adcAutoDc_af       : std_logic_vector(7 downto 0)             := (others => '0');
 
+  signal wr_data_count      : SLV_VECTOR_TYPE (7 downto 0)(12 downto 0):= (others => (others => '0'));
+
   signal adcStart : boolean := true;
 
   signal adcBusy : std_logic := '0';
@@ -598,6 +600,7 @@ begin
 
       adcSamplingPeriod => adcCnv_nPeriod,
 
+      wr_data_count => wr_data_count,
       adcDataRdy => not(fifoAdcData_ef),
       adcDataRen => fifoAdcData_ren,
       adcData    => adcData,

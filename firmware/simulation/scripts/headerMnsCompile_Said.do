@@ -55,8 +55,11 @@ vcom -64 -93 -work dds_compiler_v6_0_19  \
 
 vcom -64 -93 -work xil_defaultlib  \
 "../source/cores/ipMicrozed/dds_compiler_1khz/sim/dds_compiler_1khz.vhd" \
-"../source/cores/ipMicrozed/fifo_autoDatacollection/fifo_autoDatacollection_sim_netlist.vhdl" 
- vlog -64 -incr -work xil_defaultlib  \
+
+vlog -64 -incr -work xil_defaultlib  \
+"../source/cores/ipMicrozed/fifo_autoDatacollection/sim/fifo_autoDatacollection.v" 
+
+vlog -64 -incr -work xil_defaultlib  \
 "../source/cores/ipMicrozed/bram_sdp_18x8k/sim/bram_sdp_18x8k.v"
 
 vcom -64 -2008 -work duneDwa  \
@@ -72,8 +75,11 @@ vcom -64 -2008 -work duneDwa  \
 "../source/hdl/adc_dds_io.vhd" \
 "../source/hdl/adcReadout.vhd" \
 "../source/hdl/headerGenerator.vhd" \
+"../source/hdl/ledCheck.vhd" \
 "../source/hdl/mainsNoiseCorrection.vhd" \
 "../source/hdl/CheckReg.vhd" 
+
+
 
 
 vcom -64 -2008 -work duneDwa   \

@@ -60,14 +60,14 @@ entity headerGenerator is
                                                       -- have been done in
                                                       -- this run.   FIXME: bits???
 
-        wr_data_count    : out  slv_vector_type (7 downto 0)(12 downto 0);
-	--wr_data_count     : SLV_VECTOR_TYPE (12 downto 0);
+        wr_data_count    : in slv_vector_type(7 downto 0)(12 downto 0);
+
         adcSamplingPeriod : in unsigned(23 downto 0);
 
         -- For ADC data access
         adcDataRdy : in  std_logic_vector(7 downto 0);
         adcDataRen : out std_logic_vector(7 downto 0) := (others => '0');
-        adcData    : in  slv_vector_type (7 downto 0)(31 downto 0);
+        adcData    : in slv_vector_type(7 downto 0)(31 downto 0);
 
         dwaClk100 : in std_logic -- := '0'
     );

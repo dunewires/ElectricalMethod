@@ -1,75 +1,75 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/adcCnv_nPeriod
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy_del
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutCnt
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutBusy
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/freqSet
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/toDaqReg
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/timerCnt
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendRunHdr
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendAdcData
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/scanDone
+add wave -noupdate -group wtaCtrl -expand /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/fromDaqReg
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/dwaClk100
+add wave -noupdate -group wtaCtrl -color {Light Blue} /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlState
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlStart_del
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcStart
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcAutoDc_af
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/acStim_enable
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy_del
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutCnt
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutBusy
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/freqSet
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/toDaqReg
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/timerCnt
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendRunHdr
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendAdcData
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/scanDone
+add wave -noupdate -group wtaCtrl -expand /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/fromDaqReg
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/dwaClk100
+add wave -noupdate -group wtaCtrl -color {Light Blue} /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlState
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlStart_del
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcStart
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcAutoDc_af
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/acStim_enable
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy_del
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutCnt
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutBusy
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/freqSet
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/toDaqReg
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/timerCnt
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendRunHdr
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendAdcData
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/scanDone
+add wave -noupdate -group wtaCtrl -expand /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/fromDaqReg
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/dwaClk100
+add wave -noupdate -group wtaCtrl -color {Light Blue} /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlState
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlStart_del
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcStart
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcAutoDc_af
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/acStim_enable
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy_del
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutCnt
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutBusy
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/freqSet
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/toDaqReg
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/timerCnt
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendRunHdr
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendAdcData
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/scanDone
+add wave -noupdate -group wtaCtrl -expand /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/fromDaqReg
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/dwaClk100
+add wave -noupdate -group wtaCtrl -color {Light Blue} /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlState
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlStart_del
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcStart
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcAutoDc_af
+add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/acStim_enable
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/acStim_nPeriod_fp6
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy_del
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutCnt
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutBusy
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/freqSet
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/toDaqReg
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/timerCnt
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendRunHdr
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendAdcData
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/scanDone
-add wave -noupdate -group wtaCtrl -expand /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/fromDaqReg
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/dwaClk100
-add wave -noupdate -group wtaCtrl -color {Light Blue} /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlState
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlStart_del
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcStart
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcAutoDc_af
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/acStim_enable
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy_del
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutCnt
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutBusy
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/freqSet
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/toDaqReg
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/timerCnt
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendRunHdr
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendAdcData
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/scanDone
-add wave -noupdate -group wtaCtrl -expand /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/fromDaqReg
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/dwaClk100
-add wave -noupdate -group wtaCtrl -color {Light Blue} /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlState
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlStart_del
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcStart
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcAutoDc_af
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/acStim_enable
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy_del
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutCnt
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutBusy
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/freqSet
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/toDaqReg
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/timerCnt
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendRunHdr
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendAdcData
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/scanDone
-add wave -noupdate -group wtaCtrl -expand /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/fromDaqReg
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/dwaClk100
-add wave -noupdate -group wtaCtrl -color {Light Blue} /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlState
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlStart_del
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcStart
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcAutoDc_af
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/acStim_enable
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy_del
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutCnt
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/noiseReadoutBusy
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/freqSet
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/toDaqReg
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/timerCnt
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendRunHdr
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/sendAdcData
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/scanDone
-add wave -noupdate -group wtaCtrl -expand /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/fromDaqReg
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/dwaClk100
-add wave -noupdate -group wtaCtrl -color {Light Blue} /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlState
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/ctrlStart_del
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcStart
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcBusy
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/adcAutoDc_af
-add wave -noupdate -group wtaCtrl /tb_adc_emu/top_tension_analyzer_1/wtaController_inst/acStim_enable
 add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/udpPktCnt
 add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/udpDataRdy_reg
 add wave -noupdate -group headerGen /tb_adc_emu/top_tension_analyzer_1/headerGenerator_inst/udpDataRdy_next
@@ -383,8 +383,8 @@ add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNo
 add wave -noupdate -expand -group mns -color Khaki -format Literal /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/freqInRange
 add wave -noupdate -expand -group mns -color Khaki /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/freqSet
 add wave -noupdate -expand -group mns -color Khaki /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/cnvCnt
-add wave -noupdate -expand -group mns -expand -subitemconfig {/tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp(1) -expand /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp(0) -expand} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp
-add wave -noupdate -expand -group mns -expand /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseAvg8
+add wave -noupdate -expand -group mns -subitemconfig {/tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp(1) -expand /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp(0) -expand} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp
+add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseAvg8
 add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseAccum
 add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/mnsStatePos
 add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/mnsState
@@ -393,7 +393,7 @@ add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNo
 add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/fromDaqReg
 add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/freqPtr
 add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/dwaClk100
-add wave -noupdate -expand -group mns -color {Sky Blue} -expand -subitemconfig {/tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(7) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(6) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(5) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(4) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(3) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(2) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(1) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(0) {-color {Sky Blue} -height 17}} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel
+add wave -noupdate -expand -group mns -color {Sky Blue} -subitemconfig {/tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(7) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(6) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(5) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(4) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(3) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(2) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(1) {-color {Sky Blue} -height 17} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel(0) {-color {Sky Blue} -height 17}} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataTsel
 add wave -noupdate -expand -group mns -color {Sky Blue} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/senseWireDataStrb
 add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/vioProbeOut0
 add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/toDaqReg
@@ -406,7 +406,7 @@ add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNo
 add wave -noupdate -expand -group mns -color Khaki -format Literal /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/freqInRange
 add wave -noupdate -expand -group mns -color Khaki /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/freqSet
 add wave -noupdate -expand -group mns -color Khaki /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/cnvCnt
-add wave -noupdate -expand -group mns -expand -subitemconfig {/tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp(1) -expand /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp(0) -expand} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp
+add wave -noupdate -expand -group mns -subitemconfig {/tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp(1) -expand /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp(0) -expand} /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseCorrSamp
 add wave -noupdate -expand -group mns -expand /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseAvg8
 add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/noiseAccum
 add wave -noupdate -expand -group mns /tb_adc_emu/top_tension_analyzer_1/mainsNoiseCorrection_inst/mnsStatePos
@@ -476,9 +476,9 @@ add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/dwaClk
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/clk200Step
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/bPClkPeriodCnt
 add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/bandPassClkGen_inst/bPClk
-add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/Check_Range_i/*
+add wave -noupdate /tb_adc_emu/top_tension_analyzer_1/fromDaqReg.reset
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {449043098763 fs} 0}
+WaveRestoreCursors {{Cursor 1} {1012187711813 fs} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 208
 configure wave -valuecolwidth 210
@@ -494,4 +494,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits fs
 update
-WaveRestoreZoom {0 fs} {3387836633524 fs}
+WaveRestoreZoom {1012027126979 fs} {1013062782791 fs}
