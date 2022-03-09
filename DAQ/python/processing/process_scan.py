@@ -64,6 +64,7 @@ def update_results_dict_continuity(resultsDict, stage, layer, side, scanId, wire
 
             
 def process_channel(layer, apaCh, f, a): 
+    print("getting res")
     segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,200)
     roundex = []
     for seg in expected_resonances:
@@ -71,9 +72,10 @@ def process_channel(layer, apaCh, f, a):
     expected_resonances = roundex
     segments_nolim, ex_nolim = channel_frequencies.get_expected_resonances(layer,apaCh,9e9)
     
+    print("backgorund sub")
     bsub = resonance_fitting.baseline_subtracted(np.cumsum(a))
     bsubabs = np.abs(bsub)
-    smooth = savgol_filter(bsubabs, 51, 3)
+    smooth = savgol_filter(bsubabs, 25, 3)
     opt_reduced = smooth.copy()
 
     #if plot: ax.plot(f,bsub)
@@ -81,10 +83,15 @@ def process_channel(layer, apaCh, f, a):
         print(f"DWA Chan {apaCh}: No resonances found")
         return segments, [-1 for s in segments], [-1 for s in segments]
 
-    pks, _ = find_peaks(smooth,prominence=5)
+    print("find peaks")
+    pks, _ = find_peaks(smooth,prominence=40) # TODO: Configurable?
     fpks = np.array([f[pk] for pk in pks])
     fpks = fpks[fpks>55] # TODO: Remove this once we solve the mains noise issue
+    print(fpks)
+    print("analyze placement ", len(fpks))
     placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
+    
+    print("sorting")
     sorted_placements = np.array([x for _, x in sorted(zip(costs, placements))])
     sorted_diffs = np.array([x for _, x in sorted(zip(costs, diffs))])
     sorted_tensions = np.array([x for _, x in sorted(zip(costs, tensions))])
@@ -102,6 +109,7 @@ def process_channel(layer, apaCh, f, a):
     #print("best tensions: ",best_tensions)
     best_tension_stds = np.std(best_tensions,0)
     #print("best std: ",best_tensions_std)
+    print("returning")
     return segments, best_tensions[0], best_tension_stds
 
 def process_scan(resultsDict, dirName):
@@ -121,7 +129,7 @@ def process_scan(resultsDict, dirName):
     scanType = data['type']
     print("Processing ",stage,layer,side,scanId,scanType)
 
-    if scanType == 'Continuity':
+    if False and scanType == 'Continuity':
         channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr = capacitanceFile.connectivityTest(dirName)
         print("Continuity results")
         print(booleanArr)
@@ -136,6 +144,7 @@ def process_scan(resultsDict, dirName):
     else:
         for reg in range(8):
             dwaCh = str(reg)
+            print(f"Processing {reg}")
             #print(data[dwaCh].keys())
             apaCh = data['apaChannels'][reg]
             if not apaCh:
@@ -144,7 +153,7 @@ def process_scan(resultsDict, dirName):
                 
             f = np.array(data[dwaCh]['freq'])
             a = np.array(data[dwaCh]['ampl'])
-            if len(f) == 0 or max(f) > 500 or len(f) < 250:
+            if len(f) == 0 or len(f) < 50:
                 print(f"DWA Chan {reg}: Not a valid scan")
                 continue
 

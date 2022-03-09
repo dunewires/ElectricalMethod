@@ -22,7 +22,7 @@ def configure_fixed_frequency(stim_freq_req=90):
     return {'stimFreqReq': format(int(stim_freq_req * unit_factor), '06X')}
 
 
-def configure_scan_frequencies(stim_freq_min, stim_freq_max, stim_freq_step=1/16):
+def configure_scan_frequencies(stim_freq_min, stim_freq_max, stim_freq_step=1/8):
     '''Return a dictionary of configuration values for the scan stimulus frequencies, i.e. the scan minimum and maximum frequencies and the scan frequency step size, given input frequency values in hertz.'''
     # TODO change unit_factor to 256 after firmware change
     

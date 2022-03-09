@@ -113,7 +113,7 @@ def analyze_res_placement(f,a,res_arr,fpks):
                 for res in np.unique(res_seg):
                     #print(np.min(fpks - res))
                     #print(res)
-                    if res > 120: continue # Noisy above 120, not a big deal if there's no match
+                    #if res > 120: continue # Noisy above 120, not a big deal if there's no match
                     if res > np.max(f): continue # Can't expect a resonance where there's no data
                     if np.min(np.abs(fpks - res)) > 4:
                         #print("failed proximity", res, fpks)

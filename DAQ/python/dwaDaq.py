@@ -168,6 +168,7 @@ import dwaTools as dwa
 import DwaDataParser as ddp
 import DwaConfigFile as dcf
 import DwaMicrozed as duz
+import winsound
 
 
 #from SietchConnect import SietchConnect
@@ -210,7 +211,7 @@ SCAN_OUTPUT_DIRS = [OUTPUT_DIR_SCAN_DATA, OUTPUT_DIR_SCAN_DATA_ADVANCED]
 #OUTPUT_DIR_UDP_DATA = './udpData/'
 #OUTPUT_DIR_AMP_DATA = './ampData/'        
 CLOCK_PERIOD_SEC = 1e8
-SCAN_FREQUENCY_STEP_DEFAULT = 1/16  # Hz
+SCAN_FREQUENCY_STEP_DEFAULT = 1/8  # Hz
 STIM_VIEW_OFFSET = 0
 #
 UDP_RECV_BUF_SIZE = 1024*2**20 # Bytes (2**20 Bytes is ~1MB)
@@ -224,7 +225,7 @@ PUSH_BUTTON_LIST = [1, 2] # PB0 is deprecated
 #INTER_SCAN_DELAY_SEC = 2  # [seconds] How long to wait before user can start another scan (in AUTO scan mode)
 
 # DEBUGGING FLAGS
-AUTO_CHANGE_TAB = True # False for debugging
+AUTO_CHANGE_TAB = False # False for debugging
 GUI_Y_OFFSET = 0 #FIXME: remove this!
 
 # FIXME: these should go in DwaDataParser.py
@@ -331,17 +332,17 @@ class Scans(IntEnum):
 # Recent scan list
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum',
                        'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
-RESULTS_TABLE_HDRS = ['Stage', 'Measurement Time', 'Wire Segment', 'Layer', 'Side', 'Headboard',
-                      'Result', 'Measurement Type', 'Confidence', 'Scan ID']
+RESULTS_TABLE_HDRS = ['Measurement Time', 'Stage', 'Side', 'Layer', 'Headboard', 'Wire Segment',
+                      'Measurement Type', 'Result', 'Confidence', 'Scan ID']
 class Results(IntEnum):
-    STAGE=RESULTS_TABLE_HDRS.index('Stage')
     MSRMT_TIME=RESULTS_TABLE_HDRS.index('Measurement Time')
-    WIRE_SEGMENT=RESULTS_TABLE_HDRS.index('Wire Segment')
-    LAYER=RESULTS_TABLE_HDRS.index('Layer')
+    STAGE=RESULTS_TABLE_HDRS.index('Stage')
     SIDE=RESULTS_TABLE_HDRS.index('Side')
+    LAYER=RESULTS_TABLE_HDRS.index('Layer')
     HEADBOARD=RESULTS_TABLE_HDRS.index('Headboard')
-    RESULT=RESULTS_TABLE_HDRS.index('Result')
+    WIRE_SEGMENT=RESULTS_TABLE_HDRS.index('Wire Segment')
     MSRMT_TYPE=RESULTS_TABLE_HDRS.index('Measurement Type')
+    RESULT=RESULTS_TABLE_HDRS.index('Result')
     CONFIDENCE=RESULTS_TABLE_HDRS.index('Confidence')
     SCAN=RESULTS_TABLE_HDRS.index('Scan ID')
 
@@ -940,7 +941,7 @@ class MainWindow(qtw.QMainWindow):
         le = getattr(self, f'filterLineEditHeadboard')
         le.setPlaceholderText(RESULTS_TABLE_HDRS[Results.HEADBOARD])
         le.textChanged.connect(lambda text, col=Results.HEADBOARD:
-                                self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp('^'+text+'$'),
+                                self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(text+'$'),
                                                                                 col))
         for stage in APA_STAGES_SHORT:
             getattr(self, f'filterStage{stage}').stateChanged.connect(self.filterStageChanged)
@@ -958,11 +959,7 @@ class MainWindow(qtw.QMainWindow):
         #self.resultsDict = self.getResultsDict()
         #self.resultsTableUpdate()
 
-    def resultsTableUpdate(self):
-        #FIXME: need to account for stage....
-        #stage = "Installation (Top)" #self.tensionStageComboBox.currentText()
-        #scanTable = database_functions.get_scan_table(sietch,self.configApaUuid,stage)
-
+    def resultsTableLoad(self):
         # Empty the table model...
         self.recentScansTableModel.removeRows( 0, self.recentScansTableModel.rowCount() )
         
@@ -973,9 +970,19 @@ class MainWindow(qtw.QMainWindow):
         if resultsDict is None:
             return
         
+        self.resultsTableUpdate(resultsDict)
+
+    def resultsTableUpdate(self, resultsDict):
+        #FIXME: need to account for stage....
+        #stage = "Installation (Top)" #self.tensionStageComboBox.currentText()
+        #scanTable = database_functions.get_scan_table(sietch,self.configApaUuid,stage)
+        print("Updating results table")
+        if resultsDict is None:
+            return
+        
         # Populate the table with JSON data
         # should we sort the entries in the dict before populating the model?
-        i = 0
+        i = self.recentScansTableModel.rowCount()
         for stage in APA_STAGES_SCANS:
             if stage not in resultsDict:
                 continue
@@ -1029,7 +1036,10 @@ class MainWindow(qtw.QMainWindow):
                             if "tension" in scanDict.keys():
                                 tension = scanDict["tension"]
                                 item = qtg.QStandardItem()
-                                item.setData(tension, qtc.Qt.DisplayRole)
+                                if tension == 'Not Found':
+                                    item.setData(tension, qtc.Qt.DisplayRole)
+                                else:
+                                    item.setData(str(round(tension,3)), qtc.Qt.DisplayRole)
                                 self.recentScansTableModel.setItem(i, Results.RESULT, item)
                                 # Status
                                 if tension == 'Not Found' or  tension == 'None':
@@ -1718,15 +1728,16 @@ class MainWindow(qtw.QMainWindow):
             range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
             #print(f'range_data = {range_data}')
             rd = range_data[0]
-            self.range_data_list.append(rd)
 
             if self.doContinuity:
                 # advanced params?
+                self.range_data_list.append(rd)
                 useAdvancedParamsCont = not self.advDisableContParamCb.isChecked()
                 self.scanConfigTableAddRow(rd, row, scanType='Continuity', useAdvanced=useAdvancedParamsCont)
                 row += 1
                 
             if self.doTension:
+                self.range_data_list.append(rd)
                 self.scanConfigTableAddRow(rd, row, scanType='Tension', useAdvanced=useAdvancedParamsRes)
                 row += 1
 
@@ -2178,6 +2189,7 @@ class MainWindow(qtw.QMainWindow):
         statusText = self.scanConfigTableModel.item(self.scanConfigRowToScan, Scans.STATUS).text()
         if statusText == 'Done':
             print("final scan has completed...")
+            winsound.Beep(2400, 400)
         else:
             print("auto-starting next scan...")
             self.startScanThread()
@@ -2538,7 +2550,7 @@ class MainWindow(qtw.QMainWindow):
             self.logger.info('======= dwa disable HV ===========')
             print('======= dwa disable HV ===========')
             self.uz.hvDisable()
-            time.sleep(0.5) # sleep to let HV drain
+            time.sleep(2.5) # sleep to let HV drain
         except:
             self.logger.error("DWA hvDisable failed")
             
@@ -2551,6 +2563,7 @@ class MainWindow(qtw.QMainWindow):
             self.logger.error("DWA run configuration failed")
 
         try:
+            time.sleep(0.5)
             self.logger.info('======= dwa enable HV ===========')
             print('======= dwa enable HV ===========')
             self.uz.hvEnable()
@@ -2643,7 +2656,7 @@ class MainWindow(qtw.QMainWindow):
         self.horizontalWidget.setVisible(True)
         self.widgetUuid.setEnabled(False)
         # Load the results table using the specified UUID
-        self.resultsTableUpdate()
+        self.resultsTableLoad()
 
         
     @pyqtSlot()
@@ -2807,7 +2820,7 @@ class MainWindow(qtw.QMainWindow):
             json.dump(resultsDict, f, indent=4, sort_keys=True)
 
         # update the results table
-        self.resultsTableUpdate()
+        self.resultsTableLoad()
 
             
     def loadSavedScanData(self, filename):
@@ -3173,26 +3186,26 @@ class MainWindow(qtw.QMainWindow):
         #tensionTable = database_functions.get_tension_table(sietch, apaUuid, stage)
         #if tensionTable:
         #    wireData = tensionTable['data']['wireSegments']
-        resultsDict = self.getResultsDict()
+        fullResultsDict = self.getResultsDict() 
+        scanResultsDict = self.newResultsDict() 
         
 
         for dwaChan in range(N_DWA_CHANS):
             if dwaChan in self.activeRegistersS:
                 apaChan = self.ampDataS['apaChannels'][dwaChan]
-                apaLayer = self.ampDataS['layer']
-                apaSide = self.ampDataS['side']
-                segments, _ = channel_frequencies.get_expected_resonances(apaLayer,apaChan,200)
+                segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan,200)
                 for seg in range(3):
                     if seg < len(segments):
                         wireSeg = segments[seg]
-                        resultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1.}
+                        fullResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1.}
+                        scanResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1.}
 
 
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{apaUuid}.json')
         print(f'writing processed scan results to {outfile}')
         with open(outfile, 'w') as f:
-            json.dump(resultsDict, f, indent=4, sort_keys=True)
+            json.dump(fullResultsDict, f, indent=4, sort_keys=True)
         # apaChannels = self.ampDataS['apaChannels']
         # for dwaChan,apaChan in enumerate(apaChannels):
         #     if not apaChan: continue
@@ -3248,7 +3261,7 @@ class MainWindow(qtw.QMainWindow):
         # }
         # sietch.api('/test',record_result)
         self.labelResonanceSubmitStatus.setText("Submitted!")
-        self.resultsTableUpdate()
+        self.resultsTableUpdate(scanResultsDict)
         
     def saveResonanceData(self):
         resData = {}
@@ -4318,18 +4331,22 @@ class MainWindow(qtw.QMainWindow):
         # Process the scan and update the results table
         print("Processing scan")
 
-        resultsDict = self.getResultsDict()
-        process_scan.process_scan(resultsDict, os.path.dirname(self.fnOfAmpData))
+        fullResultsDict = self.getResultsDict()
+        scanResultsDict = self.newResultsDict()
+        print("Processing full")
+        process_scan.process_scan(fullResultsDict, os.path.dirname(self.fnOfAmpData))
+        print("Processing single")
+        process_scan.process_scan(scanResultsDict, os.path.dirname(self.fnOfAmpData))
 
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
         print(f'writing processed scan results to {outfile}')
         with open(outfile, 'w') as f:
-            json.dump(resultsDict, f, indent=4, sort_keys=True)
+            json.dump(fullResultsDict, f, indent=4, sort_keys=True)
         print("Processed scan")
 
         # Update the results table
-        self.resultsTableUpdate()
+        self.resultsTableUpdate(scanResultsDict)
 
     def insertScanIntoScanList(self, scanDir, row=None, submitted=None):
         # a do-nothing function for now...
@@ -4376,7 +4393,7 @@ class MainWindow(qtw.QMainWindow):
         self.resFreqUpdateDisplay(chan=None)
 
     def resFreqRunFit(self):
-        
+        # TODO: This is duplicate code with proccess_scan.process_channel
         # #for reg in self.registers:
         # for chan in self.activeRegistersS:
         #     reg = chan
@@ -4443,7 +4460,7 @@ class MainWindow(qtw.QMainWindow):
             opt_res_arr = [[] for _ in segments]
             if len(f) == 0 or max(f) > 500: continue
             
-            if len(f) < 250:
+            if len(f) < 50:
                 print(f"DWA Chan {reg.value}: Scan too short")
                 continue
             #plot = True
@@ -4451,7 +4468,7 @@ class MainWindow(qtw.QMainWindow):
             bsub = resonance_fitting.baseline_subtracted(np.cumsum(a))
             self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], bsub)
             bsubabs = np.abs(bsub)
-            smooth = savgol_filter(bsubabs, 51, 3)
+            smooth = savgol_filter(bsubabs, 25, 3)
             opt_reduced = smooth.copy()
             
             #if plot: ax.plot(f,bsub)
@@ -4459,10 +4476,11 @@ class MainWindow(qtw.QMainWindow):
                 print(f"DWA Chan {reg.value}: No resonances")
                 continue
         
-            colors = ['gold','deepskyblue','violet']
-            pks, _ = find_peaks(smooth,prominence=5)
+            print('finding peaks')
+            pks, _ = find_peaks(smooth,prominence=40)
             fpks = np.array([f[pk] for pk in pks])
             fpks = fpks[fpks>55] # TODO: Remove this once we solve the mains noise issue
+            print('analyzing placement')
             placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
             print("peaks: ",fpks)
             sorted_placements = np.array([x for _, x in sorted(zip(costs, placements))])
