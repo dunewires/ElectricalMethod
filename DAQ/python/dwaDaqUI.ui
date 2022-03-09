@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1345</width>
-    <height>1196</height>
+    <height>1067</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -411,7 +411,7 @@
                    <attribute name="title">
                     <string>Config</string>
                    </attribute>
-                   <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="6,0,3">
+                   <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="6">
                     <item>
                      <widget class="QWidget" name="widget_2" native="true">
                       <layout class="QVBoxLayout" name="verticalLayout_19">
@@ -479,22 +479,6 @@
                           <widget class="QLabel" name="layer_label">
                            <property name="text">
                             <string>Layer</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="3" column="1">
-                          <widget class="QComboBox" name="configLayerComboBox">
-                           <property name="minimumSize">
-                            <size>
-                             <width>60</width>
-                             <height>0</height>
-                            </size>
-                           </property>
-                           <property name="maximumSize">
-                            <size>
-                             <width>40</width>
-                             <height>16777215</height>
-                            </size>
                            </property>
                           </widget>
                          </item>
@@ -654,6 +638,44 @@
                            </item>
                           </layout>
                          </item>
+                         <item row="3" column="1">
+                          <widget class="QWidget" name="widget_25" native="true">
+                           <layout class="QHBoxLayout" name="horizontalLayout_38">
+                            <property name="leftMargin">
+                             <number>0</number>
+                            </property>
+                            <property name="topMargin">
+                             <number>0</number>
+                            </property>
+                            <property name="bottomMargin">
+                             <number>0</number>
+                            </property>
+                            <item>
+                             <widget class="QComboBox" name="configLayerComboBox">
+                              <property name="minimumSize">
+                               <size>
+                                <width>60</width>
+                                <height>0</height>
+                               </size>
+                              </property>
+                              <property name="maximumSize">
+                               <size>
+                                <width>40</width>
+                                <height>16777215</height>
+                               </size>
+                              </property>
+                             </widget>
+                            </item>
+                            <item>
+                             <widget class="QCheckBox" name="configLayerScanAll_cb">
+                              <property name="text">
+                               <string>Scan all layers</string>
+                              </property>
+                             </widget>
+                            </item>
+                           </layout>
+                          </widget>
+                         </item>
                         </layout>
                        </item>
                        <item>
@@ -675,22 +697,6 @@
                        </item>
                       </layout>
                      </widget>
-                    </item>
-                    <item>
-                     <spacer name="verticalSpacer">
-                      <property name="orientation">
-                       <enum>Qt::Vertical</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>20</width>
-                        <height>40</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                    <item>
-                     <widget class="QGraphicsView" name="graphicsView"/>
                     </item>
                    </layout>
                   </widget>
@@ -3166,7 +3172,6 @@
   <tabstop>omitComments_cb</tabstop>
   <tabstop>configFileContents</tabstop>
   <tabstop>btnDwaConnect</tabstop>
-  <tabstop>configLayerComboBox</tabstop>
   <tabstop>pw_grid_2</tabstop>
   <tabstop>btnConfigureScans</tabstop>
   <tabstop>pw_grid_0</tabstop>
@@ -3222,7 +3227,6 @@
   <tabstop>submitTensionNoteLineEdit</tabstop>
   <tabstop>evtVwr_openScan_pb</tabstop>
   <tabstop>measuredByLineEdit</tabstop>
-  <tabstop>graphicsView</tabstop>
  </tabstops>
  <resources/>
  <connections/>

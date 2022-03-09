@@ -304,11 +304,12 @@ CONTINUITY_SCAN_PARAMS_DEFAULT = {
 #        #XStream.stdout().write("{}\n".format(record))
 
 
-SCAN_CONFIG_TABLE_HDRS = ['Type', 'Status', 'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
+SCAN_CONFIG_TABLE_HDRS = ['Type', 'Layer', 'Status', 'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
 #SCAN_CONFIG_TABLE_HDRS = ['Scan #', 'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
 class Scans(IntEnum):
     #SCAN_NUM  = SCAN_CONFIG_TABLE_HDRS.index('Scan #')
     TYPE      = SCAN_CONFIG_TABLE_HDRS.index('Type')
+    LAYER     = SCAN_CONFIG_TABLE_HDRS.index('Layer')
     STATUS    = SCAN_CONFIG_TABLE_HDRS.index('Status')
     WIRES     = SCAN_CONFIG_TABLE_HDRS.index('Wires')
     FREQ_MIN  = SCAN_CONFIG_TABLE_HDRS.index('Freq Min (Hz)')
@@ -637,6 +638,9 @@ class MainWindow(qtw.QMainWindow):
         self.doTension = True
         self.doContinuityCb.setChecked(qtc.Qt.Checked if self.doContinuity else qtc.Qt.Unchecked)
         self.doTensionCb.setChecked(qtc.Qt.Checked if self.doTension else qtc.Qt.Unchecked)
+        self.configLayerScanAll_cb.setChecked(qtc.Qt.Unchecked)
+        self.configLayerScanAllChanged()
+       
         self._scanButtonDisable()
         self._submitResonanceButtonDisable()
         self._setScanButtonAction('START')
@@ -1065,7 +1069,6 @@ class MainWindow(qtw.QMainWindow):
     def filterStageChanged(self):
         print("filterStateChanged")
         filterString = ''
-        #BOBOBOB
         for idx, stage in enumerate(APA_STAGES_KEYS):
             stageShort = APA_STAGES[stage]['short']
             if getattr(self, f'filterStage{stageShort}').isChecked():
@@ -1295,6 +1298,7 @@ class MainWindow(qtw.QMainWindow):
         self.doContinuityCb.stateChanged.connect(self.doContinuityChanged)
         self.doTensionCb.stateChanged.connect(self.doTensionChanged)
         self.btnConfigureScans.clicked.connect(self.configureScans)
+        self.configLayerScanAll_cb.stateChanged.connect(self.configLayerScanAllChanged)
         for stage in APA_STAGES_SCANS:
             self.configStageComboBox.addItem(stage)
             #if stage == "Installation":
@@ -1611,14 +1615,19 @@ class MainWindow(qtw.QMainWindow):
     def hexString(self, val):
         return str(hex(int(val))).upper()[2:].zfill(N_DWA_CHANS)
 
-    def scanConfigTableAddRow(self, rd, row, scanType='Tension', useAdvanced=False):
+    def scanConfigTableAddRow(self, rd, row, scanType='Tension', layer=None, useAdvanced=False):
         # scanType: 'Tension' or 'Continuity'
         # useAdvanced: boolean (for use advanced parameters)
-        #print(f'rd = {rd}')
+        print(f'rd = {rd}')
 
         if scanType not in ['Tension', 'Continuity']:
             print(f"ERROR: scanType not recognized: {scanType}")
             print("returning...")
+            return
+
+        # FIXME: add check on layer keyword value
+        if layer is None:
+            print("ERROR: must specify layer")
             return
         
         # Scan type
@@ -1629,6 +1638,13 @@ class MainWindow(qtw.QMainWindow):
         item.setTextAlignment(qtc.Qt.AlignLeft)
         self.scanConfigTableModel.setItem(row, Scans.TYPE, item)
 
+        # Layer
+        item = qtg.QStandardItem()
+        #ty = 'Tension' if scanType == 'tension' else 'Continuity'
+        item.setData(layer, qtc.Qt.DisplayRole)
+        item.setTextAlignment(qtc.Qt.AlignLeft)
+        self.scanConfigTableModel.setItem(row, Scans.LAYER, item)
+        
         # Status type
         item = qtg.QStandardItem()
         #item.setData(ScanConfigStatusString[ScanConfigStatus.PENDING], qtc.Qt.DisplayRole)
@@ -1702,33 +1718,42 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTable.resizeColumnsToContents()
     
     def configureScans(self):
+        print("configureScans")
         self.scanConfigTableModel.removeRows( 0, self.scanConfigTableModel.rowCount() )
 
-        configLayer = self.configLayerComboBox.currentText()
+        layers = []
+        if self.configScanAllLayers:
+            layers = APA_LAYERS[:]
+        else:
+            layers.append(self.configLayerComboBox.currentText())
+        print(f"Layers = {layers}")
+            
+        #configLayer = self.configLayerComboBox.currentText()
         configHeadboard = self.configHeadboardSpinBox.value()
         useAdvancedParamsRes  = not self.advDisableResParamCb.isChecked()
         useAdvancedParamsCont = not self.advDisableContParamCb.isChecked()
 
-        channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
         self.range_data_list = []
 
         row = 0
-        for channels in channelGroups:
-            #print(f'channels = {channels}')
-            range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
-            #print(f'range_data = {range_data}')
-            rd = range_data[0]
-            self.range_data_list.append(rd)
-
-            if self.doContinuity:
-                # advanced params?
-                useAdvancedParamsCont = not self.advDisableContParamCb.isChecked()
-                self.scanConfigTableAddRow(rd, row, scanType='Continuity', useAdvanced=useAdvancedParamsCont)
-                row += 1
-                
-            if self.doTension:
-                self.scanConfigTableAddRow(rd, row, scanType='Tension', useAdvanced=useAdvancedParamsRes)
-                row += 1
+        for configLayer in layers:
+            print(f"configuring scans for layer {configLayer}")
+            channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
+            for channels in channelGroups:
+                #print(f'channels = {channels}')
+                range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
+                #print(f'range_data = {range_data}')
+                rd = range_data[0]
+                self.range_data_list.append(rd)
+            
+                if self.doContinuity:
+                    # advanced params?
+                    self.scanConfigTableAddRow(rd, row, scanType='Continuity', useAdvanced=useAdvancedParamsCont, layer=configLayer)
+                    row += 1
+                    
+                if self.doTension:
+                    self.scanConfigTableAddRow(rd, row, scanType='Tension', useAdvanced=useAdvancedParamsRes, layer=configLayer)
+                    row += 1
 
         # Select the first row
         self.scanConfigTable.selectRow(0)
@@ -2311,7 +2336,7 @@ class MainWindow(qtw.QMainWindow):
         self.configMeasuredBy = self.measuredByLineEdit.text()
         self.configStage = self.configStageComboBox.currentText()
         self.configApaUuid = self.configApaUuidLineEdit.text().strip()
-        self.configLayer = self.configLayerComboBox.currentText()
+        #self.configLayer = self.configLayerComboBox.currentText()
         self.configHeadboard = self.configHeadboardSpinBox.value()
         self.configApaSide = self.SideComboBox.currentText()
         is_flex_connection_winderlike = True
@@ -2333,6 +2358,9 @@ class MainWindow(qtw.QMainWindow):
             print(f"       returning...")
             return
 
+        self.configLayer = self.scanConfigTableModel.item(row, Scans.LAYER).text()
+        print(f"scanning layer {self.configLayer}")
+        
         # Get values from scan config table (may be overwritten by advanced parameters later)
         freqMin = float(self.scanConfigTableModel.item(row,  Scans.FREQ_MIN).text())
         freqMax = float(self.scanConfigTableModel.item(row,  Scans.FREQ_MAX).text())
@@ -4173,6 +4201,10 @@ class MainWindow(qtw.QMainWindow):
     def doTensionChanged(self):
         self.doTension = self.doTensionCb.isChecked()
         print(f"self.doTension: {self.doTension}")
+
+    def configLayerScanAllChanged(self):
+        self.configScanAllLayers = self.configLayerScanAll_cb.isChecked()
+        self.configLayerComboBox.setEnabled(not self.configScanAllLayers)
         
     def disableScanButtonForTime(self, disableDuration):
         """ disableDuration is a time in seconds """
