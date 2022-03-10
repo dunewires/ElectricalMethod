@@ -571,7 +571,7 @@ begin
         -- ADC full bits are the second set of 8 bits
         full          => fifoAdcData_ff(adc_i),
         empty         => fifoAdcData_ef(adc_i),
-        wr_data_count => wr_data_count(adc_i),
+        wr_data_count => open,
         prog_full     => fifoAdcData_pf(adc_i)
       );
 
@@ -600,6 +600,7 @@ begin
 
       adcSamplingPeriod => adcCnv_nPeriod,
 
+      wr_data_count => wr_data_count,
       adcDataRdy => not(fifoAdcData_ef),
       adcDataRen => fifoAdcData_ren,
       adcData    => adcData,
