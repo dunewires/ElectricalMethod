@@ -11,6 +11,20 @@ import channel_frequencies
 import resonance_fitting
 import os
 
+def combine_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT, d1, d2):
+    """Combine two results dictionaries"""
+    resultsDict = new_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
+    for stage in STAGES:
+        for layer in APA_LAYERS:
+            for side in APA_SIDES:
+                for i in range(MAX_WIRE_SEGMENT[layer]):
+                    segment = str(i).zfill(5)
+                    resultsDict[stage][layer][side][segment] = {
+                        "tension": {**d1[stage][layer][side][segment]["tension"], **d2[stage][layer][side][segment]["tension"]}, 
+                        "continuity": {**d1[stage][layer][side][segment]["continuity"], **d2[stage][layer][side][segment]["continuity"]}
+                    }
+    return resultsDict
+
 def new_results_dictOLD(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
     resultsDict = {}
     for l in APA_LAYERS:
@@ -113,7 +127,7 @@ def process_channel(layer, apaCh, f, a):
     return segments, best_tensions[0], best_tension_stds
 
 def process_scan(resultsDict, dirName):
-    '''Process a scan with a given directory name.'''
+    '''Process a scan with a given directory name and update the given results dictionary.'''
     try: # Ensure that there is an amplitudeData.json file present!
         with open(dirName+'/amplitudeData.json', "r") as fh:
             data = json.load(fh)
