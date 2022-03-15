@@ -48,7 +48,7 @@ def returnCap(i, data):
 	popt, pcov =  curve_fit(calcGain, frequency, amp, [100*1e-12, 5000])
 	return popt[0]
 
-def continuityTest(json_dir, pickled_fit):
+def connectivityTest(json_dir, pickled_fit):
 	'''Example of structure of input: json_dir = 'scanData/APA_.../...' (folder without trailing "/"), pickled_fit = 'Continuity/.../fit.pickle' '''
 	
 	channelNameArr_all = []								# array to store the name of ALL channels in this file
