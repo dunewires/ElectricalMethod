@@ -37,7 +37,7 @@ def calcGain(ff, CC, scale):
 def fitCapScale(channelNum, capType):
     global formatedData
     cap_ex = formatedData[channelNum][capType][0]
-    data_ex = np.array(formatedData[channelNum][capType][1:23])
+    data_ex = np.array(formatedData[channelNum][capType][1:20])
     ff  = data_ex[:,0]
     popt, pcov =  curve_fit(calcGain, ff, data_ex[:, 1], [cap_ex[0]*1e-12, 5000])
     cap = popt[0]
@@ -46,7 +46,7 @@ def fitCapScale(channelNum, capType):
 
 def plotFitting(channelNum, capType):
     global formatedData
-    data_ex = np.array(formatedData[channelNum][capType][1:23])
+    data_ex = np.array(formatedData[channelNum][capType][1:20])
     cap, scale = fitCapScale(channelNum, capType)
     fig = plt.figure()
     plt.plot(data_ex[:,0], data_ex[:,1], 'o', color = 'black')
@@ -69,7 +69,7 @@ def plotFitting(channelNum, capType):
     
     
     
-ffArray = np.linspace(20, 1028.0239, num=22) # array for the frequency used in measurement 
+ffArray = np.linspace(20, 1028.0239, num=19) # array for the frequency used in measurement 
 capArray = np.array([47*1e-12, 100*1e-12, 150*1e-12, 220*1e-12]) ## arra for the cap values 
 
 XX = [];    # cap array
@@ -99,7 +99,7 @@ data = np.array(data)
 #ax.plot3D(data[3][:,0], data[3][:,1], data[3][:,2], 'deepskyblue');
 
 
-jsonData = np.loadtxt("extractFromJson.txt").reshape(128*88, 3)
+jsonData = np.loadtxt("extractFromJson.txt").reshape(128*19*4, 3)
 nameData = []
 with open("nameData.txt") as file:
     for line in file:
@@ -126,12 +126,12 @@ formatedData = [channel(0-127)][cappacitance(0-3)]([0 = measured cap], [freq, am
 
 formatedData = [];
 for dataPoint in range(len(jsonData)):
-    if dataPoint % 88 == 0: ## per channel
+    if dataPoint % (4*19) == 0: ## per channel
         formatedData.append([])
-    if dataPoint % 22 == 0:  ## per capacitabnce
-        formatedData[int(dataPoint/88)].append([])
-        formatedData[int(dataPoint/88)][int((dataPoint % 88)/22)].append([jsonData[dataPoint][0]])
-    formatedData[int(dataPoint/88)][int((dataPoint % 88)/22)].append([jsonData[dataPoint][1], jsonData[dataPoint][2]])
+    if dataPoint % 19 == 0:  ## per capacitabnce
+        formatedData[int(dataPoint/(4*19))].append([])
+        formatedData[int(dataPoint/(4*19))][int((dataPoint % (4*19))/19)].append([jsonData[dataPoint][0]])
+    formatedData[int(dataPoint/(4*19))][int((dataPoint % (4*19))/19)].append([jsonData[dataPoint][1], jsonData[dataPoint][2]])
         
 '''
 plotFitting(3,0)

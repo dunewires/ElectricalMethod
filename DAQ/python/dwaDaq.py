@@ -168,7 +168,7 @@ import dwaTools as dwa
 import DwaDataParser as ddp
 import DwaConfigFile as dcf
 import DwaMicrozed as duz
-import winsound
+import simpleaudio
 
 
 #from SietchConnect import SietchConnect
@@ -2189,7 +2189,7 @@ class MainWindow(qtw.QMainWindow):
         statusText = self.scanConfigTableModel.item(self.scanConfigRowToScan, Scans.STATUS).text()
         if statusText == 'Done':
             print("final scan has completed...")
-            winsound.Beep(2400, 400)
+            simpleaudio.WaveObject.from_wave_file("sounds/completed.wav").play()
         else:
             print("auto-starting next scan...")
             self.startScanThread()
