@@ -139,7 +139,7 @@ for index in range(1151):
         l_physical_wire_G.append(PhysicalWire(*physical_wire_position('G',index+1,'start'),*physical_wire_position('G',index+1,'end')))
 
 
-def length_to_frequency(length, tension=6.5, density=1.6e-4):
+def length_to_frequency(length, tension=6.5, density=1.5e-4):
     return (tension/4/density/(length/1000)**2)**0.5
 
 

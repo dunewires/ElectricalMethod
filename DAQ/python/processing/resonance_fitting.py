@@ -2,10 +2,17 @@ from scipy import signal
 import numpy as np
 import itertools
 
-def baseline_subtracted(amps):
+def get_num_savgol_bins(freq):
+    step_size = freq[1] - freq[0]
+    num_bins = int(round(27/(8*step_size)))
+    if (num_bins % 2) == 0: num_bins += 1
+    return num_bins
+    
+def baseline_subtracted(freq, amps):
     '''Use the savgol filter to smooth out a trace.'''
-    smooth_curve = signal.savgol_filter(amps, 101, 3)
-    return signal.savgol_filter(amps-smooth_curve, 7, 2)
+    num_bins = get_num_savgol_bins(freq)
+    smooth_curve = signal.savgol_filter(amps, num_bins, 3)
+    return amps-smooth_curve
 
 def get_r2(arr):
     '''Comutes the r-squared of an array'''
@@ -151,4 +158,4 @@ def analyze_res_placement(f,a,res_arr,fpks):
                 diffs.append(diff)
                 tensions.append(tension_arr)
                     
-    return placements, costs, diffs, tensions
+    return np.array(placements), np.array(costs), np.array(diffs), np.array(tensions)

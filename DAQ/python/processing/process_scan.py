@@ -87,9 +87,9 @@ def process_channel(layer, apaCh, f, a):
     segments_nolim, ex_nolim = channel_frequencies.get_expected_resonances(layer,apaCh,9e9)
     
     print("backgorund sub")
-    bsub = resonance_fitting.baseline_subtracted(np.cumsum(a))
+    bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
     bsubabs = np.abs(bsub)
-    smooth = savgol_filter(bsubabs, 25, 3)
+    smooth = savgol_filter(bsubabs, resonance_fitting.get_num_savgol_bins(f), 3)
     opt_reduced = smooth.copy()
 
     #if plot: ax.plot(f,bsub)
@@ -100,31 +100,42 @@ def process_channel(layer, apaCh, f, a):
     print("find peaks")
     pks, _ = find_peaks(smooth,prominence=40) # TODO: Configurable?
     fpks = np.array([f[pk] for pk in pks])
-    fpks = fpks[fpks>55] # TODO: Remove this once we solve the mains noise issue
-    print(fpks)
-    print("analyze placement ", len(fpks))
-    placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
-    
-    print("sorting")
-    sorted_placements = np.array([x for _, x in sorted(zip(costs, placements))])
-    sorted_diffs = np.array([x for _, x in sorted(zip(costs, diffs))])
-    sorted_tensions = np.array([x for _, x in sorted(zip(costs, tensions))])
-    sorted_costs = np.array([x for _, x in sorted(zip(costs, costs))])
-    if len(sorted_costs) < 1:
-        return segments, [-1 for s in segments], [-1 for s in segments]
-    lowest_cost = sorted_costs[0]
-    lowest_placement = sorted_placements[0]
+    if layer in ['X','G']:
+        pks, _ = find_peaks(bsub,height=0.1*np.max(bsub))
+        fpks = [f[pk] for pk in pks]
+        wire_segment_res = np.array(expected_resonances[0])
+        opt_res_arr = [wire_segment_res - np.min(wire_segment_res) + fpks[0]]
+        minMeasured = np.min(opt_res_arr[0])
+        minExpected = np.min(expected_resonances[0])
+        tension = 6.5*(minMeasured/minExpected)**2
+        return segments, opt_res_arr, [tension], [0]
+    else:
+        placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
+        lowest_cost = np.min(costs)
+        select_best = (costs < 1.2*lowest_cost)
+        best_placements = placements[select_best]
+        best_diffs = diffs[select_best]
+        best_tensions = tensions[select_best]
+        min_index = np.argmin(best_diffs)
+        return segments, best_placements[min_index], best_tensions[min_index], np.std(best_tensions,0)
 
-    #print("lowest: ",lowest_placement)
-    #print("sorted costs: ",sorted_costs[:3]) 
-    #print("sorted placements: ",sorted_placements[:3]) 
-    select_best = (sorted_costs < 1.2*lowest_cost)
-    best_tensions = sorted_tensions[select_best]
-    #print("best tensions: ",best_tensions)
-    best_tension_stds = np.std(best_tensions,0)
-    #print("best std: ",best_tensions_std)
-    print("returning")
-    return segments, best_tensions[0], best_tension_stds
+        
+        # print("sorting")
+        # sorted_placements = np.array([x for _, x in sorted(zip(costs, placements))])
+        # sorted_diffs = np.array([x for _, x in sorted(zip(costs, diffs))])
+        # sorted_tensions = np.array([x for _, x in sorted(zip(costs, tensions))])
+        # sorted_costs = np.array([x for _, x in sorted(zip(costs, costs))])
+        # if len(sorted_costs) < 1:
+        #     return segments, [-1 for s in segments], [-1 for s in segments]
+        # lowest_cost = sorted_costs[0]
+        # lowest_placement = sorted_placements[0]
+        # select_best = (sorted_costs < 1.2*lowest_cost)
+        # best_tensions = sorted_tensions[select_best]
+        # #print("best tensions: ",best_tensions)
+        # best_tension_stds = np.std(best_tensions,0)
+        # #print("best std: ",best_tensions_std)
+        # print("returning")
+        # return segments, best_tensions[0], best_tension_stds
 
 def process_scan(resultsDict, dirName):
     '''Process a scan with a given directory name and update the given results dictionary.'''
@@ -143,7 +154,7 @@ def process_scan(resultsDict, dirName):
     scanType = data['type']
     print("Processing ",stage,layer,side,scanId,scanType)
 
-    if False and scanType == 'Continuity':
+    if scanType == 'Continuity':
         channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr = capacitanceFile.connectivityTest(dirName)
         print("Continuity results")
         print(booleanArr)
@@ -153,8 +164,8 @@ def process_scan(resultsDict, dirName):
             continuous = booleanArr[i]
             capacitanceCal = calibratedCapArr[i]
             capacitanceUnCal = uncalibratedCapArr[i]
-            update_results_dict_continuity(resultsDict, stage, layer, side, scanId, segments, continuous, capacitanceCal, capacitanceUnCal)
-
+            if resultsDict:
+                update_results_dict_continuity(resultsDict, stage, layer, side, scanId, segments, continuous, capacitanceCal, capacitanceUnCal)
     else:
         for reg in range(8):
             dwaCh = str(reg)
@@ -172,4 +183,5 @@ def process_scan(resultsDict, dirName):
                 continue
 
             segments, best_tensions, best_tension_stds = process_channel(layer, apaCh, f, a)
-            update_results_dict_tension(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_stds)
+            if resultsDict:
+                update_results_dict_tension(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_stds)
