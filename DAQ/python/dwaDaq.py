@@ -213,6 +213,7 @@ SCAN_OUTPUT_DIRS = [OUTPUT_DIR_SCAN_DATA, OUTPUT_DIR_SCAN_DATA_ADVANCED]
 CLOCK_PERIOD_SEC = 1e8
 SCAN_FREQUENCY_STEP_DEFAULT = 1/8  # Hz
 STIM_VIEW_OFFSET = 0
+MAX_FREQ = 250 # Hz
 #
 UDP_RECV_BUF_SIZE = 1024*2**20 # Bytes (2**20 Bytes is ~1MB)
 SYSTEM_PLATFORM   = platform.system().upper()
@@ -2843,9 +2844,7 @@ class MainWindow(qtw.QMainWindow):
         # and only update the f0 values and GUI display for that associated channel
         print('self.resonantFreqs',self.resonantFreqs)
         for reg in self.registers:
-            if not self.resonantFreqs[reg.value]: continue
             for seg in range(3):
-                if reg.value not in self.resonantFreqs.keys() or self.resonantFreqs[reg.value] == None: continue
                 if seg < len(self.resonantFreqs[reg.value]):
                     try:
                         tensionInput = float(getattr(self, f'le_resfreq_val_{reg}_{seg}').text())
@@ -3193,7 +3192,7 @@ class MainWindow(qtw.QMainWindow):
         for dwaChan in range(N_DWA_CHANS):
             if dwaChan in self.activeRegistersS:
                 apaChan = self.ampDataS['apaChannels'][dwaChan]
-                segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan,200)
+                segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan,MAX_FREQ)
                 for seg in range(3):
                     if seg < len(segments):
                         wireSeg = segments[seg]
@@ -3261,7 +3260,8 @@ class MainWindow(qtw.QMainWindow):
         # }
         # sietch.api('/test',record_result)
         self.labelResonanceSubmitStatus.setText("Submitted!")
-        self.resultsTableUpdate(scanResultsDict)
+        self.resultsTableLoad()
+        #self.resultsTableUpdate(scanResultsDict)
         
     def saveResonanceData(self):
         resData = {}
@@ -3784,7 +3784,7 @@ class MainWindow(qtw.QMainWindow):
                 apaSide = self.ampDataS['side']
                 self.resonanceRawPlots[index].setTitle(f'DWA Chan: {index} APA Chan: {apaLayer}{apaSide}{apaChan}')
                 self.resonanceProcessedPlots[index].setTitle(f'DWA Chan: {index} APA Chan: {apaLayer}{apaSide}{apaChan}')
-                segments, _ = channel_frequencies.get_expected_resonances(apaLayer,apaChan,200)
+                segments, _ = channel_frequencies.get_expected_resonances(apaLayer,apaChan,MAX_FREQ)
                 for seg in range(3):
                     if seg < len(segments):
                         wireNum = segments[seg]
@@ -4405,7 +4405,7 @@ class MainWindow(qtw.QMainWindow):
         #     opt_res = []
         #     print("Channel ",apaCh)
         #     if apaCh:
-        #         expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,200)
+        #         expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,MAX_FREQ)
         #         exFreq = expected_resonances[1]
         #         wires = expected_resonances[0]
         #         order = range(len(exFreq))
@@ -4443,67 +4443,80 @@ class MainWindow(qtw.QMainWindow):
                 print(f"DWA Chan {reg.value}: No channel")
                 continue
 
-            segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,200)
+            segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,MAX_FREQ)
             self.resonantFreqs[reg.value] = [[] for _ in segments]
             roundex = []
             for seg in expected_resonances:
                 roundex.append([round(x,2) for x in seg])
             expected_resonances = roundex
-            segments_nolim,ex_nolim = channel_frequencies.get_expected_resonances(layer,apaCh,9e9)
-            #if 351 not in segments: continue
-            #if 93 in segments: plot = True
-            #else: plot = False
-            #ex.sort(key=len,reverse=True)
-            self.expectedFreqs[reg.value] = expected_resonances
             f = np.array(self.ampDataS[reg]['freq'])
             a = np.array(self.ampDataS[reg]['ampl'])
-            opt_res_arr = [[] for _ in segments]
-            if len(f) == 0 or max(f) > 500: continue
-            
-            if len(f) < 50:
-                print(f"DWA Chan {reg.value}: Scan too short")
-                continue
-            #plot = True
-            #if plot: fig,ax = plt.subplots(figsize=(4,2))
-            bsub = resonance_fitting.baseline_subtracted(np.cumsum(a))
+            bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
             self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], bsub)
-            bsubabs = np.abs(bsub)
-            smooth = savgol_filter(bsubabs, 25, 3)
-            opt_reduced = smooth.copy()
-            
-            #if plot: ax.plot(f,bsub)
-            if not resonance_fitting.contains_resonances(f,bsub,layer):
-                print(f"DWA Chan {reg.value}: No resonances")
-                continue
-        
-            print('finding peaks')
-            pks, _ = find_peaks(smooth,prominence=40)
-            fpks = np.array([f[pk] for pk in pks])
-            fpks = fpks[fpks>55] # TODO: Remove this once we solve the mains noise issue
-            print('analyzing placement')
-            placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
-            print("peaks: ",fpks)
-            sorted_placements = np.array([x for _, x in sorted(zip(costs, placements))])
-            sorted_diffs = np.array([x for _, x in sorted(zip(costs, diffs))])
-            sorted_tensions = np.array([x for _, x in sorted(zip(costs, tensions))])
-            sorted_costs = np.array([x for _, x in sorted(zip(costs, costs))])
-            if len(sorted_costs) < 1: continue
-            lowest_cost = sorted_costs[0]
-            lowest_placement = sorted_placements[0]
-            
-            print("lowest: ",lowest_placement)
-            print("sorted costs: ",sorted_costs[:3]) 
-            print("sorted placements: ",sorted_placements[:3]) 
-            select_best = (sorted_costs < 1.2*lowest_cost)
-            best_tensions = sorted_tensions[select_best]
-            best_tensions_std = np.std(best_tensions,0)
-            print("best std: ",best_tensions_std)
+            segments, opt_res_arr, best_tension, best_tensions_std = process_scan.process_channel(layer, apaCh, f, a)
+            self.expectedFreqs[reg.value] = expected_resonances
 
-            for s, seg_std in enumerate(best_tensions_std):
-                if seg_std > 1.2:
-                    opt_res_arr[s] = []
-                else:
-                    opt_res_arr[s] = lowest_placement[s]
+            # segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,MAX_FREQ)
+            # self.resonantFreqs[reg.value] = [[] for _ in segments]
+            # roundex = []
+            # for seg in expected_resonances:
+            #     roundex.append([round(x,2) for x in seg])
+            # expected_resonances = roundex
+            # segments_nolim,ex_nolim = channel_frequencies.get_expected_resonances(layer,apaCh,9e9)
+            # #if 351 not in segments: continue
+            # #if 93 in segments: plot = True
+            # #else: plot = False
+            # #ex.sort(key=len,reverse=True)
+            # self.expectedFreqs[reg.value] = expected_resonances
+            # f = np.array(self.ampDataS[reg]['freq'])
+            # a = np.array(self.ampDataS[reg]['ampl'])
+            # opt_res_arr = [[] for _ in segments]
+            # if len(f) == 0 or max(f) > 500: continue
+            
+            # if len(f) < 50:
+            #     print(f"DWA Chan {reg.value}: Scan too short")
+            #     continue
+            # #plot = True
+            # #if plot: fig,ax = plt.subplots(figsize=(4,2))
+            # bsub = resonance_fitting.baseline_subtracted(np.cumsum(a))
+            # self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], bsub)
+            # bsubabs = np.abs(bsub)
+            # smooth = savgol_filter(bsubabs, 25, 3)
+            # opt_reduced = smooth.copy()
+            
+            # #if plot: ax.plot(f,bsub)
+            # if not resonance_fitting.contains_resonances(f,bsub,layer):
+            #     print(f"DWA Chan {reg.value}: No resonances")
+            #     continue
+        
+            # print('finding peaks')
+            # pks, _ = find_peaks(smooth,prominence=40)
+            # fpks = np.array([f[pk] for pk in pks])
+            # fpks = fpks[fpks>55] # TODO: Remove this once we solve the mains noise issue
+            # print('analyzing placement')
+            # placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
+            # print("peaks: ",fpks)
+            # sorted_placements = np.array([x for _, x in sorted(zip(costs, placements))])
+            # sorted_diffs = np.array([x for _, x in sorted(zip(costs, diffs))])
+            # sorted_tensions = np.array([x for _, x in sorted(zip(costs, tensions))])
+            # sorted_costs = np.array([x for _, x in sorted(zip(costs, costs))])
+            # if len(sorted_costs) < 1: continue
+            # lowest_cost = sorted_costs[0]
+            # lowest_placement = sorted_placements[0]
+            
+            # print("lowest: ",lowest_placement)
+            # print("sorted costs: ",sorted_costs[:3]) 
+            # print("sorted placements: ",sorted_placements[:3]) 
+            # select_best = (sorted_costs < 1.2*lowest_cost)
+            # best_tensions = sorted_tensions[select_best]
+            # best_tensions_std = np.std(best_tensions,0)
+            # print("best std: ",best_tensions_std)
+
+            # for s, seg_std in enumerate(best_tensions_std):
+            #     if seg_std > 1.2:
+            #         opt_res_arr[s] = []
+            #     else:
+            #         opt_res_arr[s] = lowest_placement[s]
 
                             
         #         bsub = resonance_fitting.baseline_subtracted(a)
@@ -4519,7 +4532,7 @@ class MainWindow(qtw.QMainWindow):
             # #apaChan = self.ampDataS['apaChannels'][reg.value]
             # apaChan = self.ampDataS['apaChannels'][chan]
             # if not apaChan: continue
-            # wires, expectedFreqs = channel_frequencies.get_expected_resonances(self.ampDataS["layer"], apaChan, thresh = 250.)
+            # wires, expectedFreqs = channel_frequencies.get_expected_resonances(self.ampDataS["layer"], apaChan, thresh = MAX_FREQ)
             # #expectedFreqs = [f for sublist in expectedFreqs for f in sublist]
 
             
@@ -4562,6 +4575,7 @@ class MainWindow(qtw.QMainWindow):
             self.currentTensions[chan] = [None for _ in range(3)]
             if self.resonantFreqs[chan] is None: continue
             for seg,measured in enumerate(self.resonantFreqs[chan]):
+                print("measured",measured)
                 if len(measured) == 0:
                     self.currentTensions[chan][seg] = -1
                 else:

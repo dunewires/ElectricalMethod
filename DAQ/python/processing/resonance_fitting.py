@@ -146,6 +146,7 @@ def analyze_res_placement(f,a,res_arr,fpks):
                         reduce_surrounding(f,reduced_a,res)
                 cost = np.sum(reduced_a)
                 costs.append(cost)
+                shifted_res_arr = [shift_res_seg_to_f0(res_seg, np.max(res_seg), np.max(res_seg)-1.5) for res_seg in shifted_res_arr]
                 placements.append(shifted_res_arr)
                 # Calculate diff
                 diff = 0

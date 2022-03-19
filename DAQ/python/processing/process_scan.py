@@ -76,33 +76,33 @@ def update_results_dict_continuity(resultsDict, stage, layer, side, scanId, wire
 #            #print(resultsDict[layer][side][str(wireNum).zfill(5)].keys())
 #            resultsDict[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std}
 
+def min_meak_height(a):
+    return max(5., 0.05*np.max(a))
             
 def process_channel(layer, apaCh, f, a): 
     print("getting res")
-    segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,200)
+    maxFreq = f[-1]
+    stepSize = f[1]-f[0]
+    segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,maxFreq)
     roundex = []
     for seg in expected_resonances:
         roundex.append([round(x,2) for x in seg])
     expected_resonances = roundex
-    segments_nolim, ex_nolim = channel_frequencies.get_expected_resonances(layer,apaCh,9e9)
     
-    print("backgorund sub")
     bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
     bsubabs = np.abs(bsub)
     smooth = savgol_filter(bsubabs, resonance_fitting.get_num_savgol_bins(f), 3)
-    opt_reduced = smooth.copy()
 
     #if plot: ax.plot(f,bsub)
     if not resonance_fitting.contains_resonances(f,bsub,layer):
         print(f"DWA Chan {apaCh}: No resonances found")
-        return segments, [-1 for s in segments], [-1 for s in segments]
+        return segments, [[] for s in segments], [-1 for s in segments], [-1 for s in segments]
 
-    print("find peaks")
-    pks, _ = find_peaks(smooth,prominence=40) # TODO: Configurable?
-    fpks = np.array([f[pk] for pk in pks])
+ 
     if layer in ['X','G']:
-        pks, _ = find_peaks(bsub,height=0.1*np.max(bsub))
-        fpks = [f[pk] for pk in pks]
+        pks, _ = find_peaks(bsub,height=min_meak_height(bsub),width=int(0.5/stepSize))
+        fpks = [f[pk] for pk in pks]   
+        print("find peaks", apaCh, fpks)
         wire_segment_res = np.array(expected_resonances[0])
         opt_res_arr = [wire_segment_res - np.min(wire_segment_res) + fpks[0]]
         minMeasured = np.min(opt_res_arr[0])
@@ -110,7 +110,13 @@ def process_channel(layer, apaCh, f, a):
         tension = 6.5*(minMeasured/minExpected)**2
         return segments, opt_res_arr, [tension], [0]
     else:
+        pks, props = find_peaks(smooth,height=min_meak_height(smooth),width=int(0.5/stepSize),prominence=5.)
+        fpks = np.array([f[pk] for pk in pks])   
+        print("find peaks", apaCh, fpks,props)
         placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
+        if len(placements) < 1: 
+            print(f"DWA Chan {apaCh}: No valid placements found")
+            return segments, [[] for s in segments], [-1 for s in segments], [-1 for s in segments]
         lowest_cost = np.min(costs)
         select_best = (costs < 1.2*lowest_cost)
         best_placements = placements[select_best]
@@ -182,6 +188,6 @@ def process_scan(resultsDict, dirName):
                 print(f"DWA Chan {reg}: Not a valid scan")
                 continue
 
-            segments, best_tensions, best_tension_stds = process_channel(layer, apaCh, f, a)
+            segments, opt_res_arr, best_tensions, best_tension_stds = process_channel(layer, apaCh, f, a)
             if resultsDict:
                 update_results_dict_tension(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_stds)
