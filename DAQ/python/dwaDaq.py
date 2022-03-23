@@ -306,11 +306,11 @@ CONTINUITY_SCAN_PARAMS_DEFAULT = {
 #        #XStream.stdout().write("{}\n".format(record))
 
 
-SCAN_CONFIG_TABLE_HDRS = ['Type', 'Status', 'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
-#SCAN_CONFIG_TABLE_HDRS = ['Scan #', 'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
+SCAN_CONFIG_TABLE_HDRS = ['Type', 'Layer', 'Status', 'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
 class Scans(IntEnum):
     #SCAN_NUM  = SCAN_CONFIG_TABLE_HDRS.index('Scan #')
     TYPE      = SCAN_CONFIG_TABLE_HDRS.index('Type')
+    LAYER     = SCAN_CONFIG_TABLE_HDRS.index('Layer')
     STATUS    = SCAN_CONFIG_TABLE_HDRS.index('Status')
     WIRES     = SCAN_CONFIG_TABLE_HDRS.index('Wires')
     FREQ_MIN  = SCAN_CONFIG_TABLE_HDRS.index('Freq Min (Hz)')
@@ -1315,6 +1315,7 @@ class MainWindow(qtw.QMainWindow):
             #    self.configStageComboBox.addItem(stage)
         for layer in APA_LAYERS:
             self.configLayerComboBox.addItem(layer)
+        self.configLayerComboBox.addItem("UVX")
 
         self.connectLabel.setStyleSheet("color : red")
         self.connectLabel.setText("DWA is not connected")
@@ -1622,7 +1623,7 @@ class MainWindow(qtw.QMainWindow):
     def hexString(self, val):
         return str(hex(int(val))).upper()[2:].zfill(N_DWA_CHANS)
 
-    def scanConfigTableAddRow(self, rd, row, scanType='Tension', useAdvanced=False):
+    def scanConfigTableAddRow(self, rd, row, scanType='Tension', layer=None, useAdvanced=False):
         # scanType: 'Tension' or 'Continuity'
         # useAdvanced: boolean (for use advanced parameters)
         #print(f'rd = {rd}')
@@ -1630,6 +1631,11 @@ class MainWindow(qtw.QMainWindow):
         if scanType not in ['Tension', 'Continuity']:
             print(f"ERROR: scanType not recognized: {scanType}")
             print("returning...")
+            return
+
+        # FIXME: add check on layer keyword value
+        if layer is None:
+            print("ERROR: must specify layer")
             return
         
         # Scan type
@@ -1640,6 +1646,13 @@ class MainWindow(qtw.QMainWindow):
         item.setTextAlignment(qtc.Qt.AlignLeft)
         self.scanConfigTableModel.setItem(row, Scans.TYPE, item)
 
+        # Layer
+        item = qtg.QStandardItem()
+        #ty = 'Tension' if scanType == 'tension' else 'Continuity'
+        item.setData(layer, qtc.Qt.DisplayRole)
+        item.setTextAlignment(qtc.Qt.AlignLeft)
+        self.scanConfigTableModel.setItem(row, Scans.LAYER, item)
+        
         # Status type
         item = qtg.QStandardItem()
         #item.setData(ScanConfigStatusString[ScanConfigStatus.PENDING], qtc.Qt.DisplayRole)
@@ -1713,34 +1726,42 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTable.resizeColumnsToContents()
     
     def configureScans(self):
+        print("configureScans")
         self.scanConfigTableModel.removeRows( 0, self.scanConfigTableModel.rowCount() )
 
         configLayer = self.configLayerComboBox.currentText()
+        if configLayer == 'UVX':
+            layers = ['U','V','X']
+        else:
+            layers = [configLayer]
+        print(f'layers = {layers}')
+        
         configHeadboard = self.configHeadboardSpinBox.value()
         useAdvancedParamsRes  = not self.advDisableResParamCb.isChecked()
         useAdvancedParamsCont = not self.advDisableContParamCb.isChecked()
 
-        channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
         self.range_data_list = []
 
         row = 0
-        for channels in channelGroups:
-            #print(f'channels = {channels}')
-            range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
-            #print(f'range_data = {range_data}')
-            rd = range_data[0]
-
-            if self.doContinuity:
-                # advanced params?
-                self.range_data_list.append(rd)
-                useAdvancedParamsCont = not self.advDisableContParamCb.isChecked()
-                self.scanConfigTableAddRow(rd, row, scanType='Continuity', useAdvanced=useAdvancedParamsCont)
-                row += 1
-                
-            if self.doTension:
-                self.range_data_list.append(rd)
-                self.scanConfigTableAddRow(rd, row, scanType='Tension', useAdvanced=useAdvancedParamsRes)
-                row += 1
+        for configLayer in layers:
+            print(f"configuring scans for layer {configLayer}")
+            channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
+            for channels in channelGroups:
+                #print(f'channels = {channels}')
+                range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
+                #print(f'range_data = {range_data}')
+                rd = range_data[0]
+    
+                if self.doContinuity:
+                    # advanced params?
+                    self.scanConfigTableAddRow(rd, row, scanType='Continuity', useAdvanced=useAdvancedParamsCont, layer=configLayer)
+                    self.range_data_list.append(rd)
+                    row += 1
+                   
+                if self.doTension:
+                    self.scanConfigTableAddRow(rd, row, scanType='Tension', useAdvanced=useAdvancedParamsRes, layer=configLayer)
+                    self.range_data_list.append(rd)
+                    row += 1
 
         # Select the first row
         self.scanConfigTable.selectRow(0)

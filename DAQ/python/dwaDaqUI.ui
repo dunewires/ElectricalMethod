@@ -489,7 +489,7 @@
                           <widget class="QComboBox" name="configLayerComboBox">
                            <property name="minimumSize">
                             <size>
-                             <width>60</width>
+                             <width>80</width>
                              <height>0</height>
                             </size>
                            </property>
@@ -1567,8 +1567,8 @@
                              <rect>
                               <x>0</x>
                               <y>0</y>
-                              <width>199</width>
-                              <height>1718</height>
+                              <width>227</width>
+                              <height>1724</height>
                              </rect>
                             </property>
                             <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1646,8 +1646,8 @@
                              <rect>
                               <x>0</x>
                               <y>0</y>
-                              <width>199</width>
-                              <height>1718</height>
+                              <width>227</width>
+                              <height>1724</height>
                              </rect>
                             </property>
                             <layout class="QVBoxLayout" name="verticalLayout_20">
@@ -3113,7 +3113,7 @@
      <x>0</x>
      <y>0</y>
      <width>1345</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
