@@ -1315,7 +1315,7 @@ class MainWindow(qtw.QMainWindow):
             #    self.configStageComboBox.addItem(stage)
         for layer in APA_LAYERS:
             self.configLayerComboBox.addItem(layer)
-        self.configLayerComboBox.addItem("UVX")
+        self.configLayerComboBox.addItem("XVU")
 
         self.connectLabel.setStyleSheet("color : red")
         self.connectLabel.setText("DWA is not connected")
@@ -1730,8 +1730,8 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTableModel.removeRows( 0, self.scanConfigTableModel.rowCount() )
 
         configLayer = self.configLayerComboBox.currentText()
-        if configLayer == 'UVX':
-            layers = ['U','V','X']
+        if configLayer == 'XVU':
+            layers = ['X', 'V', 'U']
         else:
             layers = [configLayer]
         print(f'layers = {layers}')
