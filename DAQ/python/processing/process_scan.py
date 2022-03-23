@@ -76,8 +76,9 @@ def update_results_dict_continuity(resultsDict, stage, layer, side, scanId, wire
 #            #print(resultsDict[layer][side][str(wireNum).zfill(5)].keys())
 #            resultsDict[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std}
 
-def min_meak_height(a):
-    return max(5., 0.05*np.max(a))
+def min_meak_height(layer, a):
+    if layer in ['X','G']: return 0.1*np.max(a)
+    else: return max(5., 0.05*np.max(a))
             
 def process_channel(layer, apaCh, f, a): 
     print("getting res")
@@ -100,7 +101,7 @@ def process_channel(layer, apaCh, f, a):
 
  
     if layer in ['X','G']:
-        pks, _ = find_peaks(bsub,height=min_meak_height(bsub),width=int(0.5/stepSize))
+        pks, _ = find_peaks(bsub,height=min_meak_height(layer, bsub),width=int(0.5/stepSize))
         fpks = [f[pk] for pk in pks]   
         print("find peaks", apaCh, fpks)
         wire_segment_res = np.array(expected_resonances[0])
@@ -110,7 +111,7 @@ def process_channel(layer, apaCh, f, a):
         tension = 6.5*(minMeasured/minExpected)**2
         return segments, opt_res_arr, [tension], [0]
     else:
-        pks, props = find_peaks(smooth,height=min_meak_height(smooth),width=int(0.5/stepSize),prominence=5.)
+        pks, props = find_peaks(smooth,height=min_meak_height(layer, smooth),width=int(0.5/stepSize),prominence=5.)
         fpks = np.array([f[pk] for pk in pks])   
         print("find peaks", apaCh, fpks,props)
         placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
@@ -161,6 +162,7 @@ def process_scan(resultsDict, dirName):
     print("Processing ",stage,layer,side,scanId,scanType)
 
     if scanType == 'Continuity':
+        return
         channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr = capacitanceFile.connectivityTest(dirName)
         print("Continuity results")
         print(booleanArr)

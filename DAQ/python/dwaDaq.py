@@ -1014,13 +1014,19 @@ class MainWindow(qtw.QMainWindow):
                             item.setData(side, qtc.Qt.DisplayRole)
                             self.recentScansTableModel.setItem(i, Results.SIDE, item)
                             # Headboard
-                            headboard = scanId.split("_")[2]
+                            if scanId[0:3] == '202': # Date appears first in dir name
+                                strdatetime = scanId.split("_")[3]
+                            else:
+                                headboard = scanId.split("_")[2]
                             item = qtg.QStandardItem()
                             item.setData(headboard, qtc.Qt.DisplayRole)
                             self.recentScansTableModel.setItem(i, Results.HEADBOARD, item)
                             # Measurement Time
                             item = qtg.QStandardItem()
-                            strdatetime = scanId[-15:]
+                            if scanId[0:3] == '202':
+                                strdatetime = scanId[:15]
+                            else:
+                                strdatetime = scanId[-15:]
                             date_format = "%Y%m%dT%H%M%S"
                             dtdatetime = datetime.datetime.strptime(strdatetime, date_format)
                             item.setData(dtdatetime.strftime('%Y-%m-%d %H:%M:%S'), qtc.Qt.DisplayRole)
@@ -1037,13 +1043,13 @@ class MainWindow(qtw.QMainWindow):
                             if "tension" in scanDict.keys():
                                 tension = scanDict["tension"]
                                 item = qtg.QStandardItem()
-                                if tension == 'Not Found':
+                                if tension == 'Not Found' or tension == None:
                                     item.setData(tension, qtc.Qt.DisplayRole)
                                 else:
                                     item.setData(str(round(tension,3)), qtc.Qt.DisplayRole)
                                 self.recentScansTableModel.setItem(i, Results.RESULT, item)
                                 # Status
-                                if tension == 'Not Found' or  tension == 'None':
+                                if tension == 'Not Found' or tension == None:
                                     status = 'None'
                                 elif tension > 0:
                                     std = scanDict["tension_std"]
@@ -2844,6 +2850,8 @@ class MainWindow(qtw.QMainWindow):
         # and only update the f0 values and GUI display for that associated channel
         print('self.resonantFreqs',self.resonantFreqs)
         for reg in self.registers:
+            if reg.value not in self.activeRegistersS:
+                continue
             for seg in range(3):
                 if seg < len(self.resonantFreqs[reg.value]):
                     try:
