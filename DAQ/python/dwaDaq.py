@@ -980,10 +980,16 @@ class MainWindow(qtw.QMainWindow):
         print("Updating results table")
         if resultsDict is None:
             return
-        
+
+        tstart = time.time()
+        self.recentScansTableView.setSortingEnabled(False)
+
+        date_format = "%Y%m%dT%H%M%S"
+
         # Populate the table with JSON data
         # should we sort the entries in the dict before populating the model?
-        i = self.recentScansTableModel.rowCount()
+        #i = self.recentScansTableModel.rowCount()
+        
         for stage in APA_STAGES_SCANS:
             if stage not in resultsDict:
                 continue
@@ -991,63 +997,64 @@ class MainWindow(qtw.QMainWindow):
             for layer in APA_LAYERS:
                 for side in APA_SIDES:
                     sideDict = stageDict[layer][side]
-                    for wireSegment in sideDict: 
+                    for wireSegment in sideDict:
                         # Combine tension and continuity scans
                         segmentDict = {**sideDict[wireSegment]["tension"], **sideDict[wireSegment]["continuity"]}
                         for scanId in segmentDict:
                             scanDict = segmentDict[scanId]
+
+                            items = [None]*len(RESULTS_TABLE_HDRS)
+                            
                             # Stage
-                            item = qtg.QStandardItem()
                             if stage == 'Installation (Top)' or stage == 'Installation (Bottom)': stage = 'Installation'
-                            item.setData(stage, qtc.Qt.DisplayRole)
-                            self.recentScansTableModel.setItem(i, Results.STAGE, item)
+                            items[Results.STAGE] = qtg.QStandardItem(stage)
+                            
                             # Wire segment
-                            item = qtg.QStandardItem()
-                            item.setData(wireSegment, qtc.Qt.DisplayRole)
-                            self.recentScansTableModel.setItem(i, Results.WIRE_SEGMENT, item)
+                            items[Results.WIRE_SEGMENT] = qtg.QStandardItem(wireSegment)
+
                             # Layer
-                            item = qtg.QStandardItem()
-                            item.setData(layer, qtc.Qt.DisplayRole)
-                            self.recentScansTableModel.setItem(i, Results.LAYER, item)
+                            items[Results.LAYER] = qtg.QStandardItem(layer)
+                            
                             # Side
-                            item = qtg.QStandardItem()
-                            item.setData(side, qtc.Qt.DisplayRole)
-                            self.recentScansTableModel.setItem(i, Results.SIDE, item)
-                            # Headboard
+                            items[Results.SIDE] = qtg.QStandardItem(side)
+
+                            toks = scanId.split("_")
                             if scanId[0:3] == '202': # Date appears first in dir name
-                                strdatetime = scanId.split("_")[3]
+                                strdatetime = toks[0]
+                                headboard = toks[3]
                             else:
-                                headboard = scanId.split("_")[2]
-                            item = qtg.QStandardItem()
-                            item.setData(headboard, qtc.Qt.DisplayRole)
-                            self.recentScansTableModel.setItem(i, Results.HEADBOARD, item)
+                                strdatetime = toks[4]
+                                headboard = toks[2]
+                                
+                            # Headboard 
+                            items[Results.HEADBOARD] = qtg.QStandardItem(headboard)
+
                             # Measurement Time
-                            item = qtg.QStandardItem()
-                            if scanId[0:3] == '202':
-                                strdatetime = scanId[:15]
-                            else:
-                                strdatetime = scanId[-15:]
-                            date_format = "%Y%m%dT%H%M%S"
-                            dtdatetime = datetime.datetime.strptime(strdatetime, date_format)
-                            item.setData(dtdatetime.strftime('%Y-%m-%d %H:%M:%S'), qtc.Qt.DisplayRole)
-                            self.recentScansTableModel.setItem(i, Results.MSRMT_TIME, item)
+                            # strdatetime format is YYYYMMDDTHHMMSS
+                            yyyymmdd = f'{strdatetime[0:4]}-{strdatetime[4:6]}-{strdatetime[6:8]}'
+                            hhmmss   = f'{strdatetime[9:11]}:{strdatetime[11:13]}:{strdatetime[13:]}'
+                            displayTime = f'{yyyymmdd} {hhmmss}'
+                            
+                            items[Results.MSRMT_TIME] = qtg.QStandardItem(displayTime)
+                            #items[Results.MSRMT_TIME] = qtg.QStandardItem(strdatetime)
+                            ##dtdatetime = datetime.datetime.strptime(strdatetime, date_format)
+                            ##item.setData(dtdatetime.strftime('%Y-%m-%d %H:%M:%S'), qtc.Qt.DisplayRole)
+                            ##self.recentScansTableModel.setItem(i, Results.MSRMT_TIME, item)
+
                             # Measurement Type
-                            item = qtg.QStandardItem()
-                            item.setData('Tension', qtc.Qt.DisplayRole)
-                            self.recentScansTableModel.setItem(i, Results.MSRMT_TYPE, item)
+                            items[Results.MSRMT_TYPE] = qtg.QStandardItem('Tension')
+                            
                             # Scan name
-                            item = qtg.QStandardItem()
-                            item.setData(scanId, qtc.Qt.DisplayRole)
-                            self.recentScansTableModel.setItem(i, Results.SCAN, item)
+                            items[Results.SCAN] = qtg.QStandardItem(scanId)
+                            
                             # Tension
                             if "tension" in scanDict.keys():
                                 tension = scanDict["tension"]
-                                item = qtg.QStandardItem()
                                 if tension == 'Not Found' or tension == None:
-                                    item.setData(tension, qtc.Qt.DisplayRole)
+                                    resultStr = str(tension)
                                 else:
-                                    item.setData(str(round(tension,3)), qtc.Qt.DisplayRole)
-                                self.recentScansTableModel.setItem(i, Results.RESULT, item)
+                                    resultStr = str(round(tension,3))
+                                
                                 # Status
                                 if tension == 'Not Found' or tension == None:
                                     status = 'None'
@@ -1059,25 +1066,27 @@ class MainWindow(qtw.QMainWindow):
                                         status = 'Medium'
                                     else:
                                         status = 'Low'
-                                item = qtg.QStandardItem()
-                                item.setData(status, qtc.Qt.DisplayRole)
-                                self.recentScansTableModel.setItem(i, Results.CONFIDENCE, item)
+                                confidenceStr = status
+                                
                             elif "continuous" in scanDict.keys():
                                 continuous = scanDict["continuous"]
-                                item = qtg.QStandardItem()
-                                item.setData(continuous, qtc.Qt.DisplayRole)
-                                self.recentScansTableModel.setItem(i, Results.RESULT, item)
+                                resultStr = continuous
+                                
                                 # Status
-                                item = qtg.QStandardItem()
-                                item.setData("N/A", qtc.Qt.DisplayRole)
-                                self.recentScansTableModel.setItem(i, Results.CONFIDENCE, item)
+                                confidenceStr = 'N/A'
+                                
+                            items[Results.RESULT] = qtg.QStandardItem(resultStr)
+                            items[Results.CONFIDENCE] = qtg.QStandardItem(confidenceStr)
             
-                            i += 1
+                            self.recentScansTableModel.appendRow(items)
 
         print(f"Nrows = {self.recentScansTableModel.rowCount()}")
         print(f"Ncols = {self.recentScansTableModel.columnCount()}")
+        self.recentScansTableView.setSortingEnabled(True)
 
-
+        tend = time.time()
+        dt = tend-tstart
+        print(f"Populating table took [s] {dt}")
 
     def filterStageChanged(self):
         print("filterStateChanged")
