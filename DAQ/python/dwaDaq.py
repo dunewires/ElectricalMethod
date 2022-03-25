@@ -130,7 +130,7 @@
 
 import random
 import faulthandler
-from turtle import textinput   # helps debug segfaults
+#from turtle import textinput   # helps debug segfaults
 faulthandler.enable()
 
 import traceback, sys
