@@ -4582,6 +4582,8 @@ class MainWindow(qtw.QMainWindow):
             #print(f'in update: {chan}: {self.resonantFreqs[chan]}')
             self.currentTensions[chan] = [None for _ in range(3)]
             if self.resonantFreqs[chan] is None: continue
+            print("res",self.resonantFreqs[chan])
+            print("exp",self.expectedFreqs[chan])
             for seg,measured in enumerate(self.resonantFreqs[chan]):
                 print("measured",measured)
                 if len(measured) == 0:
