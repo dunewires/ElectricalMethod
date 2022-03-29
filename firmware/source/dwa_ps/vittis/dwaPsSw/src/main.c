@@ -131,7 +131,7 @@ unsigned int ipLocal;
 	  u8_t *macLwordB = (u8_t*) &macLword;
 	  u8_t *ipLocalB = (u8_t*) &ipLocal;
 
-	sleep(3);// give time for the power up and  serial num read
+	sleep(1);// give time for the power up and  serial num read
 
 	ipLocal = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (58 << 2));
 	macUword = *(unsigned int *) (XPAR_M00_AXI_0_BASEADDR + (59 << 2));
@@ -174,7 +174,7 @@ unsigned int ipLocal;
 	IP4_ADDR(&ipaddr,  ipLocalB[3], ipLocalB[2], ipLocalB[1], ipLocalB[0]);// take from PL NV mem
 //	IP4_ADDR(&ipaddr,  192, 168,   1, 10);
 	IP4_ADDR(&netmask, 255, 255, 255,  0);
-	IP4_ADDR(&gw,      ipLocalB[3], ipLocalB[2], 1,  1);
+	IP4_ADDR(&gw,      ipLocalB[3], ipLocalB[2], ipLocalB[1],  1);
 //	IP4_ADDR(&gw,      192, 168,   1,  1);
 #endif
 #endif
@@ -237,7 +237,7 @@ unsigned int ipLocal;
 			IP4_ADDR(&(echo_netif->ip_addr),  ipLocalB[3], ipLocalB[2], ipLocalB[1], ipLocalB[0]);
 			//IP4_ADDR(&(echo_netif->ip_addr),  128, 103,   100, 173);
 			IP4_ADDR(&(echo_netif->netmask), 255, 255, 255,  0);
-			IP4_ADDR(&(echo_netif->gw), ipLocalB[3], ipLocalB[2], 1, 1);
+			IP4_ADDR(&(echo_netif->gw), ipLocalB[3], ipLocalB[2], ipLocalB[1], 1);
 		}
 	}
 

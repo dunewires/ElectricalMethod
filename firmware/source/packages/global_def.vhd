@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Fri Feb 18 11:33:11 2022
+-- Last update : Thu Mar 17 14:23:40 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ package global_def is
     --set emulated data
     constant useAdcEmu : boolean := false;
     --constant useAdcEmu   : boolean := true;
-    constant ipLocalDefault : std_logic_vector(31 downto 0) := x"C0AB0107"; --192.168.1.7
+    constant ipLocalDefault : std_logic_vector(31 downto 0) := x"C0AB8C07"; --192.168.140.7
     constant macDefault     : std_logic_vector(47 downto 0) := x"842B2B97DA03";
 
     type SLV_VECTOR_TYPE is array (natural range <>) of std_logic_vector;

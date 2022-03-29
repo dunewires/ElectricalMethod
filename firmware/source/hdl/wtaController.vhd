@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Sep 22 14:03:31 2021
+-- Last update : Thu Mar 24 08:38:24 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ begin
 		if rising_edge(dwaClk100) then
 			scanAbort <= (scanAbort or fromDaqReg.scanAbort) and freqScanBusy;
 			--the noise scan will 
-			scanDone          <= (freqSet >= fromDaqReg.noiseFreqMax) when noiseReadoutBusy else (freqSet >= (fromDaqReg.stimFreqMax + fromDaqReg.noiseFreqStep));
+			scanDone          <= (freqSet >= fromDaqReg.noiseFreqMax) when noiseReadoutBusy else (freqSet > (fromDaqReg.stimFreqMax + fromDaqReg.stimFreqStep));
 			toDaqReg.ctrlBusy <= true;
 			ctrlStart_del     <= fromDaqReg.ctrlStart;
 			adcBusy_del       <= adcBusy;
@@ -102,7 +102,7 @@ begin
 							freqScanBusy <= true;
 							-- if we are triggering on the stimulus, the noise subtraction won't work
 							-- !! change this to mains noise disable and fix in MNS instance. 
-							if fromDaqReg.useAcStimTrig then
+							if fromDaqReg.useAcStimTrig or not fromDaqReg.mnsEna then
 								freqSet   <= fromDaqReg.stimFreqMin;
 								ctrlState <= stimEnable_s;
 							else
