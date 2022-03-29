@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Sep  2 17:08:18 2021
--- Last update : Wed Mar  9 13:52:34 2022
+-- Last update : Tue Mar 29 15:12:34 2022
 -- Platform    : Dune DWA MicroZed
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -54,7 +54,7 @@ begin
         if beatCnt(23 downto 0) < x"000004" then -- shift 4 bits every ~0.1 sec
           twinkleReg <= twinkleReg(14 downto 0) & xor(taps);
         else
-          led <= twinkleReg(15 downto 12) when fromDaqReg.danceParty else (led'range => beatCnt'left);
+          led <= twinkleReg(15 downto 12) when fromDaqReg.danceParty else (led'range => beatCnt(beatCnt'left));
         end if;
         beatCnt <= beatCnt+1;
 

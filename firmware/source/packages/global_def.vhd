@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Thu Mar 17 14:23:40 2022
+-- Last update : Tue Mar 29 15:07:29 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ package global_def is
 
 
         auto        : boolean;
-        mnsEna      : boolean;
+        mnsDisable      : boolean;
         udpDataDone : boolean;
         udpDataRen  : boolean;
         coilDrive   : std_logic_vector(31 downto 0);

@@ -201,7 +201,7 @@ architecture STRUCT of top_tension_analyzer is
   signal relayConfigError : std_logic := '0';
   signal gainConfigError  : std_logic := '0';
   signal snMemWPError     : std_logic := '0';
-  signal udpTimeoutError  : boolean   := false;
+  signal udpTimeoutError  : std_logic := '0';
   signal mainsTrigError   : std_logic := '0';
 
   signal
@@ -714,7 +714,7 @@ begin
     toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
     toDaqReg.errors           <= (
         23          => checkBound_error,
-        22 downto 1 => '0',
+        22 downto 6 => '0',
         5           => relayConfigError,
         4           => gainConfigError,
         3           => snMemWPError,

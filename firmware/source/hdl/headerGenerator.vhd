@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Wed Mar 23 23:48:56 2022
+-- Last update : Tue Mar 29 15:27:04 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ entity headerGenerator is
         adcDataRen : out std_logic_vector(7 downto 0) := (others => '0');
         adcData    : in  slv_vector_type(7 downto 0)(31 downto 0);
 
-        udpTimeoutError : out boolean := false;
+        udpTimeoutError : out std_logic := '0';
         dwaClk100       : in  std_logic -- := '0'
     );
 
@@ -133,7 +133,7 @@ architecture rtl of headerGenerator is
         tState    : boolean;
     end record;
 
-    signal statusDataSticky,statusDataLatch : statusData_type := (
+    signal statusDataSticky,statusDataLatch,statusDataDelay : statusData_type := (
             disableHV => ('0'),
             errors    => (others => '0'),
             pButton   => (others => '0'),
@@ -271,7 +271,7 @@ begin
     state_seq : process (dwaClk100)
     begin
         if rising_edge(dwaClk100) then
-            if fromDaqReg.reset or udpTimeoutError then
+            if fromDaqReg.reset or udpTimeoutError = '1' then
                 state_reg <= idle_s;
                 --headCnt_reg    <= (others   =>  '0');
                 udpDataRdy_reg <= false;
@@ -459,13 +459,12 @@ begin
 
     statusTiming : process (dwaClk100) -- latch the packet data validated by the sendData strobe
 
-        variable statusTrig : std_logic_vector(statusTrigLatch'range)
+        variable statusTrig : std_logic_vector(statusTrigLatch'range);
         variable testState  : boolean := false;
 
     begin
         if rising_edge(dwaClk100) then
             statusBusy_del    <= statusBusy;
-            acStim_enable_del <= acStim_enable;
             --trigger on going to and from idle state / initial stimulus wait state
             testState := (fromDaqReg.ctrlStateDbg = x"0") or (fromDaqReg.ctrlStateDbg = x"3");
 
@@ -484,7 +483,7 @@ begin
             statusTrig(0) := bool2sl(statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod);
 
             -- on trigger take a snapshot of status until packet is sent
-            if or(statusTrigSticky) and not sendStatus then
+            if or(statusTrigSticky) = '1' and not sendStatus then
                 sendStatus <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off
 
                 -- latch sticky data to be sent in status packet
@@ -522,14 +521,14 @@ begin
     begin
         if rising_edge(dwaClk100) then
             -- default
-            udpTimeoutError <= false; --clear request
+            udpTimeoutError <= '0'; --clear request
 
             if watchdogSleep then
                 watchdogTimerCnt <= x"00000001";
 
             elsif watchdogTimerCnt(31 downto 8) >= fromDaqReg.pktGenWatchdogPeriod then
                 watchdogTimerCnt <= x"00000001";
-                udpTimeoutError  <= true;
+                udpTimeoutError  <= '1';
 
             else
                 watchdogTimerCnt <= watchdogTimerCnt+1;

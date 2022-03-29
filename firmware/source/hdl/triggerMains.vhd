@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Sep  2 17:08:18 2021
--- Last update : Wed Mar 23 22:40:01 2022
+-- Last update : Tue Mar 29 15:14:15 2022
 -- Platform    : Dune DWA MicroZed
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -104,11 +104,11 @@ begin
         -- supress first trigger bc it will look like a trigger
         startupDone <= '1';
         -- chack that frequency is < 70Hz
-        mainsTrigError <= startupDone when watchdogTimer < "15CC56" else '0'; 
+        mainsTrigError <= startupDone when watchdogTimer < x"15CC56" else '0'; 
         watchdogTimer  <= (others => '0');
       else
         -- check for a frequency > 40Hz
-        mainsTrigError <= startupDone when watchdogTimer > "2625A0" else '0'; 
+        mainsTrigError <= startupDone when watchdogTimer > x"2625A0" else '0'; 
         watchdogTimer <=  watchdogTimer +1;
       end if;
     end if;

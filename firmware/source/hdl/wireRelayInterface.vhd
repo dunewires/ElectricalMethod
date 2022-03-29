@@ -66,9 +66,9 @@ architecture STRUCT of wireRelayInterface is
 	signal stringCnt : unsigned(1 downto 0)  := (others => '0');
 	signal waitCnt   : unsigned(15 downto 0) := (others => '0');
 
-	signal regDiff : std_logic_vector(11 downto 0) := (others => '0');
-	signal clkEn      : std_logic_vector(3 downto 0)  := (others => '0');
-	signal checkRegEq :std_logic  := '0';
+	signal regDiff        : std_logic_vector(11 downto 0)                := (others => '0');
+	signal clkEn          : std_logic_vector(3 downto 0)                 := (others => '0');
+	signal checkRegEq     : boolean                                      := false;
 	constant stringLength : UNSIGNED_VECTOR_TYPE(3 downto 0)(7 downto 0) := (
 			x"3F",
 			x"1F",

@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Mar 29 14:49:16 2022
+-- Last update : Tue Mar 29 15:08:27 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ begin
 							freqScanBusy <= true;
 							-- if we are triggering on the stimulus, the noise subtraction won't work
 							-- !! change this to mains noise disable and fix in MNS instance. 
-							if fromDaqReg.useAcStimTrig or fromDaqReg.mnsDisable then
+							if (fromDaqReg.useAcStimTrig = '1') or fromDaqReg.mnsDisable then
 								freqSet   <= fromDaqReg.stimFreqMin;
 								ctrlState <= stimEnable_s;
 							else
