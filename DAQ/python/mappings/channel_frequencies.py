@@ -139,7 +139,7 @@ for index in range(1151):
         l_physical_wire_G.append(PhysicalWire(*physical_wire_position('G',index+1,'start'),*physical_wire_position('G',index+1,'end')))
 
 
-def length_to_frequency(length, tension=6.5, density=1.6e-4):
+def length_to_frequency(length, tension=6.5, density=1.5e-4):
     return (tension/4/density/(length/1000)**2)**0.5
 
 
@@ -236,7 +236,7 @@ def wire_range_data_constant(wire_layer: str, wire_freq_data):
     range_data = []
     for w in wire_freq_data:
         if wire_layer == "X" or wire_layer == "G":
-            f_range = [70, 95]
+            f_range = [74, 102]
         else:
             res_array = np.array(wire_freq_data[w])
             res_sub_200 = res_array[(res_array<200)]

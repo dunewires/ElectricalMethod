@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1345</width>
-    <height>1196</height>
+    <width>1922</width>
+    <height>1010</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -19,7 +19,7 @@
   <property name="maximumSize">
    <size>
     <width>16777215</width>
-    <height>1196</height>
+    <height>16777215</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -32,7 +32,7 @@
       <property name="maximumSize">
        <size>
         <width>16777215</width>
-        <height>1000</height>
+        <height>16777215</height>
        </size>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_39" stretch="2,10">
@@ -46,7 +46,7 @@
          </property>
          <property name="maximumSize">
           <size>
-           <width>16777215</width>
+           <width>150</width>
            <height>16777215</height>
           </size>
          </property>
@@ -327,6 +327,9 @@
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_32">
+         <property name="spacing">
+          <number>0</number>
+         </property>
          <item>
           <widget class="QWidget" name="widgetUuid" native="true">
            <layout class="QFormLayout" name="formLayout_10">
@@ -380,6 +383,18 @@
          <item>
           <widget class="QWidget" name="horizontalWidget" native="true">
            <layout class="QHBoxLayout" name="horizontalLayout">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="QTabWidget" name="tabWidgetStages">
               <property name="enabled">
@@ -392,7 +407,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tabStimulus">
                <attribute name="title">
@@ -447,6 +462,9 @@
                              <height>16777215</height>
                             </size>
                            </property>
+                           <property name="text">
+                            <string>Chris Stanford</string>
+                           </property>
                           </widget>
                          </item>
                          <item row="2" column="0">
@@ -486,7 +504,7 @@
                           <widget class="QComboBox" name="configLayerComboBox">
                            <property name="minimumSize">
                             <size>
-                             <width>60</width>
+                             <width>80</width>
                              <height>0</height>
                             </size>
                            </property>
@@ -1292,8 +1310,14 @@
                <layout class="QVBoxLayout" name="verticalLayout_12">
                 <item>
                  <widget class="QTabWidget" name="tabWidgetResults">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="currentIndex">
-                   <number>0</number>
+                   <number>2</number>
                   </property>
                   <widget class="QWidget" name="tab_4">
                    <attribute name="title">
@@ -1301,333 +1325,1632 @@
                    </attribute>
                    <layout class="QVBoxLayout" name="verticalLayout_24">
                     <item>
-                     <widget class="QWidget" name="scanFilters" native="true">
+                     <layout class="QVBoxLayout" name="verticalLayout_8" stretch="0,4">
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="2,1">
+                        <property name="topMargin">
+                         <number>20</number>
+                        </property>
+                        <item>
+                         <widget class="QWidget" name="scanFilters" native="true">
+                          <property name="maximumSize">
+                           <size>
+                            <width>16777215</width>
+                            <height>16777215</height>
+                           </size>
+                          </property>
+                          <layout class="QHBoxLayout" name="horizontalLayout_27">
+                           <property name="leftMargin">
+                            <number>0</number>
+                           </property>
+                           <property name="rightMargin">
+                            <number>0</number>
+                           </property>
+                           <item>
+                            <widget class="QGroupBox" name="groupBox_5">
+                             <property name="title">
+                              <string>Stage</string>
+                             </property>
+                             <layout class="QVBoxLayout" name="verticalLayout_23">
+                              <item>
+                               <widget class="QCheckBox" name="filterStageDev">
+                                <property name="text">
+                                 <string>DWA Development</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterStageWinding">
+                                <property name="text">
+                                 <string>Winding</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterStagePostWinding">
+                                <property name="text">
+                                 <string>Post-Winding</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterStageStorage">
+                                <property name="text">
+                                 <string>Storage</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterStageInstallation">
+                                <property name="text">
+                                 <string>Installation</string>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QGroupBox" name="groupBox">
+                             <property name="title">
+                              <string>Layer</string>
+                             </property>
+                             <layout class="QVBoxLayout" name="verticalLayout_25">
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckV">
+                                <property name="text">
+                                 <string>V</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckU">
+                                <property name="text">
+                                 <string>U</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckG">
+                                <property name="text">
+                                 <string>G</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckX">
+                                <property name="text">
+                                 <string>X</string>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QGroupBox" name="groupBox_2">
+                             <property name="title">
+                              <string>Side</string>
+                             </property>
+                             <layout class="QVBoxLayout" name="verticalLayout_26">
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckB">
+                                <property name="text">
+                                 <string>B</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckA">
+                                <property name="text">
+                                 <string>A</string>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QGroupBox" name="groupBox_3">
+                             <property name="title">
+                              <string>Type</string>
+                             </property>
+                             <layout class="QVBoxLayout" name="verticalLayout_22">
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckTypeConnectivity">
+                                <property name="text">
+                                 <string>Connectivity</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckTypeTension">
+                                <property name="text">
+                                 <string>Tension</string>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QGroupBox" name="groupBox_4">
+                             <property name="title">
+                              <string>Confidence</string>
+                             </property>
+                             <layout class="QVBoxLayout" name="verticalLayout_27">
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckConfidenceNone">
+                                <property name="text">
+                                 <string>None</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckConfidenceLow">
+                                <property name="text">
+                                 <string>Low</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckConfidenceMedium">
+                                <property name="text">
+                                 <string>Medium</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckConfidenceHigh">
+                                <property name="text">
+                                 <string>High</string>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QGroupBox" name="groupBox_6">
+                             <property name="title">
+                              <string>Other</string>
+                             </property>
+                             <layout class="QVBoxLayout" name="verticalLayout_31">
+                              <item>
+                               <widget class="QLineEdit" name="filterLineEditDate"/>
+                              </item>
+                              <item>
+                               <widget class="QLineEdit" name="filterLineEditWireSegment"/>
+                              </item>
+                              <item>
+                               <widget class="QLineEdit" name="filterLineEditHeadboard"/>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                          </layout>
+                         </widget>
+                        </item>
+                        <item>
+                         <spacer name="horizontalSpacer">
+                          <property name="orientation">
+                           <enum>Qt::Horizontal</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>40</width>
+                            <height>20</height>
+                           </size>
+                          </property>
+                         </spacer>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <widget class="QTableView" name="recentScansTableView">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>0</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>16777215</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                    <item>
+                     <widget class="QWidget" name="widget_37" native="true">
                       <property name="maximumSize">
                        <size>
-                        <width>700</width>
-                        <height>16777215</height>
+                        <width>16777215</width>
+                        <height>30</height>
                        </size>
                       </property>
-                      <layout class="QHBoxLayout" name="horizontalLayout_27">
+                      <layout class="QHBoxLayout" name="horizontalLayout_38">
                        <property name="leftMargin">
+                        <number>0</number>
+                       </property>
+                       <property name="topMargin">
                         <number>0</number>
                        </property>
                        <property name="rightMargin">
                         <number>0</number>
                        </property>
+                       <property name="bottomMargin">
+                        <number>0</number>
+                       </property>
                        <item>
-                        <widget class="QGroupBox" name="groupBox_5">
-                         <property name="title">
-                          <string>Stage</string>
+                        <widget class="QPushButton" name="pb_scanDataSelectedLoad">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                           <horstretch>1</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
                          </property>
-                         <layout class="QVBoxLayout" name="verticalLayout_23">
-                          <item>
-                           <widget class="QCheckBox" name="filterStageDev">
-                            <property name="text">
-                             <string>DWA Development</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="filterStageWinding">
-                            <property name="text">
-                             <string>Winding</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="filterStagePostWinding">
-                            <property name="text">
-                             <string>Post-Winding</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="filterStageStorage">
-                            <property name="text">
-                             <string>Storage</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="filterStageInstallation">
-                            <property name="text">
-                             <string>Installation</string>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
+                         <property name="text">
+                          <string>Load selected scan</string>
+                         </property>
                         </widget>
                        </item>
                        <item>
-                        <widget class="QGroupBox" name="groupBox">
-                         <property name="title">
-                          <string>Layer</string>
+                        <widget class="QPushButton" name="pb_scanDataLoad">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                           <horstretch>1</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
                          </property>
-                         <layout class="QVBoxLayout" name="verticalLayout_25">
-                          <item>
-                           <widget class="QCheckBox" name="filterCheckV">
-                            <property name="text">
-                             <string>V</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="filterCheckU">
-                            <property name="text">
-                             <string>U</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="filterCheckG">
-                            <property name="text">
-                             <string>G</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="filterCheckX">
-                            <property name="text">
-                             <string>X</string>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
+                         <property name="text">
+                          <string>Load other scan(s)</string>
+                         </property>
                         </widget>
                        </item>
                        <item>
-                        <widget class="QGroupBox" name="groupBox_2">
-                         <property name="title">
-                          <string>Side</string>
+                        <widget class="QLabel" name="ampDataActiveLabel">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                           <horstretch>5</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
                          </property>
-                         <layout class="QVBoxLayout" name="verticalLayout_26">
-                          <item>
-                           <widget class="QCheckBox" name="filterCheckB">
-                            <property name="text">
-                             <string>B</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="filterCheckA">
-                            <property name="text">
-                             <string>A</string>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QGroupBox" name="groupBox_3">
-                         <property name="title">
-                          <string>Type</string>
+                         <property name="text">
+                          <string>Current:</string>
                          </property>
-                         <layout class="QVBoxLayout" name="verticalLayout_22">
-                          <item>
-                           <widget class="QCheckBox" name="filterCheckTypeConnectivity">
-                            <property name="text">
-                             <string>Connectivity</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="filterCheckTypeTension">
-                            <property name="text">
-                             <string>Tension</string>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QGroupBox" name="groupBox_4">
-                         <property name="title">
-                          <string>Confidence</string>
+                         <property name="textInteractionFlags">
+                          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
                          </property>
-                         <layout class="QVBoxLayout" name="verticalLayout_27">
-                          <item>
-                           <widget class="QCheckBox" name="filterCheckConfidenceNone">
-                            <property name="text">
-                             <string>None</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="filterCheckConfidenceLow">
-                            <property name="text">
-                             <string>Low</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="filterCheckConfidenceMedium">
-                            <property name="text">
-                             <string>Medium</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QCheckBox" name="filterCheckConfidenceHigh">
-                            <property name="text">
-                             <string>High</string>
-                            </property>
-                           </widget>
-                          </item>
-                         </layout>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QGroupBox" name="groupBox_6">
-                         <property name="title">
-                          <string>Other</string>
-                         </property>
-                         <layout class="QVBoxLayout" name="verticalLayout_31">
-                          <item>
-                           <widget class="QLineEdit" name="filterLineEditDate"/>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="filterLineEditWireSegment"/>
-                          </item>
-                          <item>
-                           <widget class="QLineEdit" name="filterLineEditHeadboard"/>
-                          </item>
-                         </layout>
                         </widget>
                        </item>
                       </layout>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QTableView" name="recentScansTableView">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>0</width>
-                        <height>750</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>16777215</width>
-                        <height>750</height>
-                       </size>
-                      </property>
                      </widget>
                     </item>
                    </layout>
                   </widget>
                   <widget class="QWidget" name="tab_5">
                    <attribute name="title">
-                    <string>Selected Scans</string>
+                    <string>Raw Scans</string>
                    </attribute>
-                   <widget class="QWidget" name="widget_3" native="true">
-                    <property name="geometry">
-                     <rect>
-                      <x>0</x>
-                      <y>0</y>
-                      <width>1400</width>
-                      <height>639</height>
-                     </rect>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>1400</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="7,0">
-                     <item>
-                      <widget class="QTabWidget" name="tabResonanceGraphs">
-                       <property name="currentIndex">
-                        <number>0</number>
-                       </property>
-                       <widget class="QWidget" name="tabResonanceRawData">
-                        <attribute name="title">
-                         <string>Raw A(f)</string>
-                        </attribute>
-                        <layout class="QVBoxLayout" name="verticalLayout_5">
+                   <layout class="QVBoxLayout" name="verticalLayout_5">
+                    <item>
+                     <layout class="QVBoxLayout" name="verticalLayout_39" stretch="4">
+                      <property name="spacing">
+                       <number>0</number>
+                      </property>
+                      <property name="leftMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>0</number>
+                      </property>
+                      <item>
+                       <widget class="QWidget" name="widget_38" native="true">
+                        <layout class="QHBoxLayout" name="horizontalLayout_14">
+                         <property name="spacing">
+                          <number>0</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>0</number>
+                         </property>
                          <item>
-                          <widget class="QScrollArea" name="scrollArea_2">
-                           <property name="widgetResizable">
-                            <bool>true</bool>
+                          <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0,0">
+                           <property name="spacing">
+                            <number>1</number>
                            </property>
-                           <widget class="QWidget" name="scrollAreaWidgetContents_2">
-                            <property name="geometry">
-                             <rect>
-                              <x>0</x>
-                              <y>0</y>
-                              <width>227</width>
-                              <height>1724</height>
-                             </rect>
-                            </property>
-                            <layout class="QVBoxLayout" name="verticalLayout_21">
-                             <item>
-                              <widget class="QWidget" name="widget_8" native="true">
-                               <property name="minimumSize">
-                                <size>
-                                 <width>0</width>
-                                 <height>1700</height>
-                                </size>
-                               </property>
-                               <property name="maximumSize">
-                                <size>
-                                 <width>16777215</width>
-                                 <height>1700</height>
-                                </size>
-                               </property>
-                               <layout class="QHBoxLayout" name="horizontalLayout_4">
-                                <item>
-                                 <spacer name="horizontalSpacer_3">
-                                  <property name="orientation">
-                                   <enum>Qt::Horizontal</enum>
-                                  </property>
-                                  <property name="sizeType">
-                                   <enum>QSizePolicy::Fixed</enum>
-                                  </property>
-                                  <property name="sizeHint" stdset="0">
-                                   <size>
-                                    <width>40</width>
-                                    <height>20</height>
-                                   </size>
-                                  </property>
-                                 </spacer>
-                                </item>
-                                <item>
-                                 <widget class="GraphicsLayoutWidget" name="resonanceRawDataGLW"/>
-                                </item>
-                                <item>
-                                 <spacer name="horizontalSpacer_4">
-                                  <property name="orientation">
-                                   <enum>Qt::Horizontal</enum>
-                                  </property>
-                                  <property name="sizeType">
-                                   <enum>QSizePolicy::Fixed</enum>
-                                  </property>
-                                  <property name="sizeHint" stdset="0">
-                                   <size>
-                                    <width>40</width>
-                                    <height>20</height>
-                                   </size>
-                                  </property>
-                                 </spacer>
-                                </item>
-                               </layout>
-                              </widget>
-                             </item>
-                            </layout>
-                           </widget>
+                           <item row="0" column="0">
+                            <widget class="QWidget" name="widget_60" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_50">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="rawgrid_0"/>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="0" column="1">
+                            <widget class="QWidget" name="widget_62" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_51">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="rawgrid_4"/>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="1" column="1">
+                            <widget class="QWidget" name="widget_64" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_52">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="rawgrid_5"/>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="1" column="0">
+                            <widget class="QWidget" name="widget_66" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_53">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="rawgrid_1"/>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="2" column="0">
+                            <widget class="QWidget" name="widget_68" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_54">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="rawgrid_2"/>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="2" column="1">
+                            <widget class="QWidget" name="widget_70" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_55">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="rawgrid_6"/>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="3" column="0">
+                            <widget class="QWidget" name="widget_72" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_56">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="rawgrid_3"/>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="3" column="1">
+                            <widget class="QWidget" name="widget_74" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_57">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="rawgrid_7"/>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                          </layout>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+                  </widget>
+                  <widget class="QWidget" name="tab_9">
+                   <attribute name="title">
+                    <string>Processed Scans</string>
+                   </attribute>
+                   <layout class="QVBoxLayout" name="verticalLayout_36">
+                    <item>
+                     <layout class="QVBoxLayout" name="verticalLayout_37" stretch="2,4">
+                      <property name="spacing">
+                       <number>0</number>
+                      </property>
+                      <property name="leftMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>0</number>
+                      </property>
+                      <item>
+                       <widget class="QWidget" name="widget_39" native="true">
+                        <property name="maximumSize">
+                         <size>
+                          <width>16777215</width>
+                          <height>30</height>
+                         </size>
+                        </property>
+                        <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="3,1,1">
+                         <property name="leftMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>0</number>
+                         </property>
+                         <item>
+                          <widget class="QLineEdit" name="submitResonanceNoteLineEdit">
+                           <property name="placeholderText">
+                            <string>Submission note...</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btnSubmitResonances">
+                           <property name="text">
+                            <string>Submit All Tensions to DB</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QLabel" name="labelResonanceSubmitStatus">
+                           <property name="text">
+                            <string>Resonances have not been submitted</string>
+                           </property>
                           </widget>
                          </item>
                         </layout>
                        </widget>
+                      </item>
+                      <item>
+                       <widget class="QWidget" name="widget_36" native="true">
+                        <layout class="QHBoxLayout" name="horizontalLayout_11">
+                         <property name="spacing">
+                          <number>0</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>0</number>
+                         </property>
+                         <item>
+                          <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0,0">
+                           <property name="spacing">
+                            <number>1</number>
+                           </property>
+                           <item row="0" column="0">
+                            <widget class="QWidget" name="widget_43" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_41">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="proccesedgrid_0"/>
+                              </item>
+                              <item>
+                               <widget class="QWidget" name="widget_44" native="true">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>0</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                                <layout class="QHBoxLayout" name="horizontalLayout_40">
+                                 <property name="leftMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="topMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="rightMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="bottomMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_0_0">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_0_0">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_0_1">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_0_1">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_0_2">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_0_2">
+                                   <property name="minimumSize">
+                                    <size>
+                                     <width>50</width>
+                                     <height>0</height>
+                                    </size>
+                                   </property>
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="submitTension_0">
+                                   <property name="text">
+                                    <string>Submit</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                </layout>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="0" column="1">
+                            <widget class="QWidget" name="widget_47" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_48">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="proccesedgrid_4"/>
+                              </item>
+                              <item>
+                               <widget class="QWidget" name="widget_57" native="true">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>0</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                                <layout class="QHBoxLayout" name="horizontalLayout_47">
+                                 <property name="leftMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="topMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="rightMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="bottomMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_4_0">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_4_0">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_4_1">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_4_1">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_4_2">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_4_2">
+                                   <property name="minimumSize">
+                                    <size>
+                                     <width>50</width>
+                                     <height>0</height>
+                                    </size>
+                                   </property>
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="submitTension_7">
+                                   <property name="text">
+                                    <string>Submit</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                </layout>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="1" column="1">
+                            <widget class="QWidget" name="widget_58" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_49">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="proccesedgrid_5"/>
+                              </item>
+                              <item>
+                               <widget class="QWidget" name="widget_59" native="true">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>0</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                                <layout class="QHBoxLayout" name="horizontalLayout_48">
+                                 <property name="leftMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="topMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="rightMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="bottomMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_5_0">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_5_0">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_5_1">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_5_1">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_5_2">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_5_2">
+                                   <property name="minimumSize">
+                                    <size>
+                                     <width>50</width>
+                                     <height>0</height>
+                                    </size>
+                                   </property>
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="submitTension_9">
+                                   <property name="text">
+                                    <string>Submit</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                </layout>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="1" column="0">
+                            <widget class="QWidget" name="widget_45" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_42">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="proccesedgrid_1"/>
+                              </item>
+                              <item>
+                               <widget class="QWidget" name="widget_46" native="true">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>0</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                                <layout class="QHBoxLayout" name="horizontalLayout_41">
+                                 <property name="leftMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="topMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="rightMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="bottomMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_1_0">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_1_0">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_1_1">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_1_1">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_1_2">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_1_2">
+                                   <property name="minimumSize">
+                                    <size>
+                                     <width>50</width>
+                                     <height>0</height>
+                                    </size>
+                                   </property>
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="submitTension_2">
+                                   <property name="text">
+                                    <string>Submit</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                </layout>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="2" column="0">
+                            <widget class="QWidget" name="widget_49" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_44">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="proccesedgrid_2"/>
+                              </item>
+                              <item>
+                               <widget class="QWidget" name="widget_50" native="true">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>0</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                                <layout class="QHBoxLayout" name="horizontalLayout_43">
+                                 <property name="leftMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="topMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="rightMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="bottomMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_2_0">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_2_0">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_2_1">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_2_1">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_2_2">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_2_2">
+                                   <property name="minimumSize">
+                                    <size>
+                                     <width>50</width>
+                                     <height>0</height>
+                                    </size>
+                                   </property>
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="submitTension_4">
+                                   <property name="text">
+                                    <string>Submit</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                </layout>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="2" column="1">
+                            <widget class="QWidget" name="widget_51" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_45">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>10</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="proccesedgrid_6"/>
+                              </item>
+                              <item>
+                               <widget class="QWidget" name="widget_52" native="true">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>0</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                                <layout class="QHBoxLayout" name="horizontalLayout_44">
+                                 <property name="leftMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="topMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="rightMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="bottomMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_6_0">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_6_0">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_6_1">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_6_1">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_6_2">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_6_2">
+                                   <property name="minimumSize">
+                                    <size>
+                                     <width>50</width>
+                                     <height>0</height>
+                                    </size>
+                                   </property>
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="submitTension_6">
+                                   <property name="text">
+                                    <string>Submit</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                </layout>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="3" column="0">
+                            <widget class="QWidget" name="widget_53" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_46">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="proccesedgrid_3"/>
+                              </item>
+                              <item>
+                               <widget class="QWidget" name="widget_54" native="true">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>0</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                                <layout class="QHBoxLayout" name="horizontalLayout_45">
+                                 <property name="leftMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="topMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="rightMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="bottomMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_3_0">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_3_0">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_3_1">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_3_1">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_3_2">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_3_2">
+                                   <property name="minimumSize">
+                                    <size>
+                                     <width>50</width>
+                                     <height>0</height>
+                                    </size>
+                                   </property>
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="submitTension_5">
+                                   <property name="text">
+                                    <string>Submit</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                </layout>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item row="3" column="1">
+                            <widget class="QWidget" name="widget_55" native="true">
+                             <layout class="QVBoxLayout" name="verticalLayout_47">
+                              <property name="spacing">
+                               <number>1</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>5</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>10</number>
+                              </property>
+                              <item>
+                               <widget class="PlotWidget" name="proccesedgrid_7"/>
+                              </item>
+                              <item>
+                               <widget class="QWidget" name="widget_56" native="true">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>0</width>
+                                  <height>20</height>
+                                 </size>
+                                </property>
+                                <layout class="QHBoxLayout" name="horizontalLayout_46">
+                                 <property name="leftMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="topMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="rightMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <property name="bottomMargin">
+                                  <number>0</number>
+                                 </property>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_7_0">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_7_0">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_7_1">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_7_1">
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLabel" name="lab_resfreq_7_2">
+                                   <property name="text">
+                                    <string>None</string>
+                                   </property>
+                                   <property name="alignment">
+                                    <set>Qt::AlignCenter</set>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QLineEdit" name="le_resfreq_val_7_2">
+                                   <property name="minimumSize">
+                                    <size>
+                                     <width>50</width>
+                                     <height>0</height>
+                                    </size>
+                                   </property>
+                                   <property name="maximumSize">
+                                    <size>
+                                     <width>16777215</width>
+                                     <height>16777215</height>
+                                    </size>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="submitTension_8">
+                                   <property name="text">
+                                    <string>Submit</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                </layout>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                          </layout>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+=======
                        <widget class="QWidget" name="tabResonanceProcessedData">
                         <attribute name="title">
                          <string>Processed A(f)</string>
@@ -2774,54 +4097,9 @@
                      </item>
                     </layout>
                    </widget>
+>>>>>>> dev_gui_xuv
                   </widget>
                  </widget>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_18">
-                  <item>
-                   <widget class="QPushButton" name="pb_scanDataSelectedLoad">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>1</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Load selected scan</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pb_scanDataLoad">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>1</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Load other scan(s)</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="ampDataActiveLabel">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>5</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Current:</string>
-                    </property>
-                    <property name="textInteractionFlags">
-                     <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
                 </item>
                </layout>
               </widget>
@@ -3103,14 +4381,13 @@
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1345</width>
-     <height>22</height>
+     <width>1922</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -3129,6 +4406,7 @@
    <addaction name="menuFIle"/>
    <addaction name="menuViews"/>
   </widget>
+  <widget class="QStatusBar" name="statusbar"/>
   <action name="actionPage1">
    <property name="text">
     <string>Page1</string>
@@ -3204,8 +4482,6 @@
   <tabstop>pw_amplchan_6</tabstop>
   <tabstop>pw_amplchan_7</tabstop>
   <tabstop>pw_amplchan_main</tabstop>
-  <tabstop>pb_scanDataSelectedLoad</tabstop>
-  <tabstop>pb_scanDataLoad</tabstop>
   <tabstop>tensionStageComboBox</tabstop>
   <tabstop>tensionLayerComboBox</tabstop>
   <tabstop>btnLoadTensions</tabstop>

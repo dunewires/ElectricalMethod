@@ -2,10 +2,17 @@ from scipy import signal
 import numpy as np
 import itertools
 
-def baseline_subtracted(amps):
+def get_num_savgol_bins(freq):
+    step_size = freq[1] - freq[0]
+    num_bins = int(round(27/(8*step_size)))
+    if (num_bins % 2) == 0: num_bins += 1
+    return num_bins
+    
+def baseline_subtracted(freq, amps):
     '''Use the savgol filter to smooth out a trace.'''
-    smooth_curve = signal.savgol_filter(amps, 101, 3)
-    return signal.savgol_filter(amps-smooth_curve, 7, 2)
+    num_bins = get_num_savgol_bins(freq)
+    smooth_curve = signal.savgol_filter(amps, num_bins, 3)
+    return amps-smooth_curve
 
 def get_r2(arr):
     '''Comutes the r-squared of an array'''
@@ -113,7 +120,7 @@ def analyze_res_placement(f,a,res_arr,fpks):
                 for res in np.unique(res_seg):
                     #print(np.min(fpks - res))
                     #print(res)
-                    if res > 120: continue # Noisy above 120, not a big deal if there's no match
+                    #if res > 120: continue # Noisy above 120, not a big deal if there's no match
                     if res > np.max(f): continue # Can't expect a resonance where there's no data
                     if np.min(np.abs(fpks - res)) > 4:
                         #print("failed proximity", res, fpks)
@@ -139,6 +146,7 @@ def analyze_res_placement(f,a,res_arr,fpks):
                         reduce_surrounding(f,reduced_a,res)
                 cost = np.sum(reduced_a)
                 costs.append(cost)
+                shifted_res_arr = [shift_res_seg_to_f0(res_seg, np.max(res_seg), np.max(res_seg)-1.5) for res_seg in shifted_res_arr]
                 placements.append(shifted_res_arr)
                 # Calculate diff
                 diff = 0
@@ -151,4 +159,4 @@ def analyze_res_placement(f,a,res_arr,fpks):
                 diffs.append(diff)
                 tensions.append(tension_arr)
                     
-    return placements, costs, diffs, tensions
+    return np.array(placements), np.array(costs), np.array(diffs), np.array(tensions)
