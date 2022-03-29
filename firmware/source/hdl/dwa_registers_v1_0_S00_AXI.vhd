@@ -1079,7 +1079,7 @@ begin
 	fromDaqReg.scanAbort   <= slv_reg0(3)= '1';
 
 	fromDaqReg.auto              <= slv_reg1(0)= '1';
-	fromDaqReg.mnsEna            <= slv_reg1(1)= '1';
+	fromDaqReg.mnsDisable            <= slv_reg1(1)= '1';
 	fromDaqReg.relayAutoBreakEna <= slv_reg1(2);
 	fromDaqReg.useAcStimTrig     <= slv_reg1(3);
 	fromDaqReg.danceParty        <= slv_reg1(8);
