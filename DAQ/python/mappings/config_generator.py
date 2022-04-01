@@ -9,8 +9,10 @@ def configure_ip_addresses(client_ip=None):
     return {'client_IP': client_ip}
 
 
-def configure_run_type(auto=1):
-    '''Return a dictionary of a configuration value for the type of run, either fixed frequency or frequency scan for the given values 0 and 1 respectively.'''
+def configure_run_type(run_type=1, noise_subtraction_disable=False):
+    '''Return a dictionary of a configuration value for the type of run, either fixed frequency or frequency scan for the given values 0 and 1 respectively, and whether the noise subtraction should be disabled, which is the default, or enabled.'''
+    # First bit is run type and second bit is noise subtraction disable
+    auto = run_type | noise_subtraction_disable << 1
     return {'auto': format(auto,'01X')}
 
 
@@ -68,9 +70,9 @@ def configure_sampling(cycles_per_freq=1, samples_per_cycle=32):
             'adcSamplesPerCycle': format(samples_per_cycle, '06X')}
 
 
-def configure_relays(wire_layer: str, apa_channels: list, is_flex_connection_winderlike: bool = True, *,
+def configure_relays(wire_layer: str, apa_channels: list, is_flex_connection_winderlike: bool = True, bad_channels: list = [], *,
                      relay_wire_top=None, relay_wire_bot=None, relay_bus_top=None, relay_bus_bot=None):
-    '''Return a dictionary of configuration values for the relays given a wire layer and the list of APA channels to be read out in that layer, depending on the orientation of the connection between the flex cable and the probe board. Configuration values can also be provided directly, bypassing the determination based on the wire layer and list of APA channels.'''
+    '''Return a dictionary of configuration values for the relays given a wire layer and the list of APA channels to be read out in that layer, depending on the orientation of the connection between the flex cable and the probe board. A list of bad channels can be given to disable the wire relays associated to them even if they would otherwise be activated. The bad channels is a list of strings of APA channels without APA side information, e.g. ['X423', 'X424']. Configuration values can also be provided directly, bypassing the determination based on the wire layer and list of APA channels.'''
     
     def raise_incompatible_channels(message=''):
         raise ValueError('Trying to configure incompatible APA channels: ' + message)
@@ -180,7 +182,6 @@ def configure_relays(wire_layer: str, apa_channels: list, is_flex_connection_win
 
     for wire_relays in wire_relays_bottom_and_top:
         concatenated_wire_relays = 0
-        #print(f'     type(wire_relays) = {type(wire_relays)}')
         for relay in wire_relays:
             concatenated_wire_relays |= 1<<(relay-1)
         concatenated_wire_relays_bottom_and_top.append(concatenated_wire_relays)
@@ -190,9 +191,20 @@ def configure_relays(wire_layer: str, apa_channels: list, is_flex_connection_win
         for relay in bus_relays:
             concatenated_bus_relays |= 1<<(relay-1)
         concatenated_bus_relays_bottom_and_top.append(concatenated_bus_relays)
+
+    # Build lists of bad channels for bottom and top wire relays. The list can serve as a mask if it's bitwise complemented
+    bad_relays = [0, 0]
+    for bad_channel in bad_channels:
+        if bad_channel[0].upper() == wire_layer:
+            bad_relay = apa_channel_to_wire_relay(bad_channel[0], int(bad_channel[1:]), is_flex_connection_winderlike)
+            if bad_relay <= 64:
+                bad_relays[0] |= 1<<(bad_relay-1)
+            else:
+                bad_relays[1] |= 1<<(bad_relay-64-1)
+    
     relay_config = {}
-    relay_config['relayWireTop'] = format(concatenated_wire_relays_bottom_and_top[1] if relay_wire_top is None else relay_wire_top, '016X') 
-    relay_config['relayWireBot'] = format(concatenated_wire_relays_bottom_and_top[0] if relay_wire_bot is None else relay_wire_bot, '016X')
+    relay_config['relayWireTop'] = format(concatenated_wire_relays_bottom_and_top[1] & ~bad_relays[1] if relay_wire_top is None else relay_wire_top, '016X') 
+    relay_config['relayWireBot'] = format(concatenated_wire_relays_bottom_and_top[0] & ~bad_relays[0] if relay_wire_bot is None else relay_wire_bot, '016X')
     relay_config['relayBusTop'] = format(concatenated_bus_relays_bottom_and_top[1] if relay_bus_top is None else relay_bus_top, '08X')
     relay_config['relayBusBot'] = format(concatenated_bus_relays_bottom_and_top[0] if relay_bus_bot is None else relay_bus_bot, '08X')
 

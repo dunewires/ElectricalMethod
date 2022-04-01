@@ -32,7 +32,8 @@ entity dpotInterface is
 		sck    : out std_logic := '0';
 		shdn_b : out std_logic := '0';
 
-		dwaClk2 : in std_logic := '0'
+		gainConfigError : out std_logic := '0';
+		dwaClk2         : in  std_logic := '0'
 	);
 end entity dpotInterface;
 
@@ -49,7 +50,7 @@ architecture STRUCT of dpotInterface is
 		);
 	END COMPONENT ;
 
-	type dpotState_type is (idle_s, shiftBitsIn_s, loadDpotReg_s, shiftBitsOut_s, loadDaqReg_s);
+	type dpotState_type is (idle_s, shiftBitsIn_s, loadDpotReg_s, shiftBitsOut_s, loadDaqReg_s, checkRegEq_s);
 	signal dpotState : dpotState_type := idle_s;
 
 	signal shiftReg     : std_logic_vector(35 downto 0);
@@ -148,9 +149,12 @@ begin
 							toDaqReg.senseWireGain(1) <= shiftReg(16 downto 9);
 							toDaqReg.senseWireGain(0) <= shiftReg(7 downto 0);
 						end if;
-						dpotState <= idle_s;
+						dpotState <= checkRegEq_s;
 					end if;
-
+				when checkRegEq_s =>
+					-- check for errors here and set '1' if we still need an update after write.
+					gainConfigError <= '0' when update = "00" else '1';
+					dpotState       <= idle_s;
 				when others =>
 					dpotState <= idle_s;
 			end case;

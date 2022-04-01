@@ -81,7 +81,7 @@ res_0(6)  <= '1' when ( (s_values.stimFreqStep >= 1) and (s_values.stimFreqStep 
 res_0(10) <= '1' when (s_values.cyclesPerFreq*s_values.adcSamplesPerCycle < 128)  else '0' ;
 res_0(11) <= '1' when (s_values.cyclesPerFreq*s_values.adcSamplesPerCycle < 128)  else '0' ;
 
-if (s_values.mnsEna) then                                                                          
+if not s_values.mnsDisable then                                                                          
 res_0(25) <= '1' when ( (s_values.noiseFreqMin <= s_values.noiseFreqMax) and (s_values.noiseFreqMin >= s_values.stimFreqMin)  ) else '0' ;
 res_0(26) <= '1' when ( (s_values.noiseFreqMax <= s_values.stimFreqMax)  and (s_values.noiseFreqMax >= s_values.noiseFreqMin) )  else '0' ;
 res_0(27) <= '1' when  (s_values.noiseFreqStep <= (s_values.noiseFreqMax -s_values.NoiseFreqMin))  else '0' ;

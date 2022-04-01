@@ -34,8 +34,9 @@ entity wireRelayInterface is
 		sck     : out std_logic_vector(3 downto 0) := (others => '0');
 		srclr_b : out std_logic_vector(3 downto 0) := (others => '0');
 
-		dwaClk100 : in std_logic := '0';
-		dwaClk2   : in std_logic := '0'
+		relayConfigError : out std_logic := '0';
+		dwaClk100        : in  std_logic := '0';
+		dwaClk2          : in  std_logic := '0'
 	);
 end entity wireRelayInterface;
 
@@ -53,9 +54,9 @@ architecture STRUCT of wireRelayInterface is
 	END COMPONENT ;
 
 	type relayCfgState_type is (idle_s, updateSerialOut_s, shiftBitsIn_s, loadParallelReg_s, shiftBitsOut_s, waitToEnable_s, waitToShiftOut_s);
-	signal relayCfgState                                 : relayCfgState_type := idle_s;
-	signal updateLatch,updateLatch_cdc1,updateLatch_cdc2 : boolean            := false;
-	signal updateBusy,updateBusy_cdc1,updateBusy_cdc2    : boolean            := false;
+	signal relayCfgState                                                  : relayCfgState_type := idle_s;
+	signal updateLatch,updateLatch_cdc1,updateLatch_cdc2                  : boolean            := false;
+	signal updateBusy,updateBusy_cdc1,updateBusy_cdc2,updateBusy_cdc2_del : boolean            := false;
 
 	signal serialStringOut : std_logic_vector(191 downto 0);
 	signal shiftRegOut     : std_logic_vector(191 downto 0);
@@ -65,8 +66,9 @@ architecture STRUCT of wireRelayInterface is
 	signal stringCnt : unsigned(1 downto 0)  := (others => '0');
 	signal waitCnt   : unsigned(15 downto 0) := (others => '0');
 
-	signal clkEn : std_logic_vector(3 downto 0) := (others => '0');
-
+	signal regDiff        : std_logic_vector(11 downto 0)                := (others => '0');
+	signal clkEn          : std_logic_vector(3 downto 0)                 := (others => '0');
+	signal checkRegEq     : boolean                                      := false;
 	constant stringLength : UNSIGNED_VECTOR_TYPE(3 downto 0)(7 downto 0) := (
 			x"3F",
 			x"1F",
@@ -111,8 +113,11 @@ begin
 	updateCdcDC100 : process (dwaClk100)
 	begin
 		if rising_edge(dwaClk100) then
-			updateBusy_cdc1 <= updateBusy;
-			updateBusy_cdc2 <= updateBusy_cdc1;
+			updateBusy_cdc1     <= updateBusy;
+			updateBusy_cdc2     <= updateBusy_cdc1;
+			updateBusy_cdc2_del <= updateBusy_cdc2;
+			-- check registers are equal on the clock following toDaqReg update from serial string
+			checkRegEq <= updateBusy_cdc2_del and not updateBusy_cdc2;
 
 			-- only enable CDC data transfer when the update is not busy
 			if not updateBusy_cdc2 then
@@ -130,7 +135,6 @@ begin
 					toDaqReg.relayWireTop(srw_i) <= shiftRegIn(3)((16 * srw_i)+15 downto (16 * srw_i));
 					toDaqReg.relayWireBot(srw_i) <= shiftRegIn(1)((16 * srw_i)+15 downto (16 * srw_i));
 				end loop shiftWireToDaq;
-
 				-- catch relayUpdate pulse
 				updateLatch <= (fromDaqReg.relayUpdate or updateLatch);
 			else
@@ -164,7 +168,7 @@ begin
 			case (relayCfgState) is
 
 				when idle_s =>
-						waitCnt       <= (others => '0'); -- reset for next time
+					waitCnt    <= (others => '0'); -- reset for next time
 					updateBusy <= false;
 					shiftCnt   <= (others => '0'); --number of bits to  shift
 					stringCnt  <= (others => '0');
@@ -193,15 +197,15 @@ begin
 					end if;
 
 				when loadParallelReg_s =>
-					rck           <= (others => '1'); -- load after all bits are shifted
-					shiftCnt      <= (others => '0'); --number of bits to  shift
-					--relayCfgState <= shiftBitsOut_s;
+					rck      <= (others => '1'); -- load after all bits are shifted
+					shiftCnt <= (others => '0'); --number of bits to  shift
+					                             --relayCfgState <= shiftBitsOut_s;
 					relayCfgState <= waitToShiftOut_s;
 
 				when waitToShiftOut_s => -- Wait for 16ms before enabling relays,  break before make
 					waitCnt <= waitCnt +1;
-					--if waitCnt = x"7D00" then
-					if waitCnt = x"0007" then -- do not wait for noise before reading, the x"0007" is just bc it's lucky
+					if waitCnt = x"7D00" then             -- wait for any HV corruption to happen before readback
+						                                  --if waitCnt = x"0007" then -- do not wait for noise before reading, the x"0007" is just bc it's lucky
 						waitCnt       <= (others => '0'); -- reset for next time
 						relayCfgState <= shiftBitsOut_s;
 					end if;
@@ -227,6 +231,25 @@ begin
 			end case;
 		end if;
 	end process relayCfgState_seq;
+
+	relayConfigErrorCheck : process (dwaClk100)
+	begin
+		if rising_edge(dwaClk100) then
+			relayConfigError <= or(regDiff);
+
+			if checkRegEq then
+				checkBus : for srb_i in 1 downto 0 loop
+					regDiff(srb_i)     <= '1' when toDaqReg.relayBusTop(srb_i) = fromDaqReg.relayBusTop(srb_i) else '0' ;
+					regDiff(srb_i + 2) <= '1' when toDaqReg.relayBusBot(srb_i) = fromDaqReg.relayBusBot(srb_i) else '0' ;
+				end loop checkBus;
+
+				checkWire : for srw_i in 3 downto 0 loop
+					regDiff(srw_i + 4) <= '1' when toDaqReg.relayWireTop(srw_i) = fromDaqReg.relayWireTop(srw_i) else '0' ;
+					regDiff(srw_i + 8) <= '1' when toDaqReg.relayWireBot(srw_i) = fromDaqReg.relayWireBot(srw_i) else '0' ;
+				end loop checkWire;
+			end if;
+		end if;
+	end process;
 
 	ila_4x32_inst : ila_4x32
 		PORT MAP (

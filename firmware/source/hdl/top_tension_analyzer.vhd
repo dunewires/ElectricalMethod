@@ -197,8 +197,12 @@ architecture STRUCT of top_tension_analyzer is
   signal ledDwa              : std_logic_vector(3 downto 0) := (others => '0');
 
   signal vioOut3, vioOut9 : std_logic := '0';
-  
-  signal snMemWPError : std_logic := '0';
+
+  signal relayConfigError : std_logic := '0';
+  signal gainConfigError  : std_logic := '0';
+  signal snMemWPError     : std_logic := '0';
+  signal udpTimeoutError  : std_logic := '0';
+  signal mainsTrigError   : std_logic := '0';
 
   signal
   toDaqReg_headerGenerator,
@@ -443,8 +447,9 @@ begin
 
       sck => CD_SCK,
 
-      dwaClk100 => dwaClk100,
-      dwaClk2   => dwaClk2
+      relayConfigError => relayConfigError,
+      dwaClk100        => dwaClk100,
+      dwaClk2          => dwaClk2
     );
   --gain DPOT
   dpotInterface_inst : entity duneDwa.dpotInterface
@@ -460,7 +465,8 @@ begin
       sck    => dpotSck,
       shdn_b => dpotShdn_b,
 
-      dwaClk2 => dwaClk2
+      gainConfigError => gainConfigError,
+      dwaClk2         => dwaClk2
     );
 
   -- trigger on  supply mains
@@ -473,7 +479,8 @@ begin
       mainsTrig           => mainsTrig,
       mainsTrigTimerLatch => mainsTrigTimerLatch,
 
-      dwaClk100 => dwaClk100
+      mainsTrigError => mainsTrigError,
+      dwaClk100      => dwaClk100
 
     );
 
@@ -638,8 +645,8 @@ begin
       adcData    => adcData,
 
       --udpRequestComplete => open,
-
-      dwaClk100 => dwaClk100
+      udpTimeoutError => udpTimeoutError,
+      dwaClk100       => dwaClk100
     );
 
   --ila_4x32_inst : ila_4x32
@@ -705,9 +712,18 @@ begin
 
     toDaqReg.serNumMemAddress <= toDaqReg_serialPromInterface.serNumMemAddress;
     toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
-    toDaqReg.errors           <= (23 => checkBound_error, 22 downto 1 => '0', 0 => snMemWPError); -- all unsigned errors set to 0
-    toDaqReg.checkRegA        <= toDaqReg_CheckReg.checkRegA;
-    toDaqReg.checkRegB        <= toDaqReg_CheckReg.checkRegB;
+    toDaqReg.errors           <= (
+        23          => checkBound_error,
+        22 downto 6 => '0',
+        5           => relayConfigError,
+        4           => gainConfigError,
+        3           => snMemWPError,
+        2           => udpTimeoutError,
+        1           => mainsTrigError,
+        0           => or(fifoAdcData_ff) and senseWireMNSDataStrb -- adc fifo overflow
+    ); -- all unsigned errors set to 0
+    toDaqReg.checkRegA <= toDaqReg_CheckReg.checkRegA;
+    toDaqReg.checkRegB <= toDaqReg_CheckReg.checkRegB;
   end process selToDaq;
 
 end STRUCT;
