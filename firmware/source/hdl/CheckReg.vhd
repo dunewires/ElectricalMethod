@@ -73,17 +73,18 @@ s_values   <= fromDaqReg;
 
 res_0 <= ( 31 downto 0 => '1');
 res_1 <= ( 31 downto 0 => '1');
-
-res_0(3)  <= '1' when ((s_values.stimFreqReq <="000000000000001111101000" ) and (s_values.stimFreqReq >="000000000000000000001010" ) ) else '0' ;
-res_0(4)  <= '1' when ((s_values.stimFreqMin < s_values.stimFreqMax) and (s_values.stimFreqMin >= "000000000000000000001010")) else '0' ;
-res_0(5)  <= '1' when ( (s_values.stimFreqMax <= "000000000000001111101000") and (s_values.stimFreqMax > s_values.stimFreqMin)) else '0' ;
+                                                     
+res_0(3)  <= '1' when ((s_values.stimFreqReq <=  x"0003E800") and (s_values.stimFreqReq >=x"00000A00" ) ) else '0' ;
+res_0(4)  <= '1' when ((s_values.stimFreqMin < s_values.stimFreqMax) and (s_values.stimFreqMin >= x"00000A00")) else '0' ;
+res_0(5)  <= '1' when ( (s_values.stimFreqMax <= x"0003E800") and (s_values.stimFreqMax > s_values.stimFreqMin)) else '0' ;
 res_0(6)  <= '1' when ( (s_values.stimFreqStep >= 1) and (s_values.stimFreqStep <= (s_values.stimFreqMax-s_values.stimFreqMin) )  ) else '0' ;
 res_0(10) <= '1' when (s_values.cyclesPerFreq*s_values.adcSamplesPerCycle < 128)  else '0' ;
 res_0(11) <= '1' when (s_values.cyclesPerFreq*s_values.adcSamplesPerCycle < 128)  else '0' ;
 
-if not s_values.mnsDisable then                                                                          
-res_0(25) <= '1' when ( (s_values.noiseFreqMin <= s_values.noiseFreqMax) and (s_values.noiseFreqMin >= s_values.stimFreqMin)  ) else '0' ;
-res_0(26) <= '1' when ( (s_values.noiseFreqMax <= s_values.stimFreqMax)  and (s_values.noiseFreqMax >= s_values.noiseFreqMin) )  else '0' ;
+
+if not s_values.mnsDisable then                                                                                                                                                
+res_0(25) <= '1' when ( (s_values.noiseFreqMin <= s_values.noiseFreqMax) and (s_values.noiseFreqMin >= "000000000010100000000000")  ) else '0' ;
+res_0(26) <= '1' when ( (s_values.noiseFreqMax <= "000000000100011000000000")  and (s_values.noiseFreqMax >= s_values.noiseFreqMin) )  else '0' ;
 res_0(27) <= '1' when  (s_values.noiseFreqStep <= (s_values.noiseFreqMax -s_values.NoiseFreqMin))  else '0' ;
 
 if ( ( (s_values.noiseFreqMax-s_values.noiseFreqMin)/s_values.noiseFreqStep) > 32 ) then 
@@ -91,6 +92,7 @@ res_0(25)<='0';
 res_0(26)<='0';
 res_0(27)<='0';
 end if;
+
 
 
 end if;

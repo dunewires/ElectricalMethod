@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Mar 29 15:27:04 2022
+-- Last update : Fri Apr  1 19:27:29 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -250,9 +250,9 @@ begin
             x"EEEE" & std_logic_vector(to_unsigned(nHeadE-2, 16)),
             x"61" & x"0000" & "000" & statusTrigLatch,
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
-            x"63" & statusDataSticky.errors,
-            x"64" & x"00000" & statusDataSticky.pButton,
-            x"65" & x"00000" & "000" & statusDataSticky.disableHV,
+            x"63" & statusDataLatch.errors,
+            x"64" & x"00000" & statusDataLatch.pButton,
+            x"65" & x"00000" & "000" & statusDataLatch.disableHV,
             x"EEEEEEEE"
     );
 

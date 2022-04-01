@@ -239,13 +239,13 @@ begin
 
 			if checkRegEq then
 				checkBus : for srb_i in 1 downto 0 loop
-					regDiff(srb_i)     <= '1' when toDaqReg.relayBusTop(srb_i) = fromDaqReg.relayBusTop(srb_i) else '0' ;
-					regDiff(srb_i + 2) <= '1' when toDaqReg.relayBusBot(srb_i) = fromDaqReg.relayBusBot(srb_i) else '0' ;
+					regDiff(srb_i)     <= '0' when toDaqReg.relayBusTop(srb_i) = fromDaqReg.relayBusTop(srb_i) else '1' ;
+					regDiff(srb_i + 2) <= '0' when toDaqReg.relayBusBot(srb_i) = fromDaqReg.relayBusBot(srb_i) else '1' ;
 				end loop checkBus;
 
 				checkWire : for srw_i in 3 downto 0 loop
-					regDiff(srw_i + 4) <= '1' when toDaqReg.relayWireTop(srw_i) = fromDaqReg.relayWireTop(srw_i) else '0' ;
-					regDiff(srw_i + 8) <= '1' when toDaqReg.relayWireBot(srw_i) = fromDaqReg.relayWireBot(srw_i) else '0' ;
+					regDiff(srw_i + 4) <= '0' when toDaqReg.relayWireTop(srw_i) = fromDaqReg.relayWireTop(srw_i) else '1' ;
+					regDiff(srw_i + 8) <= '0' when toDaqReg.relayWireBot(srw_i) = fromDaqReg.relayWireBot(srw_i) else '1' ;
 				end loop checkWire;
 			end if;
 		end if;
