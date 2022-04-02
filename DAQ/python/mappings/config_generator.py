@@ -222,6 +222,8 @@ def configure_noise_subtraction(stim_freq_min, stim_freq_max, *,
     NOISE_MIN = 40
     NOISE_MAX = 70
 
+    disable_noise_subtraction = False
+
     if stim_freq_min < NOISE_MAX and stim_freq_max > NOISE_MIN:
         if noise_freq_min is None:
             if stim_freq_min < NOISE_MIN:
@@ -234,7 +236,9 @@ def configure_noise_subtraction(stim_freq_min, stim_freq_max, *,
             else:
                 noise_freq_max = stim_freq_max
     elif noise_freq_min is None and noise_freq_max is None:
-        noise_freq_min = noise_freq_max = NOISE_MIN
+        noise_freq_min = NOISE_MIN
+        noise_freq_max = NOISE_MAX
+        disable_noise_subtraction = True
     elif noise_freq_min is None:
         noise_freq_min = noise_freq_max
     elif noise_freq_max is None:
@@ -245,12 +249,17 @@ def configure_noise_subtraction(stim_freq_min, stim_freq_max, *,
 
     noise_sampling_period = 1 / ((NOISE_MAX + NOISE_MIN)/2) / noise_samples_per_freq
 
-    return {'noiseFreqMin': format(int(noise_freq_min * unit_factor_freq), '06X'),
-            'noiseFreqMax': format(int(noise_freq_max * unit_factor_freq), '06X'),
-            'noiseFreqStep': format(int(noise_freq_step * unit_factor_freq), '06X'),
-            'noiseSettlingTime': format(int(noise_settling_time * unit_factor_time), '06X'),
-            'noiseAdcSamplesPerFreq': format(noise_samples_per_freq, '02X'),
-            'noiseSamplingPeriod': format(int(noise_sampling_period * unit_factor_period), '06X')}
+    return_dict = {'noiseFreqMin': format(int(noise_freq_min * unit_factor_freq), '06X'),
+                   'noiseFreqMax': format(int(noise_freq_max * unit_factor_freq), '06X'),
+                   'noiseFreqStep': format(int(noise_freq_step * unit_factor_freq), '06X'),
+                   'noiseSettlingTime': format(int(noise_settling_time * unit_factor_time), '06X'),
+                   'noiseAdcSamplesPerFreq': format(noise_samples_per_freq, '02X'),
+                   'noiseSamplingPeriod': format(int(noise_sampling_period * unit_factor_period), '06X')}
+
+    if disable_noise_subtraction:
+        return_dict.update(configure_run_type(noise_subtraction_disable=True))
+
+    return return_dict
 
 
 def configure_default():
