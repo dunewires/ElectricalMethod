@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Tue Mar 29 15:08:27 2022
+-- Last update : Sat Apr  2 13:17:46 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -71,7 +71,8 @@ begin
 		if rising_edge(dwaClk100) then
 			scanAbort <= (scanAbort or fromDaqReg.scanAbort) and freqScanBusy;
 			--the noise scan will 
-			scanDone          <= (freqSet >= fromDaqReg.noiseFreqMax) when noiseReadoutBusy else (freqSet > (fromDaqReg.stimFreqMax + fromDaqReg.stimFreqStep));
+			scanDone          <= (freqSet >= fromDaqReg.noiseFreqMax) when noiseReadoutBusy else 
+			((freqSet+fromDaqReg.stimFreqStep) > fromDaqReg.stimFreqMax); -- we are done if the next step will put us above freq max
 			toDaqReg.ctrlBusy <= true;
 			ctrlStart_del     <= fromDaqReg.ctrlStart;
 			adcBusy_del       <= adcBusy;
