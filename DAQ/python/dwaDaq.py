@@ -1,14 +1,14 @@
 # Continuity scan parameters
 #In hexadecimal (copied from a config file):
 #stimFreqMin = 006400
-#stimFreqMax = 03B600
+#stimFreqMax = 03E800
 #stimFreqStep = 003200
 #stimTime = 010000
 #stimMag = 200
 #
 #Which correspond to in decimal:
 #Freq min: 100 Hz
-#Freq max: 950 Hz
+#Freq max: 1000 Hz
 #Freq step: 50 Hz
 #Stimulus time: 0.16777216 s
 #Stimulus magnitude: 512 mV
@@ -288,10 +288,10 @@ PLOT_UPDATE_TIME_SEC = 0.5
 
 CONTINUITY_SCAN_PARAMS_DEFAULT = {
     'stimFreqMin':100.0,  # Hz
-    'stimFreqMax':950.0,  # Hz
+    'stimFreqMax':1000.0,  # Hz
     'stimFreqStep':50.0,  # Hz
-    'stimTime':0.166666,  # s
-    'stimMag':0.512       # V
+    'stimTime':0.16777216,  # s
+    'stimMag':512       # mV
 }
 
 # Attempt to display logged events in a text window in the GUI
