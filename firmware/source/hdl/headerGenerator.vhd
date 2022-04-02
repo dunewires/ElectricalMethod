@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Sat Apr  2 12:32:16 2022
+-- Last update : Sat Apr  2 15:32:34 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -63,10 +63,10 @@ entity headerGenerator is
 
         -- For ADC data access
 
-        wr_data_count    : in slv_vector_type(7 downto 0)(12 downto 0);
-        adcDataRdy : in  std_logic_vector(7 downto 0);
-        adcDataRen : out std_logic_vector(7 downto 0) := (others => '0');
-        adcData    : in  slv_vector_type(7 downto 0)(31 downto 0);
+        wr_data_count : in  slv_vector_type(7 downto 0)(12 downto 0);
+        adcDataRdy    : in  std_logic_vector(7 downto 0);
+        adcDataRen    : out std_logic_vector(7 downto 0) := (others => '0');
+        adcData       : in  slv_vector_type(7 downto 0)(31 downto 0);
 
         udpTimeoutError : out std_logic := '0';
         dwaClk100       : in  std_logic -- := '0'
@@ -187,11 +187,11 @@ begin
             x"77" & x"00000" & "000" & BOOL2SL(freqScanBusy),
             x"00" & std_logic_vector(runOdometer),
             x"01" & std_logic_vector(fromDaqReg.serNumLocal),
-            x"02" & std_logic_vector(fromDaqReg.dateCode(47 downto 24)),         --24MSb
-            x"03" & std_logic_vector(fromDaqReg.dateCode(23 downto 0)),          --24LSb
+            x"02" & std_logic_vector(fromDaqReg.dateCode(47 downto 24)),          --24MSb
+            x"03" & std_logic_vector(fromDaqReg.dateCode(23 downto 0)),           --24LSb
             x"04" & x"000" & std_logic_vector(fromDaqReg.hashCode(27 downto 16)), --12MSb
-            x"05" & x"00" & std_logic_vector(fromDaqReg.hashCode(15 downto 0)),  --16LSb
-                                                                                 --x"20" & std_logic_vector(fromDaqReg.dwaCtrl),
+            x"05" & x"00" & std_logic_vector(fromDaqReg.hashCode(15 downto 0)),   --16LSb
+                                                                                  --x"20" & std_logic_vector(fromDaqReg.dwaCtrl),
             x"21" & std_logic_vector(fromDaqReg.fixedPeriod),
             -- fixme: should be period...
             x"22" & std_logic_vector(fromDaqReg.stimFreqMin),
@@ -244,7 +244,7 @@ begin
             x"52" & x"00" & "0" & std_logic_vector(stimPeriodActive_reg(30 downto 16)),
             x"53" & x"00" & std_logic_vector(stimPeriodActive_reg(15 downto 0)),
             x"CCCCCCCC",
-            x"DDDD" & "000" & wr_data_count(adcIdx)  
+            x"DDDD" & "000" & wr_data_count(adcIdx)
     );
 
     --STATUS Header
@@ -466,7 +466,7 @@ begin
 
     begin
         if rising_edge(dwaClk100) then
-            statusBusy_del    <= statusBusy;
+            statusBusy_del <= statusBusy;
             --trigger on going to and from idle state / initial stimulus wait state
             testState := (fromDaqReg.ctrlStateDbg = x"0") or (fromDaqReg.ctrlStateDbg = x"3");
 
@@ -505,7 +505,11 @@ begin
 
                 statusTimerCnt <= x"00000001";
             else
-                statusTrigSticky        <= statusTrigSticky or statusTrig;                    -- accumulate triggers until they can be sent
+                -- accumulate triggers until they can be sent
+                statusTrigSticky(statusTrigSticky'left downto 1) <= statusTrigSticky(statusTrigSticky'left downto 1) or statusTrig(statusTrigSticky'left downto 1);
+                -- remove the stickiness of the timeout to remove the double trigger caused by a clearing status timer counter
+                statusTrigSticky(0) <= statusTrig(0);
+                -- accumulate triggers until they can be sent
                 statusDataSticky.errors <= statusDataDelay.errors or statusDataSticky.errors; -- accumulate errors until they can be sent
 
                 if not statusTimeout then -- keep from overflowing counter while we wait to send packet.
