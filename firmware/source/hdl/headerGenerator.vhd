@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Fri Apr  1 19:27:29 2022
+-- Last update : Fri Apr  1 21:19:06 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -187,7 +187,7 @@ begin
             x"01" & std_logic_vector(fromDaqReg.serNumLocal),
             x"02" & std_logic_vector(fromDaqReg.dateCode(47 downto 24)),         --24MSb
             x"03" & std_logic_vector(fromDaqReg.dateCode(23 downto 0)),          --24LSb
-            x"04" & x"00" & std_logic_vector(fromDaqReg.hashCode(31 downto 16)), --16MSb
+            x"04" & x"000" & std_logic_vector(fromDaqReg.hashCode(27 downto 16)), --12MSb
             x"05" & x"00" & std_logic_vector(fromDaqReg.hashCode(15 downto 0)),  --16LSb
                                                                                  --x"20" & std_logic_vector(fromDaqReg.dwaCtrl),
             x"21" & std_logic_vector(fromDaqReg.fixedPeriod),

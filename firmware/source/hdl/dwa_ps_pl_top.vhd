@@ -17,7 +17,7 @@ use duneDwa.global_def.all;
 entity dwa_ps_pl_top is
     generic (
         dateCode : std_logic_vector(47 downto 0);
-        hashCode : std_logic_vector(31 downto 0)
+        hashCode : std_logic_vector(27 downto 0)
     );
 
     port (
