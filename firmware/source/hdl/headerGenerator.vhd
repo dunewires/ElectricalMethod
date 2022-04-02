@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Fri Apr  1 21:19:06 2022
+-- Last update : Sat Apr  2 12:32:16 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -62,6 +62,8 @@ entity headerGenerator is
         adcSamplingPeriod : in unsigned(23 downto 0);
 
         -- For ADC data access
+
+        wr_data_count    : in slv_vector_type(7 downto 0)(12 downto 0);
         adcDataRdy : in  std_logic_vector(7 downto 0);
         adcDataRen : out std_logic_vector(7 downto 0) := (others => '0');
         adcData    : in  slv_vector_type(7 downto 0)(31 downto 0);
@@ -242,7 +244,7 @@ begin
             x"52" & x"00" & "0" & std_logic_vector(stimPeriodActive_reg(30 downto 16)),
             x"53" & x"00" & std_logic_vector(stimPeriodActive_reg(15 downto 0)),
             x"CCCCCCCC",
-            x"DDDD" & x"5151" -- FIXME: this shoould be in the genDFrame_s...
+            x"DDDD" & "000" & wr_data_count(adcIdx)  
     );
 
     --STATUS Header
