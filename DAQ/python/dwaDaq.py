@@ -777,7 +777,7 @@ class MainWindow(qtw.QMainWindow):
             #print(f"error = {error}")
             if error:
                 color = 'red'
-                label = f'{int(errorString,2)}'
+                label = f'{format(int(errorString,2),"06X")}'
             else:
                 label = 'OK'
                 color = 'green'
