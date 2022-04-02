@@ -1,4 +1,4 @@
--- (c) Copyright 1995-2019 Xilinx, Inc. All rights reserved.
+-- (c) Copyright 1995-2022 Xilinx, Inc. All rights reserved.
 -- 
 -- This file contains confidential and proprietary information
 -- of Xilinx, Inc. and is protected under U.S. and
@@ -47,25 +47,23 @@
 -- DO NOT MODIFY THIS FILE.
 
 -- IP VLNV: xilinx.com:ip:fifo_generator:13.2
--- IP Revision: 3
+-- IP Revision: 5
 
 -- The following code must appear in the VHDL architecture header.
 
 ------------- Begin Cut here for COMPONENT Declaration ------ COMP_TAG
 COMPONENT fifo_autoDatacollection
   PORT (
-    rst : IN STD_LOGIC;
-    wr_clk : IN STD_LOGIC;
-    rd_clk : IN STD_LOGIC;
+    clk : IN STD_LOGIC;
+    srst : IN STD_LOGIC;
     din : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
     wr_en : IN STD_LOGIC;
     rd_en : IN STD_LOGIC;
     dout : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
     full : OUT STD_LOGIC;
     empty : OUT STD_LOGIC;
-    prog_full : OUT STD_LOGIC;
-    wr_rst_busy : OUT STD_LOGIC;
-    rd_rst_busy : OUT STD_LOGIC
+    wr_data_count : OUT STD_LOGIC_VECTOR(12 DOWNTO 0);
+    prog_full : OUT STD_LOGIC
   );
 END COMPONENT;
 -- COMP_TAG_END ------ End COMPONENT Declaration ------------
@@ -76,18 +74,16 @@ END COMPONENT;
 ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
 your_instance_name : fifo_autoDatacollection
   PORT MAP (
-    rst => rst,
-    wr_clk => wr_clk,
-    rd_clk => rd_clk,
+    clk => clk,
+    srst => srst,
     din => din,
     wr_en => wr_en,
     rd_en => rd_en,
     dout => dout,
     full => full,
     empty => empty,
-    prog_full => prog_full,
-    wr_rst_busy => wr_rst_busy,
-    rd_rst_busy => rd_rst_busy
+    wr_data_count => wr_data_count,
+    prog_full => prog_full
   );
 -- INST_TAG_END ------ End INSTANTIATION Template ---------
 
