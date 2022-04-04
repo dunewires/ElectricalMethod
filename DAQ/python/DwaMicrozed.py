@@ -454,9 +454,8 @@ class DwaMicrozed():
 
    
     def digipotData(self, cfgstr):
-        # Config string for even digipots
-        cfgEven = cfgstr[12:14]+cfgstr[ 8:10]+cfgstr[4:6]+cfgstr[0:2]
-        cfgOdd  = cfgstr[14:16]+cfgstr[10:12]+cfgstr[6:8]+cfgstr[2:4]
+        cfgEven  = cfgstr[2:4]+cfgstr[6:8]+cfgstr[10:12]+cfgstr[14:16]
+        cfgOdd = cfgstr[0:2]+cfgstr[4:6]+cfgstr[8:10]+cfgstr[12:14]
         print(f"cfgEven = {cfgEven}")
         print(f"cfgOdd  = {cfgOdd}")
         return [ ['0000000F', cfgEven], # Even digipots
@@ -478,25 +477,25 @@ class DwaMicrozed():
         # Construct the register values for the digipot
         # self._regWrite("F", "0F0F0F0F0F")
         # 
-        # The association between digipots and register is first four channels
-        # on register 0xF and last four channels on 0x10, in decreasing order 
-        # from left to right. In other words, the ordering of the
+        # The association between digipots and register is even channels
+        # (0, 2, 4, 6) on register 0xF and odd channels (1, 3, 5, 7) on
+        # register 0x10. Within a register value, the ordering of the
         # digipots follows 0xDDCCBBAA, where AA is the 8-bit value for
-        # channel 0 or 4, BB for channel 1 or 5, CC for channel 2 or 6 and
-        # DD for channel 3 or 7.
+        # channel 0 or 1, BB for channel 2 or 3, CC for channel 4 or 5 and
+        # DD for channel 6 or 7.
 
         print("Setting Digipots")
 
         self._tcpOpen(sleep=self.sleepPostOpen)
         
-        cfgLow = cfgstr[8:]
-        cfgHigh  = cfgstr[:8]
-        print(f"cfgLow = {cfgLow}")
-        print(f"cfgHigh  = {cfgHigh}")
-        # Low-channel digipots
-        self._regWrite('0000000F', cfgLow)
-        # High-channel digipots
-        self._regWrite('00000010', cfgHigh)
+        cfgEven  = cfgstr[2:4]+cfgstr[6:8]+cfgstr[10:12]+cfgstr[14:16]
+        cfgOdd = cfgstr[0:2]+cfgstr[4:6]+cfgstr[8:10]+cfgstr[12:14]
+        print(f"cfgEven = {cfgEven}")
+        print(f"cfgOdd  = {cfgOdd}")
+        # Even digipots
+        self._regWrite('0000000F', cfgEven)
+        # Odd digipots
+        self._regWrite('00000010', cfgOdd)
         time.sleep(self.sleepPostWrite)
 
         self._tcpClose()
