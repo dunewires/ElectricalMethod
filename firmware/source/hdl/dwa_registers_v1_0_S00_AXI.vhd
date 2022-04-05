@@ -273,58 +273,65 @@ begin
 			fromDaqReg.serNumMemAddrStrb <= '0';
 			-- reg0 moved here so it is not sticky 
 			-- used for any pulsed signals e.g. reset & start
+			slv_reg0 <= (others => '0');zzz
+			if rising_edge(S_AXI_ACLK) then
+			--default
+			fromDaqReg.serNumMemWrite    <= '0';
+			fromDaqReg.serNumMemAddrStrb <= '0';
+			-- reg0 moved here so it is not sticky
+			-- used for any pulsed signals e.g. reset & start
 			slv_reg0 <= (others => '0');
 			if S_AXI_ARESETN = '0' then
-				-- set default register values
-				slv_reg1  <= x"00000003"; --MNS enabled, auto enabled
-				slv_reg2  <= (others => '0');
-				slv_reg3  <= (others => '0');
-				slv_reg4  <= (others => '0');
-				slv_reg5  <= (others => '0');
-				slv_reg6  <= (others => '0');
-				slv_reg7  <= (others => '0');
-				slv_reg8  <= (others => '0');
-				slv_reg9  <= (others => '0');
-				slv_reg10 <= (others => '0');
-				slv_reg11 <= (others => '0');
-				slv_reg12 <= (others => '0');
-				slv_reg13 <= (others => '0');
-				slv_reg14 <= (others => '0');
-				slv_reg15 <= (others => '0');
-				slv_reg16 <= (others => '0');
-				slv_reg17 <= (others => '0');
-				slv_reg18 <= (others => '0');
-				slv_reg19 <= (others => '0');
-				slv_reg20 <= (others => '0');
-				slv_reg21 <= (others => '0');
-				slv_reg22 <= (others => '0');
-				slv_reg23 <= (others => '0');
-				slv_reg24 <= (others => '0');
-				slv_reg25 <= x"00000370"; --		noiseFreqMin   
-				slv_reg26 <= x"00000410"; --		noiseFreqMax 
-				slv_reg27 <= x"00000010"; --		noiseFreqStep  1 Hz
-				slv_reg28 <= x"0000CB73"; --		noiseSampPer   32 samp / cycle @ 60 Hz
-				slv_reg29 <= x"00000100"; --		noiseNCnv       256 total samples
-				slv_reg30 <= x"00001000";       -- ~10ms?
-				slv_reg31 <= (others => '0');
-				slv_reg32 <= (others => '0');
-				slv_reg33 <= (others => '0');
-				slv_reg34 <= (others => '0');
-				slv_reg35 <= (others => '0');
-				slv_reg36 <= (others => '0');
-				slv_reg37 <= (others => '0');
-				slv_reg38 <= (others => '0');
-				slv_reg39 <= (others => '0');
-				slv_reg40 <= (others => '0');
-				slv_reg41 <= (others => '0');
-				slv_reg42 <= (others => '0');
-				slv_reg43 <= (others => '0');
-				slv_reg44 <= (others => '0');
-				slv_reg49 <= x"00000800";
-				slv_reg50 <= x"BADDBEEF";
-				slv_reg53 <= x"00000000"; -- 00000000 = power up off, 0005F5E1 = 1 sec
-				slv_reg54 <= x"00B2D05E"; -- 30 SEC
-				slv_reg55 <= (others => '0');
+			-- set default register values
+			slv_reg1  <= x"00000003"; --MNS enabled, auto enabled
+			slv_reg2  <= (others => '0');
+			slv_reg3  <= x"00000A00"; -- stimFreqReq
+			slv_reg4  <= x"00000A00"; -- stimFreqMin
+			slv_reg5  <= x"0003E800"; -- stimFreqMax
+			slv_reg6  <= x"00000001"; -- stimFreqStep
+			slv_reg7  <= (others => '0');
+			slv_reg8  <= (others => '0');
+			slv_reg9  <= (others => '0');
+			slv_reg10 <=  x"00000001"; -- cyclesPerFreq
+			slv_reg11 <=  x"00000001"; -- adcSamplesPerCycle
+			slv_reg12 <= (others => '0');
+			slv_reg13 <= (others => '0');
+			slv_reg14 <= (others => '0');
+			slv_reg15 <= (others => '0');
+			slv_reg16 <= (others => '0');
+			slv_reg17 <= (others => '0');
+			slv_reg18 <= (others => '0');
+			slv_reg19 <= (others => '0');
+			slv_reg20 <= (others => '0');
+			slv_reg21 <= (others => '0');
+			slv_reg22 <= (others => '0');
+			slv_reg23 <= (others => '0');
+			slv_reg24 <= (others => '0');
+			slv_reg25 <= x"00000029"; -- noiseFreqMin  
+			slv_reg26 <= x"00000045"; -- noiseFreqMax
+			slv_reg27 <= x"00000001"; -- noiseFreqStep  1 Hz
+			slv_reg28 <= x"0000CB73"; -- noiseSampPer   32 samp / cycle @ 60 Hz
+			slv_reg29 <= x"00000100"; -- noiseNCnv       256 total samples
+			slv_reg30 <= x"00001000";       -- ~10ms?
+			slv_reg32 <= (others => '0');
+			slv_reg33 <= (others => '0');
+			slv_reg34 <= (others => '0');
+			slv_reg35 <= (others => '0');
+			slv_reg36 <= (others => '0');
+			slv_reg37 <= (others => '0');
+			slv_reg38 <= (others => '0');
+			slv_reg39 <= (others => '0');
+			slv_reg40 <= (others => '0');
+			slv_reg41 <= (others => '0');
+			slv_reg42 <= (others => '0');
+			slv_reg43 <= (others => '0');
+			slv_reg44 <= (others => '0');
+			slv_reg49 <= x"00000800";
+			slv_reg50 <= x"BADDBEEF";
+			slv_reg53 <= x"00000000"; -- 00000000 = power up off, 0005F5E1 = 1 sec
+			slv_reg54 <= x"00B2D05E"; -- 30 SEC
+			slv_reg55 <= (others => '0');
+			slv_reg56 <= (others => '0');
 			else
 				loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
 				if (slv_reg_wren = '1') then
