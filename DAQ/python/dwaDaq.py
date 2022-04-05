@@ -292,6 +292,7 @@ CONTINUITY_SCAN_PARAMS_DEFAULT = {
     'stimFreqStep':50.0,  # Hz
     'stimTime':0.16777216,  # s
     'stimMag':512       # mV
+#    'stimMag':200 # Hex
 }
 
 # Attempt to display logged events in a text window in the GUI
@@ -745,6 +746,9 @@ class MainWindow(qtw.QMainWindow):
         # Info about current run
         self.stimFreqMin = 0
         self.stimFreqMax = 0
+        self.advStimTimeContLineEdit.setText(f'{CONTINUITY_SCAN_PARAMS_DEFAULT["stimTime"]:10.9f}')
+        self.advStimAmplitudeContLineEdit.setText(f'{CONTINUITY_SCAN_PARAMS_DEFAULT["stimMag"]}')
+        
         #self.dwaControllerState = None
 
         # For loading saved A(f) data
@@ -2410,6 +2414,7 @@ class MainWindow(qtw.QMainWindow):
         # TODO: Grab default values if undefined
         if advStimTime: advStimTime = float(advStimTime)
         if advInitDelay: advInitDelay = float(advInitDelay)
+        #if advStimAmplitude: advStimAmplitude = '{int(advStimAmplitude):03X}'
         if advStimAmplitude: advStimAmplitude = int(advStimAmplitude)
         if advDigipotAmplitude: advDigipotAmplitude = int(advDigipotAmplitude)
 
