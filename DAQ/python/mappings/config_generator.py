@@ -60,7 +60,7 @@ def configure_gains(stim_freq_max: int, *,
         digipot_config <<= 8
         digipot_config |= digipot_config_single
 
-    return {'stimMag': format(0xB00 if stim_mag is None else stim_mag, '03X'),
+    return {'stimMag': format(0x800 if stim_mag is None else stim_mag, '03X'),
             'digipot': format(digipot_config if digipot is None else digipot, '016X')}
 
 
@@ -270,7 +270,7 @@ def configure_default():
     configs.update(configure_fixed_frequency())
     configs.update(configure_scan_frequencies(stim_freq_min=99, stim_freq_max=100))
     configs.update(configure_wait_times())
-    configs.update(configure_gains(stim_freq_max=100, stim_mag=0xBB8, digipot=0x4444444444444444))
+    configs.update(configure_gains(stim_freq_max=100, stim_mag=0x800, digipot=0x4444444444444444))
     configs.update(configure_sampling())
     configs.update(configure_relays(wire_layer='X', apa_channels=[]))
     configs.update(configure_noise_subtraction(stim_freq_min=99, stim_freq_max=100))
