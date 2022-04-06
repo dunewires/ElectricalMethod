@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu Sep 24 17:35:18 2020
--- Last update : Thu Feb 17 09:36:49 2022
+-- Last update : Tue Mar 29 15:16:23 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -131,7 +131,8 @@ begin
     begin
         if rising_edge(dwaClk100) then
             --default
-            freqInRange          <= (freqSet >= fromDaqReg.noiseFreqMin) and (freqSet < fromDaqReg.noiseFreqMax);
+            freqInRange          <= (freqSet >= fromDaqReg.noiseFreqMin) and (freqSet < fromDaqReg.noiseFreqMax) and
+                                       not fromDaqReg.mnsDisable ; -- if not enabled, treat as out of range
             senseWireMNSDataStrb <= '0';
             memWea               <= '0';
             -- shifting freqSet by 7 will give a x128 interpolation, 6 bits for 64 individual frequencies

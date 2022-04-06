@@ -1,4 +1,4 @@
-// (c) Copyright 1995-2019 Xilinx, Inc. All rights reserved.
+// (c) Copyright 1995-2022 Xilinx, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
@@ -47,7 +47,7 @@
 // DO NOT MODIFY THIS FILE.
 
 // IP VLNV: xilinx.com:ip:fifo_generator:13.2
-// IP Revision: 3
+// IP Revision: 5
 
 // The following must be inserted into your Verilog file for this
 // core to be instantiated. Change the instance name and port connections
@@ -55,18 +55,16 @@
 
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
 fifo_autoDatacollection your_instance_name (
-  .rst(rst),                  // input wire rst
-  .wr_clk(wr_clk),            // input wire wr_clk
-  .rd_clk(rd_clk),            // input wire rd_clk
-  .din(din),                  // input wire [15 : 0] din
-  .wr_en(wr_en),              // input wire wr_en
-  .rd_en(rd_en),              // input wire rd_en
-  .dout(dout),                // output wire [31 : 0] dout
-  .full(full),                // output wire full
-  .empty(empty),              // output wire empty
-  .prog_full(prog_full),      // output wire prog_full
-  .wr_rst_busy(wr_rst_busy),  // output wire wr_rst_busy
-  .rd_rst_busy(rd_rst_busy)  // output wire rd_rst_busy
+  .clk(clk),                      // input wire clk
+  .srst(srst),                    // input wire srst
+  .din(din),                      // input wire [15 : 0] din
+  .wr_en(wr_en),                  // input wire wr_en
+  .rd_en(rd_en),                  // input wire rd_en
+  .dout(dout),                    // output wire [31 : 0] dout
+  .full(full),                    // output wire full
+  .empty(empty),                  // output wire empty
+  .wr_data_count(wr_data_count),  // output wire [12 : 0] wr_data_count
+  .prog_full(prog_full)          // output wire prog_full
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 

@@ -1,14 +1,14 @@
 # Continuity scan parameters
 #In hexadecimal (copied from a config file):
 #stimFreqMin = 006400
-#stimFreqMax = 03B600
+#stimFreqMax = 03E800
 #stimFreqStep = 003200
 #stimTime = 010000
 #stimMag = 200
 #
 #Which correspond to in decimal:
 #Freq min: 100 Hz
-#Freq max: 950 Hz
+#Freq max: 1000 Hz
 #Freq step: 50 Hz
 #Stimulus time: 0.16777216 s
 #Stimulus magnitude: 512 mV
@@ -288,10 +288,11 @@ PLOT_UPDATE_TIME_SEC = 0.5
 
 CONTINUITY_SCAN_PARAMS_DEFAULT = {
     'stimFreqMin':100.0,  # Hz
-    'stimFreqMax':950.0,  # Hz
+    'stimFreqMax':1000.0,  # Hz
     'stimFreqStep':50.0,  # Hz
-    'stimTime':0.166666,  # s
-    'stimMag':0.512       # V
+    'stimTime':0.16777216,  # s
+    'stimMag':512       # mV
+#    'stimMag':200 # Hex
 }
 
 # Attempt to display logged events in a text window in the GUI
@@ -745,6 +746,9 @@ class MainWindow(qtw.QMainWindow):
         # Info about current run
         self.stimFreqMin = 0
         self.stimFreqMax = 0
+        self.advStimTimeContLineEdit.setText(f'{CONTINUITY_SCAN_PARAMS_DEFAULT["stimTime"]:10.9f}')
+        self.advStimAmplitudeContLineEdit.setText(f'{CONTINUITY_SCAN_PARAMS_DEFAULT["stimMag"]}')
+        
         #self.dwaControllerState = None
 
         # For loading saved A(f) data
@@ -777,7 +781,7 @@ class MainWindow(qtw.QMainWindow):
             #print(f"error = {error}")
             if error:
                 color = 'red'
-                label = f'{int(errorString,2)}'
+                label = f'{format(int(errorString,2),"06X")}'
             else:
                 label = 'OK'
                 color = 'green'
@@ -2410,6 +2414,7 @@ class MainWindow(qtw.QMainWindow):
         # TODO: Grab default values if undefined
         if advStimTime: advStimTime = float(advStimTime)
         if advInitDelay: advInitDelay = float(advInitDelay)
+        #if advStimAmplitude: advStimAmplitude = '{int(advStimAmplitude):03X}'
         if advStimAmplitude: advStimAmplitude = int(advStimAmplitude)
         if advDigipotAmplitude: advDigipotAmplitude = int(advDigipotAmplitude)
 

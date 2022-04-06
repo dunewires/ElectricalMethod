@@ -6,7 +6,7 @@
 -- Author      : Nathan Felt felt@fas.harvard.edu
 -- Company     : Harvard University LPPC
 -- Created     : Thu Sep  2 17:08:18 2021
--- Last update : Fri Jan 21 09:33:28 2022
+-- Last update : Tue Mar 29 15:14:15 2022
 -- Platform    : Dune DWA MicroZed
 -- Standard    : VHDL-2008
 --------------------------------------------------------------------------------
@@ -31,6 +31,7 @@ entity triggerMains is
     mainsTrig           : out std_logic;
     mainsTrigTimerLatch : out unsigned(31 downto 0) := (others => '0');
 
+    mainsTrigError           : out std_logic;
     dwaClk100 : in std_logic
 
   );
@@ -44,8 +45,11 @@ architecture behav of triggerMains is
   signal stimFreqReqOffset                  : unsigned(6 downto 0)  := (others => '0');
   signal mainsTrigStart                     : std_logic             := '0';
   signal mainsTrigTimer                     : unsigned(31 downto 0) := (others => '0');
-begin
 
+  signal watchdogTimer                      : unsigned(23 downto 0) := (others => '0');
+  signal startupDone                        : std_logic             := '0';
+begin
+  -- consider changing to a digital PLL type trigger lock
   trigGen : process (dwaClk100)
   begin
     if rising_edge(dwaClk100) then
@@ -92,4 +96,22 @@ begin
       end if;
     end if;
   end process;
+
+    watchdog : process (dwaClk100)
+  begin
+    if rising_edge(dwaClk100) then
+      if mainsTrigStart then
+        -- supress first trigger bc it will look like a trigger
+        startupDone <= '1';
+        -- chack that frequency is < 70Hz
+        mainsTrigError <= startupDone when watchdogTimer < x"15CC56" else '0'; 
+        watchdogTimer  <= (others => '0');
+      else
+        -- check for a frequency > 40Hz
+        mainsTrigError <= startupDone when watchdogTimer > x"2625A0" else '0'; 
+        watchdogTimer <=  watchdogTimer +1;
+      end if;
+    end if;
+  end process;
+
 end architecture behav;

@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Fri Feb 18 12:11:33 2022
+-- Last update : Sat Apr  2 15:32:34 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -62,11 +62,14 @@ entity headerGenerator is
         adcSamplingPeriod : in unsigned(23 downto 0);
 
         -- For ADC data access
-        adcDataRdy : in  std_logic_vector(7 downto 0);
-        adcDataRen : out std_logic_vector(7 downto 0) := (others => '0');
-        adcData    : in  slv_vector_type(7 downto 0)(31 downto 0);
 
-        dwaClk100 : in std_logic -- := '0'
+        wr_data_count : in  slv_vector_type(7 downto 0)(12 downto 0);
+        adcDataRdy    : in  std_logic_vector(7 downto 0);
+        adcDataRen    : out std_logic_vector(7 downto 0) := (others => '0');
+        adcData       : in  slv_vector_type(7 downto 0)(31 downto 0);
+
+        udpTimeoutError : out std_logic := '0';
+        dwaClk100       : in  std_logic -- := '0'
     );
 
 end entity headerGenerator;
@@ -122,7 +125,6 @@ architecture rtl of headerGenerator is
     signal udpDataRdy_reg  : boolean := false;
     signal udpDataRdy_next : boolean := false;
 
-    signal watchdogReset    : boolean               := false;
     signal watchdogSleep    : boolean               := false;
     signal watchdogTimerCnt : unsigned(31 downto 0) := (others => '0');
 
@@ -133,17 +135,16 @@ architecture rtl of headerGenerator is
         tState    : boolean;
     end record;
 
-    signal statusDataSticky,statusDataLatch : statusData_type := (
+    signal statusDataSticky,statusDataLatch,statusDataDelay : statusData_type := (
             disableHV => ('0'),
             errors    => (others => '0'),
             pButton   => (others => '0'),
             tState    => false);
-    signal sendStatus                 : boolean := false;
-    signal statusBusy, statusBusy_del : boolean := false;
-    signal statusTimeout              : boolean := false;
-    signal statusTrigLatch            : std_logic_vector(4 downto 0);
-    signal statusTimerCnt             : unsigned(31 downto 0) := (others => '0');
-    signal acStim_enable_del          : std_logic             := '0';
+    signal sendStatus                       : boolean := false;
+    signal statusBusy, statusBusy_del       : boolean := false;
+    signal statusTimeout                    : boolean := false;
+    signal statusTrigLatch,statusTrigSticky : std_logic_vector(4 downto 0);
+    signal statusTimerCnt                   : unsigned(31 downto 0) := (others => '0');
 
     signal adcRegNum         : unsigned(3 downto 0)  := (others => '0');
     signal adcSamplesPerFreq : unsigned(39 downto 0) := (others => '0');
@@ -186,11 +187,11 @@ begin
             x"77" & x"00000" & "000" & BOOL2SL(freqScanBusy),
             x"00" & std_logic_vector(runOdometer),
             x"01" & std_logic_vector(fromDaqReg.serNumLocal),
-            x"02" & std_logic_vector(fromDaqReg.dateCode(47 downto 24)),         --24MSb
-            x"03" & std_logic_vector(fromDaqReg.dateCode(23 downto 0)),          --24LSb
-            x"04" & x"00" & std_logic_vector(fromDaqReg.hashCode(31 downto 16)), --16MSb
-            x"05" & x"00" & std_logic_vector(fromDaqReg.hashCode(15 downto 0)),  --16LSb
-                                                                                 --x"20" & std_logic_vector(fromDaqReg.dwaCtrl),
+            x"02" & std_logic_vector(fromDaqReg.dateCode(47 downto 24)),          --24MSb
+            x"03" & std_logic_vector(fromDaqReg.dateCode(23 downto 0)),           --24LSb
+            x"04" & x"00" & std_logic_vector(fromDaqReg.hashCode(31 downto 16)),  --16MSb
+            x"05" & x"00" & std_logic_vector(fromDaqReg.hashCode(15 downto 0)),   --16LSb
+                                                                                  --x"20" & std_logic_vector(fromDaqReg.dwaCtrl),
             x"21" & std_logic_vector(fromDaqReg.fixedPeriod),
             -- fixme: should be period...
             x"22" & std_logic_vector(fromDaqReg.stimFreqMin),
@@ -207,10 +208,10 @@ begin
             x"2D" & x"0000" & fromDaqReg.activeChannels,
             x"2E" & x"00" & fromDaqReg.relayMask(31 downto 16),
             x"2F" & x"00" & fromDaqReg.relayMask(15 downto 0),
-            x"30" & x"00" & fromDaqReg.senseWireGain(0) & fromDaqReg.senseWireGain(1),
-            x"31" & x"00" & fromDaqReg.senseWireGain(2) & fromDaqReg.senseWireGain(3),
-            x"32" & x"00" & fromDaqReg.senseWireGain(4) & fromDaqReg.senseWireGain(5),
-            x"33" & x"00" & fromDaqReg.senseWireGain(6) & fromDaqReg.senseWireGain(7),
+            x"30" & x"00" & fromDaqReg.senseWireGain(7) & fromDaqReg.senseWireGain(3),
+            x"31" & x"00" & fromDaqReg.senseWireGain(6) & fromDaqReg.senseWireGain(2),
+            x"32" & x"00" & fromDaqReg.senseWireGain(5) & fromDaqReg.senseWireGain(1),
+            x"33" & x"00" & fromDaqReg.senseWireGain(4) & fromDaqReg.senseWireGain(0),
             x"34" & std_logic_vector(fromDaqReg.noiseFreqMin),
             x"35" & std_logic_vector(fromDaqReg.noiseFreqMax),
             x"36" & std_logic_vector(fromDaqReg.noiseFreqStep),
@@ -243,7 +244,7 @@ begin
             x"52" & x"00" & "0" & std_logic_vector(stimPeriodActive_reg(30 downto 16)),
             x"53" & x"00" & std_logic_vector(stimPeriodActive_reg(15 downto 0)),
             x"CCCCCCCC",
-            x"DDDD" & x"5151" -- FIXME: this shoould be in the genDFrame_s...
+            x"DDDD" & "000" & wr_data_count(adcIdx)
     );
 
     --STATUS Header
@@ -251,9 +252,9 @@ begin
             x"EEEE" & std_logic_vector(to_unsigned(nHeadE-2, 16)),
             x"61" & x"0000" & "000" & statusTrigLatch,
             x"62" & x"00000" & std_logic_vector(fromDaqReg.ctrlStateDbg),
-            x"63" & statusDataSticky.errors,
-            x"64" & x"00000" & statusDataSticky.pButton,
-            x"65" & x"00000" & "000" & statusDataSticky.disableHV,
+            x"63" & statusDataLatch.errors,
+            x"64" & x"00000" & statusDataLatch.pButton,
+            x"65" & x"00000" & "000" & statusDataLatch.disableHV,
             x"EEEEEEEE"
     );
 
@@ -272,7 +273,7 @@ begin
     state_seq : process (dwaClk100)
     begin
         if rising_edge(dwaClk100) then
-            if fromDaqReg.reset or watchdogReset then
+            if fromDaqReg.reset or udpTimeoutError = '1' then
                 state_reg <= idle_s;
                 --headCnt_reg    <= (others   =>  '0');
                 udpDataRdy_reg <= false;
@@ -460,54 +461,62 @@ begin
 
     statusTiming : process (dwaClk100) -- latch the packet data validated by the sendData strobe
 
-        variable statusErrorsTrig    : boolean := false;
-        variable statusPButtonTrig   : boolean := false;
-        variable statusDisableHVTrig : boolean := false;
-        variable statusTStateTrig    : boolean := false;
-        variable statusDataTrig      : boolean := false;
+        variable statusTrig : std_logic_vector(statusTrigLatch'range);
+        variable testState  : boolean := false;
+
     begin
         if rising_edge(dwaClk100) then
-            statusBusy_del    <= statusBusy;
-            acStim_enable_del <= acStim_enable;
-            --separate the status triggr to be used in status packet.
+            statusBusy_del <= statusBusy;
+            --trigger on going to and from idle state / initial stimulus wait state
+            testState := (fromDaqReg.ctrlStateDbg = x"0") or (fromDaqReg.ctrlStateDbg = x"3");
+
+            -- create an edge finding delayed version of any signal that can produce a trigger
+            statusDataDelay.disableHV <= fromDaqReg.disableHV ;
+            statusDataDelay.errors    <= fromDaqReg.errors;
+            statusDataDelay.pButton   <= pButton;
+            statusDataDelay.tState    <= testState;
+
+            -- All triggers sources are collected in the statusTrig variable
             -- a variable is used here so latched status will reflect trigger status and not the next cluck cycle status.
-            statusDisableHVTrig := statusDataSticky.disableHV /= statusDataLatch.disableHV;
-            statusErrorsTrig    := statusDataSticky.errors /= statusDataLatch.errors;
-            statusPButtonTrig   := statusDataSticky.pButton /= statusDataLatch.pButton;
-            statusTStateTrig    := (statusDataSticky.tState /= statusDataLatch.tState) or
-                (acStim_enable = '1' and acStim_enable_del = '0'); --trigger at start of test
-            statusDataTrig := statusErrorsTrig or statusTStateTrig or statusPButtonTrig;
+            statusTrig(4) := bool2sl(statusDataDelay.disableHV /= fromDaqReg.disableHV);
+            statusTrig(3) := bool2sl(statusDataDelay.errors /= fromDaqReg.errors);
+            statusTrig(2) := bool2sl(statusDataDelay.pButton /= pButton);
+            statusTrig(1) := bool2sl(statusDataDelay.tState /= testState);
+            statusTrig(0) := bool2sl(statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod);
 
-            statusTimeout <= statusTimerCnt(31 downto 8) >= fromDaqReg.statusPeriod;
+            -- on trigger take a snapshot of status until packet is sent
+            if or(statusTrigSticky) = '1' and not sendStatus then
+                sendStatus <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off
 
-            if (statusDataTrig or statusTimeout) and not sendStatus then -- latch data and set senStatus flag, Don't re latch on subsequent triggers, keep sticky for next pkt.
-                sendStatus      <= fromDaqReg.statusPeriod > x"0000000"; --when period is 0, turn off
-                statusDataLatch <= statusDataSticky;
-                statusTrigLatch <= (
-                        4 => bool2sl(statusDisableHVTrig),
-                        3 => bool2sl(statusErrorsTrig),
-                        2 => bool2sl(statusPButtonTrig),
-                        1 => bool2sl(statusTStateTrig),
-                        0 => bool2sl(statusTimeout)
-                );
-                statusDataSticky.disableHV <= fromDaqReg.disableHV ;
-                statusDataSticky.errors    <= fromDaqReg.errors;
-                statusDataSticky.pButton   <= pButton;
-                statusDataSticky.tState    <= fromDaqReg.ctrlStateDbg /= x"0";
+                -- latch sticky data to be sent in status packet
+                -- Latch the sticky register for the errors since we want to report all errors which can be transient
+                -- for the rest we will just latch the current state, any trigger for these signals will still be accumulated and reported
+                statusDataLatch.errors    <= statusDataSticky.errors;
+                statusDataLatch.disableHV <= statusDataDelay.disableHV;
+                statusDataLatch.pButton   <= statusDataDelay.pButton;
+                statusDataLatch.tState    <= statusDataDelay.tState;
+
+                --latch triggers that initiated this packet
+                --Update with current triggers in case there happens to be a transient trigger at this point, it will be reported in the next status pkt
+                statusTrigLatch  <= statusTrigSticky;
+                statusTrigSticky <= statusTrig;
+                -- get timing right, two consecutive errors will produce two independent status packets
+                statusDataSticky.errors <= statusDataDelay.errors;
 
                 statusTimerCnt <= x"00000001";
             else
-                -- triggers are stickey so we don't miss one if busy sending a packet
-                statusDataSticky.disableHV <= fromDaqReg.disableHV or statusDataSticky.disableHV;
-                statusDataSticky.errors    <= fromDaqReg.errors or statusDataSticky.errors;
-                statusDataSticky.pButton   <= pButton or statusDataSticky.pButton;
-                statusDataSticky.tState    <= fromDaqReg.ctrlStateDbg /= x"0";
+                -- accumulate triggers until they can be sent
+                statusTrigSticky(statusTrigSticky'left downto 1) <= statusTrigSticky(statusTrigSticky'left downto 1) or statusTrig(statusTrigSticky'left downto 1);
+                -- remove the stickiness of the timeout to remove the double trigger caused by a clearing status timer counter
+                statusTrigSticky(0) <= statusTrig(0);
+                -- accumulate triggers until they can be sent
+                statusDataSticky.errors <= statusDataDelay.errors or statusDataSticky.errors; -- accumulate errors until they can be sent
 
                 if not statusTimeout then -- keep from overflowing counter while we wait to send packet.
                     statusTimerCnt <= statusTimerCnt+1;
                 end if;
                 -- latch status until statusBusy is done
-                sendStatus <= sendStatus and (not statusBusy_del or statusBusy); --clear request
+                sendStatus <= sendStatus and (not statusBusy_del or statusBusy); --clear request on packet sent
             end if;
 
         end if;
@@ -518,14 +527,14 @@ begin
     begin
         if rising_edge(dwaClk100) then
             -- default
-            watchdogReset <= false; --clear request
+            udpTimeoutError <= '0'; --clear request
 
             if watchdogSleep then
                 watchdogTimerCnt <= x"00000001";
 
             elsif watchdogTimerCnt(31 downto 8) >= fromDaqReg.pktGenWatchdogPeriod then
                 watchdogTimerCnt <= x"00000001";
-                watchdogReset    <= true;
+                udpTimeoutError  <= '1';
 
             else
                 watchdogTimerCnt <= watchdogTimerCnt+1;

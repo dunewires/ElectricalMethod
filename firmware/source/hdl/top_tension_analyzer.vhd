@@ -73,18 +73,16 @@ architecture STRUCT of top_tension_analyzer is
 
   COMPONENT fifo_autoDatacollection
     PORT (
-      rst         : IN  STD_LOGIC;
-      wr_clk      : IN  STD_LOGIC;
-      rd_clk      : IN  STD_LOGIC;
-      din         : IN  STD_LOGIC_VECTOR(15 DOWNTO 0);
-      wr_en       : IN  STD_LOGIC;
-      rd_en       : IN  STD_LOGIC;
-      dout        : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
-      full        : OUT STD_LOGIC;
-      empty       : OUT STD_LOGIC;
-      prog_full   : OUT STD_LOGIC;
-      wr_rst_busy : OUT STD_LOGIC;
-      rd_rst_busy : OUT STD_LOGIC
+      clk           : IN  STD_LOGIC;
+      srst          : IN  STD_LOGIC;
+      din           : IN  STD_LOGIC_VECTOR(15 DOWNTO 0);
+      wr_en         : IN  STD_LOGIC;
+      rd_en         : IN  STD_LOGIC;
+      dout          : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+      full          : OUT STD_LOGIC;
+      empty         : OUT STD_LOGIC;
+      wr_data_count : OUT STD_LOGIC_VECTOR(12 DOWNTO 0);
+      prog_full     : OUT STD_LOGIC
     );
   END COMPONENT;
 
@@ -150,6 +148,7 @@ architecture STRUCT of top_tension_analyzer is
   signal fifoAdcData_ef     : std_logic_vector(7 downto 0)             := (others => '0');
   signal fifoAdcData_pf     : std_logic_vector(7 downto 0)             := (others => '0');
   signal adcAutoDc_af       : std_logic_vector(7 downto 0)             := (others => '0');
+  signal wr_data_count      : SLV_VECTOR_TYPE (7 downto 0)(12 downto 0):= (others => (others => '0'));
 
   signal adcStart : boolean := true;
 
@@ -197,8 +196,12 @@ architecture STRUCT of top_tension_analyzer is
   signal ledDwa              : std_logic_vector(3 downto 0) := (others => '0');
 
   signal vioOut3, vioOut9 : std_logic := '0';
-  
-  signal snMemWPError : std_logic := '0';
+
+  signal relayConfigError : std_logic := '0';
+  signal gainConfigError  : std_logic := '0';
+  signal snMemWPError     : std_logic := '0';
+  signal udpTimeoutError  : std_logic := '0';
+  signal mainsTrigError   : std_logic := '0';
 
   signal
   toDaqReg_headerGenerator,
@@ -443,8 +446,9 @@ begin
 
       sck => CD_SCK,
 
-      dwaClk100 => dwaClk100,
-      dwaClk2   => dwaClk2
+      relayConfigError => relayConfigError,
+      dwaClk100        => dwaClk100,
+      dwaClk2          => dwaClk2
     );
   --gain DPOT
   dpotInterface_inst : entity duneDwa.dpotInterface
@@ -460,7 +464,8 @@ begin
       sck    => dpotSck,
       shdn_b => dpotShdn_b,
 
-      dwaClk2 => dwaClk2
+      gainConfigError => gainConfigError,
+      dwaClk2         => dwaClk2
     );
 
   -- trigger on  supply mains
@@ -473,7 +478,8 @@ begin
       mainsTrig           => mainsTrig,
       mainsTrigTimerLatch => mainsTrigTimerLatch,
 
-      dwaClk100 => dwaClk100
+      mainsTrigError => mainsTrigError,
+      dwaClk100      => dwaClk100
 
     );
 
@@ -589,23 +595,19 @@ begin
     -- store data for AXI read
     fifoAdcData_ch : fifo_autoDatacollection
       PORT MAP (
-        rst    => bool2Sl(fromDaqReg.reset),
-        wr_clk => dwaClk100,
-        rd_clk => dwaClk100,
-        din    => '0' & std_logic_vector(senseWireMNSData(adc_i)),
-        wr_en  => senseWireMNSDataStrb,
-
-        rd_en => fifoAdcData_ren(adc_i),
-        -- MNS eval
-        --rd_en => bool2sl(not noiseReadoutBusy),
+        clk  => dwaClk100,
+        srst => bool2Sl(fromDaqReg.reset),
+        din  => '0' & std_logic_vector(senseWireMNSData(adc_i)),
+        wr_en => senseWireMNSDataStrb,
+        
         dout => adcData(adc_i),
+        rd_en => fifoAdcData_ren(adc_i),
 
         -- ADC full bits are the second set of 8 bits
-        full        => fifoAdcData_ff(adc_i),
-        empty       => fifoAdcData_ef(adc_i),
-        prog_full   => fifoAdcData_pf(adc_i),
-        wr_rst_busy => open,
-        rd_rst_busy => open
+        full          => fifoAdcData_ff(adc_i),
+        empty         => fifoAdcData_ef(adc_i),
+        wr_data_count => wr_data_count(adc_i),
+        prog_full     => fifoAdcData_pf(adc_i)
       );
 
   end generate adcFifoGen;
@@ -633,13 +635,14 @@ begin
 
       adcSamplingPeriod => adcCnv_nPeriod,
 
+      wr_data_count => wr_data_count,
       adcDataRdy => not(fifoAdcData_ef),
       adcDataRen => fifoAdcData_ren,
       adcData    => adcData,
 
       --udpRequestComplete => open,
-
-      dwaClk100 => dwaClk100
+      udpTimeoutError => udpTimeoutError,
+      dwaClk100       => dwaClk100
     );
 
   --ila_4x32_inst : ila_4x32
@@ -705,9 +708,18 @@ begin
 
     toDaqReg.serNumMemAddress <= toDaqReg_serialPromInterface.serNumMemAddress;
     toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
-    toDaqReg.errors           <= (23 => checkBound_error, 22 downto 1 => '0', 0 => snMemWPError); -- all unsigned errors set to 0
-    toDaqReg.checkRegA        <= toDaqReg_CheckReg.checkRegA;
-    toDaqReg.checkRegB        <= toDaqReg_CheckReg.checkRegB;
+    toDaqReg.errors           <= (
+        23          => checkBound_error,
+        22 downto 6 => '0',
+        5           => relayConfigError,
+        4           => gainConfigError,
+        3           => snMemWPError,
+        2           => udpTimeoutError,
+        1           => mainsTrigError,
+        0           => or(fifoAdcData_ff) and senseWireMNSDataStrb -- adc fifo overflow
+    ); -- all unsigned errors set to 0
+    toDaqReg.checkRegA <= toDaqReg_CheckReg.checkRegA;
+    toDaqReg.checkRegB <= toDaqReg_CheckReg.checkRegB;
   end process selToDaq;
 
 end STRUCT;
