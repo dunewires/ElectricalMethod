@@ -2369,10 +2369,20 @@ class MainWindow(qtw.QMainWindow):
     def startScan(self):
         #need to create dictionaries in this thread to actually update inputs and files
 
+        # What kind of scan is this (resonance or continuity)?
+        row = self.scanConfigRowToScan
+        scanType = self.scanConfigTableModel.item(row, Scans.TYPE).text()
+        # 'Res' or 'Cont'
+        if scanType not in ['Tension', 'Continuity']:
+            print(f"ERROR: unrecognized scan type: {scanType}")
+            print(f"       expected 'Res' or 'Cont'")
+            print(f"       returning...")
+            return
+
         self.configMeasuredBy = self.measuredByLineEdit.text()
         self.configStage = self.configStageComboBox.currentText()
         self.configApaUuid = self.configApaUuidLineEdit.text().strip()
-        self.configLayer = self.configLayerComboBox.currentText()
+        self.configLayer = self.scanConfigTableModel.item(row,  Scans.LAYER).text() #self.configLayerComboBox.currentText()
         self.configHeadboard = self.configHeadboardSpinBox.value()
         self.configApaSide = self.SideComboBox.currentText()
         is_flex_connection_winderlike = True
@@ -2383,16 +2393,6 @@ class MainWindow(qtw.QMainWindow):
         useAdvParamsRes  = not self.advDisableResParamCb.isChecked()
         useAdvParamsCont = not self.advDisableContParamCb.isChecked()
         useAdv = useAdvParamsRes or useAdvParamsCont
-        
-        # What kind of scan is this (resonance or continuity)?
-        row = self.scanConfigRowToScan
-        scanType = self.scanConfigTableModel.item(row, Scans.TYPE).text()
-        # 'Res' or 'Cont'
-        if scanType not in ['Tension', 'Continuity']:
-            print(f"ERROR: unrecognized scan type: {scanType}")
-            print(f"       expected 'Res' or 'Cont'")
-            print(f"       returning...")
-            return
 
         # Get values from scan config table (may be overwritten by advanced parameters later)
         freqMin = float(self.scanConfigTableModel.item(row,  Scans.FREQ_MIN).text())
