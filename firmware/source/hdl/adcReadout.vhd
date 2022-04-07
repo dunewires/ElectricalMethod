@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Fri Sep 24 14:04:08 2021
+-- Last update : Thu Apr  7 11:33:45 2022
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -33,8 +33,8 @@ entity adcReadout is
 	port (
 		fromDaqReg : in fromDaqRegType;
 
-		adcCnv_nCnv      : in unsigned(15 downto 0) := (others => '0');
-		adcCnv_nPeriod   : in unsigned(23 downto 0) := (others => '0');
+		adcCnv_nCnv    : in unsigned(15 downto 0) := (others => '0');
+		adcCnv_nPeriod : in unsigned(23 downto 0) := (others => '0');
 
 		adcStart : in  boolean   := false;
 		trigger  : in  std_logic := '0';
@@ -58,7 +58,7 @@ end entity adcReadout;
 architecture rtl of adcReadout is
 
 	type ctrlState_type is (idle_s, adcCnvStart_s, adcCnvWait_s, adcReadout_s,readoutDone_s);
-	signal ctrlStateAdc            : ctrlState_type        := idle_s;
+	signal ctrlStateAdc         : ctrlState_type        := idle_s;
 	signal timerCnt             : unsigned(11 downto 0) := (others => '0');
 	signal adcSckEnable         : std_logic             := '0';
 	signal adcSckEnableEmu      : std_logic             := '0';
@@ -73,16 +73,13 @@ architecture rtl of adcReadout is
 	signal cnvSyncStrb  : std_logic             := '0';
 	signal cnvPeriodCnt : unsigned(23 downto 0) := (others => '0');
 	-- start out at max cnvCnt so we power up allCnvStrtDone
-	signal cnvCnt : unsigned(15 downto 0) := (others => '1');
-	signal cnvDone  : std_logic := '0';
+	signal cnvCnt  : unsigned(15 downto 0) := (others => '1');
+	signal cnvDone : std_logic             := '0';
 
 	signal adcCnv_nCnvRn    : unsigned(23 downto 0) := (others => '0');
 	signal adcCnv_nPeriodRn : unsigned(23 downto 0) := (others => '0');
 
 begin
-	--select adc conv parameters
-	adcCnv_nCnvRn    <= (x"00" & adcCnv_nCnv);
-	adcCnv_nPeriodRn <= adcCnv_nPeriod;
 	--ADC emulator
 	adc_dds_io_inst : entity work.adc_dds_io
 		port map (
@@ -192,8 +189,11 @@ begin
 
 			-- reset the sampling sequence
 			if adcStart then
-				cnvCnt  <= (others => '0');
-				adcBusy <= '1';
+				cnvCnt <= (others => '0');
+				--update adc conv parameters at the start of conversion sequence, not anytime they are updated by the DAQ
+				adcCnv_nCnvRn    <= (x"00" & adcCnv_nCnv);
+				adcCnv_nPeriodRn <= adcCnv_nPeriod;
+				adcBusy          <= '1';
 			elsif not allCnvStrtDone then
 				--get the samples
 				--trigger can be mains or stim clk	
@@ -225,7 +225,7 @@ begin
 
 				when idle_s =>
 					if cnvSyncStrb then
-						timerCnt  <= x"001";
+						timerCnt     <= x"001";
 						ctrlStateAdc <= adcCnvStart_s;
 					end if;
 
@@ -233,7 +233,7 @@ begin
 					adcCnv <= '1';
 					-- adcCnv high time 30 ns min
 					if timerCnt = x"3" then
-						timerCnt  <= x"001";
+						timerCnt     <= x"001";
 						ctrlStateAdc <= adcCnvWait_s;
 					else
 						timerCnt <= timerCnt+1;
@@ -242,7 +242,7 @@ begin
 				when adcCnvWait_s =>
 					--conversion time 450ns max
 					if timerCnt = x"030" then
-						timerCnt  <= x"001";
+						timerCnt     <= x"001";
 						ctrlStateAdc <= adcReadout_s;
 					else
 						timerCnt <= timerCnt+1;
@@ -252,14 +252,14 @@ begin
 					--readout 12 bits
 					adcSckEnable <= '1';
 					if timerCnt = x"020" then
-						timerCnt  <= x"001";
+						timerCnt     <= x"001";
 						ctrlStateAdc <= readoutDone_s;
 					else
 						timerCnt <= timerCnt+1;
 					end if;
 
 				when readoutDone_s =>
-					cnvDone   <= '1';
+					cnvDone      <= '1';
 					ctrlStateAdc <= idle_s;
 
 				when others =>

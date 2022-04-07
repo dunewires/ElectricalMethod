@@ -414,7 +414,6 @@ begin
       dwaClk200         => dwaClk200
     );
 
-
   serialPromInterface_inst : entity work.serialPromInterface
     port map (
       fromDaqReg => fromDaqReg,
@@ -428,8 +427,6 @@ begin
       dwaClk100 => dwaClk100,
       dwaClk10  => dwaClk10
     );
-
-
 
   wireRelayInterface_inst : entity duneDwa.wireRelayInterface
     port map (
@@ -450,6 +447,7 @@ begin
       dwaClk100        => dwaClk100,
       dwaClk2          => dwaClk2
     );
+
   --gain DPOT
   dpotInterface_inst : entity duneDwa.dpotInterface
     port map (
@@ -480,7 +478,6 @@ begin
 
       mainsTrigError => mainsTrigError,
       dwaClk100      => dwaClk100
-
     );
 
   -- stimulus frequency generation via DAC
@@ -567,7 +564,6 @@ begin
     end loop;
   end process dropLsb;
 
-
   mainsNoiseCorrection_inst : entity duneDwa.mainsNoiseCorrection
     port map (
       fromDaqReg => fromDaqReg,
@@ -590,7 +586,6 @@ begin
 
   --for each of the 8 channels
   adcFifoGen : for adc_i in 7 downto 0 generate
-
 
     -- store data for AXI read
     fifoAdcData_ch : fifo_autoDatacollection
@@ -678,6 +673,7 @@ begin
       probe_out10            => open,
       probe_out11            => open
     );
+    
   selToDaq : process (all)
   begin
     toDaqReg.ctrlBusy       <= toDaqReg_wtaController.ctrlBusy;

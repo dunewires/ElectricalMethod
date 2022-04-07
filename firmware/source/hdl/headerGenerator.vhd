@@ -6,7 +6,7 @@
 -- Author      : James Battat jbattat@wellesley.edu
 -- Company     : Wellesley College, Physics
 -- Created     : Thu May  2 11:04:21 2019
--- Last update : Sat Apr  2 15:32:34 2022
+-- Last update : Sat Apr  2 15:40:28 2022
 -- Platform    : DWA microZed
 -- Standard    : VHDL-2008
 -------------------------------------------------------------------------------
@@ -496,7 +496,8 @@ begin
                 statusDataLatch.pButton   <= statusDataDelay.pButton;
                 statusDataLatch.tState    <= statusDataDelay.tState;
 
-                --latch triggers that initiated this packet
+                --latch triggers that initiated this packetq
+                
                 --Update with current triggers in case there happens to be a transient trigger at this point, it will be reported in the next status pkt
                 statusTrigLatch  <= statusTrigSticky;
                 statusTrigSticky <= statusTrig;
