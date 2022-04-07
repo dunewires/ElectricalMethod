@@ -7,7 +7,7 @@ use duneDwa.global_def.all;
 entity dwa_registers_v1_0_S00_AXI is
 	generic (
 		dateCode : std_logic_vector(47 downto 0);
-		hashCode : std_logic_vector(27 downto 0);
+		hashCode : std_logic_vector(31 downto 0);
 		-- Users to add parameters here
 
 		-- User parameters ends
@@ -953,7 +953,7 @@ begin
 			when b"010011" =>
 				reg_data_out <= x"00" & dateCode(47 downto 24);
 			when b"010100" =>
-				reg_data_out <= x"0" & hashCode;
+				reg_data_out <= hashCode;
 			when b"010111" =>
 				-- PS is expecting a FIFO Empty Flag
 				reg_data_out    <= (31 downto 1 => '1', 0 => bool2Sl(not(toDaqReg.udpDataRdy)));

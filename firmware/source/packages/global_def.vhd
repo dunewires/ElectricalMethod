@@ -115,7 +115,7 @@ package global_def is
         stimMag       : unsigned(11 downto 0);                   -- any value
         senseWireGain : SLV_VECTOR_TYPE(7 downto 0)(7 downto 0); -- anyvalue
         dateCode      : std_logic_vector(47 downto 0);
-        hashCode      : std_logic_vector(27 downto 0);
+        hashCode      : std_logic_vector(31 downto 0);
         -- Client IP address (where UDP data is sent)
         clientIp : unsigned(31 downto 0);        -- anyvalue
                                                  --- After switching to a new frequency, how long to wait before

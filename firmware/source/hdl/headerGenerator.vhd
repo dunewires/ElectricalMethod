@@ -189,7 +189,7 @@ begin
             x"01" & std_logic_vector(fromDaqReg.serNumLocal),
             x"02" & std_logic_vector(fromDaqReg.dateCode(47 downto 24)),          --24MSb
             x"03" & std_logic_vector(fromDaqReg.dateCode(23 downto 0)),           --24LSb
-            x"04" & x"000" & std_logic_vector(fromDaqReg.hashCode(27 downto 16)), --12MSb
+            x"04" & x"00" & std_logic_vector(fromDaqReg.hashCode(31 downto 16)),  --16MSb
             x"05" & x"00" & std_logic_vector(fromDaqReg.hashCode(15 downto 0)),   --16LSb
                                                                                   --x"20" & std_logic_vector(fromDaqReg.dwaCtrl),
             x"21" & std_logic_vector(fromDaqReg.fixedPeriod),
@@ -208,10 +208,10 @@ begin
             x"2D" & x"0000" & fromDaqReg.activeChannels,
             x"2E" & x"00" & fromDaqReg.relayMask(31 downto 16),
             x"2F" & x"00" & fromDaqReg.relayMask(15 downto 0),
-            x"30" & x"00" & fromDaqReg.senseWireGain(0) & fromDaqReg.senseWireGain(1),
-            x"31" & x"00" & fromDaqReg.senseWireGain(2) & fromDaqReg.senseWireGain(3),
-            x"32" & x"00" & fromDaqReg.senseWireGain(4) & fromDaqReg.senseWireGain(5),
-            x"33" & x"00" & fromDaqReg.senseWireGain(6) & fromDaqReg.senseWireGain(7),
+            x"30" & x"00" & fromDaqReg.senseWireGain(7) & fromDaqReg.senseWireGain(3),
+            x"31" & x"00" & fromDaqReg.senseWireGain(6) & fromDaqReg.senseWireGain(2),
+            x"32" & x"00" & fromDaqReg.senseWireGain(5) & fromDaqReg.senseWireGain(1),
+            x"33" & x"00" & fromDaqReg.senseWireGain(4) & fromDaqReg.senseWireGain(0),
             x"34" & std_logic_vector(fromDaqReg.noiseFreqMin),
             x"35" & std_logic_vector(fromDaqReg.noiseFreqMax),
             x"36" & std_logic_vector(fromDaqReg.noiseFreqStep),

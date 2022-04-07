@@ -157,7 +157,7 @@ set git_hash [exec git log -1 --pretty='%h']
 puts hashCode=$git_hash
  
 # Set the generics
-set_property generic "dateCode=48'h$dateCode hashCode=28'h$git_hash" [current_fileset]
+set_property generic "dateCode=48'h$dateCode hashCode=32'h$git_hash" [current_fileset]
 
 }
 

@@ -1,14 +1,14 @@
 # Continuity scan parameters
 #In hexadecimal (copied from a config file):
 #stimFreqMin = 006400
-#stimFreqMax = 03B600
+#stimFreqMax = 03E800
 #stimFreqStep = 003200
 #stimTime = 010000
 #stimMag = 200
 #
 #Which correspond to in decimal:
 #Freq min: 100 Hz
-#Freq max: 950 Hz
+#Freq max: 1000 Hz
 #Freq step: 50 Hz
 #Stimulus time: 0.16777216 s
 #Stimulus magnitude: 512 mV
@@ -169,7 +169,7 @@ import dwaTools as dwa
 import DwaDataParser as ddp
 import DwaConfigFile as dcf
 import DwaMicrozed as duz
-import simpleaudio
+import boombox
 
 
 #from SietchConnect import SietchConnect
@@ -288,10 +288,11 @@ PLOT_UPDATE_TIME_SEC = 0.5
 
 CONTINUITY_SCAN_PARAMS_DEFAULT = {
     'stimFreqMin':100.0,  # Hz
-    'stimFreqMax':950.0,  # Hz
+    'stimFreqMax':1000.0,  # Hz
     'stimFreqStep':50.0,  # Hz
-    'stimTime':0.166666,  # s
-    'stimMag':0.512       # V
+    'stimTime':0.16777216,  # s
+    'stimMag':512       # mV
+#    'stimMag':200 # Hex
 }
 
 # Attempt to display logged events in a text window in the GUI
@@ -745,6 +746,9 @@ class MainWindow(qtw.QMainWindow):
         # Info about current run
         self.stimFreqMin = 0
         self.stimFreqMax = 0
+        self.advStimTimeContLineEdit.setText(f'{CONTINUITY_SCAN_PARAMS_DEFAULT["stimTime"]:10.9f}')
+        self.advStimAmplitudeContLineEdit.setText(f'{CONTINUITY_SCAN_PARAMS_DEFAULT["stimMag"]}')
+        
         #self.dwaControllerState = None
 
         # For loading saved A(f) data
@@ -777,7 +781,7 @@ class MainWindow(qtw.QMainWindow):
             #print(f"error = {error}")
             if error:
                 color = 'red'
-                label = f'{int(errorString,2)}'
+                label = f'{format(int(errorString,2),"06X")}'
             else:
                 label = 'OK'
                 color = 'green'
@@ -2234,7 +2238,7 @@ class MainWindow(qtw.QMainWindow):
         statusText = self.scanConfigTableModel.item(self.scanConfigRowToScan, Scans.STATUS).text()
         if statusText == 'Done':
             print("final scan has completed...")
-            simpleaudio.WaveObject.from_wave_file("sounds/completed.wav").play()
+            boombox.BoomBox('sounds/completed.wav').play()
         else:
             print("auto-starting next scan...")
             self.startScanThread()
@@ -2365,10 +2369,20 @@ class MainWindow(qtw.QMainWindow):
     def startScan(self):
         #need to create dictionaries in this thread to actually update inputs and files
 
+        # What kind of scan is this (resonance or continuity)?
+        row = self.scanConfigRowToScan
+        scanType = self.scanConfigTableModel.item(row, Scans.TYPE).text()
+        # 'Res' or 'Cont'
+        if scanType not in ['Tension', 'Continuity']:
+            print(f"ERROR: unrecognized scan type: {scanType}")
+            print(f"       expected 'Res' or 'Cont'")
+            print(f"       returning...")
+            return
+
         self.configMeasuredBy = self.measuredByLineEdit.text()
         self.configStage = self.configStageComboBox.currentText()
         self.configApaUuid = self.configApaUuidLineEdit.text().strip()
-        self.configLayer = self.configLayerComboBox.currentText()
+        self.configLayer = self.scanConfigTableModel.item(row,  Scans.LAYER).text() #self.configLayerComboBox.currentText()
         self.configHeadboard = self.configHeadboardSpinBox.value()
         self.configApaSide = self.SideComboBox.currentText()
         is_flex_connection_winderlike = True
@@ -2379,16 +2393,6 @@ class MainWindow(qtw.QMainWindow):
         useAdvParamsRes  = not self.advDisableResParamCb.isChecked()
         useAdvParamsCont = not self.advDisableContParamCb.isChecked()
         useAdv = useAdvParamsRes or useAdvParamsCont
-        
-        # What kind of scan is this (resonance or continuity)?
-        row = self.scanConfigRowToScan
-        scanType = self.scanConfigTableModel.item(row, Scans.TYPE).text()
-        # 'Res' or 'Cont'
-        if scanType not in ['Tension', 'Continuity']:
-            print(f"ERROR: unrecognized scan type: {scanType}")
-            print(f"       expected 'Res' or 'Cont'")
-            print(f"       returning...")
-            return
 
         # Get values from scan config table (may be overwritten by advanced parameters later)
         freqMin = float(self.scanConfigTableModel.item(row,  Scans.FREQ_MIN).text())
@@ -2410,6 +2414,7 @@ class MainWindow(qtw.QMainWindow):
         # TODO: Grab default values if undefined
         if advStimTime: advStimTime = float(advStimTime)
         if advInitDelay: advInitDelay = float(advInitDelay)
+        #if advStimAmplitude: advStimAmplitude = '{int(advStimAmplitude):03X}'
         if advStimAmplitude: advStimAmplitude = int(advStimAmplitude)
         if advDigipotAmplitude: advDigipotAmplitude = int(advDigipotAmplitude)
 
@@ -4498,6 +4503,8 @@ class MainWindow(qtw.QMainWindow):
             #print(f'in update: {chan}: {self.resonantFreqs[chan]}')
             self.currentTensions[chan] = [None for _ in range(3)]
             if self.resonantFreqs[chan] is None: continue
+            print("res",self.resonantFreqs[chan])
+            print("exp",self.expectedFreqs[chan])
             for seg,measured in enumerate(self.resonantFreqs[chan]):
                 print("measured",measured)
                 if len(measured) == 0:
