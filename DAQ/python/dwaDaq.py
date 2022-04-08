@@ -4506,7 +4506,7 @@ class MainWindow(qtw.QMainWindow):
                 
         # FIXME: move pen definition to __init__ (self.f0pen)
         f0Pen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
-        fPenBlue = [pg.mkPen(color='#0000FF', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#00AADD', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#008888', width=4, style=qtc.Qt.SolidLine)]
+        fPenColor = [pg.mkPen(color='#d62728', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#2ca02c', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#1f77b4', width=4, style=qtc.Qt.SolidLine)]
 
         debug = False
         self.currentTensions = {}
@@ -4584,11 +4584,11 @@ class MainWindow(qtw.QMainWindow):
 
                     
                     
-                    segmentLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=True, pen=fPenBlue[ii]) )
+                    segmentLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=True, pen=fPenColor[ii]) )
                     # FIXME: should the next 2 lines really be commented out?
                     segmentLinesProc[-1].sigClicked.connect(self._f0LineClicked)
                     segmentLinesProc[-1].sigPositionChangeFinished.connect(self._f0LineMoved)
-                    segmentLinesRaw.append( self.resonanceRawPlots[chan].addLine(x=f, movable=True, pen=fPenBlue[ii]) )
+                    segmentLinesRaw.append( self.resonanceRawPlots[chan].addLine(x=f, movable=True, pen=fPenColor[ii]) )
                     segmentLinesRaw[-1].sigClicked.connect(self._f0LineClicked)
                     segmentLinesRaw[-1].sigPositionChangeFinished.connect(self._f0LineMoved)
 
