@@ -1312,7 +1312,8 @@ class MainWindow(qtw.QMainWindow):
         self.pb_scanDataSelectedLoad.clicked.connect(self.loadResultsScan)
         for reg in self.registers:
             for seg in range(3):
-                getattr(self, f'le_resfreq_val_{reg}_{seg}').textChanged.connect(self._resFreqUserInputText)
+                #getattr(self, f'le_resfreq_val_{reg}_{seg}').textChanged.connect(self._resFreqUserInputText)
+                getattr(self, f'le_resfreq_val_{reg}_{seg}').editingFinished.connect(self._resFreqUserInputText)
                 #getattr(self, f'lab_resfreq_{reg}_{seg}').mousePressEvent = self._resFreqUserClick(reg,seg)
         #self.QPLabel.mousePressEvent = self._resFreqUserClick(0,0)
         # self.resFitPreDetrend.stateChanged.connect(self.resFitParameterUpdated)
@@ -1326,6 +1327,14 @@ class MainWindow(qtw.QMainWindow):
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensionsThread)
         self.btnSubmitTensions.clicked.connect(self.submitTensionsThread)
+        getattr(self, f'submitTension_0').clicked.connect(lambda: self.submitTensionsThread(0))
+        getattr(self, f'submitTension_1').clicked.connect(lambda: self.submitTensionsThread(1))
+        getattr(self, f'submitTension_2').clicked.connect(lambda: self.submitTensionsThread(2))
+        getattr(self, f'submitTension_3').clicked.connect(lambda: self.submitTensionsThread(3))
+        getattr(self, f'submitTension_4').clicked.connect(lambda: self.submitTensionsThread(4))
+        getattr(self, f'submitTension_5').clicked.connect(lambda: self.submitTensionsThread(5))
+        getattr(self, f'submitTension_6').clicked.connect(lambda: self.submitTensionsThread(6))
+        getattr(self, f'submitTension_7').clicked.connect(lambda: self.submitTensionsThread(7))
         # Config Tab
         self.doContinuityCb.stateChanged.connect(self.doContinuityChanged)
         self.doTensionCb.stateChanged.connect(self.doTensionChanged)
@@ -2329,10 +2338,10 @@ class MainWindow(qtw.QMainWindow):
         self.threadPool.start(worker)
 
     @pyqtSlot()
-    def submitTensionsThread(self):
+    def submitTensionsThread(self, selectedDwaChan=None):
     
         # Pass the function to execute
-        worker = Worker(self.submitTensions)  # could pass args/kwargs too..
+        worker = Worker(self.submitTensions, selectedDwaChan)  # could pass args/kwargs too..
         #worker.signals.result.connect(self.printOutput)
         worker.signals.finished.connect(self.submitTensionsThreadComplete)
 
@@ -2600,7 +2609,7 @@ class MainWindow(qtw.QMainWindow):
             self.logger.info('======= dwa disable HV ===========')
             print('======= dwa disable HV ===========')
             self.uz.hvDisable()
-            time.sleep(2.5) # sleep to let HV drain
+            time.sleep(0.5) # sleep to let HV drain
         except:
             self.logger.error("DWA hvDisable failed")
             
@@ -3230,7 +3239,7 @@ class MainWindow(qtw.QMainWindow):
         #self.tensionTableModel.layoutChanged.emit()
         #self.tensionTableView.resizeColumnsToContents()  # probably don't need?
         
-    def submitTensions(self):
+    def submitTensions(self, selectedDwaChan=None):
         #TODO: Fix this so that it writes to file in scanData/processed/ instead of database
         self.labelResonanceSubmitStatus.setText("Submitting...")
         # Load sietch credentials
@@ -3249,12 +3258,15 @@ class MainWindow(qtw.QMainWindow):
         
 
         for dwaChan in range(N_DWA_CHANS):
+            if selectedDwaChan != None and dwaChan != selectedDwaChan: 
+                continue
             if dwaChan in self.activeRegistersS:
                 apaChan = self.ampDataS['apaChannels'][dwaChan]
                 segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan,MAX_FREQ)
                 for seg in range(3):
                     if seg < len(segments):
                         wireSeg = segments[seg]
+                        print("writing seg", dwaChan, seg, self.currentTensions[dwaChan][seg])
                         fullResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1.}
                         scanResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1.}
 
@@ -4476,6 +4488,7 @@ class MainWindow(qtw.QMainWindow):
             bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
             self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], bsub)
             segments, opt_res_arr, best_tension, best_tensions_std = process_scan.process_channel(layer, apaCh, f, a)
+            print("setting ",reg.value,opt_res_arr)
             self.expectedFreqs[reg.value] = expected_resonances
             self.resonantFreqs[reg.value] = opt_res_arr
 
@@ -4497,6 +4510,12 @@ class MainWindow(qtw.QMainWindow):
 
         debug = False
         self.currentTensions = {}
+        print("###############################################")
+        print("resonant",self.resonantFreqs)
+        print("expected",self.expectedFreqs)
+        print(self.activeRegistersS)
+        print("###############################################")
+
         
         for chan in self.activeRegistersS:
             #chan = reg.value
