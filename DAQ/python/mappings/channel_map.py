@@ -1,19 +1,6 @@
 from channel_frequencies import check_valid_wire_layer
 import numpy as np
 
-def wire_to_apa_channel(wire_layer: str, wire_number: int):
-    '''Return the APA channel associated to the given wire layer and wire number.'''
-
-    wire_layer = check_valid_wire_layer(wire_layer)
-
-    if wire_layer in {'X', 'G'}:
-        apa_channel = wire_number
-    if wire_layer in {'V', 'U'}:
-        apa_channel = (wire_number - 1) % 400 + 1
-
-    return apa_channel
-
-
 def apa_channel_to_board_channel(wire_layer: str, apa_channel: int):
     '''Return the board channel associated to the given wire layer and APA channel. Board channel goes from 1 to 48 for X, from 1 to 40 for V and U and from 1 to 48 for G except for the first G board which goes from 1 to 49.'''
     

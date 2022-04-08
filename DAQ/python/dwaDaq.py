@@ -278,8 +278,10 @@ N_RECENT_SCANS = 500
 TENSION_SPEC = 6.5 # Newtons
 TENSION_SPEC_MIN = TENSION_SPEC-1.0
 TENSION_SPEC_MAX = TENSION_SPEC+1.0
-TENSION_LOW_COLOR  = qtg.QColor(253,253,150)
-TENSION_HIGH_COLOR = qtg.QColor(219,88,86)
+TENSION_LOW_COLOR  = qtg.QColor(219,120,120)
+TENSION_HIGH_COLOR = qtg.QColor(219,120,120)
+TENSION_NOT_APPLICABLE_COLOR = qtg.QColor(128,128,128)
+TENSION_NOT_FOUND_COLOR = qtg.QColor(219,219,40)
 TENSION_GOOD_COLOR = qtg.QColor(178, 251, 165)
 
 
@@ -391,6 +393,11 @@ class ResultsView(IntEnum):
     RAW = 1
     PROCESSED = 2
     
+class TensionStatus(IntEnum):
+    NOT_MEASURED = -1
+    NOT_FOUND = -2
+    NOT_APPLICABLE = -3
+    TOO_SHORT = -4
 
 TAB_ACTIVE_MAIN = MainView.STIMULUS
 #TAB_ACTIVE_MAIN = MainView.RESULTS
@@ -566,14 +573,30 @@ class TensionTableModel(qtc.QAbstractTableModel):
         if role == qtc.Qt.DisplayRole:
             if val is np.nan:
                 return ""
+            elif val == TensionStatus.NOT_MEASURED:
+                return "Not measured"
+            elif val == TensionStatus.NOT_FOUND:
+                return "Not found"
+            elif val == TensionStatus.NOT_APPLICABLE:
+                return "N/A"
+            elif val == TensionStatus.TOO_SHORT:
+                return "Short wire"
             else:
-                return f'{val:.2f}'
+                return f'{val:.3f}'
 
         if role == qtc.Qt.BackgroundRole:
-            if val is np.nan:
+            if isinstance(val, str):
                 return
-            if val < 0:
+            elif val is np.nan:
                 return
+            elif val == TensionStatus.NOT_MEASURED:
+                return
+            elif val == TensionStatus.NOT_FOUND:
+                return TENSION_NOT_FOUND_COLOR
+            elif val == TensionStatus.NOT_APPLICABLE:
+                return TENSION_NOT_APPLICABLE_COLOR
+            elif val == TensionStatus.TOO_SHORT:
+                return TENSION_NOT_APPLICABLE_COLOR
             elif val < TENSION_SPEC_MIN:
                 return TENSION_LOW_COLOR
             elif val > TENSION_SPEC_MAX:
@@ -1296,8 +1319,6 @@ class MainWindow(qtw.QMainWindow):
     def _configureTensionTab(self):
         for stage in APA_STAGES_TENSIONS:
             self.tensionStageComboBox.addItem(stage)
-        for layer in APA_LAYERS:
-            self.tensionLayerComboBox.addItem(layer)
     
     def _connectSignalsSlots(self):
         self.tabWidgetStages.currentChanged.connect(self.tabChangedStage)
@@ -1849,8 +1870,11 @@ class MainWindow(qtw.QMainWindow):
                 chanNum += 1
             #self.resonanceRawDataGLW.nextRow()
             #self.resonanceProcessedDataGLW.nextRow()
+        self._configureTensionPlots()
 
+    def _configureTensionPlots(self):
         # Tension tab
+        self.tensionGLW.clear() # TODO: This doesn't seem to work
         self.tensionGLW.setBackground('w')
         self.tensionPlots = {}
 
@@ -3159,85 +3183,53 @@ class MainWindow(qtw.QMainWindow):
         print('resultsDict',resultsDict.keys())
         # Get stage
         stage = self.tensionStageComboBox.currentText()
-        # Get selected layer from GUI
-        layer = self.tensionLayerComboBox.currentText()
-        self.tensionLayer = layer
-        print(f'Loading tesions for {stage} layer {layer}')
+        print(f'Loading tesions for {stage}')
         # Build dictionary and table
-        self.tensionData = {
-            'A':[-1]*MAX_WIRE_SEGMENT[layer],
-            'B':[-1]*MAX_WIRE_SEGMENT[layer],
-        }
-        self.tensionDataLowConf = {
-            'A':[-1]*MAX_WIRE_SEGMENT[layer],
-            'B':[-1]*MAX_WIRE_SEGMENT[layer],
-        }
+        self.tensionData = {}
+        for layer in APA_LAYERS:
+            for side in APA_SIDES:
+                self.tensionData[layer+side] = [-1]*MAX_WIRE_SEGMENT['U']
+                # Label non-existant channels
+                for i in range(MAX_WIRE_SEGMENT[layer],MAX_WIRE_SEGMENT['U']): self.tensionData[layer+side][i] = TensionStatus.NOT_APPLICABLE
+
         self.tensionTableModel = TensionTableModel(self.tensionData)
         self.tensionTableView.setModel(self.tensionTableModel)
         #self.tensionTableView.resizeColumnsToContents()
         self.tensionTableView.resizeRowsToContents()
+        #self._configureTensionPlots()
+
+        for layer in APA_LAYERS:
+            try:
+                layerData = resultsDict[stage][layer]
+            except:
+                print('Data for this stage and layer not found.')
+                continue
+            for side in APA_SIDES:
+                wireSegs = layerData[side]
+                for wireSeg in wireSegs:
+                    if int(wireSeg) <= 0: continue
+                    segmentLength = channel_frequencies.length_of_wire_segment(layer, int(wireSeg))
+                    wireSegDict = wireSegs[wireSeg]
+                    tensionDict = wireSegDict["tension"]
+                    tension = TensionStatus.NOT_MEASURED
+                    if len(tensionDict.keys()) > 0:
+                        scanIds = tensionDict.keys()
+                        sortedScanIds = sorted(scanIds)
+                        latestScanId = sortedScanIds[-1]
+                        latestScan = tensionDict[latestScanId]
+                        tension = latestScan["tension"]
+                        if tension == 'Not Found': tension = TensionStatus.NOT_FOUND
+                    elif segmentLength != None and segmentLength < 500:
+                        tension = TensionStatus.TOO_SHORT
+                    self.tensionData[layer+side][int(wireSeg)-1] = tension
 
 
-        try:
-            layerData = resultsDict[stage][layer]
-        except:
-            print('Data for this stage and layer not found.')
-            return
-
-        for side in ["A", "B"]:
-            wireSegs = layerData[side]
-            for wireSeg in wireSegs:
-                wireSegDict = wireSegs[wireSeg]
-                tensionDict = wireSegDict["tension"]
-                if len(tensionDict.keys()) > 0:
-                    scanIds = tensionDict.keys()
-                    sortedScanIds = sorted(scanIds)
-                    latestScanId = sortedScanIds[-1]
-                    latestScan = tensionDict[latestScanId]
-                    tension = latestScan["tension"]
-                    try:
-                        tension_std = latestScan["tension_std"]
-                    except:
-                        tension_std = 0
-                    if tension == 'Not Found': tension = -2
-                    if tension_std < 0.1:
-                        self.tensionData[side][int(wireSeg)] = tension
-                    else:
-                        self.tensionDataLowConf[side][int(wireSeg)] = tension
-                    print(layer, side, wireSeg, tension, latestScan)
-
-            # channels = [int(ch) for ch in layer_data.keys()]
-            # if not layer_data:
-            #     print(f"layer_data is empty... skipping layer, side = {layer}, {side}")
-            #     continue
-            # for ch in channels:
-            #     wires, expected_frequencies = channel_frequencies.get_expected_resonances(layer,ch)
-            #     measured_frequencies = database_functions.get_measured_resonances(layer_data, layer, ch)
-            #     #print(expected_frequencies,measured_frequencies)
-            #     if len(measured_frequencies) > 0:
-            #         mapped = channel_frequencies.compute_tensions_from_resonances(expected_frequencies, measured_frequencies)
-            #         for i,w in enumerate(wires):
-            #             self.tensionData[side][w-1] = mapped[i]
-            # self.curves['tension']['tensionOfWireNumber'][layer][side].setData(range(1, MAX_WIRE_SEGMENT[layer]+1), self.tensionData[side] )
-            # FIXME: this should only happen once -- in _makeCurves()
-            # Create the scatter plot and add it to the view
-            scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='g'), symbol='o', size=1)
-            scatterLowConf = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
-            self.tensionPlots['tensionOfWireNumber'][layer][side].addItem(scatter)
-            self.tensionPlots['tensionOfWireNumber'][layer][side].addItem(scatterLowConf)
-            pos = [{'pos': [i,self.tensionData[side][i]]} for i in range(len(self.tensionData[side]))]
-            posLowConf = [{'pos': [i,self.tensionDataLowConf[side][i]]} for i in range(len(self.tensionDataLowConf[side]))]
-            scatter.setData(pos)
-            scatterLowConf.setData(posLowConf)
+                # Create the scatter plot and add it to the view
+                scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='g'), symbol='o', size=1)
+                self.tensionPlots['tensionOfWireNumber'][layer][side].addItem(scatter)
+                pos = [{'pos': [i,self.tensionData[layer+side][i]]} for i in range(len(self.tensionData[layer+side]))]
+                scatter.setData(pos)
             
-        # need to push new data into the tension table model and then alert the view that the data has changed
-        # FIXME: is this the best way to push new tension data into the model?
-        #  No... we want to have data for all layers...
-        #  Also, we should push data into the model and then update the plots and table from the model!
-        #self.tensionTableModel.setData(self.tensionData)
-        #self.tensionTableView.resizeRowsToContents()
-        #self.tensionTableModel.layoutChanged.emit()
-        #self.tensionTableView.resizeColumnsToContents()  # probably don't need?
         
     def submitTensions(self, selectedDwaChan=None):
         #TODO: Fix this so that it writes to file in scanData/processed/ instead of database
@@ -3390,7 +3382,7 @@ class MainWindow(qtw.QMainWindow):
         for dwaCh, ch in enumerate(self.ampDataS["apaChannels"]): # Loop over channels in scan
             print("Submitting APA channel ",ch)
             for w in self.ampDataS["wireSegments"]:
-                wire_ch = channel_map.wire_to_apa_channel(self.ampDataS["layer"], w)
+                wire_ch = None #channel_map.wire_to_apa_channel(self.ampDataS["layer"], w)
                 if wire_ch == ch:
                     resonance_result = {
                         "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),

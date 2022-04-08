@@ -138,10 +138,36 @@ for index in range(1151):
     if index < 481:
         l_physical_wire_G.append(PhysicalWire(*physical_wire_position('G',index+1,'start'),*physical_wire_position('G',index+1,'end')))
 
+l_physical_wire = {
+    "X": l_physical_wire_X,
+    "V": l_physical_wire_V,
+    "U": l_physical_wire_U,
+    "G": l_physical_wire_G,
+}
 
 def length_to_frequency(length, tension=6.5, density=1.5e-4):
     return (tension/4/density/(length/1000)**2)**0.5
 
+def wire_to_apa_channel(wire_layer: str, wire_segment: int):
+    '''Return the APA channel associated to the given wire layer and wire number.'''
+
+    wire_layer = check_valid_wire_layer(wire_layer)
+
+    if wire_layer in {'X', 'G'}:
+        apa_channel = wire_segment
+    if wire_layer in {'V', 'U'}:
+        apa_channel = (wire_segment - 1) % 400 + 1
+
+    return apa_channel
+
+def length_of_wire_segment(wire_layer: str, wire_segment: int):
+    '''Return the length of the wire segment.'''
+    try:
+        length = l_physical_wire[wire_layer][wire_segment].length()
+    except:
+        print(f"Wire length for layer {wire_layer} segment {wire_segment} not found.")
+        return None
+    return length
 
 def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
     """Wire segment: part of wire between combs or ends."""
@@ -314,10 +340,8 @@ def get_range_data_for_channels(wire_layer: str, channel_numbers: list, range_ra
     range_data_with_channel_info = append_channel_info(culled_range_data, channel_numbers)
     return range_data_with_channel_info
 
-def compute_tensions_from_resonances(wire_freqs_expected, freqs_measured):
+def compute_tensions_from_resonances(wire_freqs_expected, freqs_measured, nominal_tension):
     '''Return a list of wire tensions given the expected and measured frequencies in an APA channel. The expected frequencies are to be given as a list of lists of frequencies, with each inner list corresponding to the frequencies associated to a single wire in that APA channel. The order of these inner wire lists determine the order of the returned wire tensions. The expected frequencies must only be given for frequency ranges that have been measured. The measured frequencies are to be given as an overall list of measured frequencies for that APA channel.'''
-
-    NOMINAL_TENSION = 6.5
 
     def assignment_cost(x):
         wire_freqs_expected_array = np.array([freq*x[i] for i, freqs in enumerate(wire_freqs_expected) for freq in freqs])
@@ -331,7 +355,7 @@ def compute_tensions_from_resonances(wire_freqs_expected, freqs_measured):
 
     val = optimize.minimize(assignment_cost, (1,)*len(wire_freqs_expected))
 
-    return (val.x**2 * NOMINAL_TENSION).tolist()
+    return (val.x**2 * nominal_tension).tolist()
 
 def get_expected_resonances(wire_layer, channel, thresh = 1000.):
     '''
