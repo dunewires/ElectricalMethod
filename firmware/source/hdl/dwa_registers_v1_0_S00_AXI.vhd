@@ -277,17 +277,17 @@ begin
 			slv_reg0 <= (others => '0');
 			if S_AXI_ARESETN = '0' then
 				-- set default register values
-				slv_reg1  <= x"00000003"; --MNS enabled, auto enabled
+				slv_reg1  <= x"00000003"; --MNS disabled, auto enabled
 				slv_reg2  <= (others => '0');
-				slv_reg3  <= (others => '0');
-				slv_reg4  <= (others => '0');
-				slv_reg5  <= (others => '0');
-				slv_reg6  <= (others => '0');
+				slv_reg3  <= x"00000A00"; -- stimFreqReq
+				slv_reg4  <= x"00000A00"; -- stimFreqMin
+				slv_reg5  <= x"0003E800"; -- stimFreqMax
+				slv_reg6  <= x"00000001"; -- stimFreqStep
 				slv_reg7  <= (others => '0');
 				slv_reg8  <= (others => '0');
 				slv_reg9  <= (others => '0');
-				slv_reg10 <= (others => '0');
-				slv_reg11 <= (others => '0');
+				slv_reg10 <=  x"00000010"; -- cyclesPerFreq
+				slv_reg11 <=  x"00000001"; -- adcSamplesPerCycle
 				slv_reg12 <= (others => '0');
 				slv_reg13 <= (others => '0');
 				slv_reg14 <= (others => '0');
@@ -301,9 +301,9 @@ begin
 				slv_reg22 <= (others => '0');
 				slv_reg23 <= (others => '0');
 				slv_reg24 <= (others => '0');
-				slv_reg25 <= x"00000370"; --		noiseFreqMin   
-				slv_reg26 <= x"00000410"; --		noiseFreqMax 
-				slv_reg27 <= x"00000010"; --		noiseFreqStep  1 Hz
+				slv_reg25 <= x"00003200"; --		noiseFreqMin   
+				slv_reg26 <= x"00004600"; --		noiseFreqMax 
+				slv_reg27 <= x"00000100"; --		noiseFreqStep  1 Hz
 				slv_reg28 <= x"0000CB73"; --		noiseSampPer   32 samp / cycle @ 60 Hz
 				slv_reg29 <= x"00000100"; --		noiseNCnv       256 total samples
 				slv_reg30 <= x"00001000";       -- ~10ms?
