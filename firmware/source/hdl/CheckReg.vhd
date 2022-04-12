@@ -97,7 +97,7 @@ if rising_edge(dwaClk10) then
 
 	if not fromDaqReg.mnsDisable then
                                                                                                                                                 
-	res_0(25) <= '1' when ( (fromDaqReg.noiseFreqMin <= fromDaqReg.noiseFreqMax) and (fromDaqReg.noiseFreqMin >= x"002800")             )  else '0' ;
+	res_0(25) <= '1' when ( (fromDaqReg.noiseFreqMin <= fromDaqReg.noiseFreqMax) and (fromDaqReg.noiseFreqMin >= x"001E00")             )  else '0' ;
 	res_0(26) <= '1' when ( (fromDaqReg.noiseFreqMax <= x"005000")             and (fromDaqReg.noiseFreqMax >= fromDaqReg.noiseFreqMin) )  else '0' ;
 	res_0(27) <= '1' when (  fromDaqReg.noiseFreqStep =  x"000100"   )                                                                 else '0' ;
 		                                                          
