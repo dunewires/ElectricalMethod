@@ -280,7 +280,6 @@ class DwaMicrozed():
     def mainsSubtractionData(self, cfg):
         return [ ['00000019', cfg["noiseFreqMin"]], #fromDaqReg.noiseFreqMin  <= unsigned(slv_reg25(23 downto 0));
                  ['0000001A', cfg["noiseFreqMax"]], #fromDaqReg.noiseFreqMax  <= unsigned(slv_reg26(23 downto 0));
-                 ['0000001B', cfg["noiseFreqStep"]], #fromDaqReg.noiseFreqStep <= unsigned(slv_reg27(23 downto 0));
                  ['0000001C', cfg["noiseSamplingPeriod"]], #fromDaqReg.noiseSampPer  <= unsigned(slv_reg28(23 downto 0));
                  ['0000001D', cfg["noiseAdcSamplesPerFreq"]], #fromDaqReg.noiseNCnv     <= unsigned(slv_reg29(23 downto 0));
                  ['0000001E', cfg["noiseSettlingTime"]], #fromDaqReg.noiseBpfSetTime <= unsigned(slv_reg30(23 downto 0));
@@ -297,9 +296,6 @@ class DwaMicrozed():
         time.sleep(self.sleepPostWrite)
         #fromDaqReg.noiseFreqMax  <= unsigned(slv_reg26(23 downto 0));
         self._regWrite('0000001A', cfg["noiseFreqMax"])
-        time.sleep(self.sleepPostWrite)
-        #fromDaqReg.noiseFreqStep <= unsigned(slv_reg27(23 downto 0));
-        self._regWrite('0000001B', cfg["noiseFreqStep"])
         time.sleep(self.sleepPostWrite)
         #fromDaqReg.noiseSampPer  <= unsigned(slv_reg28(23 downto 0));
         self._regWrite('0000001C', cfg["noiseSamplingPeriod"])

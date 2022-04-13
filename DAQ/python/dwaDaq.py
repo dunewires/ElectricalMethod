@@ -2475,7 +2475,6 @@ class MainWindow(qtw.QMainWindow):
         #print(f"self.configLayer, channels = {self.configLayer}, {channels}")
         #print(f"  type(channels) = {type(channels)}")
 
-        fpgaConfig.update(config_generator.configure_ip_addresses()) # TODO: Make configurable
         fpgaConfig.update(config_generator.configure_run_type()) # TODO: This chould change based on fixed freq or freq sweep
         fpgaConfig.update(config_generator.configure_fixed_frequency())
 
