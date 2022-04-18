@@ -145,7 +145,7 @@ l_physical_wire = {
     "G": l_physical_wire_G,
 }
 
-def length_to_frequency(length, tension=6.5, density=1.51e-4):
+def length_to_frequency(length, tension=6.5, density=1.50e-4):
     return (tension/4/density/(length/1000)**2)**0.5
 
 def wire_to_apa_channel(wire_layer: str, wire_segment: int):
