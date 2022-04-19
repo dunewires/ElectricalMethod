@@ -574,7 +574,12 @@ class TensionTableModel(qtc.QAbstractTableModel):
             if val is np.nan:
                 return ""
             elif val == TensionStatus.NOT_MEASURED:
-                return "Not measured"
+                layer = kk[0]
+                wireSegment = index.row() + 1
+                apaChannel = channel_frequencies.wire_to_apa_channel(layer, wireSegment)
+                headboard = channel_map.apa_channel_to_board_number(layer, apaChannel)
+                grouping_number = channel_map.get_grouping_number(layer, apaChannel)
+                return "Headboard "+str(headboard)+" Tension scan "+str(grouping_number)
             elif val == TensionStatus.NOT_FOUND:
                 return "Not found"
             elif val == TensionStatus.NOT_APPLICABLE:
@@ -1026,9 +1031,9 @@ class MainWindow(qtw.QMainWindow):
             for layer in APA_LAYERS:
                 for side in APA_SIDES:
                     sideDict = stageDict[layer][side]
-                    for wireSegment in sideDict:
+                    for wireSegmentStr in sideDict:
                         # Combine tension and continuity scans
-                        segmentDict = {**sideDict[wireSegment]["tension"], **sideDict[wireSegment]["continuity"]}
+                        segmentDict = {**sideDict[wireSegmentStr]["tension"], **sideDict[wireSegmentStr]["continuity"]}
                         for scanId in segmentDict:
                             scanDict = segmentDict[scanId]
 
@@ -1039,13 +1044,13 @@ class MainWindow(qtw.QMainWindow):
                             items[Results.STAGE] = qtg.QStandardItem(stage)
                             
                             # Wire segment
-                            items[Results.WIRE_SEGMENT] = qtg.QStandardItem(wireSegment)
+                            items[Results.WIRE_SEGMENT] = qtg.QStandardItem(wireSegmentStr)
 
                             # Layer
                             items[Results.LAYER] = qtg.QStandardItem(layer)
                             
                             # Side
-                            items[Results.SIDE] = qtg.QStandardItem(side)
+                            items[Results.SIDE] = qtg.QStandardItem(channel_map.electrical_side_to_physical_side(side, layer, int(wireSegmentStr)))
 
                             toks = scanId.split("_")
                             if scanId[0:3] == '202': # Date appears first in dir name
@@ -2945,6 +2950,7 @@ class MainWindow(qtw.QMainWindow):
                         self.resonantFreqs[reg.value][seg] = newFreqs.tolist()
                         self.currentTensions[reg.value][seg] = tensionInput
                     except:
+                        print(self.resonantFreqs[reg.value])
                         self.resonantFreqs[reg.value][seg] = []
 
         self.resFreqUpdateDisplay(chan=None)
@@ -3064,7 +3070,7 @@ class MainWindow(qtw.QMainWindow):
         movedLine = self.resFitLines[source][c][s][l]
         newValue = movedLine.value()
         oldValue = self.resonantFreqs[c][s][l]
-        self.resonantFreqs[c][s] = (newValue/oldValue)*np.array(self.resonantFreqs[c][s]) #self.resonantFreqs[c][s] + newValue - oldValue  
+        self.resonantFreqs[c][s] = [(newValue/oldValue)*x for x in self.resonantFreqs[c][s]] #self.resonantFreqs[c][s] + newValue - oldValue  
         self.resFreqUpdateDisplay(chan=None)
         # loop over all channels. Get locations of lines
         # for reg in self.registers:
@@ -3205,11 +3211,11 @@ class MainWindow(qtw.QMainWindow):
                 print('Data for this stage and layer not found.')
                 continue
             for side in APA_SIDES:
-                wireSegs = layerData[side]
-                for wireSeg in wireSegs:
-                    if int(wireSeg) <= 0: continue
-                    segmentLength = channel_frequencies.length_of_wire_segment(layer, int(wireSeg))
-                    wireSegDict = wireSegs[wireSeg]
+                wireSegmentStrs = layerData[side]
+                for wireSegmentStr in wireSegmentStrs:
+                    if int(wireSegmentStr) <= 0: continue
+                    segmentLength = channel_frequencies.length_of_wire_segment(layer, int(wireSegmentStr))
+                    wireSegDict = wireSegmentStrs[wireSegmentStr]
                     tensionDict = wireSegDict["tension"]
                     tension = TensionStatus.NOT_MEASURED
                     if len(tensionDict.keys()) > 0:
@@ -3221,7 +3227,8 @@ class MainWindow(qtw.QMainWindow):
                         if tension == 'Not Found': tension = TensionStatus.NOT_FOUND
                     elif segmentLength != None and segmentLength < 500:
                         tension = TensionStatus.TOO_SHORT
-                    self.tensionData[layer+side][int(wireSeg)-1] = tension
+                    physicalSide = channel_map.electrical_side_to_physical_side(side, layer, int(wireSegmentStr))
+                    self.tensionData[layer+physicalSide][int(wireSegmentStr)-1] = tension
 
 
                 # Create the scatter plot and add it to the view

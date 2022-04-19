@@ -76,9 +76,11 @@ def update_results_dict_continuity(resultsDict, stage, layer, side, scanId, wire
 #            #print(resultsDict[layer][side][str(wireNum).zfill(5)].keys())
 #            resultsDict[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std}
 
-def min_meak_height(layer, a):
-    if layer in ['X','G']: return 0.1*np.max(a)
-    else: return max(5., 0.05*np.max(a))
+def min_peak_height(layer, a):
+    length = len(a)
+    trimmed = a[int(length/20):] # cut out first 5% of scan to avoid having transients affect the min peak height
+    if layer in ['X','G']: return 0.1*np.max(trimmed)
+    else: return max(5., 0.05*np.max(trimmed))
             
 def process_channel(layer, apaCh, f, a): 
     print("getting res")
@@ -101,7 +103,7 @@ def process_channel(layer, apaCh, f, a):
 
  
     if layer in ['X','G']:
-        pks, _ = find_peaks(bsub,height=min_meak_height(layer, bsub),width=int(0.5/stepSize))
+        pks, _ = find_peaks(bsub,height=min_peak_height(layer, bsub),width=int(0.5/stepSize))
         fpks = [f[pk] for pk in pks]   
         print("find peaks", apaCh, fpks)
         wire_segment_res = np.array(expected_resonances[0])
@@ -111,7 +113,7 @@ def process_channel(layer, apaCh, f, a):
         tension = 6.5*(minMeasured/minExpected)**2
         return segments, opt_res_arr, [tension], [0]
     else:
-        pks, props = find_peaks(smooth,height=min_meak_height(layer, smooth),width=int(0.5/stepSize),prominence=5.)
+        pks, props = find_peaks(smooth,height=min_peak_height(layer, smooth),width=int(0.5/stepSize),prominence=5.)
         fpks = np.array([f[pk] for pk in pks])   
         print("find peaks", apaCh, fpks,props)
         placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
@@ -125,24 +127,6 @@ def process_channel(layer, apaCh, f, a):
         best_tensions = tensions[select_best]
         min_index = np.argmin(best_diffs)
         return segments, best_placements[min_index], best_tensions[min_index], np.std(best_tensions,0)
-
-        
-        # print("sorting")
-        # sorted_placements = np.array([x for _, x in sorted(zip(costs, placements))])
-        # sorted_diffs = np.array([x for _, x in sorted(zip(costs, diffs))])
-        # sorted_tensions = np.array([x for _, x in sorted(zip(costs, tensions))])
-        # sorted_costs = np.array([x for _, x in sorted(zip(costs, costs))])
-        # if len(sorted_costs) < 1:
-        #     return segments, [-1 for s in segments], [-1 for s in segments]
-        # lowest_cost = sorted_costs[0]
-        # lowest_placement = sorted_placements[0]
-        # select_best = (sorted_costs < 1.2*lowest_cost)
-        # best_tensions = sorted_tensions[select_best]
-        # #print("best tensions: ",best_tensions)
-        # best_tension_stds = np.std(best_tensions,0)
-        # #print("best std: ",best_tensions_std)
-        # print("returning")
-        # return segments, best_tensions[0], best_tension_stds
 
 def process_scan(resultsDict, dirName):
     '''Process a scan with a given directory name and update the given results dictionary.'''

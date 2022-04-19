@@ -26,3 +26,5 @@ DAQ/python/__pycache__/*
 DAQ/python/mappings/__pycache__/*
 /source/dwa_ps/vittis/.metadata/
 *.pyc
+*udpstream.txt
+*.status

@@ -72,6 +72,12 @@ def apa_channel_to_wire_relay(wire_layer: str, apa_channel: int, is_flex_connect
 
     return wire_relay
 
+def electrical_side_to_physical_side(electrical_side: str, wire_layer: str, wire_segment: int):
+    '''Return the the corrected physical side for middle segments on the U and V layers.'''
+    if wire_layer in ['X','G']: return electrical_side
+    if wire_segment > 400 and wire_segment < 801:
+        return 'A' if electrical_side == 'B' else 'B'
+    return electrical_side
 
 def wire_relay_to_dwa_channel(wire_relay: int):
     '''Return the DWA channel from 0 to 7 associated to the given wire relay.'''
@@ -144,4 +150,12 @@ def channel_groupings(wire_layer: str, headboard_number: int):
             [33,35,37,39,41,43,45,47], \
             [34,36,38,40,42,44,46,48] \
         ], dtype=object) + 49 + (headboard_number - 2)*48    
-    
+
+def get_grouping_number(wire_layer: str, apa_channel: int):
+    '''Returns the grouping number for the given layer and apa_channel.'''
+    headboard = apa_channel_to_board_number(wire_layer, apa_channel)
+    groupings = channel_groupings(wire_layer, headboard)
+    for i, group in enumerate(groupings):
+        if apa_channel in group:
+            return i+1
+    return -1

@@ -150,7 +150,6 @@ def length_to_frequency(length, tension=6.5, density=1.5e-4):
 
 def wire_to_apa_channel(wire_layer: str, wire_segment: int):
     '''Return the APA channel associated to the given wire layer and wire number.'''
-
     wire_layer = check_valid_wire_layer(wire_layer)
 
     if wire_layer in {'X', 'G'}:
