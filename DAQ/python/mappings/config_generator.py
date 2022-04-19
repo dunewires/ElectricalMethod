@@ -3,12 +3,6 @@ import sys
 from channel_map import *
 
 
-def configure_ip_addresses(client_ip=None):
-    '''Incomplete'''
-    # TODO: Need to fetch IP address from DB.
-    return {'client_IP': client_ip}
-
-
 def configure_run_type(run_type=1, noise_subtraction_disable=False):
     '''Return a dictionary of a configuration value for the type of run, either fixed frequency or frequency scan for the given values 0 and 1 respectively, and whether the noise subtraction should be disabled, which is the default, or enabled.'''
     # First bit is run type and second bit is noise subtraction disable
@@ -18,7 +12,6 @@ def configure_run_type(run_type=1, noise_subtraction_disable=False):
 
 def configure_fixed_frequency(stim_freq_req=90):
     '''Return a dictionary of a configuration value for the fixed stimulus frequency given an input frequency value in hertz.'''
-    # TODO change unit_factor to 256 after firmware change
     
     unit_factor = 256
     return {'stimFreqReq': format(int(stim_freq_req * unit_factor), '06X')}
@@ -26,7 +19,6 @@ def configure_fixed_frequency(stim_freq_req=90):
 
 def configure_scan_frequencies(stim_freq_min, stim_freq_max, stim_freq_step=1/8):
     '''Return a dictionary of configuration values for the scan stimulus frequencies, i.e. the scan minimum and maximum frequencies and the scan frequency step size, given input frequency values in hertz.'''
-    # TODO change unit_factor to 256 after firmware change
     
     unit_factor = 256
 
@@ -66,8 +58,8 @@ def configure_gains(stim_freq_max: int, *,
 
 def configure_sampling(cycles_per_freq=1, samples_per_cycle=32):
     '''Return a dictionary of configuration values for the sampling parameters: the number of sampled cycles per stimulus frequency and the number of samples, equally spaced in time, per stimulus cycle.'''
-    return {'cyclesPerFreq': format(cycles_per_freq, '06X'),
-            'adcSamplesPerCycle': format(samples_per_cycle, '06X')}
+    return {'cyclesPerFreq': format(cycles_per_freq, '02X'),
+            'adcSamplesPerCycle': format(samples_per_cycle, '02X')}
 
 
 def configure_relays(wire_layer: str, apa_channels: list, is_flex_connection_winderlike: bool = True, bad_channels: list = [], *,
@@ -212,15 +204,15 @@ def configure_relays(wire_layer: str, apa_channels: list, is_flex_connection_win
 
 
 def configure_noise_subtraction(stim_freq_min, stim_freq_max, *,
-                                noise_freq_min=None, noise_freq_max=None, noise_freq_step=1, noise_settling_time=0.01, noise_samples_per_freq=32, noise_sampling_period=1/55/32):
-    '''Return a dictionary of configuration values for the noise-subtraction parameters, i.e. the minimum and maximum frequencies and the frequency step size for sampling noise, the wait time before noise sampling, the total number of samples per frequency and the sampling period, given the scan minimum and maximum frequencies in hertz. Configuration values, in hertz and seconds, can also be provided directly, bypassing the determination based on the scan minimum and maximum frequencies.'''
+                                noise_freq_min=None, noise_freq_max=None, noise_sampling_period=1/55/32, noise_samples_per_freq=32, noise_settling_time=0.01):
+    '''Return a dictionary of configuration values for the noise-subtraction parameters, i.e. the minimum and maximum frequencies for sampling noise, the wait time before noise sampling, the total number of samples per frequency and the sampling period, given the scan minimum and maximum frequencies in hertz. Configuration values, in hertz and seconds, can also be provided directly, bypassing the determination based on the scan minimum and maximum frequencies.'''
 
     unit_factor_freq = 256
-    unit_factor_time = 1/2.56e-6
     unit_factor_period = 1/10e-9
+    unit_factor_time = 1/2.56e-6
 
-    NOISE_MIN = 40
-    NOISE_MAX = 70
+    NOISE_MIN = 30
+    NOISE_MAX = 80
 
     disable_noise_subtraction = False
 
@@ -251,10 +243,9 @@ def configure_noise_subtraction(stim_freq_min, stim_freq_max, *,
 
     return_dict = {'noiseFreqMin': format(int(noise_freq_min * unit_factor_freq), '06X'),
                    'noiseFreqMax': format(int(noise_freq_max * unit_factor_freq), '06X'),
-                   'noiseFreqStep': format(int(noise_freq_step * unit_factor_freq), '06X'),
-                   'noiseSettlingTime': format(int(noise_settling_time * unit_factor_time), '06X'),
+                   'noiseSamplingPeriod': format(int(noise_sampling_period * unit_factor_period), '06X'),
                    'noiseAdcSamplesPerFreq': format(noise_samples_per_freq, '02X'),
-                   'noiseSamplingPeriod': format(int(noise_sampling_period * unit_factor_period), '06X')}
+                   'noiseSettlingTime': format(int(noise_settling_time * unit_factor_time), '06X')}
 
     if disable_noise_subtraction:
         return_dict.update(configure_run_type(noise_subtraction_disable=True))
@@ -265,7 +256,6 @@ def configure_noise_subtraction(stim_freq_min, stim_freq_max, *,
 def configure_default():
     '''Return a dictionary with default values for all configuration parameters.'''
     
-    configs = configure_ip_addresses(client_ip='192.0.2.254')
     configs.update(configure_run_type())
     configs.update(configure_fixed_frequency())
     configs.update(configure_scan_frequencies(stim_freq_min=99, stim_freq_max=100))

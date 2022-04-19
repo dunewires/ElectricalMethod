@@ -61,50 +61,65 @@ signal res_1             : std_logic_vector (31 downto 0); -- Output 2nd part
 
 signal res_bin           : std_logic;                     -- Output limited
 
-signal s_values          : fromDaqRegType;
 
 begin
 process_check : process(dwaClk10)
 begin
 if rising_edge(dwaClk10) then
 
-s_values   <= fromDaqReg;
+	res_0 <= ( 31 downto 0 => '1');
+	res_1 <= ( 31 downto 0 => '1');
+		                                             
+	res_0(3)  <= '1' when ((fromDaqReg.stimFreqReq <=  x"0003E800") and (fromDaqReg.stimFreqReq >=x"00000A00" ) ) else '0' ;
+	res_0(4)  <= '1' when ((fromDaqReg.stimFreqMin < fromDaqReg.stimFreqMax) and (fromDaqReg.stimFreqMin >= x"00000A00")) else '0' ;
+	res_0(5)  <= '1' when ( (fromDaqReg.stimFreqMax <= x"0003E800") and (fromDaqReg.stimFreqMax > fromDaqReg.stimFreqMin)) else '0' ;
+	res_0(6)  <= '1' when ( (fromDaqReg.stimFreqStep >= 1) and (fromDaqReg.stimFreqStep <= (fromDaqReg.stimFreqMax-fromDaqReg.stimFreqMin) )  ) else '0' ;
 
+	-- (fromDaqReg.cyclesPerFreq*fromDaqReg.adcSamplesPerCycle must be greater than 0 and lower or equal 128 and be a mutliple of 2)
+	if  ( (fromDaqReg.cyclesPerFreq*fromDaqReg.adcSamplesPerCycle < 128)  and (fromDaqReg.cyclesPerFreq*fromDaqReg.adcSamplesPerCycle > 0) ) then 
+	 
+		if  ( ( (fromDaqReg.cyclesPerFreq*fromDaqReg.adcSamplesPerCycle) rem 2) =0) then
 
-res_0 <= ( 31 downto 0 => '1');
-res_1 <= ( 31 downto 0 => '1');
-                                                     
-res_0(3)  <= '1' when ((s_values.stimFreqReq <=  x"0003E800") and (s_values.stimFreqReq >=x"00000A00" ) ) else '0' ;
-res_0(4)  <= '1' when ((s_values.stimFreqMin < s_values.stimFreqMax) and (s_values.stimFreqMin >= x"00000A00")) else '0' ;
-res_0(5)  <= '1' when ( (s_values.stimFreqMax <= x"0003E800") and (s_values.stimFreqMax > s_values.stimFreqMin)) else '0' ;
-res_0(6)  <= '1' when ( (s_values.stimFreqStep >= 1) and (s_values.stimFreqStep <= (s_values.stimFreqMax-s_values.stimFreqMin) )  ) else '0' ;
-res_0(10) <= '1' when (s_values.cyclesPerFreq*s_values.adcSamplesPerCycle < 128)  else '0' ;
-res_0(11) <= '1' when (s_values.cyclesPerFreq*s_values.adcSamplesPerCycle < 128)  else '0' ;
+		res_0(10) <= '1';
+		res_0(11) <= '1';
 
+		else 
 
-if not s_values.mnsDisable then                                                                                                                                                
-res_0(25) <= '1' when ( (s_values.noiseFreqMin <= s_values.noiseFreqMax) and (s_values.noiseFreqMin >= "000000000010100000000000")  ) else '0' ;
-res_0(26) <= '1' when ( (s_values.noiseFreqMax <= "000000000100011000000000")  and (s_values.noiseFreqMax >= s_values.noiseFreqMin) )  else '0' ;
-res_0(27) <= '1' when  (s_values.noiseFreqStep <= (s_values.noiseFreqMax -s_values.NoiseFreqMin))  else '0' ;
+		res_0(10) <= '0';
+		res_0(11) <= '0';
+		end if;
 
-if ( ( (s_values.noiseFreqMax-s_values.noiseFreqMin)/s_values.noiseFreqStep) > 32 ) then 
-res_0(25)<='0';
-res_0(26)<='0';
-res_0(27)<='0';
-end if;
+	else 
+	res_0(10) <= '0';
+	res_0(11) <= '0';
 
+	end if; -- <128 and >0 
 
+	if not fromDaqReg.mnsDisable then
+                                                                                                                                                
+	res_0(25) <= '1' when ( (fromDaqReg.noiseFreqMin <= fromDaqReg.noiseFreqMax) and (fromDaqReg.noiseFreqMin >= x"001E00")             )  else '0' ;
+	res_0(26) <= '1' when ( (fromDaqReg.noiseFreqMax <= x"005000")             and (fromDaqReg.noiseFreqMax >= fromDaqReg.noiseFreqMin) )  else '0' ;
+	res_0(27) <= '1' when (  fromDaqReg.noiseFreqStep =  x"000100"   )                                                                 else '0' ;
+		                                                          
+		if ( not ( ( (fromDaqReg.noiseFreqMax-fromDaqReg.noiseFreqMin)/fromDaqReg.noiseFreqStep) < 64 ) ) then -- should be lower than 64 to remain within good range 
+		res_0(25)<='0';
+		res_0(26)<='0';
+		res_0(27)<='0';
+		end if;
 
-end if;
+	end if;
+
+	if fromDaqReg.ctrlStart then
+	toDaqReg.checkRegA <= res_0;
+	toDaqReg.checkRegB <= res_1;
+
+	checkBound_error <= '0' when (and(res_0) and  and(res_1) ) else '1' ;
+	end if ;
 
 end if;
 
 end process;
 
-toDaqReg.checkRegA <= res_0;
-toDaqReg.checkRegB <= res_1;
-
-checkBound_error <= '0' when (and(res_0) and  and(res_1) ) else '1' ;
 
 
 end Behavioral;
