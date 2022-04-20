@@ -252,10 +252,14 @@ def configure_noise_subtraction(stim_freq_min, stim_freq_max, *,
 
     return return_dict
 
+def configure_ip_addresses(client_ip=None):
+    '''Incomplete'''
+    # TODO: Need to fetch IP address from DB.
+    return {'client_IP': client_ip}
 
 def configure_default():
     '''Return a dictionary with default values for all configuration parameters.'''
-    
+    configs = configure_ip_addresses(client_ip='192.0.2.254')
     configs.update(configure_run_type())
     configs.update(configure_fixed_frequency())
     configs.update(configure_scan_frequencies(stim_freq_min=99, stim_freq_max=100))
