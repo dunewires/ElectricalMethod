@@ -1801,6 +1801,7 @@ class MainWindow(qtw.QMainWindow):
         useAdvancedParamsCont = not self.advDisableContParamCb.isChecked()
 
         self.range_data_list = []
+        self.skipChannels = []
 
         row = 0
         for configLayer in layers:
@@ -2519,7 +2520,7 @@ class MainWindow(qtw.QMainWindow):
 
         print(self.combinedConfig)
         
-        self.makeScanOutputDir(scanType):
+        self.makeScanOutputDir(scanType)
         config_generator.write_config(self.combinedConfig, 'dwaConfig.ini', self.scanRunDataDir) #self.configFileDir
         self.configFile = os.path.join(self.scanRunDataDir, "dwaConfig.ini")
 
