@@ -2497,7 +2497,7 @@ class MainWindow(qtw.QMainWindow):
                 fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, digipot=advDigipotAmplitude))
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
-        fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels, is_flex_connection_winderlike))
+        fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels, is_flex_connection_winderlike, self.skipChannels))
         print(f'\n\nAfter Relays:\n  fpgaConfig: {fpgaConfig}')
 
         # FIXME: should these keys match DATABASE_FIELDS?
@@ -2519,13 +2519,13 @@ class MainWindow(qtw.QMainWindow):
 
         print(self.combinedConfig)
         
-        self.makeScanOutputDir()
+        self.makeScanOutputDir(scanType):
         config_generator.write_config(self.combinedConfig, 'dwaConfig.ini', self.scanRunDataDir) #self.configFileDir
         self.configFile = os.path.join(self.scanRunDataDir, "dwaConfig.ini")
 
         self.runScan()
 
-    def makeScanOutputDir(self):
+    def makeScanOutputDir(self, scanType):
         scanRunSubDir = "APA_"+str(self.configApaUuid)
         dataDir = os.path.join(self.scanDataDir, scanRunSubDir)
         try:
@@ -2538,9 +2538,13 @@ class MainWindow(qtw.QMainWindow):
         self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
         #above makes the scan directory for auto scans, below gives the final scan directory its name
 
+        scanTypeLabel = ''
+        if scanType == 'Tension': scanTypeLabel = 'T'
+        if scanType == 'Continuity': scanTypeLabel = 'C'
+
         wires = "-".join([str(w) for w in self.wires])
-        self.scanRunDataDir = os.path.join(dataDir, self.configLayer + "_" + self.configApaSide + 
-        "_" + str(self.configHeadboard) + "_" + str(wires) + "_" + self.timeString)
+        self.scanRunDataDir = os.path.join(dataDir, self.timeString + "_" + self.configLayer + "_" + self.configApaSide + 
+        "_" + str(self.configHeadboard) + "_" + str(wires) + "_" + scanTypeLabel)
         os.makedirs(self.scanRunDataDir)
      
     def startScanAdv(self):
@@ -4406,8 +4410,13 @@ class MainWindow(qtw.QMainWindow):
         print("Processing full")
         process_scan.process_scan(fullResultsDict, os.path.dirname(self.fnOfAmpData))
         print("Processing single")
-        process_scan.process_scan(scanResultsDict, os.path.dirname(self.fnOfAmpData))
-
+        apaChannels, results = process_scan.process_scan(scanResultsDict, os.path.dirname(self.fnOfAmpData))
+        for apaChannel, result in zip(apaChannels, results):
+            if result == "bridged": 
+                if self.skipChannels:
+                    self.skipChannels.append(apaChannel)
+                else:
+                    self.skipChannels = [apaChannel]
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
         print(f'writing processed scan results to {outfile}')
@@ -4490,8 +4499,6 @@ class MainWindow(qtw.QMainWindow):
             self.expectedFreqs[reg.value] = expected_resonances
             self.resonantFreqs[reg.value] = opt_res_arr
 
-
-        
     def resFreqUpdateDisplay(self, chan=None):
         """ 
         FIXME: if chan=None, update all channels, otherwise, 

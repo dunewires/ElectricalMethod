@@ -144,20 +144,34 @@ def process_scan(resultsDict, dirName):
     scanId = os.path.basename(dirName)
     scanType = data['type']
     print("Processing ",stage,layer,side,scanId,scanType)
+    results = []
+    apaChannels = data['apaChannels']
 
     if scanType == 'Continuity':
-        return
-        channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr = capacitanceFile.connectivityTest(dirName)
-        print("Continuity results")
-        print(booleanArr)
-        for i, chanName in enumerate(channelNameArr):
-            apaChan = int(chanName[1:]) # Converts "U1" to 1
-            segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan)
-            continuous = booleanArr[i]
-            capacitanceCal = calibratedCapArr[i]
-            capacitanceUnCal = uncalibratedCapArr[i]
-            if resultsDict:
-                update_results_dict_continuity(resultsDict, stage, layer, side, scanId, segments, continuous, capacitanceCal, capacitanceUnCal)
+        for reg, apaCh in enumerate(apaChannels):
+            dwaCh = str(reg)
+            print(f"Processing {reg}")
+            #print(data[dwaCh].keys())
+            apaCh = data['apaChannels'][reg]
+            if not apaCh:
+                results.append("no channel")
+            a = np.array(data[dwaCh]['ampl'])
+            if len(a[a>30000])/len(a) > 0.8:
+                results.append("bridged")
+            else:
+                results.append("ok")
+
+        # channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr = capacitanceFile.connectivityTest(dirName)
+        # print("Continuity results")
+        # print(booleanArr)
+        # for i, chanName in enumerate(channelNameArr):
+        #     apaChan = int(chanName[1:]) # Converts "U1" to 1
+        #     segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan)
+        #     continuous = booleanArr[i]
+        #     capacitanceCal = calibratedCapArr[i]
+        #     capacitanceUnCal = uncalibratedCapArr[i]
+        #     if resultsDict:
+        #         update_results_dict_continuity(resultsDict, stage, layer, side, scanId, segments, continuous, capacitanceCal, capacitanceUnCal)
     else:
         for reg in range(8):
             dwaCh = str(reg)
@@ -175,5 +189,7 @@ def process_scan(resultsDict, dirName):
                 continue
 
             segments, opt_res_arr, best_tensions, best_tension_stds = process_channel(layer, apaCh, f, a)
+            results.append(best_tensions)
             if resultsDict:
                 update_results_dict_tension(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_stds)
+    return apaChannels, results
