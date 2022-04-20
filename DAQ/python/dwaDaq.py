@@ -2519,13 +2519,13 @@ class MainWindow(qtw.QMainWindow):
 
         print(self.combinedConfig)
         
-        self.makeScanOutputDir()
+        self.makeScanOutputDir(scanType)
         config_generator.write_config(self.combinedConfig, 'dwaConfig.ini', self.scanRunDataDir) #self.configFileDir
         self.configFile = os.path.join(self.scanRunDataDir, "dwaConfig.ini")
 
         self.runScan()
 
-    def makeScanOutputDir(self):
+    def makeScanOutputDir(self, scanType):
         scanRunSubDir = "APA_"+str(self.configApaUuid)
         dataDir = os.path.join(self.scanDataDir, scanRunSubDir)
         try:
@@ -2538,9 +2538,14 @@ class MainWindow(qtw.QMainWindow):
         self.timeString = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
         #above makes the scan directory for auto scans, below gives the final scan directory its name
 
+        scanTypeLabel = ''
+        if scanType == 'Tension': scanTypeLabel = 'T'
+        if scanType == 'Continuity': scanTypeLabel = 'C'
+
+
         wires = "-".join([str(w) for w in self.wires])
-        self.scanRunDataDir = os.path.join(dataDir, self.configLayer + "_" + self.configApaSide + 
-        "_" + str(self.configHeadboard) + "_" + str(wires) + "_" + self.timeString)
+        self.scanRunDataDir = os.path.join(dataDir, self.timeString + "_" + self.configLayer + "_" + self.configApaSide + 
+        "_" + str(self.configHeadboard) + "_" + str(wires) + "_" + scanTypeLabel)
         os.makedirs(self.scanRunDataDir)
      
     def startScanAdv(self):
