@@ -82,9 +82,7 @@ def min_peak_height(layer, a):
     if layer in ['X','G']: return 0.1*np.max(trimmed)
     else: return max(5., 0.05*np.max(trimmed))
             
-def process_channel(layer, apaCh, f, a): 
-    print("getting res")
-    maxFreq = f[-1]
+def process_channel(layer, apaCh, f, a, maxFreq=250.): 
     stepSize = f[1]-f[0]
     segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,maxFreq)
     roundex = []
@@ -128,7 +126,7 @@ def process_channel(layer, apaCh, f, a):
         min_index = np.argmin(best_diffs)
         return segments, best_placements[min_index], best_tensions[min_index], np.std(best_tensions,0)
 
-def process_scan(resultsDict, dirName):
+def process_scan(resultsDict, dirName, maxFreq=250.):
     '''Process a scan with a given directory name and update the given results dictionary.'''
     try: # Ensure that there is an amplitudeData.json file present!
         with open(dirName+'/amplitudeData.json', "r") as fh:
@@ -156,7 +154,8 @@ def process_scan(resultsDict, dirName):
             if not apaCh:
                 results.append("no channel")
             a = np.array(data[dwaCh]['ampl'])
-            if len(a[a>30000])/len(a) > 0.8:
+            # If 80% of the values are above 30000, it's probably a bridged channel
+            if len(a) > 0 and len(a[a>30000])/len(a) > 0.8:
                 results.append("bridged")
             else:
                 results.append("ok")
@@ -188,7 +187,7 @@ def process_scan(resultsDict, dirName):
                 print(f"DWA Chan {reg}: Not a valid scan")
                 continue
 
-            segments, opt_res_arr, best_tensions, best_tension_stds = process_channel(layer, apaCh, f, a)
+            segments, opt_res_arr, best_tensions, best_tension_stds = process_channel(layer, apaCh, f, a, maxFreq)
             results.append(best_tensions)
             if resultsDict:
                 update_results_dict_tension(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_stds)

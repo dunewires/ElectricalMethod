@@ -2905,7 +2905,7 @@ class MainWindow(qtw.QMainWindow):
         
         # process each scan
         for scan in scansToProcess:
-            process_scan.process_scan(resultsDict, scan)
+            process_scan.process_scan(resultsDict, scan, MAX_FREQ)
 
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
@@ -4411,7 +4411,7 @@ class MainWindow(qtw.QMainWindow):
         print("Processing full")
         process_scan.process_scan(fullResultsDict, os.path.dirname(self.fnOfAmpData))
         print("Processing single")
-        apaChannels, results = process_scan.process_scan(scanResultsDict, os.path.dirname(self.fnOfAmpData))
+        apaChannels, results = process_scan.process_scan(scanResultsDict, os.path.dirname(self.fnOfAmpData), MAX_FREQ)
         for apaChannel, result in zip(apaChannels, results):
             if result == "bridged": 
                 if self.skipChannels:
@@ -4495,10 +4495,9 @@ class MainWindow(qtw.QMainWindow):
             a = np.array(self.ampDataS[reg]['ampl'])
             bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
             self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], bsub)
-            segments, opt_res_arr, best_tension, best_tensions_std = process_scan.process_channel(layer, apaCh, f, a)
-            print("setting ",reg.value,opt_res_arr)
+            segments, opt_res_arr, best_tension, best_tensions_std = process_scan.process_channel(layer, apaCh, f, a, MAX_FREQ)
             self.expectedFreqs[reg.value] = expected_resonances
-            self.resonantFreqs[reg.value] = opt_res_arr
+            self.resonantFreqs[reg.value] = list(opt_res_arr)
 
     def resFreqUpdateDisplay(self, chan=None):
         """ 
