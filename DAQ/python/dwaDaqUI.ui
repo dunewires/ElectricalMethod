@@ -426,7 +426,7 @@
                    <attribute name="title">
                     <string>Config</string>
                    </attribute>
-                   <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="6,0,3">
+                   <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="5,0,2">
                     <item>
                      <widget class="QWidget" name="widget_2" native="true">
                       <layout class="QVBoxLayout" name="verticalLayout_19">
@@ -708,7 +708,7 @@
                      </spacer>
                     </item>
                     <item>
-                     <widget class="QGraphicsView" name="graphicsView"/>
+                     <widget class="APA_Diagram_View" name="APA_Diagram_View" native="true"/>
                     </item>
                    </layout>
                   </widget>
@@ -6362,6 +6362,12 @@
    <extends>QGraphicsView</extends>
    <header>pyqtgraph</header>
   </customwidget>
+  <customwidget>
+   <class>APA_Diagram_View</class>
+   <extends>QWidget</extends>
+   <header>APA_Diagram_View</header>
+   <container>1</container>
+  </customwidget>  
  </customwidgets>
  <tabstops>
   <tabstop>tabWidgetStages</tabstop>
@@ -6421,7 +6427,6 @@
   <tabstop>scanCtrlRunAll</tabstop>
   <tabstop>evtVwr_openScan_pb</tabstop>
   <tabstop>measuredByLineEdit</tabstop>
-  <tabstop>graphicsView</tabstop>
  </tabstops>
  <resources/>
  <connections/>
