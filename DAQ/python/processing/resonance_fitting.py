@@ -122,7 +122,7 @@ def analyze_res_placement(f,a,res_arr,fpks):
                     #print(res)
                     #if res > 120: continue # Noisy above 120, not a big deal if there's no match
                     if res > np.max(f): continue # Can't expect a resonance where there's no data
-                    if np.min(np.abs(fpks - res)) > 4:
+                    if np.min(np.abs(fpks - res))/res > 0.1:
                         #print("failed proximity", res, fpks)
                         all_res_near_ex = False
                 # Make sure it is somewhat near where expected
@@ -130,12 +130,12 @@ def analyze_res_placement(f,a,res_arr,fpks):
                 #print('offset ',np.abs(ex_res_seg[0] - res_seg[0])/ex_res_seg[0])
                 num_res = len(ex_res_seg)
                 offset = np.abs(ex_res_seg[0] - res_seg[0])/ex_res_seg[0] > 0.20
-                if num_res == 1 and offset > 0.1:
-                    #print("failed expectaion")
-                    all_res_near_ex = False
-                elif offset > 0.25:
-                    #print("failed expectaion")
-                    all_res_near_ex = False
+                # if num_res == 1 and offset > 0.1:
+                #     print("failed expectaion")
+                #     #all_res_near_ex = False
+                # elif offset > 0.25:
+                #     print("failed expectaion")
+                #     #all_res_near_ex = False
 
             # If all resonances are valid, compute the cost
             #print(all_res_near_ex, shifted_res_arr)
@@ -146,13 +146,13 @@ def analyze_res_placement(f,a,res_arr,fpks):
                         reduce_surrounding(f,reduced_a,res)
                 cost = np.sum(reduced_a)
                 costs.append(cost)
-                shifted_res_arr = [shift_res_seg_to_f0(res_seg, np.max(res_seg), np.max(res_seg)-1.5) for res_seg in shifted_res_arr]
+                shifted_res_arr = [shift_res_seg_to_f0(res_seg, np.max(res_seg), np.max(res_seg)) for res_seg in shifted_res_arr]
                 placements.append(shifted_res_arr)
                 # Calculate diff
                 diff = 0
                 tension_arr = []
                 for i, res_seg in enumerate(res_arr):
-                    diff += np.sum(np.abs(np.array(res_seg)-np.array(shifted_res_arr[i])))
+                    diff += np.abs(np.min(res_seg)-np.min(shifted_res_arr[i]))
                     minMeasured = np.min(shifted_res_arr[i])
                     minExpected = np.min(res_seg)
                     tension_arr.append(6.5*(minMeasured/minExpected)**2)

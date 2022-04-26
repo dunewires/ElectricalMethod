@@ -31,9 +31,12 @@ def new_results_dictOLD(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
         resultsDict[l] = {}
         for s in APA_SIDES:
             resultsDict[l][s] = {}
-            for i in range(MAX_WIRE_SEGMENT[l]):
+            for i in range(MAX_WIRE_SEGMENT[l]+1):
                 resultsDict[l][s][str(i).zfill(5)] = {"tension": {}, "continuity": {}}
     return resultsDict
+
+def blank_tension_result():
+    return {"tension": {}, "continuity": {}}
 
 def new_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
     resultsDict = {}
@@ -44,18 +47,20 @@ def new_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
             for side in APA_SIDES:
                 resultsDict[stage][layer][side] = {}
                 for i in range(MAX_WIRE_SEGMENT[layer]):
-                    resultsDict[stage][layer][side][str(i).zfill(5)] = {"tension": {}, "continuity": {}}
+                    resultsDict[stage][layer][side][str(i).zfill(5)] = blank_tension_result()
     return resultsDict
 
 def update_results_dict_tension(resultsDict, stage, layer, side, scanId, wireSegments, tensions, tension_stds):
-    for i, wireNum in enumerate(wireSegments):
+    for i, wireSegment in enumerate(wireSegments):
         tension = tensions[i]
         tension_std = tension_stds[i]
+        wireSegmentStr = str(wireSegment).zfill(5)
+        if wireSegmentStr not in resultsDict[stage][layer][side].keys(): resultsDict[stage][layer][side][wireSegmentStr] = blank_tension_result()
         if not tension: continue
         elif tension == -1:
-            resultsDict[stage][layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'Not Found'}
+            resultsDict[stage][layer][side][wireSegmentStr]["tension"][scanId] = {'tension': 'Not Found'}
         elif tension > 0:
-            resultsDict[stage][layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std}
+            resultsDict[stage][layer][side][wireSegmentStr]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std}
 
 def update_results_dict_continuity(resultsDict, stage, layer, side, scanId, wireSegments, continuous, capacitanceCal, capacitanceUnCal):
     for wireNum in wireSegments:
@@ -103,7 +108,7 @@ def process_channel(layer, apaCh, f, a, maxFreq=250.):
     if layer in ['X','G']:
         pks, _ = find_peaks(bsub,height=min_peak_height(layer, bsub),width=int(0.5/stepSize))
         fpks = [f[pk] for pk in pks]   
-        print("find peaks", apaCh, fpks)
+        print("PEAKS", apaCh, fpks)
         wire_segment_res = np.array(expected_resonances[0])
         opt_res_arr = [wire_segment_res - np.min(wire_segment_res) + fpks[0]]
         minMeasured = np.min(opt_res_arr[0])
@@ -113,17 +118,28 @@ def process_channel(layer, apaCh, f, a, maxFreq=250.):
     else:
         pks, props = find_peaks(smooth,height=min_peak_height(layer, smooth),width=int(0.5/stepSize),prominence=5.)
         fpks = np.array([f[pk] for pk in pks])   
-        print("find peaks", apaCh, fpks,props)
+        print("PEAKS", apaCh, fpks)
         placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
         if len(placements) < 1: 
             print(f"DWA Chan {apaCh}: No valid placements found")
             return segments, [[] for s in segments], [-1 for s in segments], [-1 for s in segments]
-        lowest_cost = np.min(costs)
-        select_best = (costs < 1.2*lowest_cost)
+        # lowest_cost = np.min(costs)
+        # select_best = (costs < 1.2*lowest_cost)
+        # best_placements = placements[select_best]
+        # best_diffs = diffs[select_best]
+        # best_costs = costs[select_best]
+        # best_tensions = tensions[select_best]
+        # min_index = np.argmin(best_diffs)
+        # for i,placement in enumerate(best_placements):
+        #     print('PLACEMENT', placement, best_diffs[i], best_costs[i])
+        
+        lowest_diff = np.min(diffs)
+        select_best = (diffs < 2*lowest_diff)
         best_placements = placements[select_best]
-        best_diffs = diffs[select_best]
         best_tensions = tensions[select_best]
-        min_index = np.argmin(best_diffs)
+        best_costs = costs[select_best]
+        min_index = np.argmin(best_costs)
+
         return segments, best_placements[min_index], best_tensions[min_index], np.std(best_tensions,0)
 
 def process_scan(resultsDict, dirName, maxFreq=250.):
