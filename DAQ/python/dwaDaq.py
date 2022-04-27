@@ -963,7 +963,7 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTable.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
         #self.scanConfigTable.setEditTriggers(qtw.QTableView.NoEditTriggers)
         #self.scanConfigTable.doubleClicked.connect(self.scanConfigTableRowDoubleClicked)
-        self.scanConfigTable.clicked.connect(self.setAPADiagram)
+        self.scanConfigTable.selectionModel().currentChanged.connect(self.setAPADiagram)
         
     def resultsTableInit(self):
         self.recentScansTableModel = qtg.QStandardItemModel()
