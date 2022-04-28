@@ -963,7 +963,7 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTable.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
         #self.scanConfigTable.setEditTriggers(qtw.QTableView.NoEditTriggers)
         #self.scanConfigTable.doubleClicked.connect(self.scanConfigTableRowDoubleClicked)
-        self.scanConfigTable.selectionModel().currentChanged.connect(self.setAPADiagram)
+        self.scanConfigTable.selectionModel().selectionChanged.connect(self.setAPADiagram)
         
     def resultsTableInit(self):
         self.recentScansTableModel = qtg.QStandardItemModel()
@@ -1862,11 +1862,14 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTable.selectRow(0)
         self.configureLabel.setText("")
         self.configure = True
-        self.setAPADiagram()
         self._scanButtonEnable()
 
     def setAPADiagram(self):
-        row = self.scanConfigTable.selectedIndexes()[0].row()
+        if self.scanConfigTable.selectedIndexes():
+            row = self.scanConfigTable.selectedIndexes()[0].row()
+        else:
+            row = 0
+            
         rd = self.range_data_list[row]
 
         self.apaDiagramModel.setStage(self.configStageComboBox.currentText())

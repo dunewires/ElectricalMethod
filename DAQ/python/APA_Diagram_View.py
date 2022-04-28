@@ -77,6 +77,7 @@ class APA_Diagram_View(FigureCanvasQTAgg):
         style = '-'
         styleback = (0, (5, 5))
 
+        # Uncomment block below to not change point of view of diagram when scanning far side of APA
         # if side == 'B':
         #     offsetXVG, offsetXVGback = offsetXVGback, offsetXVG
         #     offsetU, offsetUback = offsetUback, offsetU
