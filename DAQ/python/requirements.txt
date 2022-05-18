@@ -3,3 +3,4 @@ PyQt5 >= 5.15.4
 pyqtgraph >= 0.12.1
 six >= 1.15.0
 boombox >= 0.56
+matplotlib >= 3.5.2
