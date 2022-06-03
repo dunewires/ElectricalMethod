@@ -214,7 +214,7 @@ SCAN_OUTPUT_DIRS = [OUTPUT_DIR_SCAN_DATA, OUTPUT_DIR_SCAN_DATA_ADVANCED]
 CLOCK_PERIOD_SEC = 1e8
 SCAN_FREQUENCY_STEP_DEFAULT = 1/8  # Hz
 STIM_VIEW_OFFSET = 0
-MAX_FREQ = 250 # Hz
+MAX_FREQ = 350 # Hz
 #
 UDP_RECV_BUF_SIZE = 1024*2**20 # Bytes (2**20 Bytes is ~1MB)
 SYSTEM_PLATFORM   = platform.system().upper()
@@ -1809,7 +1809,7 @@ class MainWindow(qtw.QMainWindow):
             channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
             for channels in channelGroups:
                 #print(f'channels = {channels}')
-                range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
+                range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels, MAX_FREQ)
                 #print(f'range_data = {range_data}')
                 rd = range_data[0]
     
@@ -4411,7 +4411,7 @@ class MainWindow(qtw.QMainWindow):
         print("Processing full")
         process_scan.process_scan(fullResultsDict, os.path.dirname(self.fnOfAmpData))
         print("Processing single")
-        apaChannels, results = process_scan.process_scan(scanResultsDict, os.path.dirname(self.fnOfAmpData), MAX_FREQ)
+        scanType, apaChannels, results = process_scan.process_scan(scanResultsDict, os.path.dirname(self.fnOfAmpData), MAX_FREQ, self.verbose)
         for apaChannel, result in zip(apaChannels, results):
             if result == "bridged": 
                 if self.skipChannels:
@@ -4495,7 +4495,7 @@ class MainWindow(qtw.QMainWindow):
             a = np.array(self.ampDataS[reg]['ampl'])
             bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
             self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], bsub)
-            segments, opt_res_arr, best_tension, best_tensions_std = process_scan.process_channel(layer, apaCh, f, a, MAX_FREQ)
+            segments, opt_res_arr, best_tension, best_tensions_std, fpks = process_scan.process_channel(layer, apaCh, f, a, MAX_FREQ, self.verbose)
             self.expectedFreqs[reg.value] = expected_resonances
             self.resonantFreqs[reg.value] = list(opt_res_arr)
 

@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import optimize
+import sys
 
 class PhysicalWire():
     """A physical wire that is soldered at both ends."""
@@ -168,7 +169,7 @@ def length_of_wire_segment(wire_layer: str, wire_segment: int):
         return None
     return length
 
-def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
+def channel_frequencies_per_wire(wire_layer: str, channel_number: int, thresh = sys.float_info.max):
     """Wire segment: part of wire between combs or ends."""
     
     wire_layer = check_valid_wire_layer(wire_layer)
@@ -186,7 +187,8 @@ def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
             if index%400 == channel_number-1:
                 wire_freqs = []
                 for length in wire.lengths():
-                    wire_freqs.append(length_to_frequency(length))
+                    freq = length_to_frequency(length)
+                    if freq < thresh: wire_freqs.append(length_to_frequency(length))
                 channel_freqs[f'{index+1}'] = wire_freqs
 
     if wire_layer == 'U':
@@ -194,7 +196,8 @@ def channel_frequencies_per_wire(wire_layer: str, channel_number: int):
             if index%400 == channel_number-1:
                 wire_freqs = []
                 for length in wire.lengths():
-                    wire_freqs.append(length_to_frequency(length))
+                    freq = length_to_frequency(length)
+                    if freq < thresh: wire_freqs.append(length_to_frequency(length))
                 channel_freqs[f'{index+1}'] = wire_freqs
     
     if wire_layer == 'G':
@@ -222,11 +225,11 @@ def all_apa_frequencies():
     return all_freqs
 
 
-def wire_frequencies_from_channels(wire_layer: str, channel_numbers: list):
+def wire_frequencies_from_channels(wire_layer: str, channel_numbers: list, thresh = sys.float_info.max):
     """Return a dictionary where the keys are the wire numbers for the given channels and the values are their resonance frequencies."""
     allwires = {}
     for ch in channel_numbers:
-        allwires.update(channel_frequencies_per_wire(wire_layer, ch))
+        allwires.update(channel_frequencies_per_wire(wire_layer, ch, thresh))
     return allwires
 
 def closest_index_to(arr, val):
@@ -239,38 +242,39 @@ def closest_index_to(arr, val):
             closestInd = i
     return closestInd
 
-def wire_range_data(wire_freq_data, range_radius = 0.15):
-    """
-    Converts the frequency data into a list of frequency range dictionaries. Ex: {"wireSegments": [23], "range": [60,80]}.
-    The radius of the range is set by range_radius
-    """
-    range_data = []
-    for w in wire_freq_data:
-        i = closest_index_to(wire_freq_data[w],70)
-        f = wire_freq_data[w][i]
-        f_range = [round(f*(1-range_radius),2), round(f*(1+range_radius),2)]
-        range_data.append({"wireSegments": [int(w)], "range": f_range})
-    return range_data
+# def wire_range_data(wire_freq_data, range_radius = 0.15):
+#     """
+#     Converts the frequency data into a list of frequency range dictionaries. Ex: {"wireSegments": [23], "range": [60,80]}.
+#     The radius of the range is set by range_radius
+#     """
+#     range_data = []
+#     for w in wire_freq_data:
+#         i = closest_index_to(wire_freq_data[w],70)
+#         f = wire_freq_data[w][i]
+#         f_range = [round(f*(1-range_radius),2), round(f*(1+range_radius),2)]
+#         range_data.append({"wireSegments": [int(w)], "range": f_range})
+#     return range_data
 
 
-def wire_range_data_constant(wire_layer: str, wire_freq_data):
+def wire_range_data(wire_layer: str, wire_freq_data, range_radius):
     """
     Converts the frequency data into a list of frequency range dictionaries. Ex: {"wireSegments": [23], "range": [60,80]}.
     The range is independant of the wire, and depends only on the layer 
     """
     range_data = []
-    for w in wire_freq_data:
+    for w in wire_freq_data.keys():
         if wire_layer == "X" or wire_layer == "G":
             f_range = [74, 102]
         else:
             res_array = np.array(wire_freq_data[w])
-            res_sub_200 = res_array[(res_array<200)]
-            if len(res_sub_200)==0:
+            #res_sub_200 = res_array[(res_array<200)]
+            if len(res_array)==0:
                 maxf = 51
             else:
-                maxf = round(np.max(res_sub_200)*1.2)
+                maxf = round(np.max(res_array)*1.2)
             f_range = [50, maxf]
         range_data.append({"wireSegments": [int(w)], "range": f_range})
+    print('rd ',range_data)
     return range_data
 
 def combine_range_data(range_data_a, range_data_b):
@@ -327,16 +331,21 @@ def append_channel_info(culled_range_data, channel_numbers):
         range_data_with_channel_info.append(rangeData)
     return range_data_with_channel_info
         
-def get_range_data_for_channels(wire_layer: str, channel_numbers: list, range_radius = 0.15):
+def get_range_data_for_channels(wire_layer: str, channel_numbers: list, thresh = sys.float_info.max, range_radius = 0.2):
     """
     Produces a full reduced and culled set of frequency range dictionaries for a set of channels.
     """
-    wire_freq_data = wire_frequencies_from_channels(wire_layer, channel_numbers)
+    wire_freq_data = wire_frequencies_from_channels(wire_layer, channel_numbers, thresh)
+    print("wire_freq_data",thresh,wire_freq_data)
     #range_data = wire_range_data(wire_freq_data, range_radius) # Swtiched to a constant method where range depends only on the layer
-    range_data = wire_range_data_constant(wire_layer, wire_freq_data)
+    range_data = wire_range_data(wire_layer, wire_freq_data, range_radius)
+    print("range_data",range_data)
     reduced_range_data = reduce_range_data(range_data)
+    print("reduced_range_data",reduced_range_data)
     culled_range_data = cull_range_data(reduced_range_data)
+    print("culled_range_data",culled_range_data)
     range_data_with_channel_info = append_channel_info(culled_range_data, channel_numbers)
+    print("range_data_with_channel_info",range_data_with_channel_info)
     return range_data_with_channel_info
 
 def compute_tensions_from_resonances(wire_freqs_expected, freqs_measured, nominal_tension):
