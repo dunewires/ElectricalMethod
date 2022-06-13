@@ -4114,14 +4114,13 @@ class MainWindow(qtw.QMainWindow):
                 if self.scanType == ScanType.AUTO:  # One scan of a set is done
 
                     row = self.scanConfigRowToScan
-                    #BOBOBOB add check here to see if tensions were found...
                     self.scanConfigTableModel.item(row, Scans.STATUS).setText('Done')
-                    colorMissingTensions = qtg.QColor(245, 209, 66)
-                    colorAllTensionsFound = qtg.QColor(3, 205, 0)
+                    cMissingTensions = qtg.QColor(245, 209, 66) # yellow-ish
+                    cAllTensionsFound = qtg.QColor(3, 205, 0)   # green
                     if self.someTensionsNotFound:
-                        newRowColor = colorMissingTensions
+                        newRowColor = cMissingTensions
                     else:
-                        newRowColor = colorAllTensionsFound
+                        newRowColor = cAllTensionsFound
                     for c in range(0, self.scanConfigTableModel.columnCount()):
                         self.scanConfigTableModel.item(row,c).setBackground(newRowColor)
                         #self.scanConfigTableModel.item(row,c).setBackground(qtg.QColor(3,205,0))
