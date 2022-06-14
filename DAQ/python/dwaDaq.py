@@ -1114,7 +1114,7 @@ class MainWindow(qtw.QMainWindow):
                             
                             # Scan name
                             items[Results.SCAN] = qtg.QStandardItem(scanId)
-                            
+
                             # Tension
                             if "tension" in scanDict.keys():
                                 tension = scanDict["tension"]
@@ -1139,12 +1139,20 @@ class MainWindow(qtw.QMainWindow):
                             elif "continuous" in scanDict.keys():
                                 continuous = scanDict["continuous"]
                                 resultStr = continuous
+                                submitted = 'N/A'
                                 
                                 # Status
                                 confidenceStr = 'N/A'
                                 
                             items[Results.RESULT] = qtg.QStandardItem(resultStr)
                             items[Results.CONFIDENCE] = qtg.QStandardItem(confidenceStr)
+
+                            try:
+                                submitted = scanDict["submitted"]
+                            except:
+                                submitted = 'N/A'
+
+                            items[Results.SUBMITTED] = qtg.QStandardItem(submitted)
             
                             self.recentScansTableModel.appendRow(items)
 
@@ -4489,7 +4497,6 @@ class MainWindow(qtw.QMainWindow):
         print("Processing single")
         process_scan.process_scan(scanResultsDict, dirName)
 
-        # BOBOBOB
         self.someTensionsNotFound = self.checkForMissingTensions(self.fnOfAmpData, fullResultsDict)
         print(f"self.someTensionsNotFound = {self.someTensionsNotFound}")
 
