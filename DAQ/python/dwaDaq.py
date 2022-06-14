@@ -3343,11 +3343,9 @@ class MainWindow(qtw.QMainWindow):
                     if seg < len(segments):
                         wireSeg = segments[seg]
                         print("writing seg", dwaChan, seg, self.currentTensions[dwaChan][seg])
-                        # BOBOBOBOB
                         print(f"stage, layer, side, wireSeg, scanId: {stage}, {layer}, {side}, {wireSeg}, {scanId}")
                         fullResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1., 'submitted':'Manual'}
                         scanResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1., 'submitted':'Manual'}
-
 
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{apaUuid}.json')
