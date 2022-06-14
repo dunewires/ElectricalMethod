@@ -55,7 +55,7 @@ def update_results_dict_tension(resultsDict, stage, layer, side, scanId, wireSeg
         elif tension == -1:
             resultsDict[stage][layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'Not Found'}
         elif tension > 0:
-            resultsDict[stage][layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std}
+            resultsDict[stage][layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std, 'submitted': 'Auto'}
 
 def update_results_dict_continuity(resultsDict, stage, layer, side, scanId, wireSegments, continuous, capacitanceCal, capacitanceUnCal):
     for wireNum in wireSegments:

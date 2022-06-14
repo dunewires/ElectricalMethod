@@ -1134,6 +1134,8 @@ class MainWindow(qtw.QMainWindow):
                                         status = 'Medium'
                                     else:
                                         status = 'Low'
+                                else:
+                                    status = 'None'
                                 confidenceStr = status
                                 
                             elif "continuous" in scanDict.keys():
