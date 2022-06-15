@@ -97,20 +97,8 @@ def is_res_seg_valid(res_seg, fpks, ex_res_arr, f, i):
         if res > np.max(f): continue # Can't expect a resonance where there's no data
         # Make sure each resonance is within 10% of a peak
         if np.min(np.abs(fpks - res))/res > 0.1:
-            print(" "," invalid because ",res," in ", res_seg," > 10 percent away from a peak")
+            #print(" "," invalid because ",res," in ", res_seg," > 10 percent away from a peak")
             return False
-        
-    # Make sure it is somewhat near where expected
-    ex_res_seg = ex_res_arr[i]
-    #print('offset ',np.abs(ex_res_seg[0] - res_seg[0])/ex_res_seg[0])
-    num_res = len(ex_res_seg)
-    offset = np.abs(ex_res_seg[0] - res_seg[0])/ex_res_seg[0]
-    if num_res == 1 and offset > 0.3:
-        print(" "," invalid because ",res_seg," offset from expectation > 0.3")
-        return False
-    elif offset > 0.5:
-        print(" "," invalid because ",res_seg," offset from expectation > 0.5")
-        return False
     return True
 
 
@@ -126,6 +114,26 @@ def is_res_arr_valid(res_arr, fpks, peak_heights):
             all_pks_near_res = False
             return False
     return True
+
+def add_viable_placement(f, a, res_arr, shifted_res_arr, costs, reductions, placements, diffs, tensions):
+    reduced_a = a.copy()
+    for res_seg in shifted_res_arr:
+        for res in res_seg:
+            reduce_surrounding(f,reduced_a,res)
+    cost = np.sum(reduced_a)
+    reductions.append(reduced_a)
+    costs.append(cost)
+    placements.append(shifted_res_arr)
+    # Calculate diff
+    diff = 0
+    tension_arr = []
+    for i, res_seg in enumerate(res_arr):
+        diff += np.abs(np.min(res_seg)-np.min(shifted_res_arr[i]))
+        minMeasured = np.min(shifted_res_arr[i])
+        minExpected = np.min(res_seg)
+        tension_arr.append(6.5*(minMeasured/minExpected)**2)
+    diffs.append(diff)
+    tensions.append(tension_arr) 
 
 def analyze_res_placement(f,a,res_arr,fpks,peak_heights):
     '''
@@ -146,43 +154,49 @@ def analyze_res_placement(f,a,res_arr,fpks,peak_heights):
     tensions = []
     reductions = []
     possible_placements = itertools.product(fpks, repeat=len(res_arr))
-    for p, placement in enumerate(possible_placements):
-        possible_res_arr = shift_res_arr_to_placement(res_arr, placement)
-        for r, shifted_res_arr in enumerate(possible_res_arr):
-            try: 
-                flattened_res_arr = np.array([res for res_seg in shifted_res_arr for res in res_seg])
-                all_res_near_ex = True
-                # See if all resonances are near an expected resonance
-                # Make sure each other resonance is within 3 Hz of a peak
-                #print(" Checking validity")
-                for i,res_seg in enumerate(shifted_res_arr):
-                    if not is_res_seg_valid(res_seg, fpks, res_arr, f, i): raise StopIteration
-                
-                if not is_res_arr_valid(shifted_res_arr, fpks, peak_heights): raise StopIteration
-
-            except StopIteration:
-                break
-
-            # If all resonances are valid, compute the cost
-            #print(all_res_near_ex, shifted_res_arr)
-            reduced_a = a.copy()
-            for res_seg in shifted_res_arr:
-                for res in res_seg:
-                    reduce_surrounding(f,reduced_a,res)
-            cost = np.sum(reduced_a)
-            reductions.append(reduced_a)
-            costs.append(cost)
-            shifted_res_arr = [shift_res_seg_to_f0(res_seg, np.max(res_seg), np.max(res_seg)) for res_seg in shifted_res_arr]
-            placements.append(shifted_res_arr)
-            # Calculate diff
-            diff = 0
-            tension_arr = []
-            for i, res_seg in enumerate(res_arr):
-                diff += np.abs(np.min(res_seg)-np.min(shifted_res_arr[i]))
-                minMeasured = np.min(shifted_res_arr[i])
-                minExpected = np.min(res_seg)
-                tension_arr.append(6.5*(minMeasured/minExpected)**2)
-            diffs.append(diff)
-            tensions.append(tension_arr)
+    if len(res_arr) == 1:
+        for f0 in fpks:
+            for res0 in res_arr[0]:
+                if np.abs(f0 - res0)/res0 > 0.3: continue
+                shifted_res_seg_0 = shift_res_seg_to_f0(res_arr[0], res0, f0)
+                if not is_res_seg_valid(shifted_res_seg_0, fpks, res_arr, f, 0): continue
+                shifted_res_arr = [shifted_res_seg_0]
+                if not is_res_arr_valid(shifted_res_arr, fpks, peak_heights): continue
+                add_viable_placement(f, a, res_arr, shifted_res_arr, costs, reductions, placements, diffs, tensions)
+    
+    if len(res_arr) == 2:
+        for f0 in fpks:
+            for res0 in res_arr[0]:
+                if np.abs(f0 - res0)/res0 > 0.3: continue
+                shifted_res_seg_0 = shift_res_seg_to_f0(res_arr[0], res0, f0)
+                if not is_res_seg_valid(shifted_res_seg_0, fpks, res_arr, f, 0): continue
+                for f1 in fpks:
+                    for res1 in res_arr[1]:
+                        if np.abs(f1 - res1)/res1 > 0.3: continue
+                        shifted_res_seg_1 = shift_res_seg_to_f0(res_arr[1], res1, f1)
+                        if not is_res_seg_valid(shifted_res_seg_1, fpks, res_arr, f, 1): continue                
+                        shifted_res_arr = [shifted_res_seg_0,shifted_res_seg_1]
+                        if not is_res_arr_valid(shifted_res_arr, fpks, peak_heights): continue
+                        add_viable_placement(f, a, res_arr, shifted_res_arr, costs, reductions, placements, diffs, tensions) 
+                        
+    if len(res_arr) == 3:
+        for f0 in fpks:
+            for res0 in res_arr[0]:
+                if np.abs(f0 - res0)/res0 > 0.3: continue
+                shifted_res_seg_0 = shift_res_seg_to_f0(res_arr[0], res0, f0)
+                if not is_res_seg_valid(shifted_res_seg_0, fpks, res_arr, f, 0): continue
+                for f1 in fpks:
+                    for res1 in res_arr[1]:
+                        if np.abs(f1 - res1)/res1 > 0.3: continue
+                        shifted_res_seg_1 = shift_res_seg_to_f0(res_arr[1], res1, f1)
+                        if not is_res_seg_valid(shifted_res_seg_1, fpks, res_arr, f, 1): continue     
+                        for f2 in fpks:
+                            for res2 in res_arr[2]:
+                                if np.abs(f2 - res2)/res2 > 0.3: continue
+                                shifted_res_seg_2 = shift_res_seg_to_f0(res_arr[2], res2, f2)
+                                if not is_res_seg_valid(shifted_res_seg_2, fpks, res_arr, f, 2): continue             
+                                shifted_res_arr = [shifted_res_seg_0,shifted_res_seg_1,shifted_res_seg_2]
+                                if not is_res_arr_valid(shifted_res_arr, fpks, peak_heights): continue
+                                add_viable_placement(f, a, res_arr, shifted_res_arr, costs, reductions, placements, diffs, tensions)
                     
     return np.array(placements), np.array(costs), np.array(diffs), np.array(tensions), np.array(reductions)

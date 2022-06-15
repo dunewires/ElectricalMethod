@@ -3265,7 +3265,9 @@ class MainWindow(qtw.QMainWindow):
                 continue
             if dwaChan in self.activeRegistersS:
                 apaChan = self.ampDataS['apaChannels'][dwaChan]
-                segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan,MAX_FREQ)
+                f = self.ampDataS[dwaChan]['freq']
+                maxFreq = np.min([np.max(f), MAX_FREQ])
+                segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan,maxFreq)
                 for seg in range(3):
                     if seg < len(segments):
                         wireSeg = segments[seg]
@@ -3859,7 +3861,9 @@ class MainWindow(qtw.QMainWindow):
                 apaSide = self.ampDataS['side']
                 self.resonanceRawPlots[index].setTitle(f'DWA Chan: {index} APA Chan: {apaLayer}{apaSide}{apaChan}')
                 self.resonanceProcessedPlots[index].setTitle(f'DWA Chan: {index} APA Chan: {apaLayer}{apaSide}{apaChan}')
-                segments, _ = channel_frequencies.get_expected_resonances(apaLayer,apaChan,MAX_FREQ)
+                f = self.ampDataS[index]['freq']
+                maxFreq = np.min([np.max(f), MAX_FREQ])
+                segments, _ = channel_frequencies.get_expected_resonances(apaLayer,apaChan,maxFreq)
                 for seg in range(3):
                     if seg < len(segments):
                         wireNum = segments[seg]
@@ -4485,14 +4489,11 @@ class MainWindow(qtw.QMainWindow):
                 print(f"DWA Chan {reg.value}: No channel")
                 continue
 
-            segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,MAX_FREQ)
-            self.resonantFreqs[reg.value] = [[] for _ in segments]
-            roundex = []
-            for seg in expected_resonances:
-                roundex.append([round(x,2) for x in seg])
-            expected_resonances = roundex
             f = np.array(self.ampDataS[reg]['freq'])
             a = np.array(self.ampDataS[reg]['ampl'])
+            maxFreq = np.min([np.max(f), MAX_FREQ])
+            segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,maxFreq)
+            self.resonantFreqs[reg.value] = [[] for _ in segments]
             bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
             self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], bsub)
             segments, opt_res_arr, best_tension, best_tensions_std, fpks = process_scan.process_channel(layer, apaCh, f, a, MAX_FREQ, self.verbose)
@@ -4589,11 +4590,11 @@ class MainWindow(qtw.QMainWindow):
 
                     
                     
-                    segmentLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=True, pen=fPenColor[ii]) )
+                    segmentLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=True, pen=fPenColor[ii], hoverPen=pg.mkPen(color='#d6d600', width=4, style=qtc.Qt.SolidLine)) )
                     # FIXME: should the next 2 lines really be commented out?
                     segmentLinesProc[-1].sigClicked.connect(self._f0LineClicked)
                     segmentLinesProc[-1].sigPositionChangeFinished.connect(self._f0LineMoved)
-                    segmentLinesRaw.append( self.resonanceRawPlots[chan].addLine(x=f, movable=True, pen=fPenColor[ii]) )
+                    segmentLinesRaw.append( self.resonanceRawPlots[chan].addLine(x=f, movable=True, pen=fPenColor[ii], hoverPen=pg.mkPen(color='#d6d600', width=4, style=qtc.Qt.SolidLine))  )
                     segmentLinesRaw[-1].sigClicked.connect(self._f0LineClicked)
                     segmentLinesRaw[-1].sigPositionChangeFinished.connect(self._f0LineMoved)
 
