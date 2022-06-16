@@ -1,3 +1,6 @@
+# btnSubmitResonances
+# submitTension_0 ... 7
+
 # Continuity scan parameters
 #In hexadecimal (copied from a config file):
 #stimFreqMin = 006400
@@ -338,7 +341,7 @@ class Scans(IntEnum):
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum',
                        'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
 RESULTS_TABLE_HDRS = ['Measurement Time', 'Stage', 'Side', 'Layer', 'Headboard', 'Wire Segment',
-                      'Measurement Type', 'Result', 'Confidence', 'Scan ID']
+                      'Measurement Type', 'Result', 'Confidence', 'Submitted', 'Scan ID']
 class Results(IntEnum):
     MSRMT_TIME=RESULTS_TABLE_HDRS.index('Measurement Time')
     STAGE=RESULTS_TABLE_HDRS.index('Stage')
@@ -349,6 +352,7 @@ class Results(IntEnum):
     MSRMT_TYPE=RESULTS_TABLE_HDRS.index('Measurement Type')
     RESULT=RESULTS_TABLE_HDRS.index('Result')
     CONFIDENCE=RESULTS_TABLE_HDRS.index('Confidence')
+    SUBMITTED=RESULTS_TABLE_HDRS.index('Submitted')
     SCAN=RESULTS_TABLE_HDRS.index('Scan ID')
 
 class State(IntEnum):
@@ -712,7 +716,8 @@ class MainWindow(qtw.QMainWindow):
         self.udpListening = False
         self.initApaUuidSuggestions()
         self.initAPADiagram()
-       
+        self.someTensionsNotFound = False
+        
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
         
@@ -1011,10 +1016,12 @@ class MainWindow(qtw.QMainWindow):
             getattr(self, f'filterCheck{layer}').stateChanged.connect(self.filterLayerChanged)
         for side in APA_SIDES:
             getattr(self, f'filterCheck{side}').stateChanged.connect(self.filterSideChanged)
-        for type in ['Tension', 'Connectivity']: # FIXME: if associated GUI labels change, this breaks
-            getattr(self, f'filterCheckType{type}').stateChanged.connect(self.filterTypeChanged)
+        for mytype in ['Tension', 'Connectivity']: # FIXME: if associated GUI labels change, this breaks
+            getattr(self, f'filterCheckType{mytype}').stateChanged.connect(self.filterTypeChanged)
         for conf in ['High', 'Medium', 'Low', 'None']: # FIXME: if associated GUI labels change, this breaks
             getattr(self, f'filterCheckConfidence{conf}').stateChanged.connect(self.filterConfidenceChanged)
+        for subm in ['Manual', 'Auto']: # FIXME: if associated GUI labels change, this breaks
+            getattr(self, f'filterCheckSubmitted{subm}').stateChanged.connect(self.filterSubmittedChanged)
 
         #sietch = SietchConnect("sietch.creds")
         #self.configApaUuid = "43cd3950-268d-11ec-b6f5-a70e70a44436" #self.configApaUuidLineEdit.text()
@@ -1107,7 +1114,7 @@ class MainWindow(qtw.QMainWindow):
                             
                             # Scan name
                             items[Results.SCAN] = qtg.QStandardItem(scanId)
-                            
+
                             # Tension
                             if "tension" in scanDict.keys():
                                 tension = scanDict["tension"]
@@ -1127,17 +1134,27 @@ class MainWindow(qtw.QMainWindow):
                                         status = 'Medium'
                                     else:
                                         status = 'Low'
+                                else:
+                                    status = 'None'
                                 confidenceStr = status
                                 
                             elif "continuous" in scanDict.keys():
                                 continuous = scanDict["continuous"]
                                 resultStr = continuous
+                                submitted = 'N/A'
                                 
                                 # Status
                                 confidenceStr = 'N/A'
                                 
                             items[Results.RESULT] = qtg.QStandardItem(resultStr)
                             items[Results.CONFIDENCE] = qtg.QStandardItem(confidenceStr)
+
+                            try:
+                                submitted = scanDict["submitted"]
+                            except:
+                                submitted = 'N/A'
+
+                            items[Results.SUBMITTED] = qtg.QStandardItem(submitted)
             
                             self.recentScansTableModel.appendRow(items)
 
@@ -1152,7 +1169,6 @@ class MainWindow(qtw.QMainWindow):
     def filterStageChanged(self):
         print("filterStateChanged")
         filterString = ''
-        #BOBOBOB
         for idx, stage in enumerate(APA_STAGES_KEYS):
             stageShort = APA_STAGES[stage]['short']
             if getattr(self, f'filterStage{stageShort}').isChecked():
@@ -1199,6 +1215,15 @@ class MainWindow(qtw.QMainWindow):
         if len(filterString): filterString = filterString[:-1]
         print(filterString)
         self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),Results.CONFIDENCE)
+
+    def filterSubmittedChanged(self):
+        filterString = ''
+        for subm in ['Manual', 'Auto']:
+            if getattr(self, f'filterCheckSubmitted{subm}').isChecked():
+                filterString += f'{subm}|'
+        if len(filterString): filterString = filterString[:-1]
+        print(filterString)
+        self.recentScansFilterProxy.setFilterByColumn(qtc.QRegExp(filterString,qtc.Qt.CaseSensitive),Results.SUBMITTED)
 
     def recentScansRowDoubleClicked(self, mi):
         print(f"double-clicked row: {mi.row()}")
@@ -3321,9 +3346,9 @@ class MainWindow(qtw.QMainWindow):
                     if seg < len(segments):
                         wireSeg = segments[seg]
                         print("writing seg", dwaChan, seg, self.currentTensions[dwaChan][seg])
-                        fullResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1.}
-                        scanResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1.}
-
+                        print(f"stage, layer, side, wireSeg, scanId: {stage}, {layer}, {side}, {wireSeg}, {scanId}")
+                        fullResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1., 'submitted':'Manual'}
+                        scanResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1., 'submitted':'Manual'}
 
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{apaUuid}.json')
@@ -3791,7 +3816,7 @@ class MainWindow(qtw.QMainWindow):
         
 
         e.g.
-        >>> udpDataStr  = 'AAAA0002100000F1110000FFAAAAAAAA'
+       >>> udpDataStr  = 'AAAA0002100000F1110000FFAAAAAAAA'
         >>> dataStrings = self._makeWordList(udpDataStr)
            ['AAAA0002', '100000F1', '110000FF', 'AAAAAAAA']
         '''
@@ -4090,6 +4115,10 @@ class MainWindow(qtw.QMainWindow):
                 print("Disable relays")
                 self.disableRelaysThread()
                 
+                #print("UPDATING PLOTS ONE LAST TIME")
+                self.updatePlots(force_all=True)
+                self.wrapUpStimulusScan()
+                
                 #if the scan is auto, then when it finishes and the scan is over this
                 #finds what row was scanned and updates the status for that row
                 #this also selects the next row
@@ -4097,17 +4126,21 @@ class MainWindow(qtw.QMainWindow):
 
                     row = self.scanConfigRowToScan
                     self.scanConfigTableModel.item(row, Scans.STATUS).setText('Done')
+                    cMissingTensions = qtg.QColor(245, 209, 66) # yellow-ish
+                    cAllTensionsFound = qtg.QColor(3, 205, 0)   # green
+                    if self.someTensionsNotFound:
+                        newRowColor = cMissingTensions
+                    else:
+                        newRowColor = cAllTensionsFound
                     for c in range(0, self.scanConfigTableModel.columnCount()):
-                        self.scanConfigTableModel.item(row,c).setBackground(qtg.QColor(3,205,0))
+                        self.scanConfigTableModel.item(row,c).setBackground(newRowColor)
+                        #self.scanConfigTableModel.item(row,c).setBackground(qtg.QColor(3,205,0))
                     if row == self.scanConfigTableModel.rowCount()-1:
                         self.scanConfigRowToScan = 0
                     else:
                         self.scanConfigRowToScan += 1
                     self.scanConfigTable.selectRow(self.scanConfigRowToScan)
                     
-                #print("UPDATING PLOTS ONE LAST TIME")
-                self.updatePlots(force_all=True)
-                self.wrapUpStimulusScan()
                 self.scanType = None
                 
             else:
@@ -4461,8 +4494,9 @@ class MainWindow(qtw.QMainWindow):
 
         fullResultsDict = self.getResultsDict()
         scanResultsDict = self.newResultsDict()
+        dirName = os.path.dirname(self.fnOfAmpData)
         print("Processing full")
-        process_scan.process_scan(fullResultsDict, os.path.dirname(self.fnOfAmpData))
+        process_scan.process_scan(fullResultsDict, dirName)
         print("Processing single")
         scanType, apaChannels, results = process_scan.process_scan(scanResultsDict, os.path.dirname(self.fnOfAmpData), MAX_FREQ, self.verbose)
         for apaChannel, result in zip(apaChannels, results):
@@ -4471,6 +4505,10 @@ class MainWindow(qtw.QMainWindow):
                     self.skipChannels.append(apaChannel)
                 else:
                     self.skipChannels = [apaChannel]
+                    
+        self.someTensionsNotFound = self.checkForMissingTensions(self.fnOfAmpData, fullResultsDict)
+        print(f"self.someTensionsNotFound = {self.someTensionsNotFound}")
+
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
         print(f'writing processed scan results to {outfile}')
@@ -4480,6 +4518,43 @@ class MainWindow(qtw.QMainWindow):
 
         # Update the results table
         self.resultsTableUpdate(scanResultsDict)
+
+    def checkForMissingTensions(self, ampDataFile, resultsDict):
+        # scanResultsDict holds tension values from the most recent scan.
+        # If "Not found" or similar is present, then
+        # need to update color of scanconfig table.
+        # Get list of wire segments for this run...
+        #print(self.fnOfAmpData)
+        dirName = os.path.dirname(ampDataFile)
+        scanId = os.path.basename(dirName)
+        wireSegs = []
+        try: # Ensure that there is an amplitudeData.json file present!
+            with open(ampDataFile, "r") as fh:
+                data = json.load(fh)
+                wireSegs = data['wireSegments']
+                layer = data['layer']
+                headboard = data['headboardNum']
+                side = data['side']
+                scanType = data['type']
+                stage = data['stage']
+        except:
+            print(f"Could not find scan (bad json file?) {dirName}...")
+            return None
+        print(f"wireSegs = {wireSegs}")
+        tensions = []
+        for ws in wireSegs:
+            try:
+                tens = fullResultsDict[stage][layer][side][str(ws).zfill(5)]["tension"][scanId]["tension"]
+                # process_scan can return an empty dict for "tension"...
+                # process_scan can also return "Not Found")
+            except:
+                tens = -1
+            tensions.append( tens )
+
+        print(f'tensions = {tensions}')
+
+        return not all(x in tensions for x in [-1, 'Not Found'])
+
 
     def insertScanIntoScanList(self, scanDir, row=None, submitted=None):
         # a do-nothing function for now...

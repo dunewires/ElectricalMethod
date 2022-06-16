@@ -407,7 +407,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tabStimulus">
                <attribute name="title">
@@ -1504,6 +1504,29 @@
                                <widget class="QCheckBox" name="filterCheckConfidenceHigh">
                                 <property name="text">
                                  <string>High</string>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QGroupBox" name="groupBox_7">
+                             <property name="title">
+                              <string>Submitted</string>
+                             </property>
+                             <layout class="QVBoxLayout" name="verticalLayout_14">
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckSubmittedManual">
+                                <property name="text">
+                                 <string>Manual</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QCheckBox" name="filterCheckSubmittedAuto">
+                                <property name="text">
+                                 <string>Auto</string>
                                 </property>
                                </widget>
                               </item>
@@ -6314,7 +6337,7 @@
      <x>0</x>
      <y>0</y>
      <width>1916</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">
@@ -6367,7 +6390,7 @@
    <extends>QWidget</extends>
    <header>APA_Diagram_View</header>
    <container>1</container>
-  </customwidget>  
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>tabWidgetStages</tabstop>
