@@ -217,7 +217,7 @@ SCAN_OUTPUT_DIRS = [OUTPUT_DIR_SCAN_DATA, OUTPUT_DIR_SCAN_DATA_ADVANCED]
 CLOCK_PERIOD_SEC = 1e8
 SCAN_FREQUENCY_STEP_DEFAULT = 1/8  # Hz
 STIM_VIEW_OFFSET = 0
-MAX_FREQ = 250 # Hz
+MAX_FREQ = 350 # Hz
 #
 UDP_RECV_BUF_SIZE = 1024*2**20 # Bytes (2**20 Bytes is ~1MB)
 SYSTEM_PLATFORM   = platform.system().upper()
@@ -1861,6 +1861,7 @@ class MainWindow(qtw.QMainWindow):
         useAdvancedParamsCont = not self.advDisableContParamCb.isChecked()
 
         self.range_data_list = []
+        self.skipChannels = []
 
         row = 0
         for configLayer in layers:
@@ -1868,7 +1869,7 @@ class MainWindow(qtw.QMainWindow):
             channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
             for channels in channelGroups:
                 #print(f'channels = {channels}')
-                range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels)
+                range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels, MAX_FREQ)
                 #print(f'range_data = {range_data}')
                 rd = range_data[0]
     
@@ -2572,7 +2573,7 @@ class MainWindow(qtw.QMainWindow):
                 fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, digipot=advDigipotAmplitude))
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
-        fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels, is_flex_connection_winderlike))
+        fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels, is_flex_connection_winderlike, self.skipChannels))
         print(f'\n\nAfter Relays:\n  fpgaConfig: {fpgaConfig}')
 
         # FIXME: should these keys match DATABASE_FIELDS?
@@ -2616,8 +2617,6 @@ class MainWindow(qtw.QMainWindow):
         scanTypeLabel = ''
         if scanType == 'Tension': scanTypeLabel = 'T'
         if scanType == 'Continuity': scanTypeLabel = 'C'
-
-
         wires = "-".join([str(w) for w in self.wires])
         self.scanRunDataDir = os.path.join(dataDir, self.timeString + "_" + self.configLayer + "_" + self.configApaSide + 
         "_" + str(self.configHeadboard) + "_" + str(wires) + "_" + scanTypeLabel)
@@ -2980,7 +2979,7 @@ class MainWindow(qtw.QMainWindow):
         
         # process each scan
         for scan in scansToProcess:
-            process_scan.process_scan(resultsDict, scan)
+            process_scan.process_scan(resultsDict, scan, MAX_FREQ)
 
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
@@ -3340,7 +3339,9 @@ class MainWindow(qtw.QMainWindow):
                 continue
             if dwaChan in self.activeRegistersS:
                 apaChan = self.ampDataS['apaChannels'][dwaChan]
-                segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan,MAX_FREQ)
+                f = self.ampDataS[dwaChan]['freq']
+                maxFreq = np.min([np.max(f), MAX_FREQ])
+                segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan,maxFreq)
                 for seg in range(3):
                     if seg < len(segments):
                         wireSeg = segments[seg]
@@ -3934,7 +3935,9 @@ class MainWindow(qtw.QMainWindow):
                 apaSide = self.ampDataS['side']
                 self.resonanceRawPlots[index].setTitle(f'DWA Chan: {index} APA Chan: {apaLayer}{apaSide}{apaChan}')
                 self.resonanceProcessedPlots[index].setTitle(f'DWA Chan: {index} APA Chan: {apaLayer}{apaSide}{apaChan}')
-                segments, _ = channel_frequencies.get_expected_resonances(apaLayer,apaChan,MAX_FREQ)
+                f = self.ampDataS[index]['freq']
+                maxFreq = np.min([np.max(f), MAX_FREQ])
+                segments, _ = channel_frequencies.get_expected_resonances(apaLayer,apaChan,maxFreq)
                 for seg in range(3):
                     if seg < len(segments):
                         wireNum = segments[seg]
@@ -4495,8 +4498,14 @@ class MainWindow(qtw.QMainWindow):
         print("Processing full")
         process_scan.process_scan(fullResultsDict, dirName)
         print("Processing single")
-        process_scan.process_scan(scanResultsDict, dirName)
-
+        scanType, apaChannels, results = process_scan.process_scan(scanResultsDict, os.path.dirname(self.fnOfAmpData), MAX_FREQ, self.verbose)
+        for apaChannel, result in zip(apaChannels, results):
+            if result == "bridged": 
+                if self.skipChannels:
+                    self.skipChannels.append(apaChannel)
+                else:
+                    self.skipChannels = [apaChannel]
+                    
         self.someTensionsNotFound = self.checkForMissingTensions(self.fnOfAmpData, fullResultsDict)
         print(f"self.someTensionsNotFound = {self.someTensionsNotFound}")
 
@@ -4604,23 +4613,17 @@ class MainWindow(qtw.QMainWindow):
                 print(f"DWA Chan {reg.value}: No channel")
                 continue
 
-            segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,MAX_FREQ)
-            self.resonantFreqs[reg.value] = [[] for _ in segments]
-            roundex = []
-            for seg in expected_resonances:
-                roundex.append([round(x,2) for x in seg])
-            expected_resonances = roundex
             f = np.array(self.ampDataS[reg]['freq'])
             a = np.array(self.ampDataS[reg]['ampl'])
+            maxFreq = np.min([np.max(f), MAX_FREQ])
+            segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,maxFreq)
+            self.resonantFreqs[reg.value] = [[] for _ in segments]
             bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
             self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], bsub)
-            segments, opt_res_arr, best_tension, best_tensions_std = process_scan.process_channel(layer, apaCh, f, a)
-            print("setting ",reg.value,opt_res_arr)
+            segments, opt_res_arr, best_tension, best_tensions_std, fpks = process_scan.process_channel(layer, apaCh, f, a, MAX_FREQ, self.verbose)
             self.expectedFreqs[reg.value] = expected_resonances
-            self.resonantFreqs[reg.value] = opt_res_arr
+            self.resonantFreqs[reg.value] = list(opt_res_arr)
 
-
-        
     def resFreqUpdateDisplay(self, chan=None):
         """ 
         FIXME: if chan=None, update all channels, otherwise, 
@@ -4711,11 +4714,11 @@ class MainWindow(qtw.QMainWindow):
 
                     
                     
-                    segmentLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=True, pen=fPenColor[ii]) )
+                    segmentLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=True, pen=fPenColor[ii], hoverPen=pg.mkPen(color='#d6d600', width=4, style=qtc.Qt.SolidLine)) )
                     # FIXME: should the next 2 lines really be commented out?
                     segmentLinesProc[-1].sigClicked.connect(self._f0LineClicked)
                     segmentLinesProc[-1].sigPositionChangeFinished.connect(self._f0LineMoved)
-                    segmentLinesRaw.append( self.resonanceRawPlots[chan].addLine(x=f, movable=True, pen=fPenColor[ii]) )
+                    segmentLinesRaw.append( self.resonanceRawPlots[chan].addLine(x=f, movable=True, pen=fPenColor[ii], hoverPen=pg.mkPen(color='#d6d600', width=4, style=qtc.Qt.SolidLine))  )
                     segmentLinesRaw[-1].sigClicked.connect(self._f0LineClicked)
                     segmentLinesRaw[-1].sigPositionChangeFinished.connect(self._f0LineMoved)
 
