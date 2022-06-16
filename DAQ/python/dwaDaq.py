@@ -645,6 +645,31 @@ class SortFilterProxyModel(qtc.QSortFilterProxyModel):
                     return False
         return True
 
+class APA_Diagram_Model():
+    def __init__(self):
+        print("APA_Diagram_Model")
+        self.signals = APA_Diagram_Signals()
+        
+    def setStage(self, stage):
+        self.apaStage = stage
+
+    def setLayer(self, layer):
+        self.apaLayer = layer
+        
+    def setSide(self, side):
+        self.apaSide = side
+
+    # APA channels, which can have up to three wires, not wires directly
+    def setChannels(self, channels):
+        self.apaChans = channels
+        self.signals.dataChanged.emit()
+        
+class APA_Diagram_Signals(qtc.QObject):
+    '''
+    Defines the signals available from an APA_Diagram_Model
+    '''
+    dataChanged = qtc.pyqtSignal()
+
 class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -686,6 +711,7 @@ class MainWindow(qtw.QMainWindow):
         self.heartval = 0
         self.udpListening = False
         self.initApaUuidSuggestions()
+        self.initAPADiagram()
        
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
@@ -937,6 +963,7 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTable.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
         #self.scanConfigTable.setEditTriggers(qtw.QTableView.NoEditTriggers)
         #self.scanConfigTable.doubleClicked.connect(self.scanConfigTableRowDoubleClicked)
+        self.scanConfigTable.selectionModel().selectionChanged.connect(self.setAPADiagram)
         
     def resultsTableInit(self):
         self.recentScansTableModel = qtg.QStandardItemModel()
@@ -1195,7 +1222,15 @@ class MainWindow(qtw.QMainWindow):
         #self.adcData[reg]['tfit'] = list
         #self.adcData[reg]['ADCfit'] = list
 
-        
+    def initAPADiagram(self):
+        # APA Diagram / schematic
+        self.apaDiagramModel = APA_Diagram_Model()
+        self.apaDiagramModel.setStage('')
+        self.apaDiagramModel.setLayer('')
+        self.apaDiagramModel.setSide('')
+        self.apaDiagramModel.setChannels([])
+        self.APA_Diagram_View.setModel(self.apaDiagramModel)
+                
     def _configureAmps(self):
         self.ampData = {}  # hold amplitude vs. freq data for a scan (and metadata)
         self.resonantFreqs = {}  
@@ -1829,6 +1864,21 @@ class MainWindow(qtw.QMainWindow):
         self.configureLabel.setText("")
         self.configure = True
         self._scanButtonEnable()
+
+    def setAPADiagram(self):
+        if self.scanConfigTable.selectedIndexes():
+            row = self.scanConfigTable.selectedIndexes()[0].row()
+        else:
+            row = 0
+            
+        rd = self.range_data_list[row]
+
+        self.apaDiagramModel.setStage(self.configStageComboBox.currentText())
+        self.apaDiagramModel.setLayer(self.scanConfigTableModel.item(row,  Scans.LAYER).text())
+        self.apaDiagramModel.setSide(self.SideComboBox.currentText())
+        self.apaDiagramModel.setChannels(rd["apaChannels"])
+
+        self.APA_Diagram_View.setModel(self.apaDiagramModel)
 
     def _configurePlots(self):
         self.chanViewMain = 0  # which channel to show large for V(t) data
@@ -2542,7 +2592,6 @@ class MainWindow(qtw.QMainWindow):
         scanTypeLabel = ''
         if scanType == 'Tension': scanTypeLabel = 'T'
         if scanType == 'Continuity': scanTypeLabel = 'C'
-
         wires = "-".join([str(w) for w in self.wires])
         self.scanRunDataDir = os.path.join(dataDir, self.timeString + "_" + self.configLayer + "_" + self.configApaSide + 
         "_" + str(self.configHeadboard) + "_" + str(wires) + "_" + scanTypeLabel)

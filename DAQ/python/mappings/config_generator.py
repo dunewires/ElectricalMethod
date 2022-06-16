@@ -259,7 +259,6 @@ def configure_ip_addresses(client_ip=None):
 
 def configure_default():
     '''Return a dictionary with default values for all configuration parameters.'''
-
     configs = configure_ip_addresses(client_ip='192.0.2.254')
     configs.update(configure_run_type())
     configs.update(configure_fixed_frequency())
