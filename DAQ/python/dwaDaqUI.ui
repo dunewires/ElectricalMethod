@@ -1317,7 +1317,7 @@
                    </sizepolicy>
                   </property>
                   <property name="currentIndex">
-                   <number>0</number>
+                   <number>2</number>
                   </property>
                   <widget class="QWidget" name="tab_4">
                    <attribute name="title">
@@ -1937,7 +1937,7 @@
                           <height>30</height>
                          </size>
                         </property>
-                        <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="3,1,1">
+                        <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="2,1,1,1">
                          <property name="leftMargin">
                           <number>0</number>
                          </property>
@@ -1961,6 +1961,13 @@
                           <widget class="QPushButton" name="btnSubmitResonances">
                            <property name="text">
                             <string>Submit All Tensions to DB</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btnSubmitAndLoadNext">
+                           <property name="text">
+                            <string>Submit and Load Next Unconfirmed Scan</string>
                            </property>
                           </widget>
                          </item>
@@ -6337,7 +6344,7 @@
      <x>0</x>
      <y>0</y>
      <width>1916</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">

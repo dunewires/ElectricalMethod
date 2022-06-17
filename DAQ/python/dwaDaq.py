@@ -1410,6 +1410,7 @@ class MainWindow(qtw.QMainWindow):
         #
         # Resonance Tab
         self.btnSubmitResonances.clicked.connect(self.submitTensionsThread)
+        self.btnSubmitAndLoadNext.clicked.connect(self.submitTensionsAndLoadNext)
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensionsThread)
         self.btnSubmitTensions.clicked.connect(self.submitTensionsThread)
@@ -2453,6 +2454,16 @@ class MainWindow(qtw.QMainWindow):
         # execute
         self.threadPool.start(worker)
 
+    def submitTensionsAndLoadNext(self):
+        self.labelResonanceSubmitStatus.setText("Submitting...")
+        self.submitTensions()
+        
+        for row in range(self.recentScansFilterProxy.rowCount()):
+            wire = self.recentScansFilterProxy.index(row, Results.WIRE_SEGMENT ).data()
+            submitted = self.recentScansFilterProxy.index(row, Results.SUBMITTED ).data()
+            if submitted == "Auto": 
+                self.loadResultsScan(row)
+                break
         
     def disableRelaysThreadComplete(self):
         print("disableRelaysThreadComplete")
@@ -2833,10 +2844,11 @@ class MainWindow(qtw.QMainWindow):
         self._loadConfigFile()
 
 
-    def loadResultsScan(self):
+    def loadResultsScan(self, row=None):
         # 
-        index = self.recentScansTableView.currentIndex()
-        row = index.row()
+        if row == None: 
+            index = self.recentScansTableView.currentIndex()
+            row = index.row()
         col = Results.SCAN
         scan = self.recentScansFilterProxy.index(row, col ).data() # G_A_1_1-3-5-7-9-11-13-15_20211022T093618
         print(f"scan = {scan}")
@@ -3748,8 +3760,10 @@ class MainWindow(qtw.QMainWindow):
 
         # Get the Metadata
         for field in DATABASE_FIELDS:
-            self.ampDataS[field] = data[field]
-
+            try:
+                self.ampDataS[field] = data[field]
+            except:
+                self.ampDataS[field] = "Unknown"
         okToLogToDb = False if self.ampDataS['apaUuid'] is None else True  # KLUGE: may want a different test here
         print(f'okToLogToDb = {okToLogToDb}')
         print(f"self.ampDataS['apaUuid'] = {self.ampDataS['apaUuid']}")
