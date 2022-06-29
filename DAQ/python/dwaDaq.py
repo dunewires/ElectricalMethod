@@ -781,6 +781,8 @@ class MainWindow(qtw.QMainWindow):
         # Establish keyboard shortcuts and associated signals/slots
         self._keyboardShortcuts()
 
+        self.getAnalysisVersion()
+        
         self._configureGUI()
         self._configureMultithreading()
 
@@ -822,6 +824,8 @@ class MainWindow(qtw.QMainWindow):
         self.udpConnect()
         
     # end of __init__ for class MainWindow
+    def getAnalysisVersion(self):
+        self.analysisVersion = 'JUNK'
 
     def setPushButtonStatusAll(self, buttonVals):
         # Set all push button GUI elements
