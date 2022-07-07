@@ -174,7 +174,6 @@ import DwaConfigFile as dcf
 import DwaMicrozed as duz
 import boombox
 
-
 #from SietchConnect import SietchConnect
 
 sys.path.append('./mappings')
@@ -781,7 +780,7 @@ class MainWindow(qtw.QMainWindow):
         # Establish keyboard shortcuts and associated signals/slots
         self._keyboardShortcuts()
 
-        self.getAnalysisVersion()
+        #self.getAnalysisVersion()
         
         self._configureGUI()
         self._configureMultithreading()
@@ -824,8 +823,21 @@ class MainWindow(qtw.QMainWindow):
         self.udpConnect()
         
     # end of __init__ for class MainWindow
-    def getAnalysisVersion(self):
-        self.analysisVersion = 'JUNK'
+
+    # Moved to process/process_scan.py
+    #def getAnalysisVersion(self):
+    #    #$ git rev-parse --short `git log -n 1 --pretty=format:%H -- processing/`
+    #    #a4df205
+    #    print(f'********** Resonance algorithm version ***********')
+    #    cmd = ['git', 'log', '-n 1', '--pretty=format:%H', '--', 'processing/']
+    #    out = subprocess.check_output(cmd)
+    #    print(f'out = {out}')
+    #    cmd = ['git', 'rev-parse', '--short', out]
+    #    out = subprocess.check_output(cmd).strip()
+    #    out = str(out)
+    #    print(f'out = {out}')
+    #    print(f'**************************************************')
+    #    self.analysisVersion = out
 
     def setPushButtonStatusAll(self, buttonVals):
         # Set all push button GUI elements
