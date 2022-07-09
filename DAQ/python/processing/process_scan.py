@@ -63,41 +63,28 @@ def new_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
                     resultsDict[stage][layer][side][str(i).zfill(5)] = blank_tension_result()
     return resultsDict
 
-def update_results_dict_tension(resultsDict, stage, layer, side, scanId, wireSegments, tensions, tension_stds):
+def update_results_dict_tension(resultsDict, stage, layer, side, scanId, wireSegments, tensions, tension_confidences):
     for i, wireSegment in enumerate(wireSegments):
         tension = tensions[i]
-        tension_std = tension_stds[i]
+        tension_confidence = tension_confidences[i]
         wireSegmentStr = str(wireSegment).zfill(5)
         if wireSegmentStr not in resultsDict[stage][layer][side].keys(): resultsDict[stage][layer][side][wireSegmentStr] = blank_tension_result()
         if not tension: continue
         elif tension == -1:
             resultsDict[stage][layer][side][wireSegmentStr]["tension"][scanId] = {'tension': 'Not Found'}
         elif tension > 0:
-            resultsDict[stage][layer][side][str(wireSegment).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std, 'submitted': 'Auto'}
+            resultsDict[stage][layer][side][str(wireSegment).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_confidence': tension_confidence, 'submitted': 'Auto'}
 
 def update_results_dict_continuity(resultsDict, stage, layer, side, scanId, wireSegments, continuous, capacitanceCal, capacitanceUnCal):
     for wireSegment in wireSegments:
         print("Writing ",stage,layer,side,scanId,wireSegment,continuous,capacitanceCal, capacitanceUnCal)
         resultsDict[stage][layer][side][str(wireSegment).zfill(5)]["continuity"][scanId] = {'continuous': continuous, 'capacitance_cal': capacitanceCal, "capacitance_un_cal": capacitanceUnCal}
 
-#def update_results_dict(resultsDict, layer, side, scanId, wireSegments, tensions, tension_stds):
-#    for i, wireNum in enumerate(wireSegments):
-#        tension = tensions[i]
-#        tension_std = tension_stds[i]
-#        if not tension: continue
-#        elif tension == -1:
-#            resultsDict[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'Not Found'}
-#        elif tension > 0:
-#            #print(resultsDict.keys())
-#            #print(resultsDict[layer].keys())
-#            #print(resultsDict[layer][side].keys())
-#            #print(resultsDict[layer][side][str(wireNum).zfill(5)].keys())
-#            resultsDict[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_std': tension_std}
-
 def refine_peak_position(f, a, fpk, radius):
     selected = (f > fpk - radius) & (f < fpk + radius)
     selected_f = f[selected]
     selected_a = a[selected]
+    if len(selected_a) == 0: return fpk
     pks, props = find_peaks(selected_a,height=0.2*np.max(selected_a),width=4)
     if len(pks) == 0: return fpk
     fpks = np.array([selected_f[pk] for pk in pks])
@@ -241,7 +228,7 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0):
     select_low_diffs = (diffs < lowest_diff+20)
     # Of those, choose the ones that minimize the "cost", which is a complex calculation but essentially means minimizing the number of peaks that don't have assigned resonances 
     lowest_cost = np.min(costs[select_low_diffs])
-    select_best = (diffs < lowest_diff+20) & (costs < 1.5*lowest_cost)
+    select_best = select_low_diffs & (costs < 1.5*lowest_cost)
     best_placements = placements[select_best]
     best_tensions = tensions[select_best]
     best_costs = costs[select_best]
@@ -253,6 +240,8 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0):
         if verbosity > 1: print('Placement/diff/cost', placement, diffs[i], costs[i])
     best_placement = best_placements[min_index]
     best_tension = best_tensions[min_index]
+    dts = np.abs(best_tensions-best_tension)
+    print("np.max(np.abs(dts),0) --------------------------------------------------",np.max(np.abs(dts),0))
     refined_placement = []
     refined_tension = []
     for i,res_seg in enumerate(best_placement):
@@ -264,7 +253,7 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0):
         refined_tension.append(best_tension[i]*new_res**2/old_res**2)
     best_tension = refined_tension
     best_placement = refined_placement
-    return segments, best_placement, best_tension, np.std(best_tensions,0), fpks
+    return segments, best_placement, best_tension, np.max(np.abs(dts),0), fpks
 
 def process_scan_v1(resultsDict, dirName, maxFreq=250.):
     '''Process a scan with a given directory name and update the given results dictionary.'''
@@ -399,10 +388,10 @@ def process_scan(resultsDict, dirName, maxFreq=250., verbosity=0):
                 results.append(None)
                 continue
 
-            segments, opt_res_arr, best_tensions, best_tension_stds, fpks = process_channel(layer, apaCh, f, a, maxFreq, verbosity)
+            segments, opt_res_arr, best_tensions, best_tension_confidences, fpks = process_channel(layer, apaCh, f, a, maxFreq, verbosity)
             #print('best',best_tensions)
             results.append(best_tensions)
             if resultsDict:
-                update_results_dict_tension(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_stds)
+                update_results_dict_tension(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_confidences)
         
     return scanType, apaChannels, results

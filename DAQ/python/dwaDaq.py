@@ -1114,7 +1114,8 @@ class MainWindow(qtw.QMainWindow):
                             
                             # Scan name
                             items[Results.SCAN] = qtg.QStandardItem(scanId)
-
+                            print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+                            print(scanDict)
                             # Tension
                             if "tension" in scanDict.keys():
                                 tension = scanDict["tension"]
@@ -1124,20 +1125,12 @@ class MainWindow(qtw.QMainWindow):
                                     resultStr = str(round(tension,3))
                                 
                                 # Status
-                                if tension == 'Not Found' or tension == None:
-                                    status = 'None'
-                                elif tension > 0:
-                                    std = scanDict["tension_std"]
-                                    if std < 0.1:
-                                        status = 'High'
-                                    elif std < 0.5:
-                                        status = 'Medium'
-                                    else:
-                                        status = 'Low'
+                                confidenceStr = 'Unknown'
+                                if tension == 'Not Found' or tension == None or 'tension_confidence' not in scanDict.keys() or tension <= 0:
+                                    pass
                                 else:
-                                    status = 'None'
-                                confidenceStr = status
-                                
+                                    confidenceStr = str(round(scanDict["tension_confidence"],3))
+                            
                             elif "continuous" in scanDict.keys():
                                 continuous = scanDict["continuous"]
                                 resultStr = continuous
@@ -1145,7 +1138,7 @@ class MainWindow(qtw.QMainWindow):
                                 
                                 # Status
                                 confidenceStr = 'N/A'
-                                
+                            print("confidenceStr",confidenceStr)  
                             items[Results.RESULT] = qtg.QStandardItem(resultStr)
                             items[Results.CONFIDENCE] = qtg.QStandardItem(confidenceStr)
 
