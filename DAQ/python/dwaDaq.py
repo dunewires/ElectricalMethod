@@ -341,7 +341,7 @@ class Scans(IntEnum):
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum',
                        'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
 RESULTS_TABLE_HDRS = ['Measurement Time', 'Stage', 'Side', 'Layer', 'Headboard', 'Wire Segment',
-                      'Measurement Type', 'Result', 'Confidence', 'Submitted', 'Scan ID']
+                      'Measurement Type', 'Result', 'Uncertainty', 'Submitted', 'Scan ID']
 class Results(IntEnum):
     MSRMT_TIME=RESULTS_TABLE_HDRS.index('Measurement Time')
     STAGE=RESULTS_TABLE_HDRS.index('Stage')
@@ -351,7 +351,7 @@ class Results(IntEnum):
     WIRE_SEGMENT=RESULTS_TABLE_HDRS.index('Wire Segment')
     MSRMT_TYPE=RESULTS_TABLE_HDRS.index('Measurement Type')
     RESULT=RESULTS_TABLE_HDRS.index('Result')
-    CONFIDENCE=RESULTS_TABLE_HDRS.index('Confidence')
+    CONFIDENCE=RESULTS_TABLE_HDRS.index('Uncertainty')
     SUBMITTED=RESULTS_TABLE_HDRS.index('Submitted')
     SCAN=RESULTS_TABLE_HDRS.index('Scan ID')
 
@@ -1118,8 +1118,6 @@ class MainWindow(qtw.QMainWindow):
                             
                             # Scan name
                             items[Results.SCAN] = qtg.QStandardItem(scanId)
-                            print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-                            print(scanDict)
                             # Tension
                             if "tension" in scanDict.keys():
                                 tension = scanDict["tension"]
@@ -1142,7 +1140,6 @@ class MainWindow(qtw.QMainWindow):
                                 
                                 # Status
                                 confidenceStr = 'N/A'
-                            print("confidenceStr",confidenceStr)  
                             items[Results.RESULT] = qtg.QStandardItem(resultStr)
                             items[Results.CONFIDENCE] = qtg.QStandardItem(confidenceStr)
 

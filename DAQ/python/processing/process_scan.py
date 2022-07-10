@@ -228,7 +228,7 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0):
     select_low_diffs = (diffs < lowest_diff+20)
     # Of those, choose the ones that minimize the "cost", which is a complex calculation but essentially means minimizing the number of peaks that don't have assigned resonances 
     lowest_cost = np.min(costs[select_low_diffs])
-    select_best = select_low_diffs & (costs < 1.5*lowest_cost)
+    select_best = select_low_diffs & (costs < 1.1*lowest_cost)
     best_placements = placements[select_best]
     best_tensions = tensions[select_best]
     best_costs = costs[select_best]
@@ -241,7 +241,6 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0):
     best_placement = best_placements[min_index]
     best_tension = best_tensions[min_index]
     dts = np.abs(best_tensions-best_tension)
-    print("np.max(np.abs(dts),0) --------------------------------------------------",np.max(np.abs(dts),0))
     refined_placement = []
     refined_tension = []
     for i,res_seg in enumerate(best_placement):
