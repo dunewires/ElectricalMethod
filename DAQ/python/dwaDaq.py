@@ -2845,6 +2845,7 @@ class MainWindow(qtw.QMainWindow):
             row = index.row()
         col = Results.SCAN
         scan = self.recentScansFilterProxy.index(row, col ).data() # G_A_1_1-3-5-7-9-11-13-15_20211022T093618
+        self.doubleClickedSegment = int(self.recentScansFilterProxy.index(row, Results.WIRE_SEGMENT ).data()) # G_A_1_1-3-5-7-9-11-13-15_20211022T093618
         print(f"scan = {scan}")
         print(f"APA UUID: {self.configApaUuid}") # 43cd3950-268d-11ec-b6f5-a70e70a44436
         apaSubdir = f'APA_{self.configApaUuid}'  # APA_43cd3950-268d-11ec-b6f5-a70e70a44436
@@ -3937,6 +3938,7 @@ class MainWindow(qtw.QMainWindow):
                 getattr(self, f'lab_resfreq_{index}_{seg}').setText('None')
                 getattr(self, f'le_resfreq_val_{index}_{seg}').setText('')
                 getattr(self, f'le_resfreq_val_{index}_{seg}').setEnabled(False)
+                getattr(self, f'le_resfreq_val_{index}_{seg}').setStyleSheet("QLineEdit {background-color: white;}")
             if index in self.activeRegistersS:
                 apaChan = self.ampDataS['apaChannels'][index]
                 apaLayer = self.ampDataS['layer']
@@ -3948,8 +3950,9 @@ class MainWindow(qtw.QMainWindow):
                 segments, _ = channel_frequencies.get_expected_resonances(apaLayer,apaChan,maxFreq)
                 for seg in range(3):
                     if seg < len(segments):
-                        wireNum = segments[seg]
-                        getattr(self, f'lab_resfreq_{index}_{seg}').setText(f'{apaLayer}{apaSide}{wireNum}')
+                        wireSeg = segments[seg]
+                        if (wireSeg == self.doubleClickedSegment): getattr(self, f'le_resfreq_val_{index}_{seg}').setStyleSheet("QLineEdit {background-color: pink;}")
+                        getattr(self, f'lab_resfreq_{index}_{seg}').setText(f'{apaLayer}{apaSide}{wireSeg}')
                         getattr(self, f'le_resfreq_val_{index}_{seg}').setEnabled(True)
 
     def _makeOutputFilenames(self):
@@ -4676,6 +4679,7 @@ class MainWindow(qtw.QMainWindow):
                     getattr(self, f'le_resfreq_val_{chan}_{seg}').setText('')
                 else:
                     getattr(self, f'le_resfreq_val_{chan}_{seg}').setEnabled(True)
+                    
                     if self.currentTensions[chan][seg] == -1:
                         getattr(self, f'le_resfreq_val_{chan}_{seg}').setText("")
                     else:
