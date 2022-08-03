@@ -10,7 +10,25 @@ import capacitanceFile
 import channel_frequencies
 import resonance_fitting
 import os
+import subprocess
 
+
+def getAnalysisVersion():
+    #$ git rev-parse --short `git log -n 1 --pretty=format:%H -- processing/`
+    #a4df205
+    #print(f'********** Resonance algorithm version ***********')
+    cmd = ['git', 'log', '-n 1', '--pretty=format:%H', '--', 'processing/']
+    out = subprocess.check_output(cmd)
+    #print(f'out = {out}')
+    cmd = ['git', 'rev-parse', '--short', out]
+    out = subprocess.check_output(cmd).strip()   # returns binary string b'a4df205'
+    out = out.decode('ascii')  # converts to regular string
+    #print(f'out = {out}')
+    #print(f'**************************************************')
+    return out
+
+algo_version = getAnalysisVersion()
+    
 def slope_near_bin(freqs, amps, i, window):
     df = freqs[1]-freqs[0]
     startBin = i-int((window-1)/2)
@@ -73,7 +91,7 @@ def update_results_dict_tension(resultsDict, stage, layer, side, scanId, wireSeg
         elif tension == -1:
             resultsDict[stage][layer][side][wireSegmentStr]["tension"][scanId] = {'tension': 'Not Found'}
         elif tension > 0:
-            resultsDict[stage][layer][side][str(wireSegment).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_confidence': tension_confidence, 'submitted': 'Auto'}
+            resultsDict[stage][layer][side][str(wireSegment).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_confidence': tension_confidence, 'submitted': 'Auto', 'algo_ver':algo_version}
 
 def update_results_dict_continuity(resultsDict, stage, layer, side, scanId, wireSegments, continuous, capacitanceCal, capacitanceUnCal):
     for wireSegment in wireSegments:
