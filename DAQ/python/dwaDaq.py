@@ -3929,9 +3929,10 @@ class MainWindow(qtw.QMainWindow):
                     apaChan = None
                 #getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
                 getattr(self, f'pw_{ptype}_{ii}').setXRange(self.stimFreqMin, self.stimFreqMax)
-                getattr(self, f'pw_{ptype}_{ii}').setTitle("{}-{}, DWA Chan: {} APA Chan: {}".format(self.ampData['layer'],
+                _, hw_map = channel_map.get_hardware_map(self.configStage, self.ampData['layer'], apaChan)
+                getattr(self, f'pw_{ptype}_{ii}').setTitle("{}-{}, DWA Chan: {} APA Chan: {} ({})".format(self.ampData['layer'],
                                                                                                      self.ampData['side'],
-                                                                                                     ii, apaChan))
+                                                                                                     ii, apaChan, '-'.join(hw_map)))
         self.pw_amplgrid_all.setXRange(self.stimFreqMin, self.stimFreqMax)
         self.pw_amplchan_main.setXRange(self.stimFreqMin, self.stimFreqMax)
         #self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
