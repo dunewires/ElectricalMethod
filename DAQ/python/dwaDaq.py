@@ -1,6 +1,3 @@
-# btnSubmitResonances
-# submitTension_0 ... 7
-
 # Continuity scan parameters
 #In hexadecimal (copied from a config file):
 #stimFreqMin = 006400
@@ -32,9 +29,6 @@
 #
 # * The noise sampling period, noise NCnv, active channels and relayMask parameters are unnecessary in the firmware. To avoid possible unforeseen issues in the firmware due to a bad configuration of them, they should be removed from the firmware and software.
 # 
-# * Play audible alert after a scan is done?
-#   and/or bring focus to config tab?
-#
 # * can't just use self.recentScansTableRowInUse because rows may have been added
 #   to the scan since the A(f) data was loaded!
 #   Should probably get rid of self.recentScansTableRowInUse entirely
@@ -180,12 +174,14 @@ sys.path.append('./mappings')
 sys.path.append('./database')
 sys.path.append('./processing')
 sys.path.append('./Continuity')
+sys.path.append('../../../dunedb/m2m')
 import config_generator
 import channel_map
 import channel_frequencies
 import database_functions
 import resonance_fitting
 import process_scan
+from common import ConnectToAPI, PerformAction
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -1415,19 +1411,27 @@ class MainWindow(qtw.QMainWindow):
         # self.resFitKwargs.editingFinished.connect(self.resFitParameterUpdated)
         #
         # Resonance Tab
-        self.btnSubmitResonances.clicked.connect(self.submitTensionsThread)
-        self.btnSubmitAndLoadNext.clicked.connect(self.submitTensionsAndLoadNext)
+        self.btnSaveTensions.clicked.connect(self.saveTensionsThread)
+        self.btnSaveAndLoadNext.clicked.connect(self.saveTensionsAndLoadNext)
+        getattr(self, f'saveTension_0').clicked.connect(lambda: self.saveTensionsThread(0))
+        getattr(self, f'saveTension_1').clicked.connect(lambda: self.saveTensionsThread(1))
+        getattr(self, f'saveTension_2').clicked.connect(lambda: self.saveTensionsThread(2))
+        getattr(self, f'saveTension_3').clicked.connect(lambda: self.saveTensionsThread(3))
+        getattr(self, f'saveTension_4').clicked.connect(lambda: self.saveTensionsThread(4))
+        getattr(self, f'saveTension_5').clicked.connect(lambda: self.saveTensionsThread(5))
+        getattr(self, f'saveTension_6').clicked.connect(lambda: self.saveTensionsThread(6))
+        getattr(self, f'saveTension_7').clicked.connect(lambda: self.saveTensionsThread(7))
+        getattr(self, f'nominalTension_0').clicked.connect(lambda: self.nominalTensionsThread(0))
+        getattr(self, f'nominalTension_1').clicked.connect(lambda: self.nominalTensionsThread(1))
+        getattr(self, f'nominalTension_2').clicked.connect(lambda: self.nominalTensionsThread(2))
+        getattr(self, f'nominalTension_3').clicked.connect(lambda: self.nominalTensionsThread(3))
+        getattr(self, f'nominalTension_4').clicked.connect(lambda: self.nominalTensionsThread(4))
+        getattr(self, f'nominalTension_5').clicked.connect(lambda: self.nominalTensionsThread(5))
+        getattr(self, f'nominalTension_6').clicked.connect(lambda: self.nominalTensionsThread(6))
+        getattr(self, f'nominalTension_7').clicked.connect(lambda: self.nominalTensionsThread(7))
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensionsThread)
-        self.btnSubmitTensions.clicked.connect(self.submitTensionsThread)
-        getattr(self, f'submitTension_0').clicked.connect(lambda: self.submitTensionsThread(0))
-        getattr(self, f'submitTension_1').clicked.connect(lambda: self.submitTensionsThread(1))
-        getattr(self, f'submitTension_2').clicked.connect(lambda: self.submitTensionsThread(2))
-        getattr(self, f'submitTension_3').clicked.connect(lambda: self.submitTensionsThread(3))
-        getattr(self, f'submitTension_4').clicked.connect(lambda: self.submitTensionsThread(4))
-        getattr(self, f'submitTension_5').clicked.connect(lambda: self.submitTensionsThread(5))
-        getattr(self, f'submitTension_6').clicked.connect(lambda: self.submitTensionsThread(6))
-        getattr(self, f'submitTension_7').clicked.connect(lambda: self.submitTensionsThread(7))
+        self.btnSubmitTensionsSelected.clicked.connect(self.submitTensionsSelected)
         # Config Tab
         self.doContinuityCb.stateChanged.connect(self.doContinuityChanged)
         self.doTensionCb.stateChanged.connect(self.doTensionChanged)
@@ -1442,6 +1446,9 @@ class MainWindow(qtw.QMainWindow):
         for layer in APA_LAYERS:
             self.configLayerComboBox.addItem(layer)
         self.configLayerComboBox.addItem("XVU")
+
+        self.configFlexComboBox.addItem("Away from APA")
+        self.configFlexComboBox.addItem("Toward APA")
 
         self.connectLabel.setStyleSheet("color : red")
         self.connectLabel.setText("DWA is not connected")
@@ -2010,14 +2017,14 @@ class MainWindow(qtw.QMainWindow):
     def threadComplete(self):
         logging.info("THREAD COMPLETE!")
 
-    def submitResonancesThreadComplete(self):
-        print("submitResonancesThread complete!")
+    def saveTensionsThreadComplete(self):
+        print("saveTensionsThread complete!")
+
+    def nominalTensionsThreadComplete(self):
+        print("nominalTensionsThread complete!")
 
     def loadTensionsThreadComplete(self):
         print("loadTensionsThread complete!")
-
-    def submitTensionsThreadComplete(self):
-        print("submitTensionsThread complete!")
         
     def _makeDummyData(self):
         # V(t)
@@ -2428,12 +2435,23 @@ class MainWindow(qtw.QMainWindow):
         self.threadPool.start(worker)
         
     @pyqtSlot()
-    def submitResonancesThread(self):
+    def saveTensionsThread(self):
     
         # Pass the function to execute
-        worker = Worker(self.submitResonances)  # could pass args/kwargs too..
+        worker = Worker(self.saveTensions)  # could pass args/kwargs too..
         #worker.signals.result.connect(self.printOutput)
-        worker.signals.finished.connect(self.submitResonancesThreadComplete)
+        worker.signals.finished.connect(self.saveTensionsThreadComplete)
+
+        # execute
+        self.threadPool.start(worker)
+
+    @pyqtSlot()
+    def nominalTensionsThread(self):
+    
+        # Pass the function to execute
+        worker = Worker(self.nominalTensions)  # could pass args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.nominalTensionsThreadComplete)
 
         # execute
         self.threadPool.start(worker)
@@ -2450,19 +2468,30 @@ class MainWindow(qtw.QMainWindow):
         self.threadPool.start(worker)
 
     @pyqtSlot()
-    def submitTensionsThread(self, selectedDwaChan=None):
+    def saveTensionsThread(self, selectedDwaChan=None):
     
         # Pass the function to execute
-        worker = Worker(self.submitTensions, selectedDwaChan)  # could pass args/kwargs too..
+        worker = Worker(self.saveTensions, selectedDwaChan)  # could pass args/kwargs too..
         #worker.signals.result.connect(self.printOutput)
-        worker.signals.finished.connect(self.submitTensionsThreadComplete)
+        worker.signals.finished.connect(self.saveTensionsThreadComplete)
 
         # execute
         self.threadPool.start(worker)
 
-    def submitTensionsAndLoadNext(self):
+    @pyqtSlot()
+    def nominalTensionsThread(self, selectedDwaChan=None):
+    
+        # Pass the function to execute
+        worker = Worker(self.nominalTensions, selectedDwaChan)  # could pass args/kwargs too..
+        #worker.signals.result.connect(self.printOutput)
+        worker.signals.finished.connect(self.nominalTensionsThreadComplete)
+
+        # execute
+        self.threadPool.start(worker)
+
+    def saveTensionsAndLoadNext(self):
         self.labelResonanceSubmitStatus.setText("Submitting...")
-        self.submitTensions()
+        self.saveTensions()
         
         for row in range(self.recentScansFilterProxy.rowCount()):
             wire = self.recentScansFilterProxy.index(row, Results.WIRE_SEGMENT ).data()
@@ -2516,8 +2545,9 @@ class MainWindow(qtw.QMainWindow):
         self.configLayer = self.scanConfigTableModel.item(row,  Scans.LAYER).text() #self.configLayerComboBox.currentText()
         self.configHeadboard = self.configHeadboardSpinBox.value()
         self.configApaSide = self.SideComboBox.currentText()
-        is_flex_connection_winderlike = True
-        if self.configStage == "Installation (Top)": is_flex_connection_winderlike = False
+        self.flexDirection = self.configFlexComboBox.currentText()
+        is_flex_direction_away_from_APA = True
+        if self.flexDirection == "Toward APA": is_flex_direction_away_from_APA = False
 
         self.updateApaUuidListModel()  
         
@@ -2561,7 +2591,7 @@ class MainWindow(qtw.QMainWindow):
         self.apaChannels = [None]*len(dwaChannels)
         for apaChannel in channels:
             dwaChannel = channel_map.apa_channel_to_dwa_channel(self.configLayer, apaChannel,
-                                                                is_flex_connection_winderlike)
+                                                                is_flex_direction_away_from_APA)
             self.apaChannels[dwaChannel] = apaChannel
 
         self.activeRegisters = [ii for ii in range(len(self.apaChannels)) if self.apaChannels[ii]]  # Which DWA channels have data?
@@ -2590,7 +2620,7 @@ class MainWindow(qtw.QMainWindow):
                 fpgaConfig.update(config_generator.configure_gains(stim_freq_max=freqMax, digipot=advDigipotAmplitude))
 
         fpgaConfig.update(config_generator.configure_sampling()) # TODO: Should this be configurable?
-        fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels, is_flex_connection_winderlike, self.skipChannels))
+        fpgaConfig.update(config_generator.configure_relays(self.configLayer, channels, is_flex_direction_away_from_APA, self.skipChannels))
         print(f'\n\nAfter Relays:\n  fpgaConfig: {fpgaConfig}')
 
         # FIXME: should these keys match DATABASE_FIELDS?
@@ -3024,7 +3054,7 @@ class MainWindow(qtw.QMainWindow):
     def _resFreqUserClick(self, reg, seg):
         lineEdit = getattr(self, f'le_resfreq_val_{reg}_{seg}')
         if len(lineEdit.text()) == 0:
-            lineEdit.setText("6.5")
+            lineEdit.setText(str(TENSION_SPEC))
 
     @pyqtSlot()
     def _resFreqUserInputText(self):
@@ -3335,7 +3365,14 @@ class MainWindow(qtw.QMainWindow):
                 scatter.setData(pos)
             
         
-    def submitTensions(self, selectedDwaChan=None):
+    def nominalTensions(self, selectedDwaChan=None):
+        for seg in range(3):
+            lineEdit = getattr(self, f'le_resfreq_val_{selectedDwaChan}_{seg}')
+            if lineEdit.isEnabled():
+                lineEdit.setText('6.5')
+        self._resFreqUserInputText()
+        
+    def saveTensions(self, selectedDwaChan=None):
         #TODO: Fix this so that it writes to file in scanData/processed/ instead of database
         self.labelResonanceSubmitStatus.setText("Submitting...")
         # Load sietch credentials
@@ -3431,6 +3468,34 @@ class MainWindow(qtw.QMainWindow):
         self.labelResonanceSubmitStatus.setText("Submitted!")
         self.resultsTableLoad()
         #self.resultsTableUpdate(scanResultsDict)
+
+    def submitTensionsSelected(self):
+        # Set up a connection to the database API and get the connection request headers
+        # This must be done at the beginning of this main script function, but ONLY ONCE
+        connection, headers = ConnectToAPI()
+        ########################################
+
+        # Performing a new action requires three pieces of information to be pre-defined:
+        #   - the action's type form ID (a string, for which a corresponding type form must already exist in the DB)
+        #   - the UUID of the component on which the action is being performed (which must already exist in the DB)
+        #   - the action data (a Python dictionary, corresponding to the data to be entered into the type form)
+        actionTypeFormID = 'APALayerTensionMeasurement'
+        componentUUID = '2cf8b7f0-4657-11ed-93a3-11d7cd14e853'
+        actionData = {
+            'name': 'M2M Action',
+            'actionPerformedAfterFormsCleanup': True,
+            'wireLayer': 'X',
+            'tensionArray': [4.5,5.5,6.5,7.5,8.5],
+            'segmentIdArray': [1,2,3,4,5]
+        }
+        # Call the action performance function, which takes the action type form ID, component UUID and action data as its first three arguments
+        # The last two arguments must ALWAYS be 'connection' and 'headers' respectively
+        # If successful, the function returns the ID of the performed action (if not, an error message is automatically displayed)
+        id = PerformAction(actionTypeFormID, componentUUID,
+                        actionData, connection, headers)
+        print(f" Successfully performed action with ID: {id}")
+        # Once all actions have been performed and submitted, close the connection to the database API
+        connection.close()
         
     def saveResonanceData(self):
         resData = {}
@@ -3458,107 +3523,6 @@ class MainWindow(qtw.QMainWindow):
         except:
             self.logger.info(f"Cannot save resonance data")
 
-        
-    @pyqtSlot()
-    def submitResonances(self):
-        return #TODO: Remove this, we no longer submit resonances
-        self.labelResonanceSubmitStatus.setText("Submitting...")
-
-        self.saveResonanceData()
-
-        # Load sietch credentials #FIXME still using James's credentials
-        sietch = SietchConnect("sietch.creds")
-
-        note = self.submitResonanceNoteLineEdit.text()
-        
-        out = database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"])
-        #pointerTable = get_pointer_table(sietch, apa_uuid, stage)
-        pointerTable = database_functions.get_pointer_table(sietch, self.ampDataS['apaUuid'], self.ampDataS['stage'])
-        if not pointerTable:
-            wirePointersAllLayers = {}
-            for layer in APA_LAYERS:
-                wirePointersAllLayers[layer] = {}
-                for side in APA_SIDES:
-                    wirePointersAllLayers[layer][side] = [{"testId": None}]*MAX_WIRE_SEGMENT[layer]
-        else:
-            wirePointersAllLayers = pointerTable["data"]["wireSegments"]
-
-        print("Writing resonance results to db")
-        #pointer_list = [{"testId": None}]*MAX_WIRE_SEGMENT  # BUG: shouldn't you read from db what's already there?
-        for dwaCh, ch in enumerate(self.ampDataS["apaChannels"]): # Loop over channels in scan
-            print("Submitting APA channel ",ch)
-            for w in self.ampDataS["wireSegments"]:
-                wire_ch = None #channel_map.wire_to_apa_channel(self.ampDataS["layer"], w)
-                if wire_ch == ch:
-                    resonance_result = {
-                        "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
-                        "formId": "wire_resonance_measurement",
-                        "formName": "Wire Resonance Measurement",
-                        "data": {
-                            "versionDaq": "1.1",
-                            "dwaUuid": self.ampDataS["apaUuid"],
-                            "versionFirmware": "1.1",
-                            "site": "Harvard",
-                            "measuredBy": self.ampDataS["measuredBy"],
-                            "productionStage": self.ampDataS["stage"],
-                            "side": self.ampDataS["side"],
-                            "layer": self.ampDataS["layer"],
-                            "wireSegments": {
-                                str(w): self.resonantFreqs[dwaCh]
-                            },
-                            "saveAsDraft": True,
-                            "submit": True,
-                            "note": note
-                        },
-                    }
-                    print("Submitting wire ",w)
-                    dbid = sietch.api('/test',resonance_result)
-                    wirePointersAllLayers[self.ampDataS['layer']][self.ampDataS['side']][w-1] = {"testId": dbid}
-                    #pointer_list[w] = {"testId": dbid}
-        print("Done writing resonance results to db")
-
-        #pointer_lists[self.ampDataS["layer"]][self.ampDataS["side"]] = pointer_list  # BUG? should copy the list not reference it?
-        record_result = {
-            "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, self.ampDataS["apaUuid"]),
-            "formId": "wire_tension_pointer",
-            "formName": "Wire Tension Pointer Record",
-            "stage": self.ampDataS["stage"],
-            "data": {
-                "version": "1.1",
-                "apaUuid": self.ampDataS["apaUuid"],
-                "wireSegments": wirePointersAllLayers,
-                "saveAsDraft": True,
-                "submit": True
-            }
-        }
-        dbid= sietch.api('/test',record_result)
-        print("Done writing record_result to db")
-
-        # get the right row number to change Submitted status on
-        # can't just use self.recentScansTableRowInUse because rows may have been added
-        # to the scan since the A(f) data was loaded!
-        # Even this approach is not foolproof (race condition)
-        tableData = self.recentScansTableModel.getData()
-        for row in range(len(tableData)):
-            if tableData[row]['scanName'] == self.recentScansNameOfLoadedScan:
-                self.recentScansTableModel.setSubmitted(row, Submitted.YES)
-            
-        #self.recentScansTableModel.setSubmitted(self.recentScansTableRowInUse, Submitted.YES)
-        self.recentScansTableModel.layoutChanged.emit()
-
-        self.labelResonanceSubmitStatus.setText("Submitted!")
-
-
-    #def loadEventDataViaName(self):
-    #    print("cannot load event data this way anymore")
-        #scanId = self.evtVwr_runName_val.text()
-        #print(f'scanId = {scanId}')
-        #
-        #fileroot = 'scanData/'+scanId+'/'
-        #
-        #wireDataFilenames = [ f'{scanId}_{nn:02d}.txt' for nn in range(N_DWA_CHANS) ]
-        #wireDataFilenames = [ os.path.join(fileroot, ff) for ff in wireDataFilenames ]
-        #runHeaderFile = os.path.join(fileroot, f'{scanId}_FF.txt')
     
     def loadEventDataViaFileBrowser(self):
         #options = qtw.QFileDialog.Options()
@@ -4426,10 +4390,10 @@ class MainWindow(qtw.QMainWindow):
             self.btnScanCtrlAdv.clicked.connect(self.abortScan)
         
     def _submitResonanceButtonDisable(self):
-        self.btnSubmitResonances.setEnabled(False)
+        self.btnSaveTensions.setEnabled(False)
 
     def _submitResonanceButtonEnable(self):
-        self.btnSubmitResonances.setEnabled(True)
+        self.btnSaveTensions.setEnabled(True)
         
     def _scanButtonDisable(self):
         #self._scanButtonEnable(state=False)
