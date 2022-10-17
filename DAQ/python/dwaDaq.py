@@ -3862,14 +3862,14 @@ class MainWindow(qtw.QMainWindow):
         self.curvesFit['chan']['main'].setData([])
         
     def _clearAmplitudeData(self):
-        self.resonantFreqs = {}  # FIXME: this should not go here... should happen when A(f) data is loaded...
+        #self.resonantFreqs = {}  # FIXME: this should not go here... should happen when A(f) data is loaded...
         self.ampData = {}        # FIXME: shouldn't really reset the dict like this...
         self.ampData[SCAN_END_MODE_KEYWORD] = ScanEnd.NORMAL
         for reg in self.registers:
             self.ampData[reg] = {'freq':[],  # stim freq in Hz
                                  'ampl':[] } # amplitude in ADC counts
-            self.resonantFreqs[reg.value] = None   # a list of f0 values for each wire
-            self.expectedFreqs[reg.value] = None
+            #self.resonantFreqs[reg.value] = None   # a list of f0 values for each wire
+            #self.expectedFreqs[reg.value] = None
 
         # Clear amplitude plots
         plotTypes = ['amplchan', 'amplgrid']
