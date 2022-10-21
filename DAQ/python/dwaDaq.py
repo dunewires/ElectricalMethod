@@ -504,7 +504,6 @@ class Worker(qtc.QRunnable):
         self.kwargs = kwargs
         self.signals = WorkerSignals()
         self.logger = logging.getLogger()
-        
         # Add the callback to our kwargs, if needed
         # this will be passed on to self.fn so that function
         # has access to the callback
@@ -730,6 +729,10 @@ class MainWindow(qtw.QMainWindow):
         self.initAPADiagram()
         self.someTensionsNotFound = False
         
+        self.fPen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
+        self.fPenColor = [pg.mkPen(color='#d62728', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#2ca02c', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#1f77b4', width=4, style=qtc.Qt.SolidLine)]
+        self.fPenColorTemp = [pg.mkPen(color='#d62728', width=1, style=qtc.Qt.DashLine),pg.mkPen(color='#2ca02c', width=1, style=qtc.Qt.DashLine),pg.mkPen(color='#1f77b4', width=1, style=qtc.Qt.DashLine)]
+        
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
         
@@ -826,7 +829,7 @@ class MainWindow(qtw.QMainWindow):
 
         # For loading saved A(f) data
         self._initResonanceFitLines()
-        self._initResonanceExpLines()
+        self._initResonanceExpectedLines()
         
         # Socket for UDP connection to FPGA    
         self.sock = None
@@ -1894,7 +1897,7 @@ class MainWindow(qtw.QMainWindow):
             self.resFitLines['proc'][reg] = []
             self.resFitLines['procDebug'][reg] = []
 
-    def _initResonanceExpLines(self):
+    def _initResonanceExpectedLines(self):
         self.resExpLines = {'raw':{},  # hold instances of InfiniteLines that indicate expected resonance positions
                             'proc':{},  # for both raw and processed A(f) plots
                             'procDebug':{} # for debugging
@@ -3270,6 +3273,7 @@ class MainWindow(qtw.QMainWindow):
         self._loadSavedAmpData(filename)
         self._configureResonancePlots()
         self.runResonanceAnalysis()
+        self._addResonanceExpectedLines()
         self.labelResonanceSubmitStatus.setText("Tensions have not been submitted")
 
 
@@ -3329,7 +3333,7 @@ class MainWindow(qtw.QMainWindow):
 
     def _f0LineRemove(self, infLine):
         print(f"removing InfiniteLine {infLine} at f={infLine.value()}")
-        source = self._getInfLineSource(infLine)  # 'proc' or 'raw'
+        source = self._getInfLineSource(infLine, self.resFitLines)  # 'proc' or 'raw'
         #print(f"Before: {self.resFitLines['proc']}")
         keys = self.resFitLines[source].keys()
         for kk in keys:
@@ -3377,6 +3381,24 @@ class MainWindow(qtw.QMainWindow):
         self.evtVwrUpdatePlots(plotAmpl=False)
         
     #@pyqtSlot()
+    def _expectedLineMoved(self, evt):
+        # evt is an InfiniteLine instance (sigDragged event from InfiniteLine)
+        
+        print("f0Line moved")
+        print(f"evt = {evt}")
+        print(f"self.resExpLines['raw'] = {self.resExpLines['raw']}")
+        print(f"self.resExpLines['proc'] = {self.resExpLines['proc']}")
+
+        source, c, s, l = self._getInfLineSource(evt, self.resExpLines)
+        
+        movedLine = self.resExpLines[source][c][s][l]
+        newValue = movedLine.value()
+        oldValue = self.expectedFreqs[c][s][l]
+        self.resonantFreqs[c][s] = [(newValue/oldValue)*x for x in self.expectedFreqs[c][s]] #self.resonantFreqs[c][s] + newValue - oldValue  
+        self._clearResonanceExpectedLines()
+        self.resFreqUpdateDisplay(chan=None)
+        self._addResonanceExpectedLines()
+
     def _f0LineMoved(self, evt):
         # evt is an InfiniteLine instance (sigDragged event from InfiniteLine)
         
@@ -3385,16 +3407,16 @@ class MainWindow(qtw.QMainWindow):
         print(f"self.resFitLines['raw'] = {self.resFitLines['raw']}")
         print(f"self.resFitLines['proc'] = {self.resFitLines['proc']}")
 
-        source, c, s, l = self._getInfLineSource(evt)
+        source, c, s, l = self._getInfLineSource(evt, self.resFitLines)
         self._updateResFreqsFromLineLocations(source, c, s, l)
         self.resFreqUpdateDisplay(chan=None)  # update GUI
 
-    def _getInfLineSource(self, infLine):
+    def _getInfLineSource(self, infLine, resLines):
         # Figure out which plot the line drag was in
         # Flatten the list of InfiniteLines and match to source of signal
         for source in ['raw', 'proc']:
             for c in self.activeRegistersS:
-                chanLines = self.resFitLines[source][c]
+                chanLines = resLines[source][c]
                 for s,segLines in enumerate(chanLines):
                     for l,line in enumerate(segLines):
                         if line == infLine:
@@ -4109,18 +4131,18 @@ class MainWindow(qtw.QMainWindow):
 
     def _clearResonanceExpectedLines(self):
         print("Clearing expected resonance lines from the resonance plots")
-
         for reg in self.registers:
-            for infLine in self.resExpLines['proc'][reg]:
-                self.resonanceProcessedPlots[reg].removeItem(infLine)
-            for infLine in self.resExpLines['raw'][reg]:
-                self.resonanceRawPlots[reg].removeItem(infLine)
-            for line in self.resExpLines['procDebug'][reg]:
-                self.resonanceProcessedPlots[reg].removeItem(line)
-
-        self._initResonanceExpLines()
-
-        
+            #if reg.value == selectedChan or reg == None:
+            for segments in self.resExpLines['proc'][reg]:
+                for line in segments:
+                    self.resonanceProcessedPlots[reg].removeItem(line)
+            for segments in self.resExpLines['raw'][reg]:
+                for line in segments:
+                    self.resonanceRawPlots[reg].removeItem(line)
+            for segments in self.resExpLines['procDebug'][reg]:
+                for line in segments:
+                    self.resonanceProcessedPlots[reg].removeItem(line)
+        self._initResonanceExpectedLines()
                 
     def _clearTimeseriesData(self):
         plotTypes = ['grid', 'chan']
@@ -4202,6 +4224,7 @@ class MainWindow(qtw.QMainWindow):
                         if (wireSeg == self.doubleClickedSegment): getattr(self, f'le_resfreq_val_{index}_{seg}').setStyleSheet("QLineEdit {background-color: pink;}")         
                         getattr(self, f'lab_resfreq_{index}_{seg}').setText(f'{apaLayer}{apaSide}{wireSeg}')
                         getattr(self, f'le_resfreq_val_{index}_{seg}').setEnabled(True)
+
 
     def _makeOutputFilenames(self):
         # Generate a unique filename for each register
@@ -4883,6 +4906,24 @@ class MainWindow(qtw.QMainWindow):
             self.expectedFreqs[reg.value] = expected_resonances
             self.resonantFreqs[reg.value] = list(opt_res_arr)
 
+    def _addResonanceExpectedLines(self):
+        # Place expected fit lines at nominal tension frequencies
+        for chan in self.activeRegistersS:
+            for seg, ff in enumerate(self.expectedFreqs[chan]):
+                tempLinesProc = []
+                for segi, f in enumerate(ff):
+                    # If there is a defined tension, then the expected tensions are not draggable
+                    print('oooooooooooooooooooooooooooo')
+                    print(self.currentTensions,chan,seg)
+                    print(self.currentTensions[chan][seg])
+                    if self.currentTensions[chan][seg] and self.currentTensions[chan][seg] > 0:
+                        tempLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=False, pen=self.fPenColorTemp[seg]) )
+                    else:
+                        tempLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=True, pen=self.fPenColorTemp[seg], hoverPen=self.fPenColor[seg]) )
+                    tempLinesProc[-1].sigPositionChangeFinished.connect(self._expectedLineMoved)
+
+                self.resExpLines['proc'][chan].append(tempLinesProc)
+
     def resFreqUpdateDisplay(self, chan=None):
         """ 
         FIXME: if chan=None, update all channels, otherwise, 
@@ -4891,11 +4932,7 @@ class MainWindow(qtw.QMainWindow):
 
         # Remove any existing InfiniteLines from A(f) plots and reset dict
         self._clearResonanceFitLines()
-        self._clearResonanceExpectedLines()
-                
-        # FIXME: move pen definition to __init__ (self.f0pen)
-        f0Pen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
-        fPenColor = [pg.mkPen(color='#d62728', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#2ca02c', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#1f77b4', width=4, style=qtc.Qt.SolidLine)]
+        #self._clearResonanceExpectedLines()
 
         debug = False
         self.currentTensions = {}
@@ -4948,6 +4985,8 @@ class MainWindow(qtw.QMainWindow):
             #     expectedFreqRounded = np.unique(expectedFreqRounded)
             #     for ii, ff in enumerate(expectedFreqRounded):
             #         self.resExpLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=False, pen=fPenBlue[i]) )
+            # Create/display new InfiniteLine instance for each resonant freq
+
 
             # Create/display new InfiniteLine instance for each resonant freq
             for ii, ff in enumerate(self.resonantFreqs[chan]):
@@ -4978,14 +5017,11 @@ class MainWindow(qtw.QMainWindow):
                     #     print("")
                     #     self.resFitLines['procDebug'][chan].append( self.resonanceProcessedPlots[chan].plot(x=[ff,ff], y=[ymin,ymax]))
                     #     self.resFitLines['procDebug'][chan].append( self.resonanceProcessedPlots[chan].plot(x=[xmin, xmax], y=[ywidth,ywidth]))
-
-                    
-                    
-                    segmentLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=True, pen=fPenColor[ii], hoverPen=pg.mkPen(color='#d6d600', width=4, style=qtc.Qt.SolidLine)) )
+                    segmentLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=True, pen=self.fPenColor[ii], hoverPen=pg.mkPen(color='#d6d600', width=4, style=qtc.Qt.SolidLine)) )
                     # FIXME: should the next 2 lines really be commented out?
                     segmentLinesProc[-1].sigClicked.connect(self._f0LineClicked)
                     segmentLinesProc[-1].sigPositionChangeFinished.connect(self._f0LineMoved)
-                    segmentLinesRaw.append( self.resonanceRawPlots[chan].addLine(x=f, movable=True, pen=fPenColor[ii], hoverPen=pg.mkPen(color='#d6d600', width=4, style=qtc.Qt.SolidLine))  )
+                    segmentLinesRaw.append( self.resonanceRawPlots[chan].addLine(x=f, movable=True, pen=self.fPenColor[ii], hoverPen=pg.mkPen(color='#d6d600', width=4, style=qtc.Qt.SolidLine))  )
                     segmentLinesRaw[-1].sigClicked.connect(self._f0LineClicked)
                     segmentLinesRaw[-1].sigPositionChangeFinished.connect(self._f0LineMoved)
 
