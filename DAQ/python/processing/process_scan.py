@@ -428,14 +428,15 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
     pruned_moved_res_arr_movement_factors = []
     for i, moved_res_arr_movement_factor in enumerate(moved_res_arr_movement_factors):
         moved_res_arr = moved_res_arrs[i]
+        within_movement_factor = True
         if np.max(moved_res_arr_movement_factor) > MOVEMENT_FACTOR_MAX*np.min(moved_res_arr_movement_factor):
             for j, res_seg in enumerate(moved_res_arr):
                 if len(res_seg) == 1:
                     moved_res_arr[j] = []
                     moved_res_arr_movement_factor[j] = np.nan
                     if np.nanmax(moved_res_arr_movement_factor) > MOVEMENT_FACTOR_MAX*np.nanmin(moved_res_arr_movement_factor):
-                        continue
-                    
+                        within_movement_factor = False
+        if within_movement_factor == False: continue
         flat_res = np.array([sub_seg for res_seg in moved_res_arrs[i] for sub_seg in res_seg])
         res_not_near_peak = False
         for sub_seg in flat_res:
