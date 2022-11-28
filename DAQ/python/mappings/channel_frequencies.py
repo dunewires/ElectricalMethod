@@ -149,6 +149,9 @@ l_physical_wire = {
 def length_to_frequency(length, tension=6.5, density=1.52e-4):
     return (tension/4/density/(length/1000)**2)**0.5
 
+    # f^2 = (T/4pL^2)
+    # f2 = f1*(T2/T1)^0.5
+
 def wire_to_apa_channel(wire_layer: str, wire_segment: int):
     '''Return the APA channel associated to the given wire layer and wire number.'''
     wire_layer = check_valid_wire_layer(wire_layer)

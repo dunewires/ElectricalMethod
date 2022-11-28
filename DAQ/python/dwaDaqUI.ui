@@ -420,7 +420,7 @@
                    <enum>QTabWidget::North</enum>
                   </property>
                   <property name="currentIndex">
-                   <number>0</number>
+                   <number>1</number>
                   </property>
                   <widget class="QWidget" name="tab_config">
                    <attribute name="title">
@@ -510,7 +510,7 @@
                            </property>
                            <property name="maximumSize">
                             <size>
-                             <width>40</width>
+                             <width>60</width>
                              <height>16777215</height>
                             </size>
                            </property>
@@ -533,7 +533,7 @@
                            </property>
                            <property name="maximumSize">
                             <size>
-                             <width>40</width>
+                             <width>60</width>
                              <height>16777215</height>
                             </size>
                            </property>
@@ -549,14 +549,14 @@
                            </item>
                           </widget>
                          </item>
-                         <item row="5" column="0">
+                         <item row="7" column="0">
                           <widget class="QLabel" name="scanTypeLabel">
                            <property name="text">
                             <string>Headboard</string>
                            </property>
                           </widget>
                          </item>
-                         <item row="5" column="1">
+                         <item row="7" column="1">
                           <widget class="QSpinBox" name="configHeadboardSpinBox">
                            <property name="minimumSize">
                             <size>
@@ -581,14 +581,14 @@
                            </property>
                           </widget>
                          </item>
-                         <item row="11" column="0">
+                         <item row="13" column="0">
                           <widget class="QLabel" name="doContinuityLabel">
                            <property name="text">
                             <string>Type</string>
                            </property>
                           </widget>
                          </item>
-                         <item row="11" column="1">
+                         <item row="13" column="1">
                           <widget class="QWidget" name="widget_7" native="true">
                            <layout class="QHBoxLayout" name="horizontalLayout_16">
                             <item>
@@ -608,7 +608,7 @@
                            </layout>
                           </widget>
                          </item>
-                         <item row="13" column="1">
+                         <item row="15" column="1">
                           <widget class="QPushButton" name="btnConfigureScans">
                            <property name="minimumSize">
                             <size>
@@ -627,7 +627,7 @@
                            </property>
                           </widget>
                          </item>
-                         <item row="15" column="1">
+                         <item row="17" column="1">
                           <layout class="QVBoxLayout" name="verticalLayout_2">
                            <property name="leftMargin">
                             <number>6</number>
@@ -671,6 +671,16 @@
                             </widget>
                            </item>
                           </layout>
+                         </item>
+                         <item row="5" column="0">
+                          <widget class="QLabel" name="flexDirectionLabel">
+                           <property name="text">
+                            <string>Flex Direction</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="5" column="1">
+                          <widget class="QComboBox" name="configFlexComboBox"/>
                          </item>
                         </layout>
                        </item>
@@ -1317,11 +1327,40 @@
                    </sizepolicy>
                   </property>
                   <property name="currentIndex">
-                   <number>2</number>
+                   <number>3</number>
                   </property>
+                  <widget class="QWidget" name="tab_6">
+                   <attribute name="title">
+                    <string>Scans</string>
+                   </attribute>
+                   <layout class="QVBoxLayout" name="verticalLayout_21">
+                    <item>
+                     <widget class="QTableView" name="recentScansTableView">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
                   <widget class="QWidget" name="tab_4">
                    <attribute name="title">
-                    <string>Table</string>
+                    <string>Wires</string>
                    </attribute>
                    <layout class="QVBoxLayout" name="verticalLayout_24">
                     <item>
@@ -1570,7 +1609,7 @@
                        </layout>
                       </item>
                       <item>
-                       <widget class="QTableView" name="recentScansTableView">
+                       <widget class="QTableView" name="recentWiresTableView">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                           <horstretch>0</horstretch>
@@ -1663,7 +1702,7 @@
                   </widget>
                   <widget class="QWidget" name="tab_5">
                    <attribute name="title">
-                    <string>Raw Scans</string>
+                    <string>Raw Plots</string>
                    </attribute>
                    <layout class="QVBoxLayout" name="verticalLayout_5">
                     <item>
@@ -1909,7 +1948,7 @@
                   </widget>
                   <widget class="QWidget" name="tab_9">
                    <attribute name="title">
-                    <string>Processed Scans</string>
+                    <string>Processed Plots</string>
                    </attribute>
                    <layout class="QVBoxLayout" name="verticalLayout_36">
                     <item>
@@ -1937,7 +1976,7 @@
                           <height>30</height>
                          </size>
                         </property>
-                        <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="2,1,1,1">
+                        <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="2,1,1,1,1">
                          <property name="leftMargin">
                           <number>0</number>
                          </property>
@@ -1958,16 +1997,23 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QPushButton" name="btnSubmitResonances">
+                          <widget class="QPushButton" name="btnRemoveAndArchive">
                            <property name="text">
-                            <string>Submit All Tensions to DB</string>
+                            <string>Remove and Archive Scan</string>
                            </property>
                           </widget>
                          </item>
                          <item>
-                          <widget class="QPushButton" name="btnSubmitAndLoadNext">
+                          <widget class="QPushButton" name="btnSaveTensions">
                            <property name="text">
-                            <string>Submit and Load Next Unconfirmed Scan</string>
+                            <string>Save All Tensions</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="btnSaveAndLoadNext">
+                           <property name="text">
+                            <string>Save and Load Next Unconfirmed Scan</string>
                            </property>
                           </widget>
                          </item>
@@ -2497,9 +2543,16 @@
                                   </widget>
                                  </item>
                                  <item>
-                                  <widget class="QPushButton" name="submitTension_0">
+                                  <widget class="QPushButton" name="nominalTension_0">
                                    <property name="text">
-                                    <string>Submit</string>
+                                    <string>Nominal</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="saveTension_0">
+                                   <property name="text">
+                                    <string>Save</string>
                                    </property>
                                   </widget>
                                  </item>
@@ -3002,9 +3055,16 @@
                                   </widget>
                                  </item>
                                  <item>
-                                  <widget class="QPushButton" name="submitTension_4">
+                                  <widget class="QPushButton" name="nominalTension_4">
                                    <property name="text">
-                                    <string>Submit</string>
+                                    <string>Nominal</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="saveTension_4">
+                                   <property name="text">
+                                    <string>Save</string>
                                    </property>
                                   </widget>
                                  </item>
@@ -3507,9 +3567,16 @@
                                   </widget>
                                  </item>
                                  <item>
-                                  <widget class="QPushButton" name="submitTension_5">
+                                  <widget class="QPushButton" name="nominalTension_5">
                                    <property name="text">
-                                    <string>Submit</string>
+                                    <string>Nominal</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="saveTension_5">
+                                   <property name="text">
+                                    <string>Save</string>
                                    </property>
                                   </widget>
                                  </item>
@@ -4012,9 +4079,16 @@
                                   </widget>
                                  </item>
                                  <item>
-                                  <widget class="QPushButton" name="submitTension_1">
+                                  <widget class="QPushButton" name="nominalTension_1">
                                    <property name="text">
-                                    <string>Submit</string>
+                                    <string>Nominal</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="saveTension_1">
+                                   <property name="text">
+                                    <string>Save</string>
                                    </property>
                                   </widget>
                                  </item>
@@ -4517,9 +4591,16 @@
                                   </widget>
                                  </item>
                                  <item>
-                                  <widget class="QPushButton" name="submitTension_2">
+                                  <widget class="QPushButton" name="nominalTension_2">
                                    <property name="text">
-                                    <string>Submit</string>
+                                    <string>Nominal</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="saveTension_2">
+                                   <property name="text">
+                                    <string>Save</string>
                                    </property>
                                   </widget>
                                  </item>
@@ -5022,9 +5103,16 @@
                                   </widget>
                                  </item>
                                  <item>
-                                  <widget class="QPushButton" name="submitTension_6">
+                                  <widget class="QPushButton" name="nominalTension_6">
                                    <property name="text">
-                                    <string>Submit</string>
+                                    <string>Nominal</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="saveTension_6">
+                                   <property name="text">
+                                    <string>Save</string>
                                    </property>
                                   </widget>
                                  </item>
@@ -5527,9 +5615,16 @@
                                   </widget>
                                  </item>
                                  <item>
-                                  <widget class="QPushButton" name="submitTension_3">
+                                  <widget class="QPushButton" name="nominalTension_3">
                                    <property name="text">
-                                    <string>Submit</string>
+                                    <string>Nominal</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="saveTension_3">
+                                   <property name="text">
+                                    <string>Save</string>
                                    </property>
                                   </widget>
                                  </item>
@@ -6032,9 +6127,16 @@
                                   </widget>
                                  </item>
                                  <item>
-                                  <widget class="QPushButton" name="submitTension_7">
+                                  <widget class="QPushButton" name="nominalTension_7">
                                    <property name="text">
-                                    <string>Submit</string>
+                                    <string>Nominal</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QPushButton" name="saveTension_7">
+                                   <property name="text">
+                                    <string>Save</string>
                                    </property>
                                   </widget>
                                  </item>
@@ -6063,196 +6165,213 @@
                </attribute>
                <layout class="QVBoxLayout" name="verticalLayout_13">
                 <item>
-                 <layout class="QVBoxLayout" name="verticalLayout_20" stretch="1,1,1,1">
-                  <property name="bottomMargin">
-                   <number>6</number>
+                 <widget class="QWidget" name="widget_3" native="true">
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>80</height>
+                   </size>
                   </property>
-                  <item>
-                   <widget class="QWidget" name="widget_3" native="true">
-                    <property name="maximumSize">
-                     <size>
-                      <width>16777215</width>
-                      <height>80</height>
-                     </size>
-                    </property>
-                    <widget class="QComboBox" name="tensionStageComboBox">
-                     <property name="geometry">
-                      <rect>
-                       <x>44</x>
-                       <y>10</y>
-                       <width>300</width>
-                       <height>20</height>
-                      </rect>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>300</width>
-                       <height>0</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>300</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                    </widget>
-                    <widget class="QLabel" name="tensionStageLabel">
-                     <property name="geometry">
-                      <rect>
-                       <x>10</x>
-                       <y>10</y>
-                       <width>28</width>
-                       <height>16</height>
-                      </rect>
-                     </property>
-                     <property name="text">
-                      <string>Stage</string>
-                     </property>
-                    </widget>
-                    <widget class="QPushButton" name="btnLoadTensions">
-                     <property name="geometry">
-                      <rect>
-                       <x>44</x>
-                       <y>36</y>
-                       <width>300</width>
-                       <height>23</height>
-                      </rect>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>300</width>
-                       <height>0</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>300</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                     <property name="text">
-                      <string>Get Tensions</string>
-                     </property>
-                    </widget>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QTabWidget" name="tabWidget_2">
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>500</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>16777215</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="currentIndex">
-                     <number>0</number>
-                    </property>
-                    <widget class="QWidget" name="tab">
-                     <attribute name="title">
-                      <string>Table</string>
-                     </attribute>
-                     <layout class="QVBoxLayout" name="verticalLayout_17">
+                  <widget class="QComboBox" name="tensionStageComboBox">
+                   <property name="geometry">
+                    <rect>
+                     <x>44</x>
+                     <y>10</y>
+                     <width>300</width>
+                     <height>20</height>
+                    </rect>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>300</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>300</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                  </widget>
+                  <widget class="QLabel" name="tensionStageLabel">
+                   <property name="geometry">
+                    <rect>
+                     <x>10</x>
+                     <y>10</y>
+                     <width>28</width>
+                     <height>16</height>
+                    </rect>
+                   </property>
+                   <property name="text">
+                    <string>Stage</string>
+                   </property>
+                  </widget>
+                  <widget class="QPushButton" name="btnLoadTensions">
+                   <property name="geometry">
+                    <rect>
+                     <x>44</x>
+                     <y>36</y>
+                     <width>300</width>
+                     <height>23</height>
+                    </rect>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>300</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>300</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>Get Tensions</string>
+                   </property>
+                  </widget>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTabWidget" name="tabWidget_2">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>500</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="currentIndex">
+                   <number>0</number>
+                  </property>
+                  <widget class="QWidget" name="tab">
+                   <attribute name="title">
+                    <string>Table</string>
+                   </attribute>
+                   <layout class="QVBoxLayout" name="verticalLayout_17">
+                    <item>
+                     <widget class="QTableView" name="tensionTableView">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <layout class="QVBoxLayout" name="verticalLayout_20">
                       <item>
-                       <widget class="QTableView" name="tensionTableView">
-                        <property name="minimumSize">
-                         <size>
-                          <width>0</width>
-                          <height>0</height>
-                         </size>
-                        </property>
+                       <widget class="QComboBox" name="tensionLayerSelectionComboBox">
                         <property name="maximumSize">
                          <size>
-                          <width>16777215</width>
+                          <width>60</width>
                           <height>16777215</height>
                          </size>
                         </property>
                        </widget>
                       </item>
-                     </layout>
-                    </widget>
-                    <widget class="QWidget" name="tab_2">
-                     <attribute name="title">
-                      <string>Graphs</string>
-                     </attribute>
-                     <layout class="QVBoxLayout" name="verticalLayout_18">
                       <item>
-                       <widget class="GraphicsLayoutWidget" name="tensionGLW">
+                       <widget class="QComboBox" name="tensionSideSelectionComboBox">
+                        <property name="maximumSize">
+                         <size>
+                          <width>60</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLineEdit" name="submitTensionNoteLineEdit">
                         <property name="sizePolicy">
-                         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                           <horstretch>0</horstretch>
                           <verstretch>0</verstretch>
                          </sizepolicy>
                         </property>
                         <property name="minimumSize">
                          <size>
-                          <width>0</width>
+                          <width>300</width>
                           <height>0</height>
                          </size>
                         </property>
                         <property name="maximumSize">
                          <size>
-                          <width>16777215</width>
+                          <width>300</width>
                           <height>16777215</height>
                          </size>
+                        </property>
+                        <property name="placeholderText">
+                         <string>Submission note...</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="btnSubmitTensionsSelected">
+                        <property name="minimumSize">
+                         <size>
+                          <width>300</width>
+                          <height>0</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>300</width>
+                          <height>16777215</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string>Submit Selection to DB</string>
                         </property>
                        </widget>
                       </item>
                      </layout>
-                    </widget>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLineEdit" name="submitTensionNoteLineEdit">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>300</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>300</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="placeholderText">
-                     <string>Submission note...</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="btnSubmitTensions">
-                    <property name="minimumSize">
-                     <size>
-                      <width>300</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>300</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>Submit Tensions to DB</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
+                    </item>
+                   </layout>
+                  </widget>
+                  <widget class="QWidget" name="tab_2">
+                   <attribute name="title">
+                    <string>Graphs</string>
+                   </attribute>
+                   <layout class="QVBoxLayout" name="verticalLayout_18">
+                    <item>
+                     <widget class="GraphicsLayoutWidget" name="tensionGLW">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </widget>
                 </item>
                </layout>
               </widget>

@@ -1,5 +1,7 @@
 from channel_frequencies import check_valid_wire_layer
 import numpy as np
+import csv
+import os
 
 def apa_channel_to_board_channel(wire_layer: str, apa_channel: int):
     '''Return the board channel associated to the given wire layer and APA channel. Board channel goes from 1 to 48 for X, from 1 to 40 for V and U and from 1 to 48 for G except for the first G board which goes from 1 to 49.'''
@@ -159,3 +161,18 @@ def get_grouping_number(wire_layer: str, apa_channel: int):
         if apa_channel in group:
             return i+1
     return -1
+
+def get_hardware_map(stage: str, wire_layer: str, apa_channel: int):
+    with open(os.path.join('.', 'mappings', 'hardware_maps', f'Full DWA Channel Mapping - {wire_layer}.csv')) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        line_count = 0
+        for row in csv_reader:
+            if line_count == apa_channel + 1:
+                print("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM--------------------------MMMMMMMMMMMMMMMMMMMMMMMM")
+                print(stage)
+                lhc = row[0:3]
+                if stage == "Installation (Top)": hw_map = row[10:17]
+                else: hw_map = row[3:10]
+                return lhc, hw_map
+            else:
+                line_count += 1
