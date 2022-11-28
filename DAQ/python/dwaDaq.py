@@ -275,8 +275,9 @@ SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum',
 N_RECENT_SCANS = 500
 
 TENSION_SPEC = 6.5 # Newtons
-TENSION_SPEC_MIN = TENSION_SPEC-1.0
-TENSION_SPEC_MAX = TENSION_SPEC+1.0
+TENSION_SPEC_TOL = 1.0
+TENSION_SPEC_MIN = TENSION_SPEC-TENSION_SPEC_TOL
+TENSION_SPEC_MAX = TENSION_SPEC+TENSION_SPEC_TOL
 TENSION_LOW_COLOR  = qtg.QColor(219,120,120)
 TENSION_HIGH_COLOR = qtg.QColor(219,120,120)
 TENSION_NOT_APPLICABLE_COLOR = qtg.QColor(128,128,128)
@@ -2693,8 +2694,10 @@ class MainWindow(qtw.QMainWindow):
         for row in range(self.recentWiresFilterProxy.rowCount()):
             wire = self.recentWiresFilterProxy.index(row, ResultsWires.WIRE_SEGMENT ).data()
             submitted = self.recentWiresFilterProxy.index(row, ResultsWires.SUBMITTED ).data()
-            if submitted == "Auto": 
-                self.loadResultsScan(row)
+            scanId =  self.recentWiresFilterProxy.index(row, ResultsWires.SCAN).data()
+            if submitted != "Manual" and os.path.isdir(os.path.join(self.apaSubdir, scanId)):
+                print("loading",os.path.join(self.apaSubdir, scanId))
+                self.loadResultsWire(row)
                 break
 
 
@@ -3068,6 +3071,7 @@ class MainWindow(qtw.QMainWindow):
             return
         
         self.configApaUuid = val
+        self.apaSubdir = os.path.join(OUTPUT_DIR_SCAN_DATA, f'APA_{self.configApaUuid}')
         print(f"self.configApaUuid = [{self.configApaUuid}]")
 
         self.horizontalWidget.setVisible(True)
@@ -3075,6 +3079,8 @@ class MainWindow(qtw.QMainWindow):
         # Load the results table using the specified UUID
         self.resultsScansTableLoad()
         self.resultsWiresTableLoad()
+        # Load tension tab
+        self.loadTensions()
 
         
     @pyqtSlot()
@@ -3091,14 +3097,8 @@ class MainWindow(qtw.QMainWindow):
         col = ResultsScans.SCAN
         scan = self.recentScansFilterProxy.index(row, col ).data() # G_A_1_1-3-5-7-9-11-13-15_20211022T093618
         self.doubleClickedSegment = None
-        print(f"scan = {scan}")
-        print(f"APA UUID: {self.configApaUuid}") # 43cd3950-268d-11ec-b6f5-a70e70a44436
-        apaSubdir = f'APA_{self.configApaUuid}'  # APA_43cd3950-268d-11ec-b6f5-a70e70a44436
-        print(f'apaSubdir: {apaSubdir}')
         
-        scanDir = os.path.join(OUTPUT_DIR_SCAN_DATA, apaSubdir, scan)
-        print(f'scanDir = {scanDir}') # scanData/raw/APA_43c...436/G_A_1_1-...-15_20211022T093618
-        scanFile = os.path.join(OUTPUT_DIR_SCAN_DATA, apaSubdir, scan, 'amplitudeData.json')
+        scanFile = os.path.join(self.apaSubdir, scan, 'amplitudeData.json')
         self.loadSavedScanData(scanFile)
 
         # Switch focus to the plot tab
@@ -3113,14 +3113,8 @@ class MainWindow(qtw.QMainWindow):
         col = ResultsWires.SCAN
         scan = self.recentWiresFilterProxy.index(row, col ).data() # G_A_1_1-3-5-7-9-11-13-15_20211022T093618
         self.doubleClickedSegment = int(self.recentWiresFilterProxy.index(row, ResultsWires.WIRE_SEGMENT ).data())
-        print(f"scan = {scan}")
-        print(f"APA UUID: {self.configApaUuid}") # 43cd3950-268d-11ec-b6f5-a70e70a44436
-        apaSubdir = f'APA_{self.configApaUuid}'  # APA_43cd3950-268d-11ec-b6f5-a70e70a44436
-        print(f'apaSubdir: {apaSubdir}')
         
-        scanDir = os.path.join(OUTPUT_DIR_SCAN_DATA, apaSubdir, scan)
-        print(f'scanDir = {scanDir}') # scanData/raw/APA_43c...436/G_A_1_1-...-15_20211022T093618
-        scanFile = os.path.join(OUTPUT_DIR_SCAN_DATA, apaSubdir, scan, 'amplitudeData.json')
+        scanFile = os.path.join(self.apaSubdir, scan, 'amplitudeData.json')
         self.loadSavedScanData(scanFile)
 
         # Switch focus to the plot tab
@@ -3574,40 +3568,45 @@ class MainWindow(qtw.QMainWindow):
         #self.tensionTableView.resizeColumnsToContents()
         self.tensionTableView.resizeRowsToContents()
         #self._configureTensionPlots()
+        for stage in APA_STAGES:
+            for layer in APA_LAYERS:
+                try:
+                    layerData = resultsDict[stage][layer]
+                except:
+                    print('Data for this stage and layer not found.')
+                    continue
+                for side in APA_SIDES:
+                    wireSegmentStrs = layerData[side]
+                    for wireSegmentStr in wireSegmentStrs:
+                        if int(wireSegmentStr) <= 0: continue
+                        segmentLength = channel_frequencies.length_of_wire_segment(layer, int(wireSegmentStr))
+                        wireSegDict = wireSegmentStrs[wireSegmentStr]
+                        tensionDict = wireSegDict["tension"]
+                        tension = TensionStatus.NOT_MEASURED
+                        if len(tensionDict.keys()) > 0:
+                            scanIds = tensionDict.keys()
+                            sortedScanIds = sorted(scanIds)
+                            latestScanId = sortedScanIds[-1]
+                            latestScan = tensionDict[latestScanId]
+                            tension = latestScan["tension"]
+                            if tension == 'Not Found': tension = TensionStatus.NOT_FOUND
+                        elif segmentLength != None and segmentLength < 500:
+                            tension = TensionStatus.TOO_SHORT
+                        physicalSide = channel_map.electrical_side_to_physical_side(side, layer, int(wireSegmentStr))
+                        self.tensionData[layer+physicalSide][int(wireSegmentStr)-1] = tension
 
-        for layer in APA_LAYERS:
-            try:
-                layerData = resultsDict[stage][layer]
-            except:
-                print('Data for this stage and layer not found.')
-                continue
-            for side in APA_SIDES:
-                wireSegmentStrs = layerData[side]
-                for wireSegmentStr in wireSegmentStrs:
-                    if int(wireSegmentStr) <= 0: continue
-                    segmentLength = channel_frequencies.length_of_wire_segment(layer, int(wireSegmentStr))
-                    wireSegDict = wireSegmentStrs[wireSegmentStr]
-                    tensionDict = wireSegDict["tension"]
-                    tension = TensionStatus.NOT_MEASURED
-                    if len(tensionDict.keys()) > 0:
-                        scanIds = tensionDict.keys()
-                        sortedScanIds = sorted(scanIds)
-                        latestScanId = sortedScanIds[-1]
-                        latestScan = tensionDict[latestScanId]
-                        tension = latestScan["tension"]
-                        if tension == 'Not Found': tension = TensionStatus.NOT_FOUND
-                    elif segmentLength != None and segmentLength < 500:
-                        tension = TensionStatus.TOO_SHORT
-                    physicalSide = channel_map.electrical_side_to_physical_side(side, layer, int(wireSegmentStr))
-                    self.tensionData[layer+physicalSide][int(wireSegmentStr)-1] = tension
 
-
-                # Create the scatter plot and add it to the view
-                scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='g'), symbol='o', size=1)
-                self.tensionPlots['tensionOfWireNumber'][layer][side].addItem(scatter)
-                pos = [{'pos': [i,self.tensionData[layer+side][i]]} for i in range(len(self.tensionData[layer+side]))]
-                scatter.setData(pos)
-            
+                    # Create the scatter plot and add it to the view
+                    scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='darkgreen'), symbol='o', size=1)
+                    self.tensionPlots['tensionOfWireNumber'][layer][side].addItem(scatter)
+                    pos = [{'pos': [i,self.tensionData[layer+side][i]]} for i in range(len(self.tensionData[layer+side]))]
+                    scatter.setData(pos)
+        
+        # save scan analysis results to JSON file
+        outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}_tensions.json')
+        print(f'writing processed scan results to {outfile}')
+        with open(outfile, 'w') as f:
+            json.dump(self.tensionData, f, sort_keys=True)
         
     def nominalTensions(self, selectedDwaChan=None):
         for seg in range(3):
@@ -3696,8 +3695,13 @@ class MainWindow(qtw.QMainWindow):
                         wireSeg = segments[seg]
                         print("writing seg", dwaChan, seg, self.currentTensions[dwaChan][seg])
                         print(f"stage, layer, side, wireSeg, scanId: {stage}, {layer}, {side}, {wireSeg}, {scanId}")
-                        fullResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1., 'submitted':'Manual'}
-                        scanResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1., 'submitted':'Manual'}
+                        strWireSeg = str(wireSeg).zfill(5)
+                        if strWireSeg not in fullResultsDict[stage][layer][side].keys():
+                            fullResultsDict[stage][layer][side][strWireSeg] = {"continuity": {}, "tension": {}}
+                        if strWireSeg not in scanResultsDict[stage][layer][side].keys():
+                            scanResultsDict[stage][layer][side][strWireSeg] = {"continuity": {}, "tension": {}}
+                        fullResultsDict[stage][layer][side][strWireSeg]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1., 'submitted':'Manual'}
+                        scanResultsDict[stage][layer][side][strWireSeg]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1., 'submitted':'Manual'}
 
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{apaUuid}.json')
@@ -4913,9 +4917,6 @@ class MainWindow(qtw.QMainWindow):
                 tempLinesProc = []
                 for segi, f in enumerate(ff):
                     # If there is a defined tension, then the expected tensions are not draggable
-                    print('oooooooooooooooooooooooooooo')
-                    print(self.currentTensions,chan,seg)
-                    print(self.currentTensions[chan][seg])
                     if self.currentTensions[chan][seg] and self.currentTensions[chan][seg] > 0:
                         tempLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=False, pen=self.fPenColorTemp[seg]) )
                     else:
@@ -4974,7 +4975,8 @@ class MainWindow(qtw.QMainWindow):
                         tension = round(self.currentTensions[chan][seg],2)
                         getattr(self, f'le_resfreq_val_{chan}_{seg}').setText(str(tension))
                         if wireSeg != self.doubleClickedSegment:
-                            if (tension < TENSION_SPEC_MIN or tension > TENSION_SPEC_MAX): getattr(self, f'le_resfreq_val_{chan}_{seg}').setStyleSheet("QLineEdit {background-color: rgb(255, 227, 180);}")                     
+                            if (np.abs(tension - TENSION_SPEC) > 2*TENSION_SPEC_TOL): getattr(self, f'le_resfreq_val_{chan}_{seg}').setStyleSheet("QLineEdit {background-color: rgb(255, 227, 180);}")
+                            elif (np.abs(tension - TENSION_SPEC) > TENSION_SPEC_TOL): getattr(self, f'le_resfreq_val_{chan}_{seg}').setStyleSheet("QLineEdit {background-color: rgb(255, 255, 240);}")                     
                             else: getattr(self, f'le_resfreq_val_{chan}_{seg}').setStyleSheet("QLineEdit {background-color: white;}") 
             
             fitx, fity = self.curves['resProcFit'][chan].getData()

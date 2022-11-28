@@ -11,9 +11,11 @@ import channel_frequencies
 import resonance_fitting
 import os
 import subprocess
-
+import itertools
+from scipy.interpolate import interp1d
 
 def getAnalysisVersion():
+    return None
     #$ git rev-parse --short `git log -n 1 --pretty=format:%H -- processing/`
     #a4df205
     #print(f'********** Resonance algorithm version ***********')
@@ -48,7 +50,7 @@ def combine_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT, d1, d2
     for stage in STAGES:
         for layer in APA_LAYERS:
             for side in APA_SIDES:
-                for i in range(MAX_WIRE_SEGMENT[layer]):
+                for i in range(1,MAX_WIRE_SEGMENT[layer]+1):
                     segment = str(i).zfill(5)
                     resultsDict[stage][layer][side][segment] = {
                         "tension": {**d1[stage][layer][side][segment]["tension"], **d2[stage][layer][side][segment]["tension"]}, 
@@ -77,7 +79,7 @@ def new_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
             resultsDict[stage][layer] = {}
             for side in APA_SIDES:
                 resultsDict[stage][layer][side] = {}
-                for i in range(MAX_WIRE_SEGMENT[layer]):
+                for i in range(1,MAX_WIRE_SEGMENT[layer]+1):
                     resultsDict[stage][layer][side][str(i).zfill(5)] = blank_tension_result()
     return resultsDict
 
@@ -99,14 +101,15 @@ def update_results_dict_continuity(resultsDict, stage, layer, side, scanId, wire
         resultsDict[stage][layer][side][str(wireSegment).zfill(5)]["continuity"][scanId] = {'continuous': continuous, 'capacitance_cal': capacitanceCal, "capacitance_un_cal": capacitanceUnCal}
 
 def refine_peak_position(f, a, fpk, radius):
-    selected = (f > fpk - radius) & (f < fpk + radius)
+    selected = (f > fpk - radius) & (f < fpk)
     selected_f = f[selected]
     selected_a = a[selected]
+    step_size = f[1]-f[0]
     if len(selected_a) == 0: return fpk
-    pks, props = find_peaks(selected_a,height=0.2*np.max(selected_a),width=4)
+    pks, props = find_peaks(selected_a, height=0.2*np.max(selected_a), width=0.5/step_size)
     if len(pks) == 0: return fpk
-    fpks = np.array([selected_f[pk] for pk in pks])
-    return fpks[0]
+    min_index = np.argmin(props['peak_heights'])
+    return pks[min_index]
 
 def lowest_max_in_surrounding(f, a, start, stop, step, width):
     lowest_max = np.max(a)
@@ -195,7 +198,7 @@ def process_channel_v1(layer, apaCh, f, a, maxFreq=250.):
 
         return segments, best_placements[min_index], best_tensions[min_index], np.std(best_tensions,0)
 
-def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0):
+def process_channel_v2(layer, apaCh, f, a, maxFreq=250., verbosity=0):
     if maxFreq > np.max(f): maxFreq = np.max(f) 
     segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,maxFreq)
     # Get baseline subtracted trace
@@ -271,6 +274,206 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0):
     best_tension = refined_tension
     best_placement = refined_placement
     return segments, best_placement, best_tension, np.max(np.abs(dts),0), fpks
+
+def move_to_nth_nearest(res_seg, n, fpks, min_or_max = 'max'):
+    if min_or_max == 'max':
+        f_in_seg = np.max(res_seg)
+    elif min_or_max == 'min':
+        f_in_seg = np.min(res_seg)
+    else: return None, None
+    diffs = list(np.abs(f_in_seg-fpks))
+    nearest_indices = [diffs.index(x) for x in sorted(diffs)]
+    if n >= len(nearest_indices): return None, None
+    nth_index = nearest_indices[n]
+    nth_fpk = fpks[nth_index]
+    shifted_res_seg = resonance_fitting.shift_res_seg_to_f0(res_seg, f_in_seg, nth_fpk)
+    return shifted_res_seg, nth_fpk/f_in_seg
+
+SMOOTH_PEAK_HEIGHT = 0.02
+SMOOTH_PEAK_WIDTH = 0.5
+PROM_TO_HEIGHT_FACTOR = 0.1
+HEIGHT_TO_LOWEST_SURROUNDING_FACTOR = 5
+LOWEST_MAX_SEARCH_RADIUS = 40
+LOWEST_MAX_WINDOW = 6
+LOOKBACK_FIRST_BUMP_1 = 6.
+LOOKBACK_FIRST_BUMP = 4.5
+LOOKFORWARD = 4.5
+FIRST_BUMP_PROM_FACTOR = 0.3
+FIRST_BUMP_PEAK_WIDTH = 0.25
+HEIGHT_TO_PREV_HEIGHT_RANGE = 10
+HEIGHT_TO_PREV_HEIGHT_FACTOR = 0.1
+N_NEAREST_PEAKS = 5
+ABOVE_F_USE_UPPER_SUB_SEG = 90
+MOVEMENT_FACTOR_MAX = 1.25
+NEAR_PEAK_DISTANCE = 4.
+NEAR_PEAK_AMPLITUDE = 0.2
+COST_F_THRESH = 150.
+COST_FIRST_PEAK_FACTOR = 2.
+
+def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTension = 6.5):
+    #verbosity = 2
+    if verbosity > 1: 
+        print(f"################################################")
+        print(f"         PROCESSING CHANNEL {apaCh}             ")
+        print(f"################################################")
+    if maxFreq > np.max(f): maxFreq = np.max(f) 
+    segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,maxFreq)
+    if expected_resonances == []:
+        return segments, [[] for s in segments], [-1 for s in segments], [-1 for s in segments], []
+    # Get baseline subtracted trace
+    bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
+    # Normalize
+    bsub /= np.max(bsub)
+    # Get the derivative/slope of the trace
+    bsub_dadf = np.array([slope_near_bin(f, bsub, i, 5) for i in range(len(f))])
+    bsub_dadf /= np.max(bsub_dadf)
+    # The ringing resonances appear to be sin-like. So we add the square of the trace to the square of the derivative, which results in peaks where the trace is sin-like due to sin^2 + cos^2 being maximized.
+    pythag = bsub**2+bsub_dadf**2
+    # Smooth out the processed trace
+    pythag_smooth = savgol_filter(pythag, resonance_fitting.get_num_savgol_bins(f), 3)
+    # Normalize the processed trace
+    pythag_smooth /= np.max(pythag_smooth)
+    # Find the peaks in the smoothed trace
+    stepSize = f[1]-f[0]
+    pks, props = find_peaks(pythag_smooth,height=SMOOTH_PEAK_HEIGHT,width=int(SMOOTH_PEAK_WIDTH/stepSize))
+    fpks = np.array([f[pk] for pk in pks])
+    peak_heights = props['peak_heights']
+    clean_fpks = []
+    clean_heights = []
+    for i,fpk in enumerate(fpks):
+        lm = lowest_max_in_surrounding(f, pythag_smooth, fpk-LOWEST_MAX_SEARCH_RADIUS, fpk+LOWEST_MAX_SEARCH_RADIUS, 1, LOWEST_MAX_WINDOW)
+        if peak_heights[i] < HEIGHT_TO_LOWEST_SURROUNDING_FACTOR*lm: 
+            if verbosity > 1: print(f"Peak at {fpk}, {peak_heights[i]} small relative to surroundings {lm}")
+            continue
+        if props['prominences'][i] < PROM_TO_HEIGHT_FACTOR*peak_heights[i]:
+            if verbosity > 1: print(f"Peak at {fpk} has prominence less than a certain factor of its height") 
+            continue
+        if i > 0 and fpk-fpks[i-1] < HEIGHT_TO_PREV_HEIGHT_RANGE and peak_heights[i] < HEIGHT_TO_PREV_HEIGHT_FACTOR*peak_heights[i-1]: 
+            if verbosity > 1: print(f"Peak at {fpk} is right after a much bigger peak")
+            continue
+        clean_fpks.append(fpk)
+        clean_heights.append(peak_heights[i])
+    fpks = np.array(clean_fpks)
+    clean_heights = np.array(clean_heights)
+    
+    if verbosity > 1: print("PEAKS", apaCh, fpks)
+
+    fpks_first_bump = []
+    amps_first_bump = []
+    for pknum, fpk in enumerate(fpks):
+        if pknum == 0: lookback = LOOKBACK_FIRST_BUMP_1
+        else: 
+            lookback = min((fpk - fpks[pknum-1])/2, LOOKBACK_FIRST_BUMP) 
+        selected = (f > fpk - lookback) & (f < fpk+LOOKFORWARD)
+        selected_f = f[selected]
+        selected_a = bsub[selected]
+        step_size = f[1]-f[0]
+        pks, props = find_peaks(selected_a, prominence=FIRST_BUMP_PROM_FACTOR*np.max(np.abs(selected_a)), width=FIRST_BUMP_PEAK_WIDTH/step_size)
+        heights = props['prominences']
+        fpks1 = [selected_f[pk] for pk in pks]
+        amps1 = [selected_a[pk] for pk in pks]
+        pks_neg, props = find_peaks(-selected_a, prominence=FIRST_BUMP_PROM_FACTOR*np.max(np.abs(selected_a)), width=FIRST_BUMP_PEAK_WIDTH/step_size)
+        heights_neg = props['prominences']
+        fpks1 += [selected_f[pk] for pk in pks_neg]
+        amps1 += [selected_a[pk] for pk in pks_neg]
+            
+        
+        if len(pks):
+            print(f"for fpk {fpk} found peaks at {fpks1}. putting line at {fpks1[np.argmin(fpks1)]}")
+            index_first_bump = np.argmin(fpks1)
+            #fpk_first_bump = fpks1[index_first_bump]
+            # if np.abs(fpk_first_bump-fpk) > 0.5:
+            fpks_first_bump.append(fpks1[index_first_bump])
+            amps_first_bump.append(amps1[index_first_bump])
+    
+    fpks_first_bump = np.array(fpks_first_bump)
+
+    n_nearest = N_NEAREST_PEAKS
+    moved_res_segs_collection = []
+    movement_factors_collection = []
+    for res_seg in expected_resonances:
+        moved_res_segs = []
+        movement_factors = []
+        for i in range(n_nearest):
+            if np.max(res_seg) < ABOVE_F_USE_UPPER_SUB_SEG:
+                moved_res_seg, movement_factor = move_to_nth_nearest(res_seg, i, fpks_first_bump, 'min')
+            else:
+                moved_res_seg, movement_factor = move_to_nth_nearest(res_seg, i, fpks_first_bump, 'max')
+            if moved_res_seg == None: continue
+            moved_res_segs.append(moved_res_seg)
+            movement_factors.append(movement_factor)
+        moved_res_segs_collection.append(moved_res_segs)
+        movement_factors_collection.append(movement_factors)
+        
+    moved_res_arrs = [list(x) for x in itertools.product(*moved_res_segs_collection)]
+    moved_res_arr_movement_factors = [list(x) for x in itertools.product(*movement_factors_collection)]
+    
+    moved_res_arr_costs = []
+    for moved_res_arr in moved_res_arrs:
+        cost = 0
+        flat_res = np.array([sub_res for res_seg in moved_res_arr for sub_res in res_seg])
+        for i,fpk in enumerate(fpks_first_bump):
+            if fpk < COST_F_THRESH:
+                diffs = np.abs((fpk-flat_res))
+                if len(diffs) == 0:
+                    print("lendiffs", fpk, flat_res, expected_resonances)
+                index_for_cost = np.argmin(diffs)
+                fpk_cost = diffs[index_for_cost]*clean_heights[i]
+                if i == 0: fpk_cost *= COST_FIRST_PEAK_FACTOR
+                cost += fpk_cost
+        moved_res_arr_costs.append(cost)
+    if verbosity > 1: print("moved_res_arrs", moved_res_arrs)
+    pruned_moved_res_arrs = []
+    pruned_moved_res_arr_costs = []
+    pruned_moved_res_arr_movement_factors = []
+    for i, moved_res_arr_movement_factor in enumerate(moved_res_arr_movement_factors):
+        moved_res_arr = moved_res_arrs[i]
+        if np.max(moved_res_arr_movement_factor) > MOVEMENT_FACTOR_MAX*np.min(moved_res_arr_movement_factor):
+            for j, res_seg in enumerate(moved_res_arr):
+                if len(res_seg) == 1:
+                    moved_res_arr[j] = []
+                    moved_res_arr_movement_factor[j] = np.nan
+                    if np.nanmax(moved_res_arr_movement_factor) > MOVEMENT_FACTOR_MAX*np.nanmin(moved_res_arr_movement_factor):
+                        continue
+                    
+        flat_res = np.array([sub_seg for res_seg in moved_res_arrs[i] for sub_seg in res_seg])
+        res_not_near_peak = False
+        for sub_seg in flat_res:
+            if np.max(np.min(np.abs(sub_seg-fpks_first_bump))) > NEAR_PEAK_DISTANCE:
+                if sub_seg < np.min(f) or sub_seg > np.max(f):
+                    res_not_near_peak = True
+                    continue
+                    
+                t_smooth_interp = interp1d(f, pythag_smooth)
+                if t_smooth_interp(sub_seg) < NEAR_PEAK_AMPLITUDE:
+                    res_not_near_peak = True
+        if res_not_near_peak == True:
+            continue
+            
+        pruned_moved_res_arrs.append(moved_res_arrs[i])
+        pruned_moved_res_arr_movement_factors.append(moved_res_arr_movement_factors[i])
+        pruned_moved_res_arr_costs.append(moved_res_arr_costs[i])   
+    if verbosity > 1: print("pruned_moved_res_arrs", pruned_moved_res_arrs)   
+    
+    selected_moved_res_arr = []
+    if len(pruned_moved_res_arr_costs):
+        selected_moved_res_arr_index = np.argmin(pruned_moved_res_arr_costs)
+        selected_moved_res_arr = pruned_moved_res_arrs[selected_moved_res_arr_index]
+
+    if verbosity > 1: print("selected_moved_res_arr", selected_moved_res_arr)   
+
+    selected_tension = []
+    if selected_moved_res_arr:
+        for i in range(len(expected_resonances)):
+            if selected_moved_res_arr[i] == []:
+                selected_tension.append([])
+            else:
+                selected_tension.append(nominalTension*(np.max(selected_moved_res_arr[i])/np.max(expected_resonances[i]))**2)
+
+    if selected_moved_res_arr == []:
+        return segments, [[] for s in segments], [-1 for s in segments], [-1 for s in segments], fpks
+    else:
+        return segments, selected_moved_res_arr, selected_tension, [0]*len(selected_tension), fpks
 
 def process_scan_v1(resultsDict, dirName, maxFreq=250.):
     '''Process a scan with a given directory name and update the given results dictionary.'''
