@@ -378,8 +378,8 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
         amps1 += [selected_a[pk] for pk in pks_neg]
             
         
-        if len(pks):
-            print(f"for fpk {fpk} found peaks at {fpks1}. putting line at {fpks1[np.argmin(fpks1)]}")
+        if len(fpks1):
+            if verbosity > 1: print(f"for fpk {fpk} found peaks at {fpks1}. putting line at {fpks1[np.argmin(fpks1)]}")
             index_first_bump = np.argmin(fpks1)
             #fpk_first_bump = fpks1[index_first_bump]
             # if np.abs(fpk_first_bump-fpk) > 0.5:
@@ -408,23 +408,9 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
     moved_res_arrs = [list(x) for x in itertools.product(*moved_res_segs_collection)]
     moved_res_arr_movement_factors = [list(x) for x in itertools.product(*movement_factors_collection)]
     
-    moved_res_arr_costs = []
-    for moved_res_arr in moved_res_arrs:
-        cost = 0
-        flat_res = np.array([sub_res for res_seg in moved_res_arr for sub_res in res_seg])
-        for i,fpk in enumerate(fpks_first_bump):
-            if fpk < COST_F_THRESH:
-                diffs = np.abs((fpk-flat_res))
-                if len(diffs) == 0:
-                    print("lendiffs", fpk, flat_res, expected_resonances)
-                index_for_cost = np.argmin(diffs)
-                fpk_cost = diffs[index_for_cost]*clean_heights[i]
-                if i == 0: fpk_cost *= COST_FIRST_PEAK_FACTOR
-                cost += fpk_cost
-        moved_res_arr_costs.append(cost)
     if verbosity > 1: print("moved_res_arrs", moved_res_arrs)
+
     pruned_moved_res_arrs = []
-    pruned_moved_res_arr_costs = []
     pruned_moved_res_arr_movement_factors = []
     for i, moved_res_arr_movement_factor in enumerate(moved_res_arr_movement_factors):
         moved_res_arr = moved_res_arrs[i]
@@ -434,9 +420,10 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
                 if len(res_seg) == 1:
                     moved_res_arr[j] = []
                     moved_res_arr_movement_factor[j] = np.nan
-                    if np.nanmax(moved_res_arr_movement_factor) > MOVEMENT_FACTOR_MAX*np.nanmin(moved_res_arr_movement_factor):
-                        within_movement_factor = False
+            if np.nanmax(moved_res_arr_movement_factor) > MOVEMENT_FACTOR_MAX*np.nanmin(moved_res_arr_movement_factor):
+                within_movement_factor = False
         if within_movement_factor == False: continue
+        
         flat_res = np.array([sub_seg for res_seg in moved_res_arrs[i] for sub_seg in res_seg])
         res_not_near_peak = False
         for sub_seg in flat_res:
@@ -452,9 +439,24 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
             continue
             
         pruned_moved_res_arrs.append(moved_res_arrs[i])
-        pruned_moved_res_arr_movement_factors.append(moved_res_arr_movement_factors[i])
-        pruned_moved_res_arr_costs.append(moved_res_arr_costs[i])   
+        pruned_moved_res_arr_movement_factors.append(moved_res_arr_movement_factors[i]) 
     if verbosity > 1: print("pruned_moved_res_arrs", pruned_moved_res_arrs)   
+
+    pruned_moved_res_arr_costs = []
+    for moved_res_arr in pruned_moved_res_arrs:
+        cost = 0
+        flat_res = []
+        for res_seg in moved_res_arr:
+            for sub_seg in res_seg:
+                if sub_seg is not np.nan: flat_res.append(sub_seg)
+        for i,fpk in enumerate(fpks_first_bump):
+            if fpk < COST_F_THRESH:
+                diffs = np.abs((fpk-flat_res))
+                index_for_cost = np.argmin(diffs)
+                fpk_cost = diffs[index_for_cost]*clean_heights[i]
+                if i == 0: fpk_cost *= COST_FIRST_PEAK_FACTOR
+                cost += fpk_cost
+        pruned_moved_res_arr_costs.append(cost)
     
     selected_moved_res_arr = []
     if len(pruned_moved_res_arr_costs):
