@@ -836,7 +836,11 @@ class MainWindow(qtw.QMainWindow):
         self.sock = None
 
         # Start listening for UDP data (different from TCP/IP connection to uzed)
-        self.verbose = 1
+        self._loadDaqConfig()
+        if 'verbose' in self.daqConfig:
+            self.verbose = int(self.daqConfig['verbose'])
+        else:
+            self.verbose = 1
         self.udpConnect()
         
     # end of __init__ for class MainWindow
@@ -1128,42 +1132,6 @@ class MainWindow(qtw.QMainWindow):
         tend = time.time()
         dt = tend-tstart
         print(f"Populating table took [s] {dt}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1813,9 +1781,6 @@ class MainWindow(qtw.QMainWindow):
         else:
             self.uz = duz.DwaMicrozed(ip=self.daqConfig['DWA_IP'])
 
-        if 'verbose' in self.daqConfig:
-            self.uz.setVerbose(self.daqConfig['verbose'])
-            self.verbose = int(self.daqConfig['verbose'])
 
         print("self.daqConfig")
         print(self.daqConfig)
@@ -4269,12 +4234,12 @@ class MainWindow(qtw.QMainWindow):
             try:
                 self.udpListening = True
                 data, addr = self.sock.recvfrom(self.udpBufferSize)
-                if self.verbose > 0:
+                if self.verbose > 3:
                     logger.info("")
                     logger.info("bing! data received")
                 #logger.info(data)                
                 udpDataStr = binascii.hexlify(data).decode(self.udpEnc).upper()
-                if self.verbose > 0:
+                if self.verbose > 3:
                     logger.info(udpDataStr)
                 
                 # Break up string into a list of 8-character chunks
@@ -4283,14 +4248,14 @@ class MainWindow(qtw.QMainWindow):
                 # Write the raw udp payload to file
                 self._logRawUdpTransmissionToFile(dataStrings)
 
-                if self.verbose > 0:
+                if self.verbose > 3:
                     print("dataStrings = ")
                     print(dataStrings)
                     
                 # Parse UDP transmission
                 self.dwaDataParser.parse(dataStrings)
                 if 'FFFFFFFF' in dataStrings:
-                    if self.verbose > 0:
+                    if self.verbose > 3:
                         logger.info('\n\n')
                         logger.info(f'self.dwaDataParser.dwaPayload = {self.dwaDataParser.dwaPayload}')
 
@@ -4309,11 +4274,11 @@ class MainWindow(qtw.QMainWindow):
                         print("runStatus = ")
                         print(self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'])
                         print(f'self.oldDataFormat = {self.oldDataFormat}')
-                        if self.verbose > 0:
+                        if self.verbose > 3:
                             logger.info("New run detected... creating new filenames")
                         self._makeOutputFilenames()
                         #self._clearAmplitudeData()  # cannot go here (in non-GUI thread)
-                        if self.verbose > 0:
+                        if self.verbose > 3:
                             logger.info(self.fnOfReg)
                 
                 # write data to file by register
@@ -4321,7 +4286,7 @@ class MainWindow(qtw.QMainWindow):
                 # Don't write status frames to disk
                 statusFrameReg = '{:02X}'.format(ddp.Registers.STATUS)
                 if reg != statusFrameReg:
-                    if self.verbose > 0:
+                    if self.verbose > 3:
                         print(f"reg = {reg}")
                         #print(f"self.fnOfReg: {self.fnOfReg}")
                         #logger.info(f"self.fnOfReg: {self.fnOfReg}")
@@ -4333,7 +4298,7 @@ class MainWindow(qtw.QMainWindow):
                 newdata_callback.emit(self.dwaDataParser.dwaPayload)
                     
             except socket.timeout:
-                if self.verbose > 0:
+                if self.verbose > 3:
                     logger.info("  UDP Timeout")
                 self.sock.close()
                 self.udpListening = False
@@ -4937,21 +4902,13 @@ class MainWindow(qtw.QMainWindow):
 
         debug = False
         self.currentTensions = {}
-        print("###############################################")
-        print("resonant",self.resonantFreqs)
-        print("expected",self.expectedFreqs)
-        print(self.activeRegistersS)
-        print("###############################################")
 
         for chan in self.activeRegistersS:
             #chan = reg.value
             #print(f'in update: {chan}: {self.resonantFreqs[chan]}')
             self.currentTensions[chan] = [None for _ in range(3)]
             if self.resonantFreqs[chan] is None: continue
-            print("res",self.resonantFreqs[chan])
-            print("exp",self.expectedFreqs[chan])
             for seg,measured in enumerate(self.resonantFreqs[chan]):
-                print("measured",measured)
                 if len(measured) == 0:
                     self.currentTensions[chan][seg] = -1
                 else:

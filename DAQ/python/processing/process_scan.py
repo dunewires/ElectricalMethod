@@ -289,7 +289,7 @@ def move_to_nth_nearest(res_seg, n, fpks, min_or_max = 'max'):
     shifted_res_seg = resonance_fitting.shift_res_seg_to_f0(res_seg, f_in_seg, nth_fpk)
     return shifted_res_seg, nth_fpk/f_in_seg
 
-SMOOTH_PEAK_HEIGHT = 0.02
+SMOOTH_PEAK_HEIGHT_START = 0.3
 SMOOTH_PEAK_WIDTH = 0.5
 PROM_TO_HEIGHT_FACTOR = 0.1
 HEIGHT_TO_LOWEST_SURROUNDING_FACTOR = 5
@@ -319,7 +319,10 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
     if maxFreq > np.max(f): maxFreq = np.max(f) 
     segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,maxFreq)
     if expected_resonances == []:
+        if verbosity > 1: print("ERROR: No expected resonances in the given frequency range")
         return segments, [[] for s in segments], [-1 for s in segments], [-1 for s in segments], []
+    flat_expected = np.array([sub_res for res_seg in expected_resonances for sub_res in res_seg])
+
     # Get baseline subtracted trace
     bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
     # Normalize
@@ -335,11 +338,18 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
     pythag_smooth /= np.max(pythag_smooth)
     # Find the peaks in the smoothed trace
     stepSize = f[1]-f[0]
-    pks, props = find_peaks(pythag_smooth,height=SMOOTH_PEAK_HEIGHT,width=int(SMOOTH_PEAK_WIDTH/stepSize))
-    fpks = np.array([f[pk] for pk in pks])
+    peak_height_thresh = SMOOTH_PEAK_HEIGHT_START        
+    pks, props = find_peaks(pythag_smooth,height=peak_height_thresh,width=int(SMOOTH_PEAK_WIDTH/stepSize))  
+    while len(pks) < 2*len(np.unique(flat_expected)) and peak_height_thresh>0.001:
+        peak_height_thresh = 0.75*peak_height_thresh
+        if verbosity > 1: print(f"Only found {len(pks)} peaks with a threshold of {peak_height_thresh}. Reducing threshold.")    
+        pks, props = find_peaks(pythag_smooth,height=peak_height_thresh,width=int(SMOOTH_PEAK_WIDTH/stepSize))  
+
+    fpks = np.array([round(f[pk],2) for pk in pks])
     peak_heights = props['peak_heights']
     clean_fpks = []
     clean_heights = []
+    if verbosity > 1: print("Peaks in smoothed trace found at ", fpks)
     for i,fpk in enumerate(fpks):
         lm = lowest_max_in_surrounding(f, pythag_smooth, fpk-LOWEST_MAX_SEARCH_RADIUS, fpk+LOWEST_MAX_SEARCH_RADIUS, 1, LOWEST_MAX_WINDOW)
         if peak_heights[i] < HEIGHT_TO_LOWEST_SURROUNDING_FACTOR*lm: 
@@ -354,9 +364,8 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
         clean_fpks.append(fpk)
         clean_heights.append(peak_heights[i])
     fpks = np.array(clean_fpks)
-    clean_heights = np.array(clean_heights)
-    
-    if verbosity > 1: print("PEAKS", apaCh, fpks)
+    peak_heights = np.array(clean_heights)
+    if verbosity > 1: print("Peaks in smoothed trace (after processing) found at ", fpks)
 
     fpks_first_bump = []
     amps_first_bump = []
@@ -370,16 +379,16 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
         step_size = f[1]-f[0]
         pks, props = find_peaks(selected_a, prominence=FIRST_BUMP_PROM_FACTOR*np.max(np.abs(selected_a)), width=FIRST_BUMP_PEAK_WIDTH/step_size)
         heights = props['prominences']
-        fpks1 = [selected_f[pk] for pk in pks]
+        fpks1 = [round(selected_f[pk],2) for pk in pks]
         amps1 = [selected_a[pk] for pk in pks]
         pks_neg, props = find_peaks(-selected_a, prominence=FIRST_BUMP_PROM_FACTOR*np.max(np.abs(selected_a)), width=FIRST_BUMP_PEAK_WIDTH/step_size)
         heights_neg = props['prominences']
-        fpks1 += [selected_f[pk] for pk in pks_neg]
+        fpks1 += [round(selected_f[pk],2) for pk in pks_neg]
         amps1 += [selected_a[pk] for pk in pks_neg]
             
         
         if len(fpks1):
-            if verbosity > 1: print(f"for fpk {fpk} found peaks at {fpks1}. putting line at {fpks1[np.argmin(fpks1)]}")
+            if verbosity > 1: print(f"For resonance around {fpk}, local peaks found at {fpks1}. Setting resonance-start at {fpks1[np.argmin(fpks1)]}")
             index_first_bump = np.argmin(fpks1)
             #fpk_first_bump = fpks1[index_first_bump]
             # if np.abs(fpk_first_bump-fpk) > 0.5:
@@ -406,41 +415,49 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
         movement_factors_collection.append(movement_factors)
         
     moved_res_arrs = [list(x) for x in itertools.product(*moved_res_segs_collection)]
-    moved_res_arr_movement_factors = [list(x) for x in itertools.product(*movement_factors_collection)]
-    
-    if verbosity > 1: print("moved_res_arrs", moved_res_arrs)
+    moved_res_arr_movement_factors = [list(x) for x in itertools.product(*movement_factors_collection)] 
 
     pruned_moved_res_arrs = []
     pruned_moved_res_arr_movement_factors = []
+    if verbosity > 1: print("Analyzing placements:")
+    if verbosity > 1 and len(moved_res_arr_movement_factors) == 0: print("    No placements found")
     for i, moved_res_arr_movement_factor in enumerate(moved_res_arr_movement_factors):
         moved_res_arr = moved_res_arrs[i]
+        if verbosity > 1: print("    Checking",moved_res_arr)
         within_movement_factor = True
         if np.max(moved_res_arr_movement_factor) > MOVEMENT_FACTOR_MAX*np.min(moved_res_arr_movement_factor):
+            if verbosity > 1: print("        Tensions are too diverse", [str(round(x*100,2))+'%' for x in moved_res_arr_movement_factor])
             for j, res_seg in enumerate(moved_res_arr):
                 if len(res_seg) == 1:
                     moved_res_arr[j] = []
                     moved_res_arr_movement_factor[j] = np.nan
+                    if verbosity > 1: print("        Dropping the short segment")
             if np.nanmax(moved_res_arr_movement_factor) > MOVEMENT_FACTOR_MAX*np.nanmin(moved_res_arr_movement_factor):
                 within_movement_factor = False
-        if within_movement_factor == False: continue
+                if verbosity > 1: print("        Tensions still too diverse", [str(round(x*100,2))+'%' for x in moved_res_arr_movement_factor])
+        if within_movement_factor == False: 
+            continue
         
         flat_res = np.array([sub_seg for res_seg in moved_res_arrs[i] for sub_seg in res_seg])
-        res_not_near_peak = False
+        res_not_near_peak = []
         for sub_seg in flat_res:
             if np.max(np.min(np.abs(sub_seg-fpks_first_bump))) > NEAR_PEAK_DISTANCE:
                 if sub_seg < np.min(f) or sub_seg > np.max(f):
-                    res_not_near_peak = True
+                    res_not_near_peak.append(sub_seg)
+                    if verbosity > 1: print(f"        This placement puts the resonance at {sub_seg} outside the scanned range")
                     continue
                     
                 t_smooth_interp = interp1d(f, pythag_smooth)
                 if t_smooth_interp(sub_seg) < NEAR_PEAK_AMPLITUDE:
-                    res_not_near_peak = True
-        if res_not_near_peak == True:
+                    res_not_near_peak.append(sub_seg)
+        if res_not_near_peak:
+            if verbosity > 1: print(f"        This placement puts the resonances at {res_not_near_peak} outside the scanned range")
             continue
             
         pruned_moved_res_arrs.append(moved_res_arrs[i])
         pruned_moved_res_arr_movement_factors.append(moved_res_arr_movement_factors[i]) 
-    if verbosity > 1: print("pruned_moved_res_arrs", pruned_moved_res_arrs)   
+    if verbosity > 1: 
+        if verbosity > 1: print("The following placements look valid, now checking which one is optimal")   
 
     pruned_moved_res_arr_costs = []
     for moved_res_arr in pruned_moved_res_arrs:
@@ -450,20 +467,29 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
             for sub_seg in res_seg:
                 if sub_seg is not np.nan: flat_res.append(sub_seg)
         for i,fpk in enumerate(fpks_first_bump):
-            if fpk < COST_F_THRESH:
-                diffs = np.abs((fpk-flat_res))
-                index_for_cost = np.argmin(diffs)
-                fpk_cost = diffs[index_for_cost]*clean_heights[i]
-                if i == 0: fpk_cost *= COST_FIRST_PEAK_FACTOR
-                cost += fpk_cost
+            #if fpk < COST_F_THRESH:
+            diffs = np.abs((fpk-flat_res))
+            index_for_cost = np.argmin(diffs)
+            fpk_cost = diffs[index_for_cost]*peak_heights[i]*((np.max(f)-fpk)/(np.max(f)-np.min(f)))
+            if i == 0: fpk_cost *= COST_FIRST_PEAK_FACTOR
+            cost += fpk_cost
+        cost = round(cost,2)
         pruned_moved_res_arr_costs.append(cost)
+    
+
+    if verbosity > 1: 
+        sorted_res_arr = [x for _, x in sorted(zip(pruned_moved_res_arr_costs, pruned_moved_res_arrs))]
+        sorted_costs = sorted(pruned_moved_res_arr_costs)
+        for cost, res_arr in zip(sorted_costs, sorted_res_arr):
+            print(f"    Cost: ({cost}) for {res_arr}")
+
     
     selected_moved_res_arr = []
     if len(pruned_moved_res_arr_costs):
         selected_moved_res_arr_index = np.argmin(pruned_moved_res_arr_costs)
         selected_moved_res_arr = pruned_moved_res_arrs[selected_moved_res_arr_index]
 
-    if verbosity > 1: print("selected_moved_res_arr", selected_moved_res_arr)   
+    if verbosity > 1: print("Selected placement", selected_moved_res_arr)   
 
     selected_tension = []
     if selected_moved_res_arr:

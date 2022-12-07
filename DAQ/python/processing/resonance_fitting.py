@@ -59,7 +59,7 @@ def contains_resonances(f,a,layer):
     
 def shift_res_seg_to_f0(res_seg, res, f0):
     '''Shift a resonance segment like [64,70,70] so that the given resonance matches f0'''
-    return [x/res*f0 for x in res_seg]
+    return [round(x/res*f0,2) for x in res_seg]
 
 def shift_res_arr_to_placement(res_arr, placement):
     '''Shift a resonance array like [[64,70,70],[70,85],[101]] so that the each permutation of the resonance in each segment corresponds to the placement frequencies'''
