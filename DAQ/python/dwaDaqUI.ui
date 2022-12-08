@@ -407,7 +407,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tabStimulus">
                <attribute name="title">
@@ -420,7 +420,7 @@
                    <enum>QTabWidget::North</enum>
                   </property>
                   <property name="currentIndex">
-                   <number>1</number>
+                   <number>0</number>
                   </property>
                   <widget class="QWidget" name="tab_config">
                    <attribute name="title">
@@ -429,258 +429,312 @@
                    <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="5,0,2">
                     <item>
                      <widget class="QWidget" name="widget_2" native="true">
-                      <layout class="QVBoxLayout" name="verticalLayout_19">
+                      <layout class="QVBoxLayout" name="verticalLayout_19" stretch="1,1,1,1">
                        <item>
-                        <layout class="QFormLayout" name="formLayout">
-                         <property name="fieldGrowthPolicy">
-                          <enum>QFormLayout::ExpandingFieldsGrow</enum>
-                         </property>
-                         <item row="1" column="0">
-                          <widget class="QLabel" name="measure_by_label">
-                           <property name="text">
-                            <string>Measured By</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="1" column="1">
-                          <widget class="QLineEdit" name="measuredByLineEdit">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="minimumSize">
-                            <size>
-                             <width>250</width>
-                             <height>0</height>
-                            </size>
-                           </property>
-                           <property name="maximumSize">
-                            <size>
-                             <width>250</width>
-                             <height>16777215</height>
-                            </size>
-                           </property>
-                           <property name="text">
-                            <string>Chris Stanford</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="2" column="0">
-                          <widget class="QLabel" name="configStageLabel">
-                           <property name="text">
-                            <string>Stage</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="2" column="1">
-                          <widget class="QComboBox" name="configStageComboBox">
-                           <property name="minimumSize">
-                            <size>
-                             <width>250</width>
-                             <height>0</height>
-                            </size>
-                           </property>
-                           <property name="maximumSize">
-                            <size>
-                             <width>250</width>
-                             <height>16777215</height>
-                            </size>
-                           </property>
-                           <property name="currentText">
-                            <string/>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="3" column="0">
-                          <widget class="QLabel" name="layer_label">
-                           <property name="text">
-                            <string>Layer</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="3" column="1">
-                          <widget class="QComboBox" name="configLayerComboBox">
-                           <property name="minimumSize">
-                            <size>
-                             <width>60</width>
-                             <height>0</height>
-                            </size>
-                           </property>
-                           <property name="maximumSize">
-                            <size>
-                             <width>60</width>
-                             <height>16777215</height>
-                            </size>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="4" column="0">
-                          <widget class="QLabel" name="apaSide">
-                           <property name="text">
-                            <string>Side</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="4" column="1">
-                          <widget class="QComboBox" name="SideComboBox">
-                           <property name="minimumSize">
-                            <size>
-                             <width>60</width>
-                             <height>0</height>
-                            </size>
-                           </property>
-                           <property name="maximumSize">
-                            <size>
-                             <width>60</width>
-                             <height>16777215</height>
-                            </size>
-                           </property>
-                           <item>
-                            <property name="text">
-                             <string>A</string>
-                            </property>
-                           </item>
-                           <item>
-                            <property name="text">
-                             <string>B</string>
-                            </property>
-                           </item>
-                          </widget>
-                         </item>
-                         <item row="7" column="0">
-                          <widget class="QLabel" name="scanTypeLabel">
-                           <property name="text">
-                            <string>Headboard</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="7" column="1">
-                          <widget class="QSpinBox" name="configHeadboardSpinBox">
-                           <property name="minimumSize">
-                            <size>
-                             <width>20</width>
-                             <height>0</height>
-                            </size>
-                           </property>
-                           <property name="maximumSize">
-                            <size>
-                             <width>40</width>
-                             <height>16777215</height>
-                            </size>
-                           </property>
-                           <property name="minimum">
-                            <number>1</number>
-                           </property>
-                           <property name="maximum">
-                            <number>10</number>
-                           </property>
-                           <property name="value">
-                            <number>1</number>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="13" column="0">
-                          <widget class="QLabel" name="doContinuityLabel">
-                           <property name="text">
-                            <string>Type</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="13" column="1">
-                          <widget class="QWidget" name="widget_7" native="true">
-                           <layout class="QHBoxLayout" name="horizontalLayout_16">
-                            <item>
-                             <widget class="QCheckBox" name="doContinuityCb">
-                              <property name="text">
-                               <string>Continuity</string>
-                              </property>
-                             </widget>
+                        <layout class="QHBoxLayout" name="horizontalLayout_5">
+                         <item>
+                          <widget class="QWidget" name="widget_4" native="true">
+                           <layout class="QGridLayout" name="gridLayout_6">
+                            <item row="0" column="2">
+                             <layout class="QGridLayout" name="gridLayout_7">
+                              <item row="0" column="0">
+                               <widget class="PlotWidget" name="config_amplgrid_0"/>
+                              </item>
+                              <item row="0" column="2">
+                               <widget class="PlotWidget" name="config_amplgrid_2"/>
+                              </item>
+                              <item row="0" column="1">
+                               <widget class="PlotWidget" name="config_amplgrid_1"/>
+                              </item>
+                              <item row="1" column="0">
+                               <widget class="PlotWidget" name="config_amplgrid_3"/>
+                              </item>
+                              <item row="1" column="2">
+                               <widget class="PlotWidget" name="config_amplgrid_5"/>
+                              </item>
+                              <item row="1" column="1">
+                               <widget class="PlotWidget" name="config_amplgrid_4"/>
+                              </item>
+                              <item row="2" column="0">
+                               <widget class="PlotWidget" name="config_amplgrid_6"/>
+                              </item>
+                              <item row="2" column="1">
+                               <widget class="PlotWidget" name="config_amplgrid_7"/>
+                              </item>
+                              <item row="2" column="2">
+                               <widget class="PlotWidget" name="config_amplgrid_all"/>
+                              </item>
+                             </layout>
                             </item>
-                            <item>
-                             <widget class="QCheckBox" name="doTensionCb">
-                              <property name="text">
-                               <string>Tension</string>
+                            <item row="0" column="0">
+                             <layout class="QFormLayout" name="formLayout">
+                              <property name="fieldGrowthPolicy">
+                               <enum>QFormLayout::ExpandingFieldsGrow</enum>
                               </property>
-                             </widget>
+                              <item row="1" column="0">
+                               <widget class="QLabel" name="measure_by_label">
+                                <property name="text">
+                                 <string>Measured By</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item row="1" column="1">
+                               <widget class="QLineEdit" name="measuredByLineEdit">
+                                <property name="sizePolicy">
+                                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                                  <horstretch>0</horstretch>
+                                  <verstretch>0</verstretch>
+                                 </sizepolicy>
+                                </property>
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>250</width>
+                                  <height>0</height>
+                                 </size>
+                                </property>
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>250</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <property name="text">
+                                 <string>Chris Stanford</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item row="2" column="0">
+                               <widget class="QLabel" name="configStageLabel">
+                                <property name="text">
+                                 <string>Stage</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item row="2" column="1">
+                               <widget class="QComboBox" name="configStageComboBox">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>250</width>
+                                  <height>0</height>
+                                 </size>
+                                </property>
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>250</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <property name="currentText">
+                                 <string/>
+                                </property>
+                               </widget>
+                              </item>
+                              <item row="3" column="0">
+                               <widget class="QLabel" name="layer_label">
+                                <property name="text">
+                                 <string>Layer</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item row="3" column="1">
+                               <widget class="QComboBox" name="configLayerComboBox">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>60</width>
+                                  <height>0</height>
+                                 </size>
+                                </property>
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>60</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                               </widget>
+                              </item>
+                              <item row="4" column="0">
+                               <widget class="QLabel" name="apaSide">
+                                <property name="text">
+                                 <string>Side</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item row="4" column="1">
+                               <widget class="QComboBox" name="SideComboBox">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>60</width>
+                                  <height>0</height>
+                                 </size>
+                                </property>
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>60</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <item>
+                                 <property name="text">
+                                  <string>A</string>
+                                 </property>
+                                </item>
+                                <item>
+                                 <property name="text">
+                                  <string>B</string>
+                                 </property>
+                                </item>
+                               </widget>
+                              </item>
+                              <item row="7" column="0">
+                               <widget class="QLabel" name="scanTypeLabel">
+                                <property name="text">
+                                 <string>Headboard</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item row="7" column="1">
+                               <widget class="QSpinBox" name="configHeadboardSpinBox">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>20</width>
+                                  <height>0</height>
+                                 </size>
+                                </property>
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>40</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <property name="minimum">
+                                 <number>1</number>
+                                </property>
+                                <property name="maximum">
+                                 <number>10</number>
+                                </property>
+                                <property name="value">
+                                 <number>1</number>
+                                </property>
+                               </widget>
+                              </item>
+                              <item row="13" column="0">
+                               <widget class="QLabel" name="doContinuityLabel">
+                                <property name="text">
+                                 <string>Type</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item row="13" column="1">
+                               <widget class="QWidget" name="widget_7" native="true">
+                                <layout class="QHBoxLayout" name="horizontalLayout_16">
+                                 <item>
+                                  <widget class="QCheckBox" name="doContinuityCb">
+                                   <property name="text">
+                                    <string>Continuity</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                 <item>
+                                  <widget class="QCheckBox" name="doTensionCb">
+                                   <property name="text">
+                                    <string>Tension</string>
+                                   </property>
+                                  </widget>
+                                 </item>
+                                </layout>
+                               </widget>
+                              </item>
+                              <item row="15" column="1">
+                               <widget class="QPushButton" name="btnConfigureScans">
+                                <property name="minimumSize">
+                                 <size>
+                                  <width>250</width>
+                                  <height>0</height>
+                                 </size>
+                                </property>
+                                <property name="maximumSize">
+                                 <size>
+                                  <width>250</width>
+                                  <height>16777215</height>
+                                 </size>
+                                </property>
+                                <property name="text">
+                                 <string>Configure Scan List</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item row="17" column="1">
+                               <layout class="QVBoxLayout" name="verticalLayout_2">
+                                <property name="leftMargin">
+                                 <number>6</number>
+                                </property>
+                                <item>
+                                 <widget class="QLabel" name="connectLabel">
+                                  <property name="minimumSize">
+                                   <size>
+                                    <width>250</width>
+                                    <height>0</height>
+                                   </size>
+                                  </property>
+                                  <property name="maximumSize">
+                                   <size>
+                                    <width>250</width>
+                                    <height>16777215</height>
+                                   </size>
+                                  </property>
+                                  <property name="text">
+                                   <string>TextLabel</string>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="QLabel" name="configureLabel">
+                                  <property name="minimumSize">
+                                   <size>
+                                    <width>250</width>
+                                    <height>0</height>
+                                   </size>
+                                  </property>
+                                  <property name="maximumSize">
+                                   <size>
+                                    <width>250</width>
+                                    <height>16777215</height>
+                                   </size>
+                                  </property>
+                                  <property name="text">
+                                   <string>TextLabel</string>
+                                  </property>
+                                 </widget>
+                                </item>
+                               </layout>
+                              </item>
+                              <item row="5" column="0">
+                               <widget class="QLabel" name="flexDirectionLabel">
+                                <property name="text">
+                                 <string>Flex Direction</string>
+                                </property>
+                               </widget>
+                              </item>
+                              <item row="5" column="1">
+                               <widget class="QComboBox" name="configFlexComboBox"/>
+                              </item>
+                             </layout>
+                            </item>
+                            <item row="0" column="1">
+                             <spacer name="verticalSpacer_2">
+                              <property name="orientation">
+                               <enum>Qt::Vertical</enum>
+                              </property>
+                              <property name="sizeHint" stdset="0">
+                               <size>
+                                <width>20</width>
+                                <height>40</height>
+                               </size>
+                              </property>
+                             </spacer>
                             </item>
                            </layout>
                           </widget>
-                         </item>
-                         <item row="15" column="1">
-                          <widget class="QPushButton" name="btnConfigureScans">
-                           <property name="minimumSize">
-                            <size>
-                             <width>250</width>
-                             <height>0</height>
-                            </size>
-                           </property>
-                           <property name="maximumSize">
-                            <size>
-                             <width>250</width>
-                             <height>16777215</height>
-                            </size>
-                           </property>
-                           <property name="text">
-                            <string>Configure Scan List</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="17" column="1">
-                          <layout class="QVBoxLayout" name="verticalLayout_2">
-                           <property name="leftMargin">
-                            <number>6</number>
-                           </property>
-                           <item>
-                            <widget class="QLabel" name="connectLabel">
-                             <property name="minimumSize">
-                              <size>
-                               <width>250</width>
-                               <height>0</height>
-                              </size>
-                             </property>
-                             <property name="maximumSize">
-                              <size>
-                               <width>250</width>
-                               <height>16777215</height>
-                              </size>
-                             </property>
-                             <property name="text">
-                              <string>TextLabel</string>
-                             </property>
-                            </widget>
-                           </item>
-                           <item>
-                            <widget class="QLabel" name="configureLabel">
-                             <property name="minimumSize">
-                              <size>
-                               <width>250</width>
-                               <height>0</height>
-                              </size>
-                             </property>
-                             <property name="maximumSize">
-                              <size>
-                               <width>250</width>
-                               <height>16777215</height>
-                              </size>
-                             </property>
-                             <property name="text">
-                              <string>TextLabel</string>
-                             </property>
-                            </widget>
-                           </item>
-                          </layout>
-                         </item>
-                         <item row="5" column="0">
-                          <widget class="QLabel" name="flexDirectionLabel">
-                           <property name="text">
-                            <string>Flex Direction</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item row="5" column="1">
-                          <widget class="QComboBox" name="configFlexComboBox"/>
                          </item>
                         </layout>
                        </item>
@@ -1327,7 +1381,7 @@
                    </sizepolicy>
                   </property>
                   <property name="currentIndex">
-                   <number>3</number>
+                   <number>1</number>
                   </property>
                   <widget class="QWidget" name="tab_6">
                    <attribute name="title">
