@@ -2095,6 +2095,8 @@ class MainWindow(qtw.QMainWindow):
         getattr(self, f'pw_amplchan_main').setTitle(self.chanViewMainAmpl)
         getattr(self, f'pw_amplgrid_all').setBackground('w')
         getattr(self, f'pw_amplgrid_all').setTitle('All')
+        getattr(self, f'config_amplgrid_all').setBackground('w')
+        getattr(self, f'config_amplgrid_all').setTitle('All')
         for ii in range(N_DWA_CHANS):
             # set background color to white
             # FIXME: clean this up...
@@ -2106,6 +2108,8 @@ class MainWindow(qtw.QMainWindow):
             getattr(self, f'pw_amplgrid_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
             getattr(self, f'pw_amplchan_{ii}').setBackground('w')
             getattr(self, f'pw_amplchan_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
+            getattr(self, f'config_amplgrid_{ii}').setBackground('w')
+            getattr(self, f'config_amplgrid_{ii}').setTitle("DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
             #getattr(self, f'pw_resfreqfit_{ii}').setBackground('w')
             #getattr(self, f'pw_resfreqfit_{ii}').setTitle(ii)
 
@@ -2236,6 +2240,8 @@ class MainWindow(qtw.QMainWindow):
         self.curves['chan'] = {}   # V(t), channel view
         self.curves['amplgrid'] = {}   # A(f), grid view
         self.curves['amplgrid']['all'] = {}   # A(f), all channels, single axes (in grid view)
+        self.curves['configamplgrid'] = {}   # A(f), grid view
+        self.curves['configamplgrid']['all'] = {}   # A(f), all channels, single axes (in grid view)
         self.curves['amplchan'] = {}   # A(f), channel view
         #self.curves['resfreqfit'] = {}   # Fitting f0 values to A(f)
         self.curves['resRawFit'] = {}    # Raw A(f) data on Resonance tab
@@ -2274,11 +2280,14 @@ class MainWindow(qtw.QMainWindow):
                                                                                     symbolBrush=amplAllPlotColors[loc],
                                                                                     symbolPen=amplAllPlotColors[loc],
                                                                                     pen=amplAllPlotPens[loc])
-            # for testing only
-            #getattr(self, f'pw_amplgrid_{loc}').setRange(xRange=(0, 1000), yRange=(0,35000), update=True)
+            self.curves['configamplgrid'][loc] = getattr(self, f'config_amplgrid_{loc}').plot([], symbol='o', symbolSize=2,
+                                                                                    symbolBrush=amplAllPlotColors[loc],
+                                                                                    symbolPen=amplAllPlotColors[loc],
+                                                                                    pen=amplAllPlotPens[loc])
            
             # A(f), all channels on single axes
             self.curves['amplgrid']['all'][loc] = getattr(self, f'pw_amplgrid_all').plot([], pen=amplAllPlotPens[loc])
+            self.curves['configamplgrid']['all'][loc] = getattr(self, f'config_amplgrid_all').plot([], pen=amplAllPlotPens[loc])
             # A(f) plots (channel view)
             self.curves['amplchan'][loc] = getattr(self, f'pw_amplchan_{loc}').plot([], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
             # Fitting f0 to A(f) plots
@@ -2335,6 +2344,12 @@ class MainWindow(qtw.QMainWindow):
                                                 self.dummyDataAmpl[ii]['y'])
             # all curves on single axes (lower right plot in grid view)
             self.curves['amplgrid']['all'][ii].setData(self.dummyDataAmpl[ii]['x'],
+                                                       self.dummyDataAmpl[ii]['y'])
+            # A(f) data, grid view
+            self.curves['configamplgrid'][ii].setData(self.dummyDataAmpl[ii]['x'],
+                                                self.dummyDataAmpl[ii]['y'])
+            # all curves on single axes (lower right plot in grid view)
+            self.curves['configamplgrid']['all'][ii].setData(self.dummyDataAmpl[ii]['x'],
                                                        self.dummyDataAmpl[ii]['y'])
             # A(f) data, chan view (small plots)
             self.curves['amplchan'][ii].setData(self.dummyDataAmpl[ii]['x'],
@@ -4134,19 +4149,20 @@ class MainWindow(qtw.QMainWindow):
             #self.expectedFreqs[reg.value] = None
 
         # Clear amplitude plots
-        plotTypes = ['amplchan', 'amplgrid']
+        plotTypes = ['amplchan', 'amplgrid', 'configamplgrid']
         for ptype in plotTypes:
             for reg in self.registers:
                 regId = reg
                 self.curves[ptype][regId].setData([])
                 self.curves['amplgrid']['all'][reg].setData([])
+                self.curves['configamplgrid']['all'][reg].setData([])
         self.curves['amplchan']['main'].setData([])
 
     def _configureAmplitudePlots(self):
         # Set x-ranges for frequency plots so pyqtgraph does not have to autoscale
         #runFreqMin = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMin_Hz'] 
         #runFreqMax = self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['stimFreqMax_Hz'] 
-        plotTypes = ['amplgrid', 'amplchan']
+        plotTypes = ['pw_amplgrid', 'pw_amplchan', 'config_amplgrid']
         for ptype in plotTypes:
             for ii in range(N_DWA_CHANS):
                 try:
@@ -4154,13 +4170,14 @@ class MainWindow(qtw.QMainWindow):
                 except:
                     apaChan = None
                 #getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
-                getattr(self, f'pw_{ptype}_{ii}').setXRange(self.stimFreqMin, self.stimFreqMax)
+                getattr(self, f'{ptype}_{ii}').setXRange(self.stimFreqMin, self.stimFreqMax)
                 _, hw_map = channel_map.get_hardware_map(self.configStage, self.ampData['layer'], apaChan)
-                getattr(self, f'pw_{ptype}_{ii}').setTitle("{}-{}, DWA Chan: {} APA Chan: {} ({})".format(self.ampData['layer'],
-                                                                                                     self.ampData['side'],
-                                                                                                     ii, apaChan, '-'.join(hw_map)))
+                getattr(self, f'{ptype}_{ii}').setTitle("{}-{} {} ({})".format(
+                    self.ampData['layer'], self.ampData['side'], apaChan, '-'.join(hw_map)))
         self.pw_amplgrid_all.setXRange(self.stimFreqMin, self.stimFreqMax)
         self.pw_amplchan_main.setXRange(self.stimFreqMin, self.stimFreqMax)
+        self.config_amplgrid_all.setXRange(self.stimFreqMin, self.stimFreqMax)
+        self.config_amplchan_main.setXRange(self.stimFreqMin, self.stimFreqMax)
         #self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
         #self.pw_amplchan_main.setXRange(runFreqMin, runFreqMax)
 
@@ -4548,6 +4565,7 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.activeRegisters:
         #for reg in self.registers:
             self.curves['amplgrid'][reg].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
+            self.curves['configamplgrid'][reg].setData(self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
 
     def updatePlotsAmpChan(self):
         for reg in self.activeRegisters:
@@ -4573,7 +4591,7 @@ class MainWindow(qtw.QMainWindow):
                 self.updatePlotsVGrid()
             elif self.currentViewStim == StimView.V_CHAN:
                 self.updatePlotsVChan()
-            elif self.currentViewStim == StimView.A_GRID:
+            elif self.currentViewStim == StimView.A_GRID or self.currentViewStim == StimView.CONFIG:
                 self.updatePlotsAmpGrid()
             elif self.currentViewStim == StimView.A_CHAN:
                 self.updatePlotsAmpChan()
