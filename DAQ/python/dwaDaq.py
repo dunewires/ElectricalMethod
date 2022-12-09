@@ -1615,6 +1615,9 @@ class MainWindow(qtw.QMainWindow):
         for layer in APA_LAYERS:
             self.configLayerComboBox.addItem(layer)
         self.configLayerComboBox.addItem("XVU")
+        self.configLayerComboBox.addItem("XV")
+        self.configLayerComboBox.addItem("XU")
+        self.configLayerComboBox.addItem("VU")
 
         self.configFlexComboBox.addItem("Away from APA")
         self.configFlexComboBox.addItem("Toward APA")
@@ -2030,10 +2033,9 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTableModel.removeRows( 0, self.scanConfigTableModel.rowCount() )
 
         configLayer = self.configLayerComboBox.currentText()
-        if configLayer == 'XVU':
-            layers = ['X', 'V', 'U']
-        else:
-            layers = [configLayer]
+
+        layers = list(configLayer)
+
         print(f'layers = {layers}')
         
         configHeadboard = self.configHeadboardSpinBox.value()
