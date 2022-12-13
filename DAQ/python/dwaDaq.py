@@ -999,7 +999,7 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTableModel = qtg.QStandardItemModel()
         self.scanConfigTableModel.setHorizontalHeaderLabels(SCAN_CONFIG_TABLE_HDRS)
         self.scanConfigTable.setModel(self.scanConfigTableModel)
-        self.scanConfigTable.horizontalHeader().setResizeMode(qtw.QHeaderView.ResizeToContents) 
+        self.scanConfigTable.horizontalHeader().sectionResizeMode(qtw.QHeaderView.ResizeToContents) 
         self.scanConfigTable.setSortingEnabled(False)
         self.scanConfigTable.setSelectionBehavior(qtw.QTableView.SelectRows)  # click highlights full row
         self.scanConfigTable.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
@@ -1017,7 +1017,7 @@ class MainWindow(qtw.QMainWindow):
         self.recentScansFilterProxy.setSourceModel(self.recentScansTableModel)
         self.recentScansTableView.setModel(self.recentScansFilterProxy)
         #self.recentScansTableView.resizeColumnsToContents()
-        self.recentScansTableView.horizontalHeader().setResizeMode(qtw.QHeaderView.ResizeToContents) 
+        self.recentScansTableView.horizontalHeader().sectionResizeMode(qtw.QHeaderView.ResizeToContents) 
 
         self.recentScansTableView.setSortingEnabled(True)
         self.recentScansTableView.setSelectionBehavior(qtw.QTableView.SelectRows)
@@ -1142,7 +1142,7 @@ class MainWindow(qtw.QMainWindow):
         self.recentWiresFilterProxy.setSourceModel(self.recentWiresTableModel)
         self.recentWiresTableView.setModel(self.recentWiresFilterProxy)
         #self.recentWiresTableView.resizeColumnsToContents()
-        self.recentWiresTableView.horizontalHeader().setResizeMode(qtw.QHeaderView.ResizeToContents) 
+        self.recentWiresTableView.horizontalHeader().sectionResizeMode(qtw.QHeaderView.ResizeToContents) 
 
         self.recentWiresTableView.setSortingEnabled(True)
         self.recentWiresTableView.setSelectionBehavior(qtw.QTableView.SelectRows)
@@ -1615,6 +1615,9 @@ class MainWindow(qtw.QMainWindow):
         for layer in APA_LAYERS:
             self.configLayerComboBox.addItem(layer)
         self.configLayerComboBox.addItem("XVU")
+        self.configLayerComboBox.addItem("XV")
+        self.configLayerComboBox.addItem("XU")
+        self.configLayerComboBox.addItem("VU")
 
         self.configFlexComboBox.addItem("Away from APA")
         self.configFlexComboBox.addItem("Toward APA")
@@ -2030,10 +2033,9 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTableModel.removeRows( 0, self.scanConfigTableModel.rowCount() )
 
         configLayer = self.configLayerComboBox.currentText()
-        if configLayer == 'XVU':
-            layers = ['X', 'V', 'U']
-        else:
-            layers = [configLayer]
+
+        layers = list(configLayer)
+
         print(f'layers = {layers}')
         
         configHeadboard = self.configHeadboardSpinBox.value()
