@@ -310,9 +310,10 @@ CONTINUITY_SCAN_PARAMS_DEFAULT = {
 #        #XStream.stdout().write("{}\n".format(record))
 
 
-SCAN_CONFIG_TABLE_HDRS = ['Type', 'Layer', 'Status', 'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
+SCAN_CONFIG_TABLE_HDRS = ['Result', 'Type', 'Layer', 'Status', 'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
 class Scans(IntEnum):
     #SCAN_NUM  = SCAN_CONFIG_TABLE_HDRS.index('Scan #')
+    RESULT    = SCAN_CONFIG_TABLE_HDRS.index('Result')
     TYPE      = SCAN_CONFIG_TABLE_HDRS.index('Type')
     LAYER     = SCAN_CONFIG_TABLE_HDRS.index('Layer')
     STATUS    = SCAN_CONFIG_TABLE_HDRS.index('Status')
@@ -2686,7 +2687,9 @@ class MainWindow(qtw.QMainWindow):
     def saveTensionsAndLoadNext(self):
         self.labelResonanceSubmitStatus.setText("Submitting...")
         self.saveTensions()
+        print("Saved tensions")
         self.loadNextUncomfirmed()
+        print("Loaded next unconfirmed scan.")
         
     def disableRelaysThreadComplete(self):
         print("disableRelaysThreadComplete")
@@ -3652,7 +3655,7 @@ class MainWindow(qtw.QMainWindow):
         self.labelResonanceSubmitStatus.setText("Submitting...")
         # Load sietch credentials
         #sietch = SietchConnect("sietch.creds")
-        apaUuid = self.ampDataS['apaUuid']
+        apaUuid = self.configApaUuid
         stage = self.ampDataS['stage']
         layer = self.ampDataS['layer']
         side = self.ampDataS['side']
