@@ -2056,6 +2056,15 @@ class MainWindow(qtw.QMainWindow):
                 #print(f'range_data = {range_data}')
                 rd = range_data[0]
     
+                # Skip channels that use the bottom board
+                # usesBottom = False
+                # for apaChan in channels:
+                #     _, hw_map = channel_map.get_hardware_map(self.flexDirection, configLayer, apaChan)
+                #     if hw_map[0] == "B": 
+                #         usesBottom = True
+                #         break
+                # if usesBottom: continue
+
                 if self.doContinuity:
                     # advanced params?
                     self.scanConfigTableAddRow(rd, row, scanType='Continuity', useAdvanced=useAdvancedParamsCont, layer=configLayer)
@@ -4176,7 +4185,7 @@ class MainWindow(qtw.QMainWindow):
                     apaChan = None
                 #getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
                 getattr(self, f'{ptype}_{ii}').setXRange(self.stimFreqMin, self.stimFreqMax)
-                _, hw_map = channel_map.get_hardware_map(self.configStage, self.ampData['layer'], apaChan)
+                _, hw_map = channel_map.get_hardware_map(self.flexDirection, self.ampData['layer'], apaChan)
                 getattr(self, f'{ptype}_{ii}').setTitle("{}-{} {} ({})".format(
                     self.ampData['layer'], self.ampData['side'], apaChan, '-'.join(hw_map)))
         self.pw_amplgrid_all.setXRange(self.stimFreqMin, self.stimFreqMax)
