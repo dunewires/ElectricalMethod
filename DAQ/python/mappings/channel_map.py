@@ -162,16 +162,14 @@ def get_grouping_number(wire_layer: str, apa_channel: int):
             return i+1
     return -1
 
-def get_hardware_map(stage: str, wire_layer: str, apa_channel: int):
+def get_hardware_map(flexDirection: str, wire_layer: str, apa_channel: int):
     with open(os.path.join('.', 'mappings', 'hardware_maps', f'Full DWA Channel Mapping - {wire_layer}.csv')) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         line_count = 0
         for row in csv_reader:
             if line_count == apa_channel + 1:
-                print("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM--------------------------MMMMMMMMMMMMMMMMMMMMMMMM")
-                print(stage)
                 lhc = row[0:3]
-                if stage == "Installation (Top)": hw_map = row[10:17]
+                if flexDirection == "Toward APA": hw_map = row[10:17]
                 else: hw_map = row[3:10]
                 return lhc, hw_map
             else:
