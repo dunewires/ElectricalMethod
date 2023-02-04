@@ -1942,6 +1942,13 @@ class MainWindow(qtw.QMainWindow):
             print("ERROR: must specify layer")
             return
         
+        # Result type
+        item = qtg.QStandardItem()
+        #ty = 'Tension' if scanType == 'tension' else 'Continuity'
+        item.setData("No results yet", qtc.Qt.DisplayRole)
+        item.setTextAlignment(qtc.Qt.AlignLeft)
+        self.scanConfigTableModel.setItem(row, Scans.RESULT, item)
+        
         # Scan type
         item = qtg.QStandardItem()
         #ty = 'Tension' if scanType == 'tension' else 'Continuity'
@@ -2563,6 +2570,15 @@ class MainWindow(qtw.QMainWindow):
         else:
             print("auto-starting next scan...")
             self.startScanThread()
+
+    def loadLastScanIfRequested(self):
+        isChecked = self.checkAutoLoad.isChecked()
+        if isChecked:
+            self.doubleClickedSegment = None
+            self.loadResultsFile(self.scanId)
+            # Switch focus to the plot tab
+            self.currentViewResults = ResultsView.PROCESSED
+            self.viewResults()
         
     @pyqtSlot()
     def startScanThreadHandler(self):
@@ -2705,6 +2721,7 @@ class MainWindow(qtw.QMainWindow):
         self._setScanButtonAction('START')
         self._scanButtonEnable(force=True)
         self.startNextScanIfRequested()
+        self.loadLastScanIfRequested()
 
     def disableRelaysThreadStarting(self):
         self.btnScanCtrl.setStyleSheet("background-color : orange")
@@ -2864,8 +2881,8 @@ class MainWindow(qtw.QMainWindow):
         if scanType == 'Tension': scanTypeLabel = 'T'
         if scanType == 'Continuity': scanTypeLabel = 'C'
         wires = "-".join([str(w) for w in self.wires])
-        self.scanRunDataDir = os.path.join(dataDir, self.timeString + "_" + self.configLayer + "_" + self.configApaSide + 
-        "_" + str(self.configHeadboard) + "_" + str(wires) + "_" + scanTypeLabel)
+        self.scanId = self.timeString + "_" + self.configLayer + "_" + self.configApaSide + "_" + str(self.configHeadboard) + "_" + str(wires) + "_" + scanTypeLabel
+        self.scanRunDataDir = os.path.join(dataDir, self.scanId)
         os.makedirs(self.scanRunDataDir)
      
     def startScanAdv(self):
@@ -3089,15 +3106,10 @@ class MainWindow(qtw.QMainWindow):
             index = self.recentScansTableView.currentIndex()
             row = index.row()
         col = ResultsScans.SCAN
-        scan = self.recentScansFilterProxy.index(row, col ).data() # G_A_1_1-3-5-7-9-11-13-15_20211022T093618
-        self.doubleClickedSegment = None
-        
-        scanFile = os.path.join(self.apaSubdir, scan, 'amplitudeData.json')
-        self.loadSavedScanData(scanFile)
+        scanId = self.recentScansFilterProxy.index(row, col ).data() # G_A_1_1-3-5-7-9-11-13-15_20211022T093618
+        self.doubleClickedSegment = int(self.recentWiresFilterProxy.index(row, ResultsWires.WIRE_SEGMENT ).data())
 
-        # Switch focus to the plot tab
-        self.currentViewResults = ResultsView.PROCESSED
-        self.viewResults()
+        self.loadResultsFile(scanId)
         
     def loadResultsWire(self, row=None):
         # 
@@ -3105,15 +3117,19 @@ class MainWindow(qtw.QMainWindow):
             index = self.recentWiresTableView.currentIndex()
             row = index.row()
         col = ResultsWires.SCAN
-        scan = self.recentWiresFilterProxy.index(row, col ).data() # G_A_1_1-3-5-7-9-11-13-15_20211022T093618
+        scanId = self.recentWiresFilterProxy.index(row, col ).data() # G_A_1_1-3-5-7-9-11-13-15_20211022T093618
         self.doubleClickedSegment = int(self.recentWiresFilterProxy.index(row, ResultsWires.WIRE_SEGMENT ).data())
+        self.loadResultsFile(scanId)
+
+    def loadResultsFile(self, scanId):
         
-        scanFile = os.path.join(self.apaSubdir, scan, 'amplitudeData.json')
+        scanFile = os.path.join(self.apaSubdir, scanId, 'amplitudeData.json')
         self.loadSavedScanData(scanFile)
 
         # Switch focus to the plot tab
         self.currentViewResults = ResultsView.PROCESSED
         self.viewResults()
+
         
     def loadRecentScanData(self):
         # DEFUNCT: not used anymore.. vestige of "recent scans" table, which no longer exists
@@ -4191,7 +4207,6 @@ class MainWindow(qtw.QMainWindow):
         self.pw_amplgrid_all.setXRange(self.stimFreqMin, self.stimFreqMax)
         self.pw_amplchan_main.setXRange(self.stimFreqMin, self.stimFreqMax)
         self.config_amplgrid_all.setXRange(self.stimFreqMin, self.stimFreqMax)
-        self.config_amplchan_main.setXRange(self.stimFreqMin, self.stimFreqMax)
         #self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
         #self.pw_amplchan_main.setXRange(runFreqMin, runFreqMax)
 
@@ -4415,7 +4430,8 @@ class MainWindow(qtw.QMainWindow):
                     else:
                         newRowColor = cAllTensionsFound
                     for c in range(0, self.scanConfigTableModel.columnCount()):
-                        self.scanConfigTableModel.item(row,c).setBackground(newRowColor)
+                        pass
+                        #self.scanConfigTableModel.item(row,c).setBackground(newRowColor)
                         #self.scanConfigTableModel.item(row,c).setBackground(qtg.QColor(3,205,0))
                     if row == self.scanConfigTableModel.rowCount()-1:
                         self.scanConfigRowToScan = 0
@@ -4789,8 +4805,24 @@ class MainWindow(qtw.QMainWindow):
                 else:
                     self.skipChannels = [apaChannel]
                     
-        self.someTensionsNotFound = self.checkForMissingTensions(self.fnOfAmpData, fullResultsDict)
-        print(f"self.someTensionsNotFound = {self.someTensionsNotFound}")
+        #self.someTensionsNotFound = self.checkForMissingTensions(self.fnOfAmpData, fullResultsDict)
+        # Compute number of bad channels
+        numBadChannels = 0
+        for segmentTensions in results:
+            for tension in segmentTensions:
+                if tension == -1:
+                    numBadChannels += 1
+                    break
+        print(f"Number of bad channels = {numBadChannels}")
+
+        # Color the results box of the scan on the config page
+        self.scanConfigTableModel.item(self.scanConfigRowToScan, Scans.RESULT).setText(f"{numBadChannels} bad channel(s)")
+        resultColor = qtg.QColor(3, 205, 0) # green
+        if numBadChannels >= 4:
+            resultColor = qtg.QColor(245, 50, 50)
+        elif numBadChannels >= 1:
+            resultColor = qtg.QColor(245, 209, 66)
+        self.scanConfigTableModel.item(self.scanConfigRowToScan, Scans.RESULT).setBackground(resultColor)
 
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
@@ -4803,6 +4835,7 @@ class MainWindow(qtw.QMainWindow):
         self.resultsWiresTableUpdate(scanResultsDict)
 
     def checkForMissingTensions(self, ampDataFile, resultsDict):
+        # TODO: deprecated
         # scanResultsDict holds tension values from the most recent scan.
         # If "Not found" or similar is present, then
         # need to update color of scanconfig table.

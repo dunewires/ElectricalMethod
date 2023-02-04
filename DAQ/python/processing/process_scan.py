@@ -332,7 +332,9 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
 
     # Get baseline subtracted trace
     bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
-    if np.max(np.abs(bsub)) < BSUB_MIN: return segments, default_res_arr, default_tensions, default_confidences, default_fpks 
+    if np.max(np.abs(bsub)) < BSUB_MIN: 
+        print("No expected resonances in the given frequency range")
+        return segments, default_res_arr, default_tensions, default_confidences, default_fpks 
     # Normalize
     bsub /= np.max(bsub)
     # Get the derivative/slope of the trace
@@ -350,7 +352,7 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
     pks, props = find_peaks(pythag_smooth,height=peak_height_thresh,width=int(SMOOTH_PEAK_WIDTH/stepSize))  
     while len(pks) < 2*len(np.unique(flat_expected)) and peak_height_thresh>0.001:
         peak_height_thresh = 0.75*peak_height_thresh
-        if verbosity > 1: print(f"Only found {len(pks)} peaks with a threshold of {peak_height_thresh}. Reducing threshold.")    
+        if verbosity > 1: print(f"Only found {len(pks)} peaks with a threshold of {round(peak_height_thresh,5)}. Reducing threshold.")    
         pks, props = find_peaks(pythag_smooth,height=peak_height_thresh,width=int(SMOOTH_PEAK_WIDTH/stepSize))  
 
     fpks = np.array([round(f[pk],2) for pk in pks])
@@ -455,14 +457,14 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
             if np.max(np.min(np.abs(sub_seg-fpks_first_bump))) > NEAR_PEAK_DISTANCE:
                 if sub_seg < np.min(f) or sub_seg > np.max(f):
                     res_not_near_peak.append(sub_seg)
-                    if verbosity > 1: print(f"        This placement puts the resonance at {sub_seg} outside the scanned range")
+                    if verbosity > 1: print(f"        This placement puts the resonance at {sub_seg} outside the scanned range ({np.min(f)}, {np.max(f)})")
                     continue
                     
                 t_smooth_interp = interp1d(f, pythag_smooth)
                 if t_smooth_interp(sub_seg) < NEAR_PEAK_AMPLITUDE:
                     res_not_near_peak.append(sub_seg)
+                    if verbosity > 1: print(f"        This placement puts the resonance at {sub_seg} more than {NEAR_PEAK_DISTANCE} from a peak and not in a high amplitude region ({t_smooth_interp(sub_seg)}).")
         if res_not_near_peak:
-            if verbosity > 1: print(f"        This placement puts the resonances at {res_not_near_peak} outside the scanned range")
             continue
             
         pruned_moved_res_arrs.append(moved_res_arrs[i])
