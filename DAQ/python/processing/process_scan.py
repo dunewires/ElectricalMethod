@@ -289,6 +289,7 @@ def move_to_nth_nearest(res_seg, n, fpks, min_or_max = 'max'):
     shifted_res_seg = resonance_fitting.shift_res_seg_to_f0(res_seg, f_in_seg, nth_fpk)
     return shifted_res_seg, nth_fpk/f_in_seg
 
+BSUB_MIN = 30
 SMOOTH_PEAK_HEIGHT_START = 0.3
 SMOOTH_PEAK_WIDTH = 0.5
 PROM_TO_HEIGHT_FACTOR = 0.1
@@ -304,7 +305,9 @@ HEIGHT_TO_PREV_HEIGHT_RANGE = 10
 HEIGHT_TO_PREV_HEIGHT_FACTOR = 0.1
 N_NEAREST_PEAKS = 5
 ABOVE_F_USE_UPPER_SUB_SEG = 90
-MOVEMENT_FACTOR_MAX = 1.25
+REL_MOVEMENT_FACTOR_MAX = 1.25
+ABS_MOVEMENT_FACTOR_MIN = 0.3
+ABS_MOVEMENT_FACTOR_MAX = 1.8
 NEAR_PEAK_DISTANCE = 4.
 NEAR_PEAK_AMPLITUDE = 0.2
 COST_F_THRESH = 150.
@@ -318,13 +321,20 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
         print(f"################################################")
     if maxFreq > np.max(f): maxFreq = np.max(f) 
     segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,maxFreq)
+    default_res_arr = [[] for s in segments]
+    default_tensions = [-1 for s in segments]
+    default_confidences = [-1 for s in segments]
+    default_fpks = []
     if expected_resonances == []:
         if verbosity > 1: print("ERROR: No expected resonances in the given frequency range")
-        return segments, [[] for s in segments], [-1 for s in segments], [-1 for s in segments], []
+        return segments, default_res_arr, default_tensions, default_confidences, default_fpks
     flat_expected = np.array([sub_res for res_seg in expected_resonances for sub_res in res_seg])
 
     # Get baseline subtracted trace
     bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
+    if np.max(np.abs(bsub)) < BSUB_MIN: 
+        print("No expected resonances in the given frequency range")
+        return segments, default_res_arr, default_tensions, default_confidences, default_fpks 
     # Normalize
     bsub /= np.max(bsub)
     # Get the derivative/slope of the trace
@@ -342,7 +352,7 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
     pks, props = find_peaks(pythag_smooth,height=peak_height_thresh,width=int(SMOOTH_PEAK_WIDTH/stepSize))  
     while len(pks) < 2*len(np.unique(flat_expected)) and peak_height_thresh>0.001:
         peak_height_thresh = 0.75*peak_height_thresh
-        if verbosity > 1: print(f"Only found {len(pks)} peaks with a threshold of {peak_height_thresh}. Reducing threshold.")    
+        if verbosity > 1: print(f"Only found {len(pks)} peaks with a threshold of {round(peak_height_thresh,5)}. Reducing threshold.")    
         pks, props = find_peaks(pythag_smooth,height=peak_height_thresh,width=int(SMOOTH_PEAK_WIDTH/stepSize))  
 
     fpks = np.array([round(f[pk],2) for pk in pks])
@@ -377,12 +387,11 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
         selected_f = f[selected]
         selected_a = bsub[selected]
         step_size = f[1]-f[0]
+        if len(selected_a) == 0: continue
         pks, props = find_peaks(selected_a, prominence=FIRST_BUMP_PROM_FACTOR*np.max(np.abs(selected_a)), width=FIRST_BUMP_PEAK_WIDTH/step_size)
-        heights = props['prominences']
         fpks1 = [round(selected_f[pk],2) for pk in pks]
         amps1 = [selected_a[pk] for pk in pks]
         pks_neg, props = find_peaks(-selected_a, prominence=FIRST_BUMP_PROM_FACTOR*np.max(np.abs(selected_a)), width=FIRST_BUMP_PEAK_WIDTH/step_size)
-        heights_neg = props['prominences']
         fpks1 += [round(selected_f[pk],2) for pk in pks_neg]
         amps1 += [selected_a[pk] for pk in pks_neg]
             
@@ -425,16 +434,20 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
         moved_res_arr = moved_res_arrs[i]
         if verbosity > 1: print("    Checking",moved_res_arr)
         within_movement_factor = True
-        if np.max(moved_res_arr_movement_factor) > MOVEMENT_FACTOR_MAX*np.min(moved_res_arr_movement_factor):
+        if np.max(moved_res_arr_movement_factor) > REL_MOVEMENT_FACTOR_MAX*np.min(moved_res_arr_movement_factor):
             if verbosity > 1: print("        Tensions are too diverse", [str(round(x*100,2))+'%' for x in moved_res_arr_movement_factor])
             for j, res_seg in enumerate(moved_res_arr):
                 if len(res_seg) == 1:
                     moved_res_arr[j] = []
                     moved_res_arr_movement_factor[j] = np.nan
                     if verbosity > 1: print("        Dropping the short segment")
-            if np.nanmax(moved_res_arr_movement_factor) > MOVEMENT_FACTOR_MAX*np.nanmin(moved_res_arr_movement_factor):
+            if np.nanmax(moved_res_arr_movement_factor) > REL_MOVEMENT_FACTOR_MAX*np.nanmin(moved_res_arr_movement_factor):
                 within_movement_factor = False
                 if verbosity > 1: print("        Tensions still too diverse", [str(round(x*100,2))+'%' for x in moved_res_arr_movement_factor])
+        if np.nanmax(moved_res_arr_movement_factor) > ABS_MOVEMENT_FACTOR_MAX or np.nanmin(moved_res_arr_movement_factor) < ABS_MOVEMENT_FACTOR_MIN:
+            if verbosity > 1: print("        Absolute movement factor out of range", [str(round(x*100,2))+'%' for x in moved_res_arr_movement_factor])
+            within_movement_factor = False
+
         if within_movement_factor == False: 
             continue
         
@@ -444,14 +457,14 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
             if np.max(np.min(np.abs(sub_seg-fpks_first_bump))) > NEAR_PEAK_DISTANCE:
                 if sub_seg < np.min(f) or sub_seg > np.max(f):
                     res_not_near_peak.append(sub_seg)
-                    if verbosity > 1: print(f"        This placement puts the resonance at {sub_seg} outside the scanned range")
+                    if verbosity > 1: print(f"        This placement puts the resonance at {sub_seg} outside the scanned range ({np.min(f)}, {np.max(f)})")
                     continue
                     
                 t_smooth_interp = interp1d(f, pythag_smooth)
                 if t_smooth_interp(sub_seg) < NEAR_PEAK_AMPLITUDE:
                     res_not_near_peak.append(sub_seg)
+                    if verbosity > 1: print(f"        This placement puts the resonance at {sub_seg} more than {NEAR_PEAK_DISTANCE} from a peak and not in a high amplitude region ({t_smooth_interp(sub_seg)}).")
         if res_not_near_peak:
-            if verbosity > 1: print(f"        This placement puts the resonances at {res_not_near_peak} outside the scanned range")
             continue
             
         pruned_moved_res_arrs.append(moved_res_arrs[i])
@@ -500,7 +513,7 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
                 selected_tension.append(nominalTension*(np.max(selected_moved_res_arr[i])/np.max(expected_resonances[i]))**2)
 
     if selected_moved_res_arr == []:
-        return segments, [[] for s in segments], [-1 for s in segments], [-1 for s in segments], fpks
+        return segments, default_res_arr, default_tensions, default_confidences, fpks
     else:
         return segments, selected_moved_res_arr, selected_tension, [0]*len(selected_tension), fpks
 

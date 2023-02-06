@@ -429,7 +429,7 @@
                    <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="5,0,2">
                     <item>
                      <widget class="QWidget" name="widget_2" native="true">
-                      <layout class="QVBoxLayout" name="verticalLayout_19" stretch="1,1,1,1">
+                      <layout class="QVBoxLayout" name="verticalLayout_19" stretch="1,1,1,0,0">
                        <item>
                         <layout class="QHBoxLayout" name="horizontalLayout_5">
                          <item>
@@ -752,6 +752,13 @@
                         <widget class="QCheckBox" name="scanCtrlRunAll">
                          <property name="text">
                           <string>Automate scanning</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QCheckBox" name="checkAutoLoad">
+                         <property name="text">
+                          <string>Auto load scan when complete</string>
                          </property>
                         </widget>
                        </item>
@@ -6627,7 +6634,6 @@
   <tabstop>evtVwrPlotsGLW</tabstop>
   <tabstop>pw_chan_1</tabstop>
   <tabstop>btnScanCtrl</tabstop>
-  <tabstop>scanCtrlRunAll</tabstop>
   <tabstop>evtVwr_openScan_pb</tabstop>
   <tabstop>measuredByLineEdit</tabstop>
  </tabstops>

@@ -267,7 +267,7 @@ def wire_range_data(wire_layer: str, wire_freq_data, range_radius):
     range_data = []
     for w in wire_freq_data.keys():
         if wire_layer == "X" or wire_layer == "G":
-            f_range = [74, 102]
+            f_range = [64, 112]
         else:
             res_array = np.array(wire_freq_data[w])
             #res_sub_200 = res_array[(res_array<200)]
@@ -339,20 +339,22 @@ def get_range_data_for_channels(wire_layer: str, channel_numbers: list, thresh =
     Produces a full reduced and culled set of frequency range dictionaries for a set of channels.
     """
     wire_freq_data = wire_frequencies_from_channels(wire_layer, channel_numbers, thresh)
-    print("wire_freq_data",thresh,wire_freq_data)
     #range_data = wire_range_data(wire_freq_data, range_radius) # Swtiched to a constant method where range depends only on the layer
     range_data = wire_range_data(wire_layer, wire_freq_data, range_radius)
-    print("range_data",range_data)
     reduced_range_data = reduce_range_data(range_data)
-    print("reduced_range_data",reduced_range_data)
     culled_range_data = cull_range_data(reduced_range_data)
-    print("culled_range_data",culled_range_data)
     range_data_with_channel_info = append_channel_info(culled_range_data, channel_numbers)
-    print("range_data_with_channel_info",range_data_with_channel_info)
     return range_data_with_channel_info
 
 def compute_tensions_from_resonances(wire_freqs_expected, freqs_measured, nominal_tension):
-    '''Return a list of wire tensions given the expected and measured frequencies in an APA channel. The expected frequencies are to be given as a list of lists of frequencies, with each inner list corresponding to the frequencies associated to a single wire in that APA channel. The order of these inner wire lists determine the order of the returned wire tensions. The expected frequencies must only be given for frequency ranges that have been measured. The measured frequencies are to be given as an overall list of measured frequencies for that APA channel.'''
+    '''
+    Return a list of wire tensions given the expected and measured frequencies in an APA channel. 
+    The expected frequencies are to be given as a list of lists of frequencies, with each inner list 
+    corresponding to the frequencies associated to a single wire in that APA channel. The order of these 
+    inner wire lists determine the order of the returned wire tensions. The expected frequencies must 
+    only be given for frequency ranges that have been measured. The measured frequencies are to be given 
+    as an overall list of measured frequencies for that APA channel.
+    '''
 
     def assignment_cost(x):
         wire_freqs_expected_array = np.array([freq*x[i] for i, freqs in enumerate(wire_freqs_expected) for freq in freqs])
