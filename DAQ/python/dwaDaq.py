@@ -2089,23 +2089,17 @@ class MainWindow(qtw.QMainWindow):
         resultsDict = self.getResultsDict()
         text = ""
         for layer in self.configLayers:
-            print("missingCheck layer", layer)
             channelGroups = channel_map.channel_groupings(layer, self.configHeadboard)
             for subChannelGroup in channelGroups:
-                print("missingCheck subChannelGroup", subChannelGroup)
                 for channel in subChannelGroup:
-                    print("missingCheck subChannelGroup", subChannelGroup)
                     segments = channel_map.get_segments_from_channel(layer, channel)
-                    missingSegments = []
+                    missingSegments = []                        
+                    scanned = ""
                     for segment in segments:
-                        print("missingCheck segment", segment)
                         missingSegment = True
-                        print(self.configStage, layer, self.configApaSide, str(segment).zfill(5))
-                        print(resultsDict[self.configStage].keys())
-                        print(resultsDict[self.configStage][layer][self.configApaSide][str(segment).zfill(5)]["tension"])
                         tensionDict = resultsDict[self.configStage][layer][self.configApaSide][str(segment).zfill(5)]["tension"]
                         for _, scan in tensionDict.items():
-                            print("missingCheck scan", scan)
+                            scanned = " (scanned)"
                             try:
                                 if float(scan["tension"]) > 0:
                                     print("missingCheck False", segment)
@@ -2114,9 +2108,8 @@ class MainWindow(qtw.QMainWindow):
                                 pass
                         if missingSegment: missingSegments.append(str(segment))
                         
-                    print("missingCheck missingSegments", missingSegments)
                     if missingSegments: 
-                        text += layer + " " + " ".join(missingSegments) + "\n"
+                        text += layer + " " + " ".join(missingSegments) + scanned + "\n"
 
         getattr(self, f'missingTensionsLabel').setText(text)
 
@@ -2743,9 +2736,7 @@ class MainWindow(qtw.QMainWindow):
     def saveTensionsAndLoadNext(self):
         self.labelResonanceSubmitStatus.setText("Submitting...")
         self.saveTensions()
-        print("Saved tensions")
         self.loadNextUncomfirmed()
-        print("Loaded next unconfirmed scan.")
         
     def disableRelaysThreadComplete(self):
         print("disableRelaysThreadComplete")
@@ -3310,6 +3301,7 @@ class MainWindow(qtw.QMainWindow):
         self.runResonanceAnalysis()
         self._addResonanceExpectedLines()
         self.labelResonanceSubmitStatus.setText("Tensions have not been submitted")
+        self.labelResonanceSubmitStatus.setStyleSheet("color : red")
 
 
     def _resFreqUserClick(self, reg, seg):
@@ -3804,7 +3796,9 @@ class MainWindow(qtw.QMainWindow):
         # }
         # sietch.api('/test',record_result)
         self.labelResonanceSubmitStatus.setText("Submitted!")
+        self.labelResonanceSubmitStatus.setStyleSheet("color : green")
         self.resultsWiresTableLoad()
+        self.updateMissingChannels()
         #self.resultsTableUpdate(scanResultsDict)
 
     def submitTensionsSelected(self):

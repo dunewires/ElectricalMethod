@@ -332,7 +332,7 @@
           <item>
            <widget class="QLabel" name="missingTensionsHeaderLabel">
             <property name="text">
-             <string>Unmeasured Channels</string>
+             <string>Channels missing a tension</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
