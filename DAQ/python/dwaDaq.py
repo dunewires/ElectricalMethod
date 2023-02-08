@@ -4834,6 +4834,7 @@ class MainWindow(qtw.QMainWindow):
         # Compute number of bad channels
         numBadChannels = 0
         for segmentTensions in results:
+            if not segmentTensions: continue
             for tension in segmentTensions:
                 if tension == -1:
                     numBadChannels += 1
