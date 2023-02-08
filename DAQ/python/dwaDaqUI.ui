@@ -50,7 +50,7 @@
            <height>16777215</height>
           </size>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,0,0,0,10">
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,0,0,0,0,0,0,0">
           <item>
            <widget class="QPushButton" name="btnDwaConnect">
             <property name="text">
@@ -321,6 +321,52 @@
              </widget>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="missingTensionsHeaderLabel">
+            <property name="text">
+             <string>Unmeasured Channels</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QScrollArea" name="scrollArea">
+            <property name="widgetResizable">
+             <bool>true</bool>
+            </property>
+            <widget class="QWidget" name="scrollAreaWidgetContents">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>130</width>
+               <height>470</height>
+              </rect>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_33">
+              <item>
+               <widget class="QLabel" name="missingTensionsLabel">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
           </item>
          </layout>
         </widget>

@@ -2037,16 +2037,11 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTable.resizeColumnsToContents()
     
     def configureScans(self):
-        print("configureScans")
         self.scanConfigTableModel.removeRows( 0, self.scanConfigTableModel.rowCount() )
-
-        configLayer = self.configLayerComboBox.currentText()
-
-        layers = list(configLayer)
-
-        print(f'layers = {layers}')
-        
-        configHeadboard = self.configHeadboardSpinBox.value()
+        self.configLayers = list(self.configLayerComboBox.currentText())
+        self.configApaSide = self.SideComboBox.currentText()
+        self.configStage = self.configStageComboBox.currentText()
+        self.configHeadboard = self.configHeadboardSpinBox.value()
         useAdvancedParamsRes  = not self.advDisableResParamCb.isChecked()
         useAdvancedParamsCont = not self.advDisableContParamCb.isChecked()
 
@@ -2054,13 +2049,10 @@ class MainWindow(qtw.QMainWindow):
         self.skipChannels = []
 
         row = 0
-        for configLayer in layers:
-            print(f"configuring scans for layer {configLayer}")
-            channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
+        for configLayer in self.configLayers:
+            channelGroups = channel_map.channel_groupings(configLayer, self.configHeadboard)
             for channels in channelGroups:
-                #print(f'channels = {channels}')
                 range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels, MAX_FREQ)
-                #print(f'range_data = {range_data}')
                 rd = range_data[0]
     
                 # Skip channels that use the bottom board
@@ -2088,6 +2080,45 @@ class MainWindow(qtw.QMainWindow):
         self.configureLabel.setText("")
         self.configure = True
         self._scanButtonEnable()
+
+        # Update Missing Channels
+        self.updateMissingChannels()
+        
+
+    def updateMissingChannels(self):
+        resultsDict = self.getResultsDict()
+        text = ""
+        for layer in self.configLayers:
+            print("missingCheck layer", layer)
+            channelGroups = channel_map.channel_groupings(layer, self.configHeadboard)
+            for subChannelGroup in channelGroups:
+                print("missingCheck subChannelGroup", subChannelGroup)
+                for channel in subChannelGroup:
+                    print("missingCheck subChannelGroup", subChannelGroup)
+                    segments = channel_map.get_segments_from_channel(layer, channel)
+                    missingSegments = []
+                    for segment in segments:
+                        print("missingCheck segment", segment)
+                        missingSegment = True
+                        print(self.configStage, layer, self.configApaSide, str(segment).zfill(5))
+                        print(resultsDict[self.configStage].keys())
+                        print(resultsDict[self.configStage][layer][self.configApaSide][str(segment).zfill(5)]["tension"])
+                        tensionDict = resultsDict[self.configStage][layer][self.configApaSide][str(segment).zfill(5)]["tension"]
+                        for _, scan in tensionDict.items():
+                            print("missingCheck scan", scan)
+                            try:
+                                if float(scan["tension"]) > 0:
+                                    print("missingCheck False", segment)
+                                    missingSegment = False
+                            except:
+                                pass
+                        if missingSegment: missingSegments.append(str(segment))
+                        
+                    print("missingCheck missingSegments", missingSegments)
+                    if missingSegments: 
+                        text += layer + " " + " ".join(missingSegments) + "\n"
+
+        getattr(self, f'missingTensionsLabel').setText(text)
 
     def setAPADiagram(self):
         if self.scanConfigTable.selectedIndexes():
@@ -4833,6 +4864,9 @@ class MainWindow(qtw.QMainWindow):
 
         # Update the results table
         self.resultsWiresTableUpdate(scanResultsDict)
+
+        # Update Missing Channels
+        self.updateMissingChannels()
 
     def checkForMissingTensions(self, ampDataFile, resultsDict):
         # TODO: deprecated

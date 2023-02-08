@@ -162,6 +162,15 @@ def get_grouping_number(wire_layer: str, apa_channel: int):
             return i+1
     return -1
 
+def get_segments_from_channel(wire_layer: str, apa_channel: int):
+    MAX_WIRE_SEGMENT = {"U": 1151, "V": 1151, "X": 480, "G": 481}
+    if apa_channel <=0 or apa_channel > MAX_WIRE_SEGMENT[wire_layer]: return []
+    if wire_layer == "X" or wire_layer == "G": return [apa_channel]
+    else:
+        result = [apa_channel, apa_channel + 400]
+        if apa_channel + 800 <= MAX_WIRE_SEGMENT[wire_layer]: result.append(apa_channel + 800)
+        return result
+
 def get_hardware_map(flexDirection: str, wire_layer: str, apa_channel: int):
     with open(os.path.join('.', 'mappings', 'hardware_maps', f'Full DWA Channel Mapping - {wire_layer}.csv')) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
