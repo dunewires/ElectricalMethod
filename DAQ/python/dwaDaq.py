@@ -4422,6 +4422,7 @@ class MainWindow(qtw.QMainWindow):
             #if end of scan...
             elif udpDict[ddp.Frame.RUN]['runStatus'] == SCAN_END:
                 print("\n SCAN IS DONE!!!")
+                boombox.BoomBox('sounds/scanFinished.wav').play()   
 
                 self.saveAmplitudeData()  # do this first to avoid data loss
 
