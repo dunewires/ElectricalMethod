@@ -2037,16 +2037,11 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTable.resizeColumnsToContents()
     
     def configureScans(self):
-        print("configureScans")
         self.scanConfigTableModel.removeRows( 0, self.scanConfigTableModel.rowCount() )
-
-        configLayer = self.configLayerComboBox.currentText()
-
-        layers = list(configLayer)
-
-        print(f'layers = {layers}')
-        
-        configHeadboard = self.configHeadboardSpinBox.value()
+        self.configLayers = list(self.configLayerComboBox.currentText())
+        self.configApaSide = self.SideComboBox.currentText()
+        self.configStage = self.configStageComboBox.currentText()
+        self.configHeadboard = self.configHeadboardSpinBox.value()
         useAdvancedParamsRes  = not self.advDisableResParamCb.isChecked()
         useAdvancedParamsCont = not self.advDisableContParamCb.isChecked()
 
@@ -2054,13 +2049,10 @@ class MainWindow(qtw.QMainWindow):
         self.skipChannels = []
 
         row = 0
-        for configLayer in layers:
-            print(f"configuring scans for layer {configLayer}")
-            channelGroups = channel_map.channel_groupings(configLayer, configHeadboard)
+        for configLayer in self.configLayers:
+            channelGroups = channel_map.channel_groupings(configLayer, self.configHeadboard)
             for channels in channelGroups:
-                #print(f'channels = {channels}')
                 range_data = channel_frequencies.get_range_data_for_channels(configLayer, channels, MAX_FREQ)
-                #print(f'range_data = {range_data}')
                 rd = range_data[0]
     
                 # Skip channels that use the bottom board
@@ -2088,6 +2080,38 @@ class MainWindow(qtw.QMainWindow):
         self.configureLabel.setText("")
         self.configure = True
         self._scanButtonEnable()
+
+        # Update Missing Channels
+        self.updateMissingChannels()
+        
+
+    def updateMissingChannels(self):
+        resultsDict = self.getResultsDict()
+        text = ""
+        for layer in self.configLayers:
+            channelGroups = channel_map.channel_groupings(layer, self.configHeadboard)
+            for subChannelGroup in channelGroups:
+                for channel in subChannelGroup:
+                    segments = channel_map.get_segments_from_channel(layer, channel)
+                    missingSegments = []                        
+                    scanned = ""
+                    for segment in segments:
+                        missingSegment = True
+                        tensionDict = resultsDict[self.configStage][layer][self.configApaSide][str(segment).zfill(5)]["tension"]
+                        for _, scan in tensionDict.items():
+                            scanned = " (scanned)"
+                            try:
+                                if float(scan["tension"]) > 0:
+                                    print("missingCheck False", segment)
+                                    missingSegment = False
+                            except:
+                                pass
+                        if missingSegment: missingSegments.append(str(segment))
+                        
+                    if missingSegments: 
+                        text += layer + " " + " ".join(missingSegments) + scanned + "\n"
+
+        getattr(self, f'missingTensionsLabel').setText(text)
 
     def setAPADiagram(self):
         if self.scanConfigTable.selectedIndexes():
@@ -2712,9 +2736,7 @@ class MainWindow(qtw.QMainWindow):
     def saveTensionsAndLoadNext(self):
         self.labelResonanceSubmitStatus.setText("Submitting...")
         self.saveTensions()
-        print("Saved tensions")
         self.loadNextUncomfirmed()
-        print("Loaded next unconfirmed scan.")
         
     def disableRelaysThreadComplete(self):
         print("disableRelaysThreadComplete")
@@ -3279,6 +3301,7 @@ class MainWindow(qtw.QMainWindow):
         self.runResonanceAnalysis()
         self._addResonanceExpectedLines()
         self.labelResonanceSubmitStatus.setText("Tensions have not been submitted")
+        self.labelResonanceSubmitStatus.setStyleSheet("color : red")
 
 
     def _resFreqUserClick(self, reg, seg):
@@ -3773,7 +3796,9 @@ class MainWindow(qtw.QMainWindow):
         # }
         # sietch.api('/test',record_result)
         self.labelResonanceSubmitStatus.setText("Submitted!")
+        self.labelResonanceSubmitStatus.setStyleSheet("color : green")
         self.resultsWiresTableLoad()
+        self.updateMissingChannels()
         #self.resultsTableUpdate(scanResultsDict)
 
     def submitTensionsSelected(self):
@@ -4397,6 +4422,7 @@ class MainWindow(qtw.QMainWindow):
             #if end of scan...
             elif udpDict[ddp.Frame.RUN]['runStatus'] == SCAN_END:
                 print("\n SCAN IS DONE!!!")
+                boombox.BoomBox('sounds/scanFinished.wav').play()   
 
                 self.saveAmplitudeData()  # do this first to avoid data loss
 
@@ -4809,6 +4835,7 @@ class MainWindow(qtw.QMainWindow):
         # Compute number of bad channels
         numBadChannels = 0
         for segmentTensions in results:
+            if not segmentTensions: continue
             for tension in segmentTensions:
                 if tension == -1:
                     numBadChannels += 1
@@ -4833,6 +4860,9 @@ class MainWindow(qtw.QMainWindow):
 
         # Update the results table
         self.resultsWiresTableUpdate(scanResultsDict)
+
+        # Update Missing Channels
+        self.updateMissingChannels()
 
     def checkForMissingTensions(self, ampDataFile, resultsDict):
         # TODO: deprecated
