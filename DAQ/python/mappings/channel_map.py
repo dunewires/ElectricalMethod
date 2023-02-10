@@ -172,6 +172,8 @@ def get_segments_from_channel(wire_layer: str, apa_channel: int):
         return result
 
 def get_hardware_map(flexDirection: str, wire_layer: str, apa_channel: int):
+    if apa_channel == None:
+        return ""
     with open(os.path.join('.', 'mappings', 'hardware_maps', f'Full DWA Channel Mapping - {wire_layer}.csv')) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         line_count = 0

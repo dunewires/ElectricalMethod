@@ -4228,7 +4228,7 @@ class MainWindow(qtw.QMainWindow):
                 try:
                     apaChan = self.apaChannels[ii]
                 except:
-                    apaChan = None
+                    continue
                 #getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
                 getattr(self, f'{ptype}_{ii}').setXRange(self.stimFreqMin, self.stimFreqMax)
                 _, hw_map = channel_map.get_hardware_map(self.flexDirection, self.ampData['layer'], apaChan)
