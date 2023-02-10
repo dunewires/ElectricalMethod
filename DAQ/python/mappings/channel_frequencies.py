@@ -166,7 +166,7 @@ def wire_to_apa_channel(wire_layer: str, wire_segment: int):
 def length_of_wire_segment(wire_layer: str, wire_segment: int):
     '''Return the length of the wire segment.'''
     try:
-        length = l_physical_wire[wire_layer][wire_segment].length()
+        length = l_physical_wire[wire_layer][wire_segment-1].length()
     except:
         print(f"Wire length for layer {wire_layer} segment {wire_segment} not found.")
         return None
@@ -277,7 +277,6 @@ def wire_range_data(wire_layer: str, wire_freq_data, range_radius):
                 maxf = round(np.max(res_array)*1.2)
             f_range = [50, maxf]
         range_data.append({"wireSegments": [int(w)], "range": f_range})
-    print('rd ',range_data)
     return range_data
 
 def combine_range_data(range_data_a, range_data_b):

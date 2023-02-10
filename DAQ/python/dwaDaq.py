@@ -159,6 +159,7 @@ from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtGui as qtg
 from PyQt5 import QtCore as qtc
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QMessageBox
 
 import pyqtgraph as pg
 
@@ -2092,8 +2093,8 @@ class MainWindow(qtw.QMainWindow):
             channelGroups = channel_map.channel_groupings(layer, self.configHeadboard)
             for subChannelGroup in channelGroups:
                 for channel in subChannelGroup:
-                    segments = channel_map.get_segments_from_channel(layer, channel)
-                    missingSegments = []                        
+                    segments, _ = channel_frequencies.get_expected_resonances(layer,channel,MAX_FREQ)
+                    missingSegments = []
                     scanned = ""
                     for segment in segments:
                         missingSegment = True
@@ -2102,7 +2103,6 @@ class MainWindow(qtw.QMainWindow):
                             scanned = " (scanned)"
                             try:
                                 if float(scan["tension"]) > 0:
-                                    print("missingCheck False", segment)
                                     missingSegment = False
                             except:
                                 pass
@@ -3206,7 +3206,12 @@ class MainWindow(qtw.QMainWindow):
                 return json.load(fh)
         except: # otherwise, create one
             print(f"Could not find JSON results file for APA UUID: {self.configApaUuid}. Creating a new dict.")
-            return self.newResultsDict()
+            qm = QMessageBox()
+            qm.question(self,'', "Results file does not exist or is in use. Create new results file?", qm.Yes | qm.No)
+            if qm.Yes:
+                return self.newResultsDict()
+            else:
+                return self.getResultsDict()
             #self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
             #self.resultsDict = process_scan.new_results_dict(APA_STAGES_SCANS, APA_LAYERS,
             #                                                 APA_SIDES, MAX_WIRE_SEGMENT)
