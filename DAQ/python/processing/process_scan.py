@@ -578,10 +578,10 @@ def process_scan_v1(resultsDict, dirName, maxFreq=250.):
                 print(f"DWA Chan {reg}: Not a valid scan")
                 continue
 
-            segments, opt_res_arr, best_tensions, best_tension_stds = process_channel(layer, apaCh, f, a, maxFreq)
+            segments, opt_res_arr, best_tensions, best_tension_confidences = process_channel(layer, apaCh, f, a, maxFreq)
             results.append(best_tensions)
             if resultsDict:
-                update_results_dict_tension(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_stds)
+                update_results_dict_tension(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_confidences)
     return apaChannels, results
 
 

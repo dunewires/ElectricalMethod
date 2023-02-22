@@ -285,9 +285,7 @@ TENSION_NOT_APPLICABLE_COLOR = qtg.QColor(128,128,128)
 TENSION_NOT_FOUND_COLOR = qtg.QColor(219,219,40)
 TENSION_GOOD_COLOR = qtg.QColor(178, 251, 165)
 
-
 PLOT_UPDATE_TIME_SEC = 0.5
-
 
 CONTINUITY_SCAN_PARAMS_DEFAULT = {
     'stimFreqMin':100.0,  # Hz
@@ -721,6 +719,7 @@ class MainWindow(qtw.QMainWindow):
         self.setDwaErrorStatus(None)
         self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
         self.runStatusHeading_label.setStyleSheet("font-weight: bold;")
+        self.channelStatusTableInit()
         self.scanConfigTableInit()
         self.resultsScansTableInit()
         self.resultsWiresTableInit()
@@ -743,6 +742,9 @@ class MainWindow(qtw.QMainWindow):
         self.logTextBox.appendPlainText("log viewing not yet implemented")
         #logging.getLogger().addHandler(self.logTextBox)
         #logging.getLogger().setLevel(logging.INFO)
+
+        self.scannedButMissingLabel.setStyleSheet("color : red")
+        self.setAutomaticallyLabel.setStyleSheet("color : teal")
 
         #self.logHandler = QtHandler()
         #self.logHandler.setFormatter(logging.Formatter("%(levelname)s:%(message)s"))
@@ -1135,7 +1137,11 @@ class MainWindow(qtw.QMainWindow):
         dt = tend-tstart
         print(f"Populating table took [s] {dt}")
 
-
+    def channelStatusTableInit(self):
+        self.channelStatusTableModel = qtg.QStandardItemModel()
+        self.channelStatusTable.setModel(self.channelStatusTableModel)
+        self.channelStatusTable.setSortingEnabled(False)
+        self.channelStatusTable.setSelectionMode(qtw.QTableView.SingleSelection) # only select one item at a time
 
     def resultsWiresTableInit(self):
         self.recentWiresTableModel = qtg.QStandardItemModel()
@@ -1616,6 +1622,9 @@ class MainWindow(qtw.QMainWindow):
             #    self.configStageComboBox.addItem(stage)
         for layer in APA_LAYERS:
             self.configLayerComboBox.addItem(layer)
+            self.tensionLayerSelectionComboBox.addItem(layer)
+        for side in APA_SIDES:
+            self.tensionSideSelectionComboBox.addItem(side)
         self.configLayerComboBox.addItem("XVU")
         self.configLayerComboBox.addItem("XV")
         self.configLayerComboBox.addItem("XU")
@@ -2088,30 +2097,37 @@ class MainWindow(qtw.QMainWindow):
 
     def updateMissingChannels(self):
         resultsDict = self.getResultsDict()
-        text = ""
+        row = 0
         for layer in self.configLayers:
             channelGroups = channel_map.channel_groupings(layer, self.configHeadboard)
             for subChannelGroup in channelGroups:
                 for channel in subChannelGroup:
+                    
                     segments, _ = channel_frequencies.get_expected_resonances(layer,channel,MAX_FREQ)
-                    missingSegments = []
-                    scanned = ""
-                    for segment in segments:
-                        missingSegment = True
+                    status = "missing"
+                    for s, segment in enumerate(segments):
                         tensionDict = resultsDict[self.configStage][layer][self.configApaSide][str(segment).zfill(5)]["tension"]
                         for _, scan in tensionDict.items():
-                            scanned = " (scanned)"
                             try:
                                 if float(scan["tension"]) > 0:
-                                    missingSegment = False
+                                    if status != "confirmed":
+                                        status = "unconfirmed"
+                                    if scan["submitted"] == "Manual":
+                                        status = "confirmed"
                             except:
                                 pass
-                        if missingSegment: missingSegments.append(str(segment))
                         
-                    if missingSegments: 
-                        text += layer + " " + " ".join(missingSegments) + scanned + "\n"
-
-        getattr(self, f'missingTensionsLabel').setText(text)
+                        item = qtg.QStandardItem()
+                        item.setData(layer + " " + str(segment), qtc.Qt.DisplayRole)
+                        item.setTextAlignment(qtc.Qt.AlignLeft)
+                        self.channelStatusTableModel.setItem(row, s, item)
+                        statusColor = "red"
+                        if status == "unconfirmed":
+                            statusColor = "teal"
+                        elif status == "confirmed":
+                            statusColor = "green" 
+                        self.channelStatusTableModel.item(row, s).setBackground(qtg.QColor(statusColor))
+                    row += 1
 
     def setAPADiagram(self):
         if self.scanConfigTable.selectedIndexes():
@@ -2138,8 +2154,6 @@ class MainWindow(qtw.QMainWindow):
         getattr(self, f'pw_amplchan_main').setTitle(self.chanViewMainAmpl)
         getattr(self, f'pw_amplgrid_all').setBackground('w')
         getattr(self, f'pw_amplgrid_all').setTitle('All')
-        getattr(self, f'config_amplgrid_all').setBackground('w')
-        getattr(self, f'config_amplgrid_all').setTitle('All')
         for ii in range(N_DWA_CHANS):
             # set background color to white
             # FIXME: clean this up...
@@ -2330,7 +2344,6 @@ class MainWindow(qtw.QMainWindow):
            
             # A(f), all channels on single axes
             self.curves['amplgrid']['all'][loc] = getattr(self, f'pw_amplgrid_all').plot([], pen=amplAllPlotPens[loc])
-            self.curves['configamplgrid']['all'][loc] = getattr(self, f'config_amplgrid_all').plot([], pen=amplAllPlotPens[loc])
             # A(f) plots (channel view)
             self.curves['amplchan'][loc] = getattr(self, f'pw_amplchan_{loc}').plot([], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=amplPlotPen)
             # Fitting f0 to A(f) plots
@@ -2391,9 +2404,6 @@ class MainWindow(qtw.QMainWindow):
             # A(f) data, grid view
             self.curves['configamplgrid'][ii].setData(self.dummyDataAmpl[ii]['x'],
                                                 self.dummyDataAmpl[ii]['y'])
-            # all curves on single axes (lower right plot in grid view)
-            self.curves['configamplgrid']['all'][ii].setData(self.dummyDataAmpl[ii]['x'],
-                                                       self.dummyDataAmpl[ii]['y'])
             # A(f) data, chan view (small plots)
             self.curves['amplchan'][ii].setData(self.dummyDataAmpl[ii]['x'],
                                                 self.dummyDataAmpl[ii]['y'])
@@ -3738,8 +3748,8 @@ class MainWindow(qtw.QMainWindow):
                             fullResultsDict[stage][layer][side][strWireSeg] = {"continuity": {}, "tension": {}}
                         if strWireSeg not in scanResultsDict[stage][layer][side].keys():
                             scanResultsDict[stage][layer][side][strWireSeg] = {"continuity": {}, "tension": {}}
-                        fullResultsDict[stage][layer][side][strWireSeg]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1., 'submitted':'Manual'}
-                        scanResultsDict[stage][layer][side][strWireSeg]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_std': -1., 'submitted':'Manual'}
+                        fullResultsDict[stage][layer][side][strWireSeg]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_confidence': 0., 'submitted':'Manual'}
+                        scanResultsDict[stage][layer][side][strWireSeg]["tension"][scanId] = {'tension': self.currentTensions[dwaChan][seg], 'tension_confidence': 0., 'submitted':'Manual'}
 
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{apaUuid}.json')
@@ -3816,14 +3826,18 @@ class MainWindow(qtw.QMainWindow):
         #   - the action's type form ID (a string, for which a corresponding type form must already exist in the DB)
         #   - the UUID of the component on which the action is being performed (which must already exist in the DB)
         #   - the action data (a Python dictionary, corresponding to the data to be entered into the type form)
+        layer = self.tensionLayerSelectionComboBox.currentText()
+        side = self.tensionSideSelectionComboBox.currentText()
+        tensions = self.tensionData[layer+side]
         actionTypeFormID = 'APALayerTensionMeasurement'
         componentUUID = '2cf8b7f0-4657-11ed-93a3-11d7cd14e853'
         actionData = {
             'name': 'M2M Action',
             'actionPerformedAfterFormsCleanup': True,
-            'wireLayer': 'X',
-            'tensionArray': [4.5,5.5,6.5,7.5,8.5],
-            'segmentIdArray': [1,2,3,4,5]
+            'wireLayer': layer,
+            'apaSide': side.lower(),
+            'tensionArray': tensions,
+            'segmentIdArray': list(range(len(tensions)))
         }
         # Call the action performance function, which takes the action type form ID, component UUID and action data as its first three arguments
         # The last two arguments must ALWAYS be 'connection' and 'headers' respectively
@@ -4236,7 +4250,6 @@ class MainWindow(qtw.QMainWindow):
                     self.ampData['layer'], self.ampData['side'], apaChan, '-'.join(hw_map)))
         self.pw_amplgrid_all.setXRange(self.stimFreqMin, self.stimFreqMax)
         self.pw_amplchan_main.setXRange(self.stimFreqMin, self.stimFreqMax)
-        self.config_amplgrid_all.setXRange(self.stimFreqMin, self.stimFreqMax)
         #self.pw_amplgrid_all.setXRange(runFreqMin, runFreqMax)
         #self.pw_amplchan_main.setXRange(runFreqMin, runFreqMax)
 
@@ -4454,8 +4467,8 @@ class MainWindow(qtw.QMainWindow):
 
                     row = self.scanConfigRowToScan
                     self.scanConfigTableModel.item(row, Scans.STATUS).setText('Done')
-                    cMissingTensions = qtg.QColor(245, 209, 66) # yellow-ish
-                    cAllTensionsFound = qtg.QColor(3, 205, 0)   # green
+                    cMissingTensions = qtg.QColor("yellow") # yellow-ish
+                    cAllTensionsFound = qtg.QColor("green")   # green
                     if self.someTensionsNotFound:
                         newRowColor = cMissingTensions
                     else:
@@ -4820,14 +4833,11 @@ class MainWindow(qtw.QMainWindow):
             self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
 
         # Process the scan and update the results table
-        print("Processing scan")
 
         fullResultsDict = self.getResultsDict()
         scanResultsDict = self.newResultsDict()
         dirName = os.path.dirname(self.fnOfAmpData)
-        print("Processing full")
         process_scan.process_scan(fullResultsDict, dirName)
-        print("Processing single")
         scanType, apaChannels, results = process_scan.process_scan(scanResultsDict, os.path.dirname(self.fnOfAmpData), MAX_FREQ, self.verbose)
         for apaChannel, result in zip(apaChannels, results):
             if result == "bridged": 
@@ -4845,67 +4855,26 @@ class MainWindow(qtw.QMainWindow):
                 if tension == -1:
                     numBadChannels += 1
                     break
-        print(f"Number of bad channels = {numBadChannels}")
 
         # Color the results box of the scan on the config page
         self.scanConfigTableModel.item(self.scanConfigRowToScan, Scans.RESULT).setText(f"{numBadChannels} bad channel(s)")
-        resultColor = qtg.QColor(3, 205, 0) # green
+        resultColor = qtg.QColor("green") # green
         if numBadChannels >= 4:
-            resultColor = qtg.QColor(245, 50, 50)
+            resultColor = qtg.QColor("red")
         elif numBadChannels >= 1:
-            resultColor = qtg.QColor(245, 209, 66)
+            resultColor = qtg.QColor("yellow")
         self.scanConfigTableModel.item(self.scanConfigRowToScan, Scans.RESULT).setBackground(resultColor)
 
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
-        print(f'writing processed scan results to {outfile}')
         with open(outfile, 'w') as f:
             json.dump(fullResultsDict, f, indent=4, sort_keys=True)
-        print("Processed scan")
 
         # Update the results table
         self.resultsWiresTableUpdate(scanResultsDict)
 
         # Update Missing Channels
         self.updateMissingChannels()
-
-    def checkForMissingTensions(self, ampDataFile, resultsDict):
-        # TODO: deprecated
-        # scanResultsDict holds tension values from the most recent scan.
-        # If "Not found" or similar is present, then
-        # need to update color of scanconfig table.
-        # Get list of wire segments for this run...
-        #print(self.fnOfAmpData)
-        dirName = os.path.dirname(ampDataFile)
-        scanId = os.path.basename(dirName)
-        wireSegs = []
-        try: # Ensure that there is an amplitudeData.json file present!
-            with open(ampDataFile, "r") as fh:
-                data = json.load(fh)
-                wireSegs = data['wireSegments']
-                layer = data['layer']
-                headboard = data['headboardNum']
-                side = data['side']
-                scanType = data['type']
-                stage = data['stage']
-        except:
-            print(f"Could not find scan (bad json file?) {dirName}...")
-            return None
-        print(f"wireSegs = {wireSegs}")
-        tensions = []
-        for ws in wireSegs:
-            try:
-                tens = fullResultsDict[stage][layer][side][str(ws).zfill(5)]["tension"][scanId]["tension"]
-                # process_scan can return an empty dict for "tension"...
-                # process_scan can also return "Not Found")
-            except:
-                tens = -1
-            tensions.append( tens )
-
-        print(f'tensions = {tensions}')
-
-        return not all(x in tensions for x in [-1, 'Not Found'])
-
 
     def insertScanIntoScanList(self, scanDir, row=None, submitted=None):
         # a do-nothing function for now...
