@@ -2964,7 +2964,6 @@ class MainWindow(qtw.QMainWindow):
 
 
     def _setScanMetadata(self):
-        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         # FIXME: rename... really this is used to set metadata in the A(f) .json file
         # During the resonance analysis those values are used to determine if data should
         # be written to database.
@@ -4259,7 +4258,7 @@ class MainWindow(qtw.QMainWindow):
                 try:
                     apaChan = self.apaChannels[ii]
                 except:
-                    apaChan = None
+                    continue
                 #getattr(self, f'pw_{ptype}_{ii}').setXRange(runFreqMin, runFreqMax)
                 getattr(self, f'{ptype}_{ii}').setXRange(self.stimFreqMin, self.stimFreqMax)
                 _, hw_map = channel_map.get_hardware_map(self.flexDirection, self.ampData['layer'], apaChan)
