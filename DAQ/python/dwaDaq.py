@@ -143,6 +143,7 @@ import platform
 import shutil
 import copy
 import ctypes
+import pickle
 
 from functools import partial
 from enum import Enum, IntEnum
@@ -708,6 +709,7 @@ class MainWindow(qtw.QMainWindow):
         self.scanType = None
         self.doContinuity = True
         self.doTension = True
+        self.loadingResultsDict = False
         self.doContinuityCb.setChecked(qtc.Qt.Checked if self.doContinuity else qtc.Qt.Unchecked)
         self.doTensionCb.setChecked(qtc.Qt.Checked if self.doTension else qtc.Qt.Unchecked)
         self._scanButtonDisable()
@@ -724,6 +726,7 @@ class MainWindow(qtw.QMainWindow):
         self.resultsScansTableInit()
         self.resultsWiresTableInit()
         self.initTensionTable()
+        self.initModels()
         self.heartPixmaps = [qtg.QPixmap('icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
         self.heartval = 0
         self.udpListening = False
@@ -985,6 +988,10 @@ class MainWindow(qtw.QMainWindow):
         if newUuid not in uuids:         # if the new UUID not already in the list, then add it
             uuids.insert(0, newUuid)
         self.apaUuidListModel.setStringList(uuids)
+
+    def initModels(self):
+        with open('./processing/X_and_G_layer_model.pkl', 'rb') as f:
+            self.model_x_g = pickle.load(f)
         
     def initTensionTable(self):
         print("init")
@@ -2104,7 +2111,7 @@ class MainWindow(qtw.QMainWindow):
                 for channel in subChannelGroup:
                     
                     segments, _ = channel_frequencies.get_expected_resonances(layer,channel,MAX_FREQ)
-                    status = "missing"
+                    status = "unscanned"
                     for s, segment in enumerate(segments):
                         tensionDict = resultsDict[self.configStage][layer][self.configApaSide][str(segment).zfill(5)]["tension"]
                         for _, scan in tensionDict.items():
@@ -2114,20 +2121,27 @@ class MainWindow(qtw.QMainWindow):
                                         status = "unconfirmed"
                                     if scan["submitted"] == "Manual":
                                         status = "confirmed"
+                                if float(scan["tension"]) <= 0:
+                                    if status != "confirmed":
+                                        status = "missing"
                             except:
+                                if status != "confirmed":
+                                    status = "missing"
                                 pass
-                        
-                        item = qtg.QStandardItem()
-                        item.setData(layer + " " + str(segment), qtc.Qt.DisplayRole)
-                        item.setTextAlignment(qtc.Qt.AlignLeft)
-                        self.channelStatusTableModel.setItem(row, s, item)
-                        statusColor = "red"
-                        if status == "unconfirmed":
-                            statusColor = "teal"
-                        elif status == "confirmed":
-                            statusColor = "green" 
-                        self.channelStatusTableModel.item(row, s).setBackground(qtg.QColor(statusColor))
-                    row += 1
+
+                        if status != "confirmed":
+                            item = qtg.QStandardItem()
+                            item.setData(layer + " " + str(segment), qtc.Qt.DisplayRole)
+                            item.setTextAlignment(qtc.Qt.AlignLeft)
+                            self.channelStatusTableModel.setItem(row, s, item)
+                            statusColor = "white"
+                            if status == "unconfirmed":
+                                statusColor = "teal"
+                            elif status == "missing":
+                                statusColor = "red"
+                            self.channelStatusTableModel.item(row, s).setBackground(qtg.QColor(statusColor))
+                    
+                    if status != "confirmed": row += 1
 
     def setAPADiagram(self):
         if self.scanConfigTable.selectedIndexes():
@@ -2341,7 +2355,7 @@ class MainWindow(qtw.QMainWindow):
                                                                                     symbolBrush=amplAllPlotColors[loc],
                                                                                     symbolPen=amplAllPlotColors[loc],
                                                                                     pen=amplAllPlotPens[loc])
-           
+
             # A(f), all channels on single axes
             self.curves['amplgrid']['all'][loc] = getattr(self, f'pw_amplgrid_all').plot([], pen=amplAllPlotPens[loc])
             # A(f) plots (channel view)
@@ -2950,6 +2964,7 @@ class MainWindow(qtw.QMainWindow):
 
 
     def _setScanMetadata(self):
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         # FIXME: rename... really this is used to set metadata in the A(f) .json file
         # During the resonance analysis those values are used to determine if data should
         # be written to database.
@@ -2971,7 +2986,7 @@ class MainWindow(qtw.QMainWindow):
 
         # Pull info from the [DATABASE] section of the config file and pass that along to the A(f) .json file
         for field in DATABASE_FIELDS:
-            self.ampData[field] = dbConfig[field] if dbConfig else None
+            self.ampData[field] = dbConfig[field] if dbConfig else None 
 
         print(f'self.ampData = {self.ampData}')
             
@@ -3206,26 +3221,29 @@ class MainWindow(qtw.QMainWindow):
         print('self.getResultsDict():')
 
         self.getApaUuid()
+        result = None
+
+        if self.loadingResultsDict:
+            print("Results file is currently being loaded. Will try again.")
+            time.sleep(1)
+            return self.getResultsDict()
 
         if self.configApaUuid is None:
             print("\n\n\nERROR ERROR ERROR ERROR: apaUuid is None!!!!!\n\n\n")
+            return None
         
         try: # load the existing JSON file if it exists
             filename = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
             with open(filename, "r") as fh:
-                return json.load(fh)
+                self.loadingResultsDict = True
+                result = json.load(fh)
         except: # otherwise, create one
             print(f"Could not find JSON results file for APA UUID: {self.configApaUuid}. Creating a new dict.")
-            qm = QMessageBox()
-            qm.question(self,'', "Results file does not exist or is in use. Create new results file?", qm.Yes | qm.No)
-            if qm.Yes:
-                return self.newResultsDict()
-            else:
-                return self.getResultsDict()
-            #self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
-            #self.resultsDict = process_scan.new_results_dict(APA_STAGES_SCANS, APA_LAYERS,
-            #                                                 APA_SIDES, MAX_WIRE_SEGMENT)
-                
+            result = self.newResultsDict()
+
+        self.loadingResultsDict = False
+        return result
+
     def getApaUuid(self):
         print('self.getApaUuid()')
         val = self.configApaUuidLineEdit.text().strip()
@@ -3294,7 +3312,7 @@ class MainWindow(qtw.QMainWindow):
         
         # process each scan
         for scan in scansToProcess:
-            process_scan.process_scan(resultsDict, scan, MAX_FREQ)
+            process_scan.process_scan(resultsDict, scan, self.model_x_g, MAX_FREQ)
 
         # save scan analysis results to JSON file
         outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
@@ -4229,7 +4247,6 @@ class MainWindow(qtw.QMainWindow):
                 regId = reg
                 self.curves[ptype][regId].setData([])
                 self.curves['amplgrid']['all'][reg].setData([])
-                self.curves['configamplgrid']['all'][reg].setData([])
         self.curves['amplchan']['main'].setData([])
 
     def _configureAmplitudePlots(self):
@@ -4837,8 +4854,8 @@ class MainWindow(qtw.QMainWindow):
         fullResultsDict = self.getResultsDict()
         scanResultsDict = self.newResultsDict()
         dirName = os.path.dirname(self.fnOfAmpData)
-        process_scan.process_scan(fullResultsDict, dirName)
-        scanType, apaChannels, results = process_scan.process_scan(scanResultsDict, os.path.dirname(self.fnOfAmpData), MAX_FREQ, self.verbose)
+        process_scan.process_scan(fullResultsDict, dirName, self.model_x_g)
+        scanType, apaChannels, results = process_scan.process_scan(scanResultsDict, os.path.dirname(self.fnOfAmpData), self.model_x_g, MAX_FREQ, self.verbose)
         for apaChannel, result in zip(apaChannels, results):
             if result == "bridged": 
                 if self.skipChannels:

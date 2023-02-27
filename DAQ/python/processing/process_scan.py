@@ -13,6 +13,172 @@ import os
 import subprocess
 import itertools
 from scipy.interpolate import interp1d
+from typing import List, Tuple, Optional, Dict
+import pickle
+
+class ResonanceFinderFailed(Exception):
+    """Exception raised when a the resonance finder fails."""
+    pass
+
+def combine_results_dict(d1, d2):
+    """Combine two results dictionaries"""
+    result_dict = d1.copy()
+
+    for stage, stageData in d2.items():
+        if stage not in result_dict:
+            result_dict[stage] = {}
+        for layer, layerData in stageData.items():
+            if layer not in result_dict[stage]:
+                result_dict[stage][layer] = {}
+            for side, sideData in layerData.items():
+                if side not in result_dict[stage][layer]:
+                    result_dict[stage][layer][side] = {}
+                for segment, segmentData in sideData.items():
+                    if segment not in result_dict[stage][layer][side]:
+                        result_dict[stage][layer][side][segment] = {
+                            "tension": {},
+                            "continuity": {}
+                        }
+                    result_dict[stage][layer][side][segment]["tension"].update(d2[stage][layer][side][segment]["tension"])
+                    result_dict[stage][layer][side][segment]["continuity"].update(d2[stage][layer][side][segment]["continuity"])
+
+    return result_dict
+
+def get_sorted_scan_dirs(base_dir: str, uuids: List[str]) -> List[str]:
+    """
+    Returns a sorted list of all scan directories corresponding to the given UUIDs.
+
+    Args:
+        base_dir (str): The base directory containing the APA_* directories.
+        uuids (List[str]): A list of UUIDs.
+
+    Returns:
+        List[str]: A sorted list of scan directories corresponding to the given UUIDs.
+    """
+    scan_dirs = []
+    for uuid in uuids:
+        uuid_dirs = os.listdir(os.path.join(base_dir, "APA_" + uuid))
+        scan_dirs += uuid_dirs
+    
+    return sorted(scan_dirs)
+
+def get_processed_results(base_dir: str, uuids: List[str]) -> Dict[str, any]:
+    """
+    Combines processed results from multiple JSON files into a single dictionary.
+
+    Args:
+        base_dir (str): The base directory containing the UUID JSON files.
+        uuids (List[str]): A list of UUIDs.
+
+    Returns:
+        Dict[str, any]: A dictionary containing the combined processed results.
+    """
+    processed = {}
+    for uuid in uuids:
+        with open(os.path.join(base_dir, uuid + ".json")) as f:
+            processed = combine_results_dict(processed, json.load(f))
+    return processed
+
+def get_channel_peak_data(freq: np.ndarray, bsub: np.ndarray, num_peaks: int) -> Tuple[List[float], List[float]]:
+    """
+    Finds the frequencies and heights of the highest peaks in a given spectrum.
+
+    Args:
+        freq (np.ndarray): An array of frequencies.
+        bsub (np.ndarray): An array of baseline-subtracted power values.
+        num_peaks (int): The number of peaks to return.
+
+    Returns:
+        Tuple[List[float], List[float]]: A tuple containing two lists: the frequencies of the highest peaks, and their corresponding heights.
+    """
+    pks = []
+    peak_height_thresh = max(bsub) * 0.75
+    while len(pks) < num_peaks:
+        peak_height_thresh *= 0.75
+        pks, props = find_peaks(bsub, height=peak_height_thresh, width=int(0.5 / (freq[1] - freq[0])))
+    fpks = freq[pks]
+    heights = props['peak_heights']
+    fpks_sorted = sorted(fpks, key=lambda x: heights[fpks.tolist().index(x)], reverse=True)
+    heights_sorted = sorted(heights, reverse=True)
+    return fpks_sorted[:num_peaks], heights_sorted[:num_peaks]
+
+def predict_tension(row_pos: np.ndarray, row_neg: np.ndarray, model_pos: Optional[any], model_neg: Optional[any]) -> Tuple[float, float]:
+    """
+    Predicts the tension of a row based on models trained on positive and negative data.
+
+    Args:
+        row_pos (np.ndarray): An array of features for the positive row.
+        row_neg (np.ndarray): An array of features for the negative row.
+        model_pos (Optional[any]): A trained model for positive rows.
+        model_neg (Optional[any]): A trained model for negative rows.
+
+    Returns:
+        Tuple[float, float]: A tuple containing the predicted tension mean and error.
+    """
+    pred_tension_pos = model_pos.predict([row_pos])[0] if model_pos else -1
+    pred_tension_neg = model_neg.predict([row_neg])[0] if model_neg else -1
+    pred_tension_mean = np.mean([pred_tension_pos, pred_tension_neg])
+    pred_tension_err = np.abs(pred_tension_mean - pred_tension_neg)
+    return pred_tension_mean, pred_tension_err
+
+def baseline_subtracted(freq: np.ndarray, ampl: np.ndarray) -> np.ndarray:
+    """
+    Subtracts the baseline from the data using a savgol filter.
+
+    Args:
+        freq (np.ndarray): An array of frequency values.
+        ampl (np.ndarray): An array of amplitude values.
+
+    Returns:
+        np.ndarray: An array of baseline-subtracted amplitude values.
+    """
+    num_bins = _get_num_savgol_bins(freq)
+    smooth_curve = savgol_filter(ampl, num_bins, 3)
+    return ampl - smooth_curve
+
+
+def _get_num_savgol_bins(freq: np.ndarray) -> int:
+    """
+    Determines the appropriate number of bins to use for the savgol filter.
+
+    Args:
+        freq (np.ndarray): An array of frequency values.
+
+    Returns:
+        int: The number of bins to use for the savgol filter.
+    """
+    step_size = freq[1] - freq[0]
+    num_bins = int(round(27 / (8 * step_size)))
+    if (num_bins % 2) == 0:
+        num_bins += 1
+    return num_bins
+
+def sliding_window_rms_ratio(freqs: np.ndarray, ampl: np.ndarray, window_size_freq: float) -> float:
+    """
+    Computes the ratio of the maximum window root mean square (RMS) to the minimum window RMS
+    when sliding a window of specified width across the trace.
+    This ratio is a good indicator of whether a trace contains a resonance or just noise.
+
+    Args:
+        freqs (np.ndarray): An array of frequency values.
+        ampl (np.ndarray): An array of amplitude values.
+        window_size_freq (float): The width of the sliding window in frequency units.
+
+    Returns:
+        float: The ratio of the maximum window RMS to the minimum window RMS.
+    """
+    min_rms = float("inf")
+    max_rms = 0.0
+    window_size_bins = int(window_size_freq / (freqs[1] - freqs[0]))
+
+    for i in range(len(ampl) - window_size_bins):
+        selection = np.array(ampl[i:i+window_size_bins])
+        rms = np.sqrt(np.mean(selection ** 2))
+        min_rms = min(min_rms, rms)
+        max_rms = max(max_rms, rms)
+
+    return float("inf") if min_rms == 0 else max_rms / min_rms
+
 
 def getAnalysisVersion():
     return None
@@ -43,20 +209,6 @@ def slope_near_bin(freqs, amps, i, window):
         endBin = length - 1
         startBin = startBin - (endBin - (length - 1))
     return (amps[endBin]-amps[startBin])/df
-
-def combine_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT, d1, d2):
-    """Combine two results dictionaries"""
-    resultsDict = new_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
-    for stage in STAGES:
-        for layer in APA_LAYERS:
-            for side in APA_SIDES:
-                for i in range(1,MAX_WIRE_SEGMENT[layer]+1):
-                    segment = str(i).zfill(5)
-                    resultsDict[stage][layer][side][segment] = {
-                        "tension": {**d1[stage][layer][side][segment]["tension"], **d2[stage][layer][side][segment]["tension"]}, 
-                        "continuity": {**d1[stage][layer][side][segment]["continuity"], **d2[stage][layer][side][segment]["continuity"]}
-                    }
-    return resultsDict
 
 def new_results_dictOLD(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
     resultsDict = {}
@@ -313,7 +465,66 @@ NEAR_PEAK_AMPLITUDE = 0.2
 COST_F_THRESH = 150.
 COST_FIRST_PEAK_FACTOR = 2.
 
-def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTension = 6.5):
+def process_channel_x_g(layer, apa_ch, freq, ampl, model, max_freq=250., verbosity=0, nominal_tension = 6.5):
+    if verbosity > 1: 
+        print(f"################################################")
+        print(f"         PROCESSING CHANNEL {apa_ch}            ")
+        print(f"################################################")
+    num_peaks = 5 # This must match the value used during training
+    if max_freq > np.max(freq): 
+        max_freq = np.max(freq) 
+    segments, expected_resonances = channel_frequencies.get_expected_resonances(layer, apa_ch, max_freq)
+    default_res_arr = [[] for s in segments]
+    default_tensions = [-1 for s in segments]
+    default_confidences = [-1 for s in segments]
+    default_fpks = []
+
+    try:
+        if expected_resonances == []:
+            raise ResonanceFinderFailed("No expected resonances in the given frequency range")
+
+        # Prevent short scans or connectivity scans from being processed
+        if len(freq) < 50 or max(freq) > 450: 
+            raise ResonanceFinderFailed("ERROR: Trace size out of range")
+            
+        # Get baseline subtracted trace
+        bsub = baseline_subtracted(freq, np.cumsum(ampl))
+        
+        # Remove scans with low rms ratio because they are likely all noise
+        rms_ratio = sliding_window_rms_ratio(freq, bsub, 10)
+        if rms_ratio < 4: 
+            raise ResonanceFinderFailed("ERROR: Trace is too noisy")
+
+        # Get positive peak data
+        fpks_pos, heights_pos = get_channel_peak_data(freq, bsub, num_peaks)
+
+        # Generate a row of data
+        row_pos = fpks_pos + heights_pos
+        
+        # Get negative peak data
+        fpks_neg, heights_neg = get_channel_peak_data(freq, -bsub, num_peaks)
+
+        # Generate a row of data
+        row_neg = fpks_neg + heights_neg
+        
+        # Get the tension
+        pred_tension, pred_tension_err = predict_tension(row_pos, row_neg, model[0], model[1])
+
+        # Compute the resonance array
+        moved_res_array = expected_resonances * (pred_tension / nominal_tension) ** 0.5
+
+
+    except ResonanceFinderFailed as e:
+        if verbosity > 1: print("Error:", e)
+        return segments, default_res_arr, default_tensions, default_confidences, default_fpks
+    else:
+        
+        return segments, moved_res_array, [pred_tension], [pred_tension_err], fpks_pos
+
+
+def process_channel(layer, apaCh, f, a, model_x_g, maxFreq=250., verbosity=0, nominalTension = 6.5):
+    if layer == "X" or layer == "G":
+        return process_channel_x_g(layer, apaCh, f, a, model_x_g, maxFreq, verbosity, nominalTension)
     #verbosity = 2
     if verbosity > 1: 
         print(f"################################################")
@@ -503,7 +714,7 @@ def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTensio
         selected_moved_res_arr = pruned_moved_res_arrs[selected_moved_res_arr_index]
 
     if verbosity > 1: print("Selected placement", selected_moved_res_arr)   
-
+    
     selected_tension = []
     if selected_moved_res_arr:
         for i in range(len(expected_resonances)):
@@ -585,7 +796,7 @@ def process_scan_v1(resultsDict, dirName, maxFreq=250.):
     return apaChannels, results
 
 
-def process_scan(resultsDict, dirName, maxFreq=250., verbosity=0):
+def process_scan(resultsDict, dirName, model_x_g, maxFreq=250., verbosity=0):
     '''Process a scan with a given directory name and update the given results dictionary.'''
     try: # Ensure that there is an amplitudeData.json file present!
         if verbosity > 0: print(dirName+'/amplitudeData.json')
@@ -650,7 +861,7 @@ def process_scan(resultsDict, dirName, maxFreq=250., verbosity=0):
                 results.append(None)
                 continue
 
-            segments, opt_res_arr, best_tensions, best_tension_confidences, fpks = process_channel(layer, apaCh, f, a, maxFreq, verbosity)
+            segments, opt_res_arr, best_tensions, best_tension_confidences, fpks = process_channel(layer, apaCh, f, a, model_x_g, maxFreq, verbosity)
             #print('best',best_tensions)
             results.append(best_tensions)
             if resultsDict:
