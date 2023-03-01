@@ -141,7 +141,6 @@ import logging
 import json
 import platform
 import shutil
-import copy
 import ctypes
 import pickle
 
@@ -149,15 +148,12 @@ from functools import partial
 from enum import Enum, IntEnum
 
 import numpy as np
-import scipy
-from scipy.signal import find_peaks, savgol_filter
 
 from PyQt5 import uic
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtGui as qtg
 from PyQt5 import QtCore as qtc
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QMessageBox
 
 import pyqtgraph as pg
 
@@ -177,12 +173,9 @@ sys.path.append('../../../dunedb/m2m')
 import config_generator
 import channel_map
 import channel_frequencies
-import database_functions
 import resonance_fitting
 import process_scan
 from common import ConnectToAPI, PerformAction
-import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
 
 #DWA_DAQ_VERSION = "X.X.X"
 #
@@ -194,9 +187,7 @@ DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
 #AMP_DATA_FILE   = "test/data/50cm24inch/20210616T203958_amp.json"
 #AMP_DATA_FILE = './scanDataAdv/dwaConfigWC_20210812T112511/amplitudeData.json'
 
-APA_UUID_DUMMY_VAL = 'd976ed20-fc5d-11eb-b6f5-a70e70a44436'
 
-EVT_VWR_TIMESTAMP = "20210617T172635"
 DAQ_UI_FILE = 'dwaDaqUI.ui'
 OUTPUT_DIR_ROOT = '.'
 OUTPUT_DIR_SCAN_DATA = os.path.join(OUTPUT_DIR_ROOT, 'scanData', 'raw')
@@ -204,12 +195,10 @@ OUTPUT_DIR_PROCESSED_DATA = os.path.join(OUTPUT_DIR_ROOT, 'scanData', 'processed
 OUTPUT_DIR_ARCHIVED_DATA = os.path.join(OUTPUT_DIR_ROOT, 'scanData', 'archive')
 OUTPUT_DIR_SCAN_DATA_ADVANCED = os.path.join(OUTPUT_DIR_ROOT, 'scanDataAdv')
 OUTPUT_DIR_SCAN_STATUS = os.path.join(OUTPUT_DIR_ROOT, 'scanStatus')
-SCAN_OUTPUT_DIRS = [OUTPUT_DIR_SCAN_DATA, OUTPUT_DIR_SCAN_DATA_ADVANCED]
 
 #OUTPUT_DIR_CONFIG = './config/'
 #OUTPUT_DIR_UDP_DATA = './udpData/'
 #OUTPUT_DIR_AMP_DATA = './ampData/'        
-CLOCK_PERIOD_SEC = 1e8
 SCAN_FREQUENCY_STEP_DEFAULT = 1/8  # Hz
 STIM_VIEW_OFFSET = 0
 MAX_FREQ = 350 # Hz
@@ -269,9 +258,7 @@ MAX_WIRE_SEGMENT = {
 DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy', 'stage', 'apaUuid', 'layer', 'headboardNum', 'side', 'type']
 
 # Recent scan list 
-SCAN_LIST_TABLE_HDRS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid']
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum', 'measuredBy', 'apaUuid', 'stage'] #'wireSegments'
-N_RECENT_SCANS = 500
 
 TENSION_SPEC = 6.5 # Newtons
 TENSION_SPEC_TOL = 1.0
@@ -503,72 +490,6 @@ class Worker(qtc.QRunnable):
         self.kwargs = kwargs
         self.signals = WorkerSignals()
         self.logger = logging.getLogger()
-        # Add the callback to our kwargs, if needed
-        # this will be passed on to self.fn so that function
-        # has access to the callback
-        #kwargs['progress_callback'] = self.signals.progress
-        #kwargs['newdata_callback'] = self.signals.newUdpPayload
-        
-    @qtc.pyqtSlot()
-    def run(self):
-        '''
-        Initialize the runner function with passed args, kwargs.
-        '''
-
-        print("\n ======== Worker.run() (thread start) ========== \n")
-        self.logger.info("Thread start")
-        # retrieve args/kwargs here; and fire processing using them
-        try:
-            self.signals.starting.emit() # Process is starting
-            result = self.fn(*self.args, **self.kwargs)
-            #result = self.fn(
-            #    *self.args, **self.kwargs,
-            #    status = self.signals.status,
-            #    progress = self.signals.progress,
-            #)
-        except:
-            print("\n ======== Worker.run() exception ========== \n")
-            traceback.print_exc()
-            exctype, value = sys.exc_info()[:2]
-            self.signals.error.emit( (exctype, value, traceback.format_exc()) )
-        else:
-            print("\n ======== Worker.run() else ========== \n")
-            self.signals.result.emit(result)  # return the result of the processing
-        finally:
-            self.signals.finished.emit() # Done
-            print("\n ======== Worker.run() finally ========== \n")
-            self.logger.info("Thread complete")
-        
-# new additions
-# From:
-# https://stackoverflow.com/questions/51404102/pyqt5-tabwidget-vertical-tab-horizontal-text-alignment-left
-#class TabBar(qtw.QTabBar):
-#    def tabSizeHint(self, index):
-#        s = qtw.QTabBar.tabSizeHint(self, index)
-#        s.transpose()
-#        return s
-#
-#    def paintEvent(self, event):
-#        painter = qtw.QStylePainter(self)
-#        opt = qtw.QStyleOptionTab()
-#
-#        for i in range(self.count()):
-#            self.initStyleOption(opt, i)
-#            painter.drawControl(qtw.QStyle.CE_TabBarTabShape, opt)
-#            painter.save()
-#
-#            s = opt.rect.size()
-#            s.transpose()
-#            r = qtc.QRect(qtc.QPoint(), s)
-#            r.moveCenter(opt.rect.center())
-#            opt.rect = r
-#
-#            c = self.tabRect(i).center()
-#            painter.translate(c)
-#            painter.rotate(90)
-#            painter.translate(-c)
-#            painter.drawControl(qtw.QStyle.CE_TabBarTabLabel, opt)
-#            painter.restore()
 
 class APA_UUID_List_Model(qtc.QStringListModel):
     def __init__(self, parent=None):
@@ -632,13 +553,6 @@ class TensionTableModel(qtc.QAbstractTableModel):
     def setData(self, dd):
         self._data = dd  # FIXME: do we need deepcopy?
     
-    def headerData(self, section, orientation, role):
-        if role == qtc.Qt.DisplayRole:
-            if orientation == qtc.Qt.Horizontal:
-                return str(sorted(self._data.keys())[section])
-            if orientation == qtc.Qt.Vertical:
-                return str(section+1)
-    
 
 class SortFilterProxyModel(qtc.QSortFilterProxyModel):
     def __init__(self, *args, **kwargs):
@@ -648,15 +562,6 @@ class SortFilterProxyModel(qtc.QSortFilterProxyModel):
     def setFilterByColumn(self, regex, column):
         self.filters[column] = regex
         self.invalidateFilter()
-
-    def filterAcceptsRow(self, source_row, source_parent):
-        for key, regex in self.filters.items():
-            ix = self.sourceModel().index(source_row, key, source_parent)
-            if ix.isValid():
-                text = self.sourceModel().data(ix)
-                if regex.indexIn(text) == -1:
-                    return False
-        return True
 
 class APA_Diagram_Model():
     def __init__(self):
@@ -731,7 +636,6 @@ class MainWindow(qtw.QMainWindow):
         self.initAPADiagram()
         self.someTensionsNotFound = False
         
-        self.fPen = pg.mkPen(color='#FF0000', width=4, style=qtc.Qt.DashLine)
         self.fPenColor = [pg.mkPen(color='#d62728', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#2ca02c', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#1f77b4', width=4, style=qtc.Qt.SolidLine)]
         self.fPenColorTemp = [pg.mkPen(color='#d62728', width=1, style=qtc.Qt.DashLine),pg.mkPen(color='#2ca02c', width=1, style=qtc.Qt.DashLine),pg.mkPen(color='#1f77b4', width=1, style=qtc.Qt.DashLine)]
         
@@ -819,10 +723,6 @@ class MainWindow(qtw.QMainWindow):
         self._configureAmps()
         self._initTimeseriesData()
         self.initPlottingUpdater()
-        
-        # KLUGE to prevent a res freq InfLine from being added right after removal
-        # via mouse click
-        self.removedInfLine = False
         
         # Info about current run
         self.stimFreqMin = 0
@@ -1058,8 +958,6 @@ class MainWindow(qtw.QMainWindow):
         tstart = time.time()
         self.recentScansTableView.setSortingEnabled(False)
 
-        date_format = "%Y%m%dT%H%M%S"
-
         # Populate the table with JSON data
         # should we sort the entries in the dict before populating the model?
         #i = self.recentWiresTableModel.rowCount()
@@ -1225,8 +1123,6 @@ class MainWindow(qtw.QMainWindow):
 
         tstart = time.time()
         self.recentWiresTableView.setSortingEnabled(False)
-
-        date_format = "%Y%m%dT%H%M%S"
 
         # Populate the table with JSON data
         # should we sort the entries in the dict before populating the model?
@@ -1645,88 +1541,6 @@ class MainWindow(qtw.QMainWindow):
         self.configure = ""
         self.connectedToUzed = ""
         self.idle = False # FIXME: need this?
-
-        # Resonance analysis plots
-        #self.resonanceProcessedDataGLW.scene().sigMouseClicked.connect(self._resProcGraphClicked)
-
-    #@pyqtSlot() For some reason, uncommenting this prevents evt from being passed!!!???!!!
-    #see: https://groups.google.com/u/1/g/pyqtgraph/c/bCWNA0Mown8
-    def _resProcGraphClicked(self, evt):
-        print("=== Clicked on the GLW ===")
-        print(evt)
-        #print(f"evt.screenPos() = {evt.screenPos()}")
-        #print(f"evt.scenePos()  = {evt.scenePos()}")
-        ##print(f"evt.pos()       = {evt.pos()}")
-        #print(f"evt.modifiers() = {evt.modifiers()}")
-
-        #if evt.modifiers() == qtc.Qt.ControlModifier:
-        #    print("CTRL held down")
-        #self._addF0LineViaClick(evt)
-        #if evt.modifiers() == qtc.Qt.ShiftModifier:
-        #    print("SHIFT held down")
-        #if evt.modifiers() == qtc.Qt.AltModifier:
-        #    print("ALT held down")
-        #if evt.modifiers() == (qtc.Qt.AltModifier | qtc.Qt.ShiftModifier):
-        #    print("ALT+SHIFT held down")
-
-        
-    def _addF0LineViaClick(self, evt):
-        # DEFUNCT: WE don't add a line by clicking anymore
-        # FIXME: don't add line if there is already an f0 sufficiently close...
-
-        # KLUGE: if a line was just removed, don't add a new line!
-        if self.removedInfLine:
-            print("warning: InfLine was just removed... will not add a new one in the same place...")
-            self.removedInfLine = False
-            return
-        
-        items = self.resonanceProcessedDataGLW.scene().items(evt.scenePos())
-        clickedItems = [x for x in items if isinstance(x, pg.PlotItem)]
-        if self.verbose:
-            print(f"Plots: {clickedItems}")
-
-        # Take the first item (should only be one!)
-        try:
-            ci = clickedItems[0]
-        except:
-            print("no PlotItem here...")
-            return
-
-        # which DWA channel was clicked?
-        try:
-            chan = self.resonanceProcessedPlots.index(ci)
-        except ValueError:
-            print(f"error: PlotItem {ci} not found in self.resonanceProcessedPlots: {self.resonanceProcessedPlots}")
-        
-        if self.verbose:
-            print(f"ci, chan = {ci}, {chan}")
-        # Convert to data coordinates
-        dataPoint = ci.getViewBox().mapSceneToView(evt.scenePos())
-        newF0 = dataPoint.x()
-        if self.verbose:
-            print(f"dataPoint = {dataPoint}")
-
-        # specify clicking tolerance for new line creation in pixels (so tolerance in Hz changes with zoom level)
-        minTolerancePixels = 5  # how far (in pixels) from existing f0 line must click be?
-        scenePosTol = qtc.QPointF(evt.scenePos().x() + minTolerancePixels, evt.scenePos().y())
-        tolPoint = ci.getViewBox().mapSceneToView(scenePosTol)
-        f0Tol = tolPoint.x()-newF0
-        print(f"f0Tol = {f0Tol}")
-        # If there is already a line at this frequency (within tolerance) then *remove* that line
-        f0Diff = np.abs(np.array(self.resonantFreqs[chan])-newF0)
-        if newF0 < 0:
-            print("Warning: cannot add line with f<0")
-            return
-        elif (len(self.resonantFreqs[chan]) > 0) and (np.min(f0Diff) < f0Tol):
-            print("Warning: already have an f0 line nearby. Will not add new line...")
-            return
-        else:
-            if self.verbose:
-                print(f"Will add InfLine at f={dataPoint.x()} Hz")
-            self.resonantFreqs[chan].append(newF0)
-            self.resonantFreqs[chan].sort()
-
-        self.resFreqUpdateDisplay()
         
     def _configureEventViewer(self):
         #self.evtVwr_runName_val.setText(EVT_VWR_TIMESTAMP)
@@ -1757,7 +1571,6 @@ class MainWindow(qtw.QMainWindow):
         # https://stackoverflow.com/questions/16460261/linux-udp-max-size-of-receive-buffer
         self.udpBufferSize = 1024*4 # max data to be received at once (bytes?)
         self.udpEnc = 'utf-8'  # encoding
-        self.udpTimeoutSec = 20
 
         # Set up UDP connection
         if self.sock is not None:
@@ -1937,9 +1750,6 @@ class MainWindow(qtw.QMainWindow):
         #self.logger.addHandler(ch)
 
         self.logger.info(f'Log created {self.logFilename}')
-
-    def hexString(self, val):
-        return str(hex(int(val))).upper()[2:].zfill(N_DWA_CHANS)
 
     def scanConfigTableAddRow(self, rd, row, scanType='Tension', layer=None, useAdvanced=False):
         # scanType: 'Tension' or 'Continuity'
@@ -2281,11 +2091,8 @@ class MainWindow(qtw.QMainWindow):
             }
 
         xx = np.arange(200)  # wire numbers
-        mu = 6.50 # Newtons
-        sigma = 0.5 # Newtons
-        tt = np.random.normal(mu, sigma, len(xx)) # wire tensions (Newtons)
-        self.dummyDataTension = {'x':xx[:],
-                                 'y':tt[:]}
+
+
 
             
     def _makeCurves(self):
@@ -2324,7 +2131,6 @@ class MainWindow(qtw.QMainWindow):
                          '#dd2c45', '#f06043', '#f5946b', '#f6c19f']
         amplAllPlotPens = [pg.mkPen(color=col) for col in amplAllPlotColors]
         vtAllPlotColors = amplAllPlotColors[:]
-        vtAllPlotPens = amplAllPlotPens[:]
         
         for pen in amplAllPlotPens:
             pen.setWidth(3)
@@ -2370,7 +2176,6 @@ class MainWindow(qtw.QMainWindow):
 
         # Tension
         self.curves['tension']['tensionOfWireNumber'] = {}
-        tensionPen = pg.mkPen(width=5, color='r')
         tensionSymbolBrush = pg.mkBrush('r')
         tensionSymbolPen = pg.mkPen(width=1, color=qtg.QColor('gray'))
         tensionSymbolSize = 5
@@ -2384,8 +2189,6 @@ class MainWindow(qtw.QMainWindow):
         ###self.curves['tension']['tensionOfWireNumber'] = self.tensionPlots['tensionOfWireNumber'].plot([], symbol='o', symbolSize=2, symbolBrush='k', symbolPen='k', pen=None)
 
         # Event Viewer plots
-        evtVwrPlotPenVolt = pg.mkPen(color=(0,0,0), style=qtc.Qt.DotLine, width=1)
-        evtVwrPlotPenAmpl = pg.mkPen(color=(0,0,0), style=qtc.Qt.DotLine, width=1)
         for loc in range(N_DWA_CHANS):
             self.curvesFit['evtVwr']['V(t)'][loc] = self.evtVwrPlots[loc].plot([], pen=amplAllPlotPens[loc])
             self.curves['evtVwr']['V(t)'][loc] = self.evtVwrPlots[loc].plot([], symbol='o', symbolSize=3, symbolBrush='k',
@@ -2745,7 +2548,6 @@ class MainWindow(qtw.QMainWindow):
 
     def loadNextUncomfirmed(self):
         for row in range(self.recentWiresFilterProxy.rowCount()):
-            wire = self.recentWiresFilterProxy.index(row, ResultsWires.WIRE_SEGMENT ).data()
             submitted = self.recentWiresFilterProxy.index(row, ResultsWires.SUBMITTED ).data()
             scanId =  self.recentWiresFilterProxy.index(row, ResultsWires.SCAN).data()
             if submitted != "Manual" and os.path.isdir(os.path.join(self.apaSubdir, scanId)):
@@ -3069,52 +2871,6 @@ class MainWindow(qtw.QMainWindow):
         self.currentViewStim = self.tabWidgetStim.currentIndex()
         if self.verbose > 0:
             print(f"tabWidgetStim changed... self.currentViewStim = {self.currentViewStim}")
-        
-
-    @pyqtSlot()
-    def resFitParameterUpdated(self):
-        # DEFUNCT: We dont have user customizable fit parameters anymore (should we make the new algorithm configurable?)
-        self.runResonanceAnalysis()
-
-    def resFreqGetParams(self): 
-        # DEFUNCT: We dont have user customizable fit parameters anymore (should we make the new algorithm configurable?)
-        self._resFreqSetDefaultParams()  # reset to defaults
-
-        # Should we detrend the A(f) data first?
-        self.resFitParams['preprocess']['detrend'] = self.resFitPreDetrend.isChecked()
-
-        # polynomial order for background subtraction (after integrating)
-        try:
-            print(f'self.resFitBkgPoly.text() = {self.resFitBkgPoly.text()}')
-            self.resFitParams['find_peaks']['bkgPoly'] = int(self.resFitBkgPoly.text())
-        except:
-            print('failed')
-            self.resFitParams['find_peaks']['bkgPoly'] = 2
-
-        # peak width parameter
-        print(f'self.resFitWidth.text() = {self.resFitWidth.text()}')
-        self.resFitParams['find_peaks']['width'] = self._resFreqParseNumOrList( self.resFitWidth.text() )
-
-        # prominence parameter
-        print(f'self.resFitProminence.text() = {self.resFitProminence.text()}')
-        self.resFitParams['find_peaks']['prominence'] =self._resFreqParseNumOrList( self.resFitProminence.text() )
-
-        print("BEFORE READING KWARGS:")
-        print(f'   self.resFitParams = {self.resFitParams}')
-        
-        # read the kwargs field, (which takes precedence over anything set previously)!
-        # expect: "key1=val1, key2=val2, ..."
-        kwargString = self.resFitKwargs.text().strip()
-        if kwargString != '':
-            kwargDict = self._resFreqParseKwargParam( self.resFitKwargs.text() )
-            for key, val in kwargDict.items():
-                if key not in self.resFitParams['find_peaks']:
-                    continue
-                self.resFitParams['find_peaks'][key] = val
-
-        # Print params and refit
-        print(f'self.resFitParams = {self.resFitParams}')
-
 
     @pyqtSlot()
     def apaUuidChanged(self):
@@ -3172,42 +2928,6 @@ class MainWindow(qtw.QMainWindow):
         # Switch focus to the plot tab
         self.currentViewResults = ResultsView.PROCESSED
         self.viewResults()
-
-        
-    def loadRecentScanData(self):
-        # DEFUNCT: not used anymore.. vestige of "recent scans" table, which no longer exists
-        # (was replaced by "Results" table
-        print(self.recentWiresTableModel.itemFromIndex(row))
-        tableRowData = self.recentWiresTableModel.getData()[row]
-        print(f"selected file = {tableRowData['scanName']}")
-        #scanFilename = './scanDataAdv/dwaConfigWC_20210812T112511/amplitudeData.json' # DUMMY
-        scanFilename = os.path.join(tableRowData['scanName'], 'amplitudeData.json')
-        #self.recentWiresTableRowInUse = row
-        self.recentWiresNameOfLoadedScan = tableRowData['scanName']
-        self.loadSavedScanData(scanFilename)
-
-    # def readResultsJSON(self, make_new=False):
-    #     # if make_new is True, then create a JSON file if it does not yet exist
-        
-    #     self.configApaUuid = self.configApaUuidLineEdit.text().strip()
-    #     if self.configApaUuid == "":
-    #         return
-        
-    #     filename = f'{self.configApaUuid}.json'
-    #     filepath = os.path.join(OUTPUT_DIR_PROCESSED_DATA, filename)
-    #     try: # Ensure that there is an amplitudeData.json file present!
-    #         print(f'trying to load {filepath}')
-    #         with open(filepath, "r") as fh:
-    #             self.resultsDict = json.load(fh)
-    #     except:
-    #         print(f"Could not open results JSON file for APA UUID: {self.configApaUuid}.")
-    #         if make_new:
-    #             print(f"make_new = {make_new} (True) so creating a new results dictionary (in memory)")
-    #             #print(f"{filepath}")
-    #             self.newResultsDict()
-    #             #self.resultsDict = process_scan.new_results_dict(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
-    #             #self.resultsDict = process_scan.new_results_dict(APA_STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
-                
 
     def newResultsDict(self):
         return process_scan.new_results_dict(APA_STAGES_SCANS, APA_LAYERS,
@@ -3429,7 +3149,6 @@ class MainWindow(qtw.QMainWindow):
         
         self._updateResFreqsFromLineLocations(source)
         self.resFreqUpdateDisplay(chan=None)  # update GUI
-        self.removedInfLine = True
         
     #@pyqtSlot()
     def _evtVwrF0LineMoved(self):
@@ -3458,10 +3177,7 @@ class MainWindow(qtw.QMainWindow):
     def _expectedLineMoved(self, evt):
         # evt is an InfiniteLine instance (sigDragged event from InfiniteLine)
         
-        print("f0Line moved")
-        print(f"evt = {evt}")
-        print(f"self.resExpLines['raw'] = {self.resExpLines['raw']}")
-        print(f"self.resExpLines['proc'] = {self.resExpLines['proc']}")
+        print("Line moved")
 
         source, c, s, l = self._getInfLineSource(evt, self.resExpLines)
         
