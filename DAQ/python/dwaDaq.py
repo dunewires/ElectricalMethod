@@ -3847,7 +3847,7 @@ class MainWindow(qtw.QMainWindow):
         side = self.tensionSideSelectionComboBox.currentText()
         tensions = self.tensionData[layer+side]
         actionTypeFormID = 'APALayerTensionMeasurement'
-        componentUUID = '2cf8b7f0-4657-11ed-93a3-11d7cd14e853'
+        componentUUID = self.configApaUuid.split('_')[0]
         actionData = {
             'name': 'M2M Action',
             'actionPerformedAfterFormsCleanup': True,
@@ -4956,7 +4956,7 @@ class MainWindow(qtw.QMainWindow):
             self.resonantFreqs[reg.value] = [[] for _ in segments]
             bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
             self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], bsub)
-            segments, opt_res_arr, best_tension, best_tensions_std, fpks = process_scan.process_channel(layer, apaCh, f, a, MAX_FREQ, self.verbose)
+            segments, opt_res_arr, best_tension, best_tensions_std, fpks = process_scan.process_channel(layer, apaCh, f, a, self.model_x_g, MAX_FREQ, self.verbose)
             self.expectedFreqs[reg.value] = expected_resonances
             self.resonantFreqs[reg.value] = list(opt_res_arr)
 

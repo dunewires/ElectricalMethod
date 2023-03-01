@@ -485,7 +485,7 @@ def process_channel_x_g(layer, apa_ch, freq, ampl, model, max_freq=250., verbosi
 
         # Prevent short scans or connectivity scans from being processed
         if len(freq) < 50 or max(freq) > 450: 
-            raise ResonanceFinderFailed("ERROR: Trace size out of range")
+            raise ResonanceFinderFailed("Trace size out of range")
             
         # Get baseline subtracted trace
         bsub = baseline_subtracted(freq, np.cumsum(ampl))
@@ -493,7 +493,7 @@ def process_channel_x_g(layer, apa_ch, freq, ampl, model, max_freq=250., verbosi
         # Remove scans with low rms ratio because they are likely all noise
         rms_ratio = sliding_window_rms_ratio(freq, bsub, 10)
         if rms_ratio < 4: 
-            raise ResonanceFinderFailed("ERROR: Trace is too noisy")
+            raise ResonanceFinderFailed("Trace is too noisy")
 
         # Get positive peak data
         fpks_pos, heights_pos = get_channel_peak_data(freq, bsub, num_peaks)
@@ -511,14 +511,18 @@ def process_channel_x_g(layer, apa_ch, freq, ampl, model, max_freq=250., verbosi
         pred_tension, pred_tension_err = predict_tension(row_pos, row_neg, model[0], model[1])
 
         # Compute the resonance array
-        moved_res_array = expected_resonances * (pred_tension / nominal_tension) ** 0.5
+        moved_res_array = [[val * (pred_tension / nominal_tension) ** 0.5 for val in expected_resonances[0]]]
 
 
     except ResonanceFinderFailed as e:
         if verbosity > 1: print("Error:", e)
         return segments, default_res_arr, default_tensions, default_confidences, default_fpks
     else:
-        
+        if verbosity > 1: 
+            print("segments:", segments)
+            print("moved_res_array:", moved_res_array)
+            print("pred_tensions:", [pred_tension])
+            print("pred_tension_errs:", [pred_tension_err])
         return segments, moved_res_array, [pred_tension], [pred_tension_err], fpks_pos
 
 
@@ -797,6 +801,7 @@ def process_scan_v1(resultsDict, dirName, maxFreq=250.):
 
 
 def process_scan(resultsDict, dirName, model_x_g, maxFreq=250., verbosity=0):
+    verbosity = 2
     '''Process a scan with a given directory name and update the given results dictionary.'''
     try: # Ensure that there is an amplitudeData.json file present!
         if verbosity > 0: print(dirName+'/amplitudeData.json')
