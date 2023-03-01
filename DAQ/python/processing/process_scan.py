@@ -527,8 +527,8 @@ def process_channel_x_g(layer, apa_ch, freq, ampl, model, max_freq=250., verbosi
 
 
 def process_channel(layer, apaCh, f, a, model_x_g, maxFreq=250., verbosity=0, nominalTension = 6.5):
-    if layer == "X" or layer == "G":
-        return process_channel_x_g(layer, apaCh, f, a, model_x_g, maxFreq, verbosity, nominalTension)
+    #if layer == "X" or layer == "G":
+    #    return process_channel_x_g(layer, apaCh, f, a, model_x_g, maxFreq, verbosity, nominalTension)
     #verbosity = 2
     if verbosity > 1: 
         print(f"################################################")
@@ -801,7 +801,7 @@ def process_scan_v1(resultsDict, dirName, maxFreq=250.):
 
 
 def process_scan(resultsDict, dirName, model_x_g, maxFreq=250., verbosity=0):
-    verbosity = 2
+    #verbosity = 2
     '''Process a scan with a given directory name and update the given results dictionary.'''
     try: # Ensure that there is an amplitudeData.json file present!
         if verbosity > 0: print(dirName+'/amplitudeData.json')

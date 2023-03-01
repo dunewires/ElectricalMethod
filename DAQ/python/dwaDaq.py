@@ -147,9 +147,6 @@ import pickle
 
 from functools import partial
 from enum import Enum, IntEnum
-import string
-
-from itertools import chain
 
 import numpy as np
 import scipy
@@ -709,7 +706,7 @@ class MainWindow(qtw.QMainWindow):
         self.scanType = None
         self.doContinuity = True
         self.doTension = True
-        self.loadingResultsDict = False
+        self.resultsDictFileLocked = False
         self.doContinuityCb.setChecked(qtc.Qt.Checked if self.doContinuity else qtc.Qt.Unchecked)
         self.doTensionCb.setChecked(qtc.Qt.Checked if self.doTension else qtc.Qt.Unchecked)
         self._scanButtonDisable()
@@ -1122,9 +1119,6 @@ class MainWindow(qtw.QMainWindow):
         for scanId in allScans:
             scanDict = allScans[scanId]
             items = [None]*len(RESULTS_SCANS_TABLE_HDRS)
-            print("------------")
-            print(scanDict["numScans"])
-            print(scanDict)
             items[ResultsScans.SCAN] = qtg.QStandardItem(scanDict["scanId"])
             items[ResultsScans.STAGE] = qtg.QStandardItem(scanDict["stage"])
             items[ResultsScans.LAYER] = qtg.QStandardItem(scanDict["layer"])
@@ -1616,6 +1610,9 @@ class MainWindow(qtw.QMainWindow):
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensionsThread)
         self.btnSubmitTensionsSelected.clicked.connect(self.submitTensionsSelected)
+        self.tensionLayerSelectionComboBox.currentIndexChanged.connect(self.submitTensionsFormChanged)
+        self.tensionLayerSelectionComboBox.currentIndexChanged.connect(self.submitTensionsFormChanged)
+
         # Config Tab
         self.doContinuityCb.stateChanged.connect(self.doContinuityChanged)
         self.doTensionCb.stateChanged.connect(self.doTensionChanged)
@@ -3222,7 +3219,7 @@ class MainWindow(qtw.QMainWindow):
         self.getApaUuid()
         result = None
 
-        if self.loadingResultsDict:
+        if self.resultsDictFileLocked:
             print("Results file is currently being loaded. Will try again.")
             time.sleep(1)
             return self.getResultsDict()
@@ -3234,14 +3231,35 @@ class MainWindow(qtw.QMainWindow):
         try: # load the existing JSON file if it exists
             filename = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
             with open(filename, "r") as fh:
-                self.loadingResultsDict = True
+                self.resultsDictFileLocked = True
                 result = json.load(fh)
         except: # otherwise, create one
             print(f"Could not find JSON results file for APA UUID: {self.configApaUuid}. Creating a new dict.")
             result = self.newResultsDict()
 
-        self.loadingResultsDict = False
+        self.resultsDictFileLocked = False
         return result
+
+    def writeResultsDict(self, resultsDict):
+        if self.resultsDictFileLocked:
+            alert = qtw.QMessageBox()
+            alert.setIcon(qtw.QMessageBox.Information)
+            alert.setText("Attempted to save tension data while file was in use!")
+            alert.setWindowTitle("Alert")
+            alert.setStandardButtons(qtw.QMessageBox.Ok)
+            alert.exec_()
+        
+        if not self.configApaUuid:
+            return 
+        
+        # save scan analysis results to JSON file
+        outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
+        print(f'Writing processed scan results to {outfile}')
+        with open(outfile, 'w') as f:
+            self.resultsDictFileLocked = True
+            json.dump(resultsDict, f, indent=4, sort_keys=True)
+
+        self.resultsDictFileLocked = False
 
     def getApaUuid(self):
         print('self.getApaUuid()')
@@ -3314,10 +3332,7 @@ class MainWindow(qtw.QMainWindow):
             process_scan.process_scan(resultsDict, scan, self.model_x_g, MAX_FREQ)
 
         # save scan analysis results to JSON file
-        outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
-        print(f'writing processed scan results to {outfile}')
-        with open(outfile, 'w') as f:
-            json.dump(resultsDict, f, indent=4, sort_keys=True)
+        self.writeResultsDict(resultsDict)
 
         # update the results table
         self.resultsWiresTableLoad()
@@ -3481,18 +3496,6 @@ class MainWindow(qtw.QMainWindow):
                         if line == infLine:
                             return source, c, s, l
 
-        # rawLines = list(chain(*self.resFitLines['raw'].values()))
-        # procLines = list(chain(*self.resFitLines['proc'].values()))
-        # if infLine in rawLines:
-        #     source = 'raw'
-        # elif infLine in procLines:
-        #     source = 'proc'
-        # else:
-        #     print("ERROR: unknown source of signal: {infLine}")
-        #     print("      rawLines  = {rawLines}")
-        #     print("      procLines = {procLines}")
-        #     return
-        # print(f"_f0LineMoved(): sender is from {source}")
         return None, None, None, None
 
     def _updateResFreqsFromLineLocations(self, source, c, s, l):
@@ -3502,12 +3505,6 @@ class MainWindow(qtw.QMainWindow):
         oldValue = self.resonantFreqs[c][s][l]
         self.resonantFreqs[c][s] = [(newValue/oldValue)*x for x in self.resonantFreqs[c][s]] #self.resonantFreqs[c][s] + newValue - oldValue  
         self.resFreqUpdateDisplay(chan=None)
-        # loop over all channels. Get locations of lines
-        # for reg in self.registers:
-        #     self.resonantFreqs[reg.value] = []  # start w/ empty list
-        #     for infLine in self.resFitLines[source][c]: # re-create resFreq list
-        #         self.resonantFreqs[reg.value].append(infLine.value())
-        #         self.resonantFreqs[reg.value].sort()
         
     @pyqtSlot()
     def viewStimulus(self):
@@ -3616,7 +3613,6 @@ class MainWindow(qtw.QMainWindow):
         # sietch = SietchConnect("sietch.creds")
         # Get results dict
         resultsDict = self.getResultsDict()
-        print('resultsDict',resultsDict.keys())
         # Get stage
         stage = self.tensionStageComboBox.currentText()
         print(f'Loading tesions for {stage}')
@@ -3667,12 +3663,6 @@ class MainWindow(qtw.QMainWindow):
                     pos = [{'pos': [i,self.tensionData[layer+side][i]]} for i in range(len(self.tensionData[layer+side]))]
                     scatter.setData(pos)
         
-        # save scan analysis results to JSON file
-        outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}_tensions.json')
-        print(f'writing processed scan results to {outfile}')
-        with open(outfile, 'w') as f:
-            json.dump(self.tensionData, f, sort_keys=True)
-        
     def nominalTensions(self, selectedDwaChan=None):
         for seg in range(3):
             lineEdit = getattr(self, f'le_resfreq_val_{selectedDwaChan}_{seg}')
@@ -3698,11 +3688,9 @@ class MainWindow(qtw.QMainWindow):
             logging.warning("  Scan directory failed to move to archive {}".format(scanId))
 
     def removeAndArchive(self):
-        #TODO: Fix this so that it writes to file in scanData/processed/ instead of database
         self.labelResonanceSubmitStatus.setText("Submitting...")
-        # Load sietch credentials
-        #sietch = SietchConnect("sietch.creds")
-        apaUuid = self.ampDataS['apaUuid']
+        
+        apaUuid = self.configApaUuid
         stage = self.ampDataS['stage']
         layer = self.ampDataS['layer']
         side = self.ampDataS['side']
@@ -3720,10 +3708,7 @@ class MainWindow(qtw.QMainWindow):
                         wireSeg = segments[seg]
                         fullResultsDict[stage][layer][side][str(wireSeg).zfill(5)]["tension"].pop(scanId,None)
         # save scan analysis results to JSON file
-        outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{apaUuid}.json')
-        print(f'writing processed scan results to {outfile}')
-        with open(outfile, 'w') as f:
-            json.dump(fullResultsDict, f, indent=4, sort_keys=True)
+        self.writeResultsDict(fullResultsDict)
 
         self.archiveScan(scanId)
         self.resultsScansTableLoad()
@@ -3740,10 +3725,8 @@ class MainWindow(qtw.QMainWindow):
         layer = self.ampDataS['layer']
         side = self.ampDataS['side']
         note = self.submitResonanceNoteLineEdit.text()
-        scanId = self.loadedScanId #self.recentWiresNameOfLoadedScan.split('\\')[-1]
-        #tensionTable = database_functions.get_tension_table(sietch, apaUuid, stage)
-        #if tensionTable:
-        #    wireData = tensionTable['data']['wireSegments']
+        scanId = self.loadedScanId 
+        
         fullResultsDict = self.getResultsDict() 
         scanResultsDict = self.newResultsDict() 
 
@@ -3859,11 +3842,23 @@ class MainWindow(qtw.QMainWindow):
         # Call the action performance function, which takes the action type form ID, component UUID and action data as its first three arguments
         # The last two arguments must ALWAYS be 'connection' and 'headers' respectively
         # If successful, the function returns the ID of the performed action (if not, an error message is automatically displayed)
+
         id = PerformAction(actionTypeFormID, componentUUID,
                         actionData, connection, headers)
-        print(f" Successfully performed action with ID: {id}")
+        print(f"Database submission performed with response: {id}")
+        if id:
+            self.labelSubmitTensionsStatus.setText("Submission successful!")
+            self.labelSubmitTensionsStatus.setStyleSheet("color : green")
+        else:
+            self.labelSubmitTensionsStatus.setText("Submission failed!")
+            self.labelSubmitTensionsStatus.setStyleSheet("color : red")
+
         # Once all actions have been performed and submitted, close the connection to the database API
         connection.close()
+
+    def submitTensionsFormChanged(self):
+        self.labelSubmitTensionsStatus.setText("Unsubmitted")
+        self.labelSubmitTensionsStatus.setStyleSheet("color : black")
         
     def saveResonanceData(self):
         resData = {}
@@ -4882,9 +4877,7 @@ class MainWindow(qtw.QMainWindow):
         self.scanConfigTableModel.item(self.scanConfigRowToScan, Scans.RESULT).setBackground(resultColor)
 
         # save scan analysis results to JSON file
-        outfile = os.path.join(OUTPUT_DIR_PROCESSED_DATA, f'{self.configApaUuid}.json')
-        with open(outfile, 'w') as f:
-            json.dump(fullResultsDict, f, indent=4, sort_keys=True)
+        self.writeResultsDict(fullResultsDict)
 
         # Update the results table
         self.resultsWiresTableUpdate(scanResultsDict)
