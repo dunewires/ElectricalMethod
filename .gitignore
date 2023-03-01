@@ -28,3 +28,4 @@ DAQ/python/mappings/__pycache__/*
 *.pyc
 *udpstream.txt
 *.status
+.DS_Store
