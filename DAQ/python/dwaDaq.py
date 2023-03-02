@@ -143,6 +143,7 @@ import platform
 import shutil
 import ctypes
 import pickle
+import functools
 
 from functools import partial
 from enum import Enum, IntEnum
@@ -491,6 +492,36 @@ class Worker(qtc.QRunnable):
         self.signals = WorkerSignals()
         self.logger = logging.getLogger()
 
+    @qtc.pyqtSlot()
+    def run(self):
+        '''
+        Initialize the runner function with passed args, kwargs.
+        '''
+
+        print("\n ======== Worker.run() (thread start) ========== \n")
+        self.logger.info("Thread start")
+        # retrieve args/kwargs here; and fire processing using them
+        try:
+            self.signals.starting.emit() # Process is starting
+            result = self.fn(*self.args, **self.kwargs)
+            #result = self.fn(
+            #    *self.args, **self.kwargs,
+            #    status = self.signals.status,
+            #    progress = self.signals.progress,
+            #)
+        except:
+            print("\n ======== Worker.run() exception ========== \n")
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            self.signals.error.emit( (exctype, value, traceback.format_exc()) )
+        else:
+            print("\n ======== Worker.run() else ========== \n")
+            self.signals.result.emit(result)  # return the result of the processing
+        finally:
+            self.signals.finished.emit() # Done
+            print("\n ======== Worker.run() finally ========== \n")
+            self.logger.info("Thread complete")
+
 class APA_UUID_List_Model(qtc.QStringListModel):
     def __init__(self, parent=None):
         super(APA_UUID_List_Model, self).__init__(parent)
@@ -562,6 +593,15 @@ class SortFilterProxyModel(qtc.QSortFilterProxyModel):
     def setFilterByColumn(self, regex, column):
         self.filters[column] = regex
         self.invalidateFilter()
+
+    def filterAcceptsRow(self, source_row, source_parent):
+        for key, regex in self.filters.items():
+            ix = self.sourceModel().index(source_row, key, source_parent)
+            if ix.isValid():
+                text = self.sourceModel().data(ix)
+                if regex.indexIn(text) == -1:
+                    return False
+        return True
 
 class APA_Diagram_Model():
     def __init__(self):
@@ -635,6 +675,7 @@ class MainWindow(qtw.QMainWindow):
         self.initApaUuidSuggestions()
         self.initAPADiagram()
         self.someTensionsNotFound = False
+        self.configLayers = None
         
         self.fPenColor = [pg.mkPen(color='#d62728', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#2ca02c', width=4, style=qtc.Qt.SolidLine),pg.mkPen(color='#1f77b4', width=4, style=qtc.Qt.SolidLine)]
         self.fPenColorTemp = [pg.mkPen(color='#d62728', width=1, style=qtc.Qt.DashLine),pg.mkPen(color='#2ca02c', width=1, style=qtc.Qt.DashLine),pg.mkPen(color='#1f77b4', width=1, style=qtc.Qt.DashLine)]
@@ -1475,7 +1516,7 @@ class MainWindow(qtw.QMainWindow):
             for seg in range(3):
                 #getattr(self, f'le_resfreq_val_{reg}_{seg}').textChanged.connect(self._resFreqUserInputText)
                 getattr(self, f'le_resfreq_val_{reg}_{seg}').editingFinished.connect(self._resFreqUserInputText)
-                #getattr(self, f'lab_resfreq_{reg}_{seg}').mousePressEvent = self._resFreqUserClick(reg,seg)
+                #getattr(self, f'lab_resfreq_{reg}_{seg}').clicked.connect(lambda reg, seg: self._resFreqUserClick(reg,seg))
         #self.QPLabel.mousePressEvent = self._resFreqUserClick(0,0)
         # self.resFitPreDetrend.stateChanged.connect(self.resFitParameterUpdated)
         # self.resFitBkgPoly.editingFinished.connect(self.resFitParameterUpdated)
@@ -1912,6 +1953,9 @@ class MainWindow(qtw.QMainWindow):
     def updateMissingChannels(self):
         resultsDict = self.getResultsDict()
         row = 0
+        if not self.configLayers:
+            return
+         
         for layer in self.configLayers:
             channelGroups = channel_map.channel_groupings(layer, self.configHeadboard)
             for subChannelGroup in channelGroups:
@@ -2995,12 +3039,6 @@ class MainWindow(qtw.QMainWindow):
         print('loadArbitraryScanData:')
         
         # open a file selection dialog for user to input a scan filename
-        options = qtw.QFileDialog.Options()
-        #options |= qtw.QFileDialog.DontUseNativeDialog
-        # scanFilenames, _ = qtw.QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileName()",
-        #                                                   "","All Files (*);;JSON Files (*.json)",
-        #                                                   options=options)
-
         file_dialog = qtw.QFileDialog()
         file_dialog.setFileMode(qtw.QFileDialog.DirectoryOnly)
         file_dialog.setOption(qtw.QFileDialog.DontUseNativeDialog, True)
@@ -3072,19 +3110,16 @@ class MainWindow(qtw.QMainWindow):
 
 
     def _resFreqUserClick(self, reg, seg):
+        print(f"Clicked {reg} {seg}")
         lineEdit = getattr(self, f'le_resfreq_val_{reg}_{seg}')
         if len(lineEdit.text()) == 0:
             lineEdit.setText(str(TENSION_SPEC))
 
     @pyqtSlot()
     def _resFreqUserInputText(self):
-        for reg in self.registers:
-            for seg in range(3):
-                print(getattr(self, f'le_resfreq_val_{reg}_{seg}').text())
 
         # FIXME: add check for which channel's textbox this came from
         # and only update the f0 values and GUI display for that associated channel
-        print('self.resonantFreqs',self.resonantFreqs)
         for reg in self.registers:
             if reg.value not in self.activeRegistersS:
                 continue
@@ -3113,6 +3148,12 @@ class MainWindow(qtw.QMainWindow):
         return freqList
         
     #@pyqtSlot()
+    
+    def NominalLineClicked(self, dwaChan, seg):
+        print(f"Nominal Line Clicked {dwaChan} {seg}")
+        getattr(self, f'le_resfreq_val_{dwaChan}_{seg}').setText(str(TENSION_SPEC))
+        self._resFreqUserInputText()
+
     def _f0LineClicked(self, infLine, clickEvt):
         # evt is an InfiniteLine and an event (sigClicked sent by InfiniteLine)
 
@@ -3193,10 +3234,6 @@ class MainWindow(qtw.QMainWindow):
         # evt is an InfiniteLine instance (sigDragged event from InfiniteLine)
         
         print("f0Line moved")
-        print(f"evt = {evt}")
-        print(f"self.resFitLines['raw'] = {self.resFitLines['raw']}")
-        print(f"self.resFitLines['proc'] = {self.resFitLines['proc']}")
-
         source, c, s, l = self._getInfLineSource(evt, self.resFitLines)
         self._updateResFreqsFromLineLocations(source, c, s, l)
         self.resFreqUpdateDisplay(chan=None)  # update GUI
@@ -3383,7 +3420,7 @@ class MainWindow(qtw.QMainWindow):
         for seg in range(3):
             lineEdit = getattr(self, f'le_resfreq_val_{selectedDwaChan}_{seg}')
             if lineEdit.isEnabled():
-                lineEdit.setText('6.5')
+                lineEdit.setText(str(TENSION_SPEC))
         self._resFreqUserInputText()
 
     def archiveScan(self, scanId):
@@ -4681,6 +4718,7 @@ class MainWindow(qtw.QMainWindow):
                     else:
                         tempLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=True, pen=self.fPenColorTemp[seg], hoverPen=self.fPenColor[seg]) )
                     tempLinesProc[-1].sigPositionChangeFinished.connect(self._expectedLineMoved)
+                    tempLinesProc[-1].sigClicked.connect(functools.partial(self.NominalLineClicked, chan, seg))
 
                 self.resExpLines['proc'][chan].append(tempLinesProc)
 
@@ -4694,7 +4732,6 @@ class MainWindow(qtw.QMainWindow):
         self._clearResonanceFitLines()
         #self._clearResonanceExpectedLines()
 
-        debug = False
         self.currentTensions = {}
 
         for chan in self.activeRegistersS:
@@ -4730,17 +4767,6 @@ class MainWindow(qtw.QMainWindow):
                             elif (np.abs(tension - TENSION_SPEC) > TENSION_SPEC_TOL): getattr(self, f'le_resfreq_val_{chan}_{seg}').setStyleSheet("QLineEdit {background-color: rgb(255, 255, 240);}")                     
                             else: getattr(self, f'le_resfreq_val_{chan}_{seg}').setStyleSheet("QLineEdit {background-color: white;}") 
             
-            fitx, fity = self.curves['resProcFit'][chan].getData()
-
-            # # Add expected resonances to plot
-            # for i, wireSegmentFreqs in enumerate(self.expectedFreqs[chan]):
-            #     expectedFreqRounded = np.array([round(f,2) for f in wireSegmentFreqs])
-            #     expectedFreqRounded = np.unique(expectedFreqRounded)
-            #     for ii, ff in enumerate(expectedFreqRounded):
-            #         self.resExpLines['proc'][reg].append( self.resonanceProcessedPlots[reg].addLine(x=ff, movable=False, pen=fPenBlue[i]) )
-            # Create/display new InfiniteLine instance for each resonant freq
-
-
             # Create/display new InfiniteLine instance for each resonant freq
             for ii, ff in enumerate(self.resonantFreqs[chan]):
 
@@ -4748,30 +4774,7 @@ class MainWindow(qtw.QMainWindow):
                 segmentLinesProc = []
                 for seg, f in enumerate(ff):
 
-                    # Plot vertical line from peak down to "baseline"
-                    # And horizontal line showing width of fitted peak
-                    # as in last example here:
-                    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html
-                    #try:
-                    #    ymax = fity[self.resFitParamsOut[chan]['peaks'][ii]]
-                    #    ymin = ymax - self.resFitParamsOut[chan]['properties']['prominences'][ii]
-                    #    print(f'ymin, ymax = {ymin}, {ymax}')
-                    #except:
-                    #    print("\n\n\nERROR!!!!!!!!!\n\n\n")
-
-                    # if (debug):
-                    #     print(f"Chan, Freq = {chan}, {ii}, {ff}")
-                    #     ymax = fity[self.resFitParamsOut[chan]['peaks'][ii]]
-                    #     ymin = ymax - self.resFitParamsOut[chan]['properties']['prominences'][ii]
-                    #     xmin = fitx[int(np.floor(self.resFitParamsOut[chan]['properties']['left_ips'][ii]))]
-                    #     xmax = fitx[int(np.ceil(self.resFitParamsOut[chan]['properties']['right_ips'][ii]))] 
-                    #     ywidth = self.resFitParamsOut[chan]['properties']['width_heights'][ii]
-                    #     print(f'ymin, ymax = {ymin}, {ymax}')
-                    #     print("")
-                    #     self.resFitLines['procDebug'][chan].append( self.resonanceProcessedPlots[chan].plot(x=[ff,ff], y=[ymin,ymax]))
-                    #     self.resFitLines['procDebug'][chan].append( self.resonanceProcessedPlots[chan].plot(x=[xmin, xmax], y=[ywidth,ywidth]))
                     segmentLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=True, pen=self.fPenColor[ii], hoverPen=pg.mkPen(color='#d6d600', width=4, style=qtc.Qt.SolidLine)) )
-                    # FIXME: should the next 2 lines really be commented out?
                     segmentLinesProc[-1].sigClicked.connect(self._f0LineClicked)
                     segmentLinesProc[-1].sigPositionChangeFinished.connect(self._f0LineMoved)
                     segmentLinesRaw.append( self.resonanceRawPlots[chan].addLine(x=f, movable=True, pen=self.fPenColor[ii], hoverPen=pg.mkPen(color='#d6d600', width=4, style=qtc.Qt.SolidLine))  )
