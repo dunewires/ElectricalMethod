@@ -1143,11 +1143,9 @@ class MainWindow(qtw.QMainWindow):
 
     def resultsWiresTableLoad(self):
         # Empty the table model...
-        self.recentWiresTableModel.removeRows( 0, self.recentWiresTableModel.rowCount() )
+        self.resultsWiresTableInit()
         
-        # Fresh read of JSON file using user-entered APA UUID
-        #self.readResultsJSON(make_new=False)
-
+        # Fresh read of JSON file
         resultsDict = self.getResultsDict()
         if resultsDict is None:
             return
