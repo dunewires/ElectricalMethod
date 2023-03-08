@@ -307,11 +307,11 @@ class Scans(IntEnum):
     FREQ_MAX  = SCAN_CONFIG_TABLE_HDRS.index('Freq Max (Hz)')
     FREQ_STEP = SCAN_CONFIG_TABLE_HDRS.index('Step Size (Hz)')
 
-#class ScanConfigStatus(IntEnum):
-#    DONE = 0
-#    RUNNING = 1
-#    PENDING = 2
-#
+class TensionSaveStatus(IntEnum):
+    UNSAVED = 0
+    SAVING = 1
+    SAVED = 2
+
 #ScanConfigStatusString = {
 #    ScanConfigStatus.DONE:'Done',
 #    ScanConfigStatus.RUNNING:'Running',
@@ -2555,9 +2555,7 @@ class MainWindow(qtw.QMainWindow):
                 self.loadResultsWire(row)
                 break
 
-
     def saveTensionsAndLoadNext(self):
-        self.labelResonanceSubmitStatus.setText("Submitting...")
         self.saveTensions()
         self.loadNextUncomfirmed()
         
@@ -2567,6 +2565,17 @@ class MainWindow(qtw.QMainWindow):
         self._scanButtonEnable(force=True)
         self.startNextScanIfRequested()
         self.loadLastScanIfRequested()
+
+    def setTensionSaveStatus(self, status):
+        self.tensionSaveStatus = status
+        if status == TensionSaveStatus.UNSAVED:
+            self.labelTensionSaveStatus.setText("Tensions have not been saved")
+            self.labelTensionSaveStatus.setStyleSheet("color : red")
+        elif status == TensionSaveStatus.SAVING:
+            self.labelTensionSaveStatus.setText("Saving...")
+        elif status == TensionSaveStatus.SAVED:
+            self.labelTensionSaveStatus.setText("Saved!")
+            self.labelTensionSaveStatus.setStyleSheet("color : green")
 
     def disableRelaysThreadStarting(self):
         self.btnScanCtrl.setStyleSheet("background-color : orange")
@@ -3061,8 +3070,7 @@ class MainWindow(qtw.QMainWindow):
         self._configureResonancePlots()
         self.runResonanceAnalysis()
         self._addResonanceExpectedLines()
-        self.labelResonanceSubmitStatus.setText("Tensions have not been saved")
-        self.labelResonanceSubmitStatus.setStyleSheet("color : red")
+        self.setTensionSaveStatus(TensionSaveStatus.UNSAVED)
 
     @pyqtSlot()
     def _resFreqUserInputText(self):
@@ -3374,9 +3382,7 @@ class MainWindow(qtw.QMainWindow):
         except:
             logging.warning("  Scan directory failed to move to archive {}".format(scanId))
 
-    def removeAndArchive(self):
-        self.labelResonanceSubmitStatus.setText("Submitting...")
-        
+    def removeAndArchive(self):        
         apaUuid = self.configApaUuid
         stage = self.ampDataS['stage']
         layer = self.ampDataS['layer']
@@ -3404,7 +3410,7 @@ class MainWindow(qtw.QMainWindow):
         
     def saveTensions(self, selectedDwaChan=None):
         #TODO: Fix this so that it writes to file in scanData/processed/ instead of database
-        self.labelResonanceSubmitStatus.setText("Submitting...")
+        self.setTensionSaveStatus(TensionSaveStatus.SAVING)
         # Load sietch credentials
         #sietch = SietchConnect("sietch.creds")
         apaUuid = self.configApaUuid
@@ -3444,8 +3450,7 @@ class MainWindow(qtw.QMainWindow):
         with open(outfile, 'w') as f:
             json.dump(fullResultsDict, f, indent=4, sort_keys=True)
      
-        self.labelResonanceSubmitStatus.setText("Submitted!")
-        self.labelResonanceSubmitStatus.setStyleSheet("color : green")
+        self.setTensionSaveStatus(TensionSaveStatus.SAVED)
         self.resultsWiresTableLoad()
         self.updateMissingChannels()
         self.resultsTableUpdate(scanResultsDict)
@@ -4470,7 +4475,7 @@ class MainWindow(qtw.QMainWindow):
         # Remove any existing InfiniteLines from A(f) plots and reset dict
         self._clearResonanceFitLines()
         #self._clearResonanceExpectedLines()
-
+        self.setTensionSaveStatus(TensionSaveStatus.UNSAVED)
         self.currentTensions = {}
 
         for chan in self.activeRegistersS:
@@ -4522,6 +4527,7 @@ class MainWindow(qtw.QMainWindow):
 
                 self.resFitLines['proc'][chan].append(segmentLinesProc)
                 self.resFitLines['raw'][chan].append(segmentLinesRaw)
+        
                 
     def cleanUp(self):
         self.logger.info("App quitting:")

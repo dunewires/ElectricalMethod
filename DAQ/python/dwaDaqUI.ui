@@ -478,7 +478,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>2</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tabStimulus">
                <attribute name="title">
@@ -2150,9 +2150,9 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QLabel" name="labelResonanceSubmitStatus">
+                          <widget class="QLabel" name="labelTensionSaveStatus">
                            <property name="text">
-                            <string>Resonances have not been submitted</string>
+                            <string>Tensions have not been saved</string>
                            </property>
                           </widget>
                          </item>
