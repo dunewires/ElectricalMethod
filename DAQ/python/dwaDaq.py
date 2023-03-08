@@ -858,46 +858,6 @@ class MainWindow(qtw.QMainWindow):
         getattr(self, f'dwaPB{buttonId}Status').setStyleSheet(style)
         #self.dwaPB0Status.setStyleSheet(style)
         #self.dwaPB1Status.setStyleSheet(style)
-        
-    def generateScanListEntry(self, scanDir, submitted=None):
-        
-        entry = {}
-        for kk in SCAN_LIST_DATA_KEYS:  # populate with default/garbage
-            entry[kk] = None
-            
-        ampFilename = os.path.join(scanDir, 'amplitudeData.json')
-        #print("generateScanListEntry()")
-        #print(f"  ampFilename = {ampFilename}")
-        try:         # Ensure that there is an amplitudeData.json file present!
-            with open(ampFilename, "r") as fh:
-                data = json.load(fh)
-
-            # Add in a couple fields
-            data['scanName'] = scanDir
-        except:
-            print(f"Could not add new scan to list (bad json file?) {ampFilename}...")
-            return None
-
-        # If caller doesn't specify a "submitted" status, the try to figure it out
-        if not submitted:
-            try:
-                resFilename = ampFilename.replace('amplitudeData.json', 'resonanceData.json')
-                with open(resFilename, 'r') as fh:
-                    pass
-                submitted = Submitted.YES
-            except:
-                submitted = Submitted.NO
-                
-        data['submitted'] = submitted
-        
-        for kk in SCAN_LIST_DATA_KEYS: # populate with useful information
-            try:
-                entry[kk] = data[kk]
-            except:
-                print(f"key [{kk}] missing")
-                print(f"cannot add scan to list: {ampFilename}")
-                return None
-        return entry
 
     def initApaUuidSuggestions(self):
 
@@ -1514,8 +1474,6 @@ class MainWindow(qtw.QMainWindow):
             for seg in range(3):
                 #getattr(self, f'le_resfreq_val_{reg}_{seg}').textChanged.connect(self._resFreqUserInputText)
                 getattr(self, f'le_resfreq_val_{reg}_{seg}').editingFinished.connect(self._resFreqUserInputText)
-                #getattr(self, f'lab_resfreq_{reg}_{seg}').clicked.connect(lambda reg, seg: self._resFreqUserClick(reg,seg))
-        #self.QPLabel.mousePressEvent = self._resFreqUserClick(0,0)
         # self.resFitPreDetrend.stateChanged.connect(self.resFitParameterUpdated)
         # self.resFitBkgPoly.editingFinished.connect(self.resFitParameterUpdated)
         # self.resFitWidth.editingFinished.connect(self.resFitParameterUpdated)
@@ -3103,15 +3061,8 @@ class MainWindow(qtw.QMainWindow):
         self._configureResonancePlots()
         self.runResonanceAnalysis()
         self._addResonanceExpectedLines()
-        self.labelResonanceSubmitStatus.setText("Tensions have not been submitted")
+        self.labelResonanceSubmitStatus.setText("Tensions have not been saved")
         self.labelResonanceSubmitStatus.setStyleSheet("color : red")
-
-
-    def _resFreqUserClick(self, reg, seg):
-        print(f"Clicked {reg} {seg}")
-        lineEdit = getattr(self, f'le_resfreq_val_{reg}_{seg}')
-        if len(lineEdit.text()) == 0:
-            lineEdit.setText(str(TENSION_SPEC))
 
     @pyqtSlot()
     def _resFreqUserInputText(self):
@@ -3134,18 +3085,6 @@ class MainWindow(qtw.QMainWindow):
                         self.resonantFreqs[reg.value][seg] = []
 
         self.resFreqUpdateDisplay(chan=None)
-
-    def _freqsOfString(self, fString):
-        # FIXME: add check to guard against failed parse
-        toks = fString.split(',')
-        print(f"resFreqUserInputText: toks = {toks}")
-        try:
-            freqList = [ float(tok) for tok in toks ]
-        except:
-            freqList = []
-        return freqList
-        
-    #@pyqtSlot()
     
     def NominalLineClicked(self, dwaChan, seg):
         print(f"Nominal Line Clicked {dwaChan} {seg}")
@@ -3359,9 +3298,6 @@ class MainWindow(qtw.QMainWindow):
 
     @pyqtSlot()
     def loadTensions(self):
-        # TODO: Get tensions from file
-        # Load sietch credentials #FIXME still using James's credentials
-        # sietch = SietchConnect("sietch.creds")
         # Get results dict
         resultsDict = self.getResultsDict()
         # Get stage
@@ -3507,65 +3443,12 @@ class MainWindow(qtw.QMainWindow):
         print(f'writing processed scan results to {outfile}')
         with open(outfile, 'w') as f:
             json.dump(fullResultsDict, f, indent=4, sort_keys=True)
-        # apaChannels = self.ampDataS['apaChannels']
-        # for dwaChan,apaChan in enumerate(apaChannels):
-        #     if not apaChan: continue
-        #     wireSegments, _ = channel_frequencies.get_expected_resonances(layer,apaChan)
-        #     if wireData[layer][side] == []:
-        #         wireData[layer][side] = [-1]*MAX_WIRE_SEGMENT[layer]
-        #     for i, wireNum in enumerate(wireSegments):
-        #         currentTension = self.currentTensions[dwaChan][i]
-        #         if not currentTension: continue
-        #         elif currentTension == -1:
-        #             wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': 'None'}
-        #         elif currentTension > 0:
-        #             wireData[layer][side][str(wireNum).zfill(5)]["tension"][scanId] = {'tension': currentTension}
-
-        # pointerTableId = self.pointerTable["_id"]
-        # apaUuid = self.pointerTable["data"]["apaUuid"]
-        # stage = self.pointerTable["stage"]
-        # note = self.submitResonanceNoteLineEdit.text()
-        # wireData = {
-        #     'X': {
-        #         'A': [],
-        #         'B': []
-        #     },
-        #     'U': {
-        #         'A': [],
-        #         'B': []
-        #     },
-        #     'V': {
-        #         'A': [],
-        #         'B': []
-        #     },
-        #     'G': {
-        #         'A': [],
-        #         'B': []
-        #     },
-        # }
-        # wireData[self.tensionLayer] = self.tensionData
-        
-        # record_result = {
-        #     "componentUuid":database_functions.get_tension_frame_uuid_from_apa_uuid(sietch, apaUuid),
-        #     "formId": "Wire Tensions",
-        #     "formName": "Wire Tensions",
-        #     "stage": stage,
-        #     "data": {
-        #         "version": "1.1",
-        #         "apaUuid": apaUuid,
-        #         "wireSegments": wireData,
-        #         "wires": wireData,
-        #         "saveAsDraft": True,
-        #         "submit": True,
-        #         "note": note
-        #     }
-        # }
-        # sietch.api('/test',record_result)
+     
         self.labelResonanceSubmitStatus.setText("Submitted!")
         self.labelResonanceSubmitStatus.setStyleSheet("color : green")
         self.resultsWiresTableLoad()
         self.updateMissingChannels()
-        #self.resultsTableUpdate(scanResultsDict)
+        self.resultsTableUpdate(scanResultsDict)
 
     def submitTensionsSelected(self):
         # Set up a connection to the database API and get the connection request headers
@@ -3610,33 +3493,6 @@ class MainWindow(qtw.QMainWindow):
     def submitTensionsFormChanged(self):
         self.labelSubmitTensionsStatus.setText("Unsubmitted")
         self.labelSubmitTensionsStatus.setStyleSheet("color : black")
-        
-    def saveResonanceData(self):
-        resData = {}
-
-        print(f'self.resonantFreqs = {self.resonantFreqs}')
-        
-        # Get the actual resonance frequencies (perhaps obtained with manual intervention)
-        resData['resonances'] = {}
-
-        for reg in self.registers:
-            apaChan = self.ampDataS['apaChannels'][reg.value]
-            if not apaChan: continue
-            resData['resonances'][reg.value] = self.resonantFreqs[reg.value]
-        
-        # Get fit parameters and algorithm-determined resonances
-        resData['fit'] = self.resFitToLog
-            
-        print(f"resData = {resData}")
-        
-        try:
-            with open(self.fnOfResData, 'w') as outfile:
-                json.dump(resData, outfile)
-            print(f"Saved resonance data as: {self.fnOfResData}") 
-            self.logger.info(f"Saved as {self.fnOfResData}") 
-        except:
-            self.logger.info(f"Cannot save resonance data")
-
     
     def loadEventDataViaFileBrowser(self):
         #options = qtw.QFileDialog.Options()
@@ -3856,9 +3712,6 @@ class MainWindow(qtw.QMainWindow):
             self._submitResonanceButtonEnable()
         else:
             self._submitResonanceButtonDisable()
-
-        self.fnOfResData = ampFilename.replace('amplitudeData.json', 'resonanceData.json')
-
             
     def _loadConfigFile(self, updateGui=True):
         #updateGui function no longer works with left column  and original textbox removed 
@@ -4084,7 +3937,7 @@ class MainWindow(qtw.QMainWindow):
         while True:
             try:
                 self.udpListening = True
-                data, addr = self.sock.recvfrom(self.udpBufferSize)
+                data, _addr = self.sock.recvfrom(self.udpBufferSize)
                 if self.verbose > 3:
                     logger.info("")
                     logger.info("bing! data received")
@@ -4186,9 +4039,9 @@ class MainWindow(qtw.QMainWindow):
                 self.stimFreqMax  = udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']
                 self.stimFreqStep = udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']
                 self.formatRunStatusIndicators(state='fresh')
-                self.globalFreqMin_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']:.3f}")
-                self.globalFreqMax_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']:.3f}")
-                self.globalFreqStep_val.setText(f"{udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']:.4f}")
+                self.globalFreqMin_val.setText(f"{self.stimFreqMin:.3f}")
+                self.globalFreqMax_val.setText(f"{self.stimFreqMax:.3f}")
+                self.globalFreqStep_val.setText(f"{self.stimFreqStep:.4f}")
                 self.globalFreqActive_val.setText(f"--")
 
                 self._clearTimeseriesData()
@@ -4229,16 +4082,7 @@ class MainWindow(qtw.QMainWindow):
 
                     row = self.scanConfigRowToScan
                     self.scanConfigTableModel.item(row, Scans.STATUS).setText('Done')
-                    cMissingTensions = qtg.QColor("yellow") # yellow-ish
-                    cAllTensionsFound = qtg.QColor("green")   # green
-                    if self.someTensionsNotFound:
-                        newRowColor = cMissingTensions
-                    else:
-                        newRowColor = cAllTensionsFound
-                    for c in range(0, self.scanConfigTableModel.columnCount()):
-                        pass
-                        #self.scanConfigTableModel.item(row,c).setBackground(newRowColor)
-                        #self.scanConfigTableModel.item(row,c).setBackground(qtg.QColor(3,205,0))
+
                     if row == self.scanConfigTableModel.rowCount()-1:
                         self.scanConfigRowToScan = 0
                     else:
@@ -4453,16 +4297,6 @@ class MainWindow(qtw.QMainWindow):
         self.doTension = self.doTensionCb.isChecked()
         print(f"self.doTension: {self.doTension}")
         
-    def disableScanButtonForTime(self, disableDuration):
-        """ disableDuration is a time in seconds """
-        # CURRENTLY "FAILS" BECAUSE BUTTON IS ENABLED BY IDLE STATE IN STATUS FRAME
-        # should check if the timer has expired before enabling...
-        print(f"\n\n\nDISABLE BUTTON FOR {disableDuration} seconds\n\n\n")
-        self._scanButtonDisable()
-        qtc.QTimer.singleShot(disableDuration*1000, self._scanButtonEnable)
-        #qtc.QTimer.singleShot(disableDuration*1000, lambda: self.btnScanCtrl.setEnabled(True))
-        #qtc.QTimer.singleShot(disableDuration*1000, lambda: XXXXself.targetBtn.setDisabled(False)XXXX)
-
     def _setScanButtonAction(self, state=None):
         ''' change the functionality of the scan buttons (start scan vs. abort scan) '''
         # state can be 'START' or 'ABORT'
@@ -4524,69 +4358,6 @@ class MainWindow(qtw.QMainWindow):
                 self.btnScanCtrl.setEnabled(True)
         if force or (self.connectedToUzed and self.idle):
             self.btnScanCtrlAdv.setEnabled(True)
-            
-            
-    def _resFreqSetDefaultParams(self):
-        #height=None, threshold=None, distance=None, prominence=None, width=None, wlen=None, rel_height=0.5, plateau_size=None
-        self.resFitParams['find_peaks'] = {'height':None, 'threshold':None, 'distance':None,
-                                           'prominence':None, 'width':None, 'wlen':None,
-                                           'rel_height':0.5, 'plateau_size':None}
-        
-    def _resFreqParseKwargParam(self, entryStr):
-        entryStr = entryStr.strip()
-        toks = entryStr.split(";")
-        toks = [tok.strip() for tok in toks]
-        print(f"kwarg toks: {toks}")
-        kwargDict = {}
-        for tok in toks:
-            print(f"kwarg: {tok}")
-            try:
-                key, val = tok.split("=")
-            except:
-                print(f"invalid kwarg: {tok}")
-                continue
-            key = key.strip()
-            if key == 'width':
-                val = self._resFreqParseNumOrList(val)
-            elif key == 'prominence':
-                val = self._resFreqParseNumOrList(val)
-            elif key == 'wlen':
-                val = int(val)
-            elif key == 'rel_height':
-                val = float(val)
-            elif key == 'distance':
-                val = float(val)
-            elif key == 'plateau_size':
-                val = self._resFreqParseNumOrList(val)
-            elif key == 'threshold':
-                val = self._resFreqParseNumOrList(val)
-            elif key == 'height':
-                val = self._resFreqParseNumOrList(val)
-            else:
-                print(f"unrecognized kwval: {tok}")
-            kwargDict[key] = val
-        print(f"kwargDict = {kwargDict}")
-        return kwargDict
-                
-    #def _resFreqParseWidthParam(self, entryStr):
-    def _resFreqParseNumOrList(self, entryStr):
-        parens_to_replace = {"(":"", ")":"", "[":"", "]":""}
-        entryStr = entryStr.strip()
-        for key,val in parens_to_replace.items():
-            entryStr = entryStr.replace(key, val)
-        toks = [x.strip() for x in entryStr.split(",")]
-        print(f'toks = {toks}')
-        vals = [None,None]
-        for ii, tok in enumerate(toks):
-            if tok.upper() == 'NONE':
-                continue
-            try:
-                #self.resFitParams['find_peaks']['width'][ii] = int(tok)
-                vals[ii] = float(tok)
-            except:
-                print(f"invalid entry: {tok} in {entryStr}")
-                vals[ii] = None
-        return vals
 
     def wrapUpStimulusScan(self):
         # Set the active tab to be RESONANCE
@@ -4636,36 +4407,6 @@ class MainWindow(qtw.QMainWindow):
         # Update Missing Channels
         self.updateMissingChannels()
 
-    def insertScanIntoScanList(self, scanDir, row=None, submitted=None):
-        # a do-nothing function for now...
-        pass
-    
-    def insertScanIntoScanListOld(self, scanDir, row=None, submitted=None):
-        '''
-        scanDir:   e.g. ./scanData/APA_<UUID>/<LAYER>_<SIDE>_<HEADBOARD>_<WIRESEGMENTLIST>_<TIMESTAMP>
-        row:       which row to insert this entry into
-        submitted: have the resonances from this scan been submitted yet?  
-        .          default is Submitted.NO, but could also be Submitted.UNKNOWN
-        '''
-        if self.verbose > 0:
-            print("insertScanIntoScanList:")
-            print(f"  scanDir:   {scanDir}")
-            print(f"  row:       {row}")
-            print(f"  submitted: {submitted} (NO={Submitted.NO}, UNKNOWN={Submitted.UNKNOWN}, YES={Submitted.YES})")
-
-        # FIXME: validate passed arguments
-        row = 0 if row is None else row
-
-        #self.recentWiresTableModel.insert(row, self.generateScanListEntry(scanDir, submitted=submitted))
-        entry = self.generateScanListEntry(scanDir, submitted=submitted)
-        if not entry:
-            print("ERROR adding scanDir to Recent Scans table")
-            print(f"scanDir = {scanDir}")
-            return
-        self.recentWiresTableModel.insertRow(row, entry)
-        self.recentWiresTableModel.layoutChanged.emit()
-        self.recentWiresTableView.resizeColumnsToContents()
-        
     def runResonanceAnalysis(self):
         # get A(f) data for each channel
         # run peakfinding -- assumes that peak finding parameters are already set
@@ -4700,7 +4441,7 @@ class MainWindow(qtw.QMainWindow):
             self.resonantFreqs[reg.value] = [[] for _ in segments]
             bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
             self.curves['resProcFit'][reg].setData(self.ampDataS[reg]['freq'], bsub)
-            segments, opt_res_arr, best_tension, best_tensions_std, fpks = process_scan.process_channel(layer, apaCh, f, a, self.model_x_g, MAX_FREQ, self.verbose)
+            segments, opt_res_arr, _, _, _ = process_scan.process_channel(layer, apaCh, f, a, self.model_x_g, MAX_FREQ, self.verbose)
             self.expectedFreqs[reg.value] = expected_resonances
             self.resonantFreqs[reg.value] = list(opt_res_arr)
 
@@ -4709,7 +4450,7 @@ class MainWindow(qtw.QMainWindow):
         for chan in self.activeRegistersS:
             for seg, ff in enumerate(self.expectedFreqs[chan]):
                 tempLinesProc = []
-                for segi, f in enumerate(ff):
+                for _, f in enumerate(ff):
                     # If there is a defined tension, then the expected tensions are not draggable
                     if self.currentTensions[chan][seg] and self.currentTensions[chan][seg] > 0:
                         tempLinesProc.append( self.resonanceProcessedPlots[chan].addLine(x=f, movable=False, pen=self.fPenColorTemp[seg]) )
@@ -4786,23 +4527,9 @@ class MainWindow(qtw.QMainWindow):
         self.logger.info("App quitting:")
         self.logger.info("   closing UDP connection")
         self.sock.close()
-
-
-class MyApplication(qtw.QApplication):
-
-    t = qtc.QElapsedTimer()
-
-    def notify(self, receiver, event):
-        self.t.start()
-        ret = qtw.QApplication.notify(self, receiver, event)
-        if(self.t.elapsed() > 10):
-            print(f"processing event type {event.type()} for object {receiver.objectName()} " 
-                  f"took {self.t.elapsed()}ms")
-        return ret
         
 if __name__ == "__main__":
     app = qtw.QApplication(sys.argv)
-    #app = MyApplication(sys.argv)
     
     app.setWindowIcon(qtg.QIcon('icons/app.png'))
     if SYSTEM_PLATFORM == 'WINDOWS':
