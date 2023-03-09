@@ -2059,56 +2059,89 @@ class MainWindow(qtw.QMainWindow):
 
         self.APA_Diagram_View.setModel(self.apaDiagramModel)
 
+    def _setWidgetProperties(self, widgetName: str, chanNum: int, chanType: str) -> None:
+        widget = getattr(self, widgetName)
+        widget.setBackground('w')
+        widget.setTitle(f'DWA Chan: {chanNum} APA Chan: {chanType}')
+
     def _configurePlots(self):
         self.chanViewMain = 0  # which channel to show large for V(t) data
         self.chanViewMainAmpl = 0  # which channel to show large for A(f) data
-        # FIXME: clean this up...
-        getattr(self, f'pw_chan_main').setBackground('w')
-        getattr(self, f'pw_chan_main').setTitle(self.chanViewMain)
-        getattr(self, f'pw_amplchan_main').setBackground('w')
-        getattr(self, f'pw_amplchan_main').setTitle(self.chanViewMainAmpl)
-        getattr(self, f'pw_amplgrid_all').setBackground('w')
-        getattr(self, f'pw_amplgrid_all').setTitle('All')
-        for ii in range(N_DWA_CHANS):
-            # set background color to white
-            # FIXME: clean this up...
-            getattr(self, f'pw_grid_{ii}').setBackground('w')
-            getattr(self, f'pw_grid_{ii}').setTitle(
-                "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-            getattr(self, f'pw_chan_{ii}').setBackground('w')
-            getattr(self, f'pw_chan_{ii}').setTitle(
-                "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-            getattr(self, f'pw_amplgrid_{ii}').setBackground('w')
-            getattr(self, f'pw_amplgrid_{ii}').setTitle(
-                "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-            getattr(self, f'pw_amplchan_{ii}').setBackground('w')
-            getattr(self, f'pw_amplchan_{ii}').setTitle(
-                "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-            getattr(self, f'config_amplgrid_{ii}').setBackground('w')
-            getattr(self, f'config_amplgrid_{ii}').setTitle(
-                "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
 
+        # Configure main plots
+        self._setWidgetProperties('pw_chan_main', self.chanViewMain, 'N/A')
+        self._setWidgetProperties('pw_amplchan_main', self.chanViewMainAmpl, 'N/A')
+        self._setWidgetProperties('pw_amplgrid_all', 0, 'N/A')
+        getattr(self, f'pw_amplgrid_all').setTitle('All')
+
+        # Configure resonance plots
         self.resonanceRawPlots = []
         self.resonanceProcessedPlots = []
-        chanNum = 0
-        
-        for irow in range(8):
-            for icol in range(1):
-                if irow == 2 and icol == 2:
-                    continue
-                self.resonanceRawPlots.append(
-                    getattr(self, f'rawgrid_{chanNum}'))
-                self.resonanceRawPlots[-1].setTitle(
-                    f'DWA Chan: {chanNum} APA Chan: N/A')
-                self.resonanceRawPlots[-1].setBackground('w')
-                self.resonanceProcessedPlots.append(
-                    getattr(self, f'proccesedgrid_{chanNum}'))
-                self.resonanceProcessedPlots[-1].setTitle(
-                    f'DWA Chan: {chanNum} APA Chan: N/A')
-                self.resonanceProcessedPlots[-1].setBackground('w')
-                chanNum += 1
-                
+
+        # Configure DWA and APA plots
+        for ii in range(N_DWA_CHANS):
+            self._setWidgetProperties(f'pw_grid_{ii}', ii, 'N/A')
+            self._setWidgetProperties(f'pw_chan_{ii}', ii, 'N/A')
+            self._setWidgetProperties(f'pw_amplgrid_{ii}', ii, 'N/A')
+            self._setWidgetProperties(f'pw_amplchan_{ii}', ii, 'N/A')
+            self._setWidgetProperties(f'config_amplgrid_{ii}', ii, 'N/A')
+            self.resonanceRawPlots.append(getattr(self, f'rawgrid_{ii}'))
+            self._setWidgetProperties(f'rawgrid_{ii}', ii, 'N/A')
+            self.resonanceProcessedPlots.append(getattr(self, f'proccesedgrid_{ii}'))
+            self._setWidgetProperties(f'proccesedgrid_{ii}', ii, 'N/A')
+
         self._configureTensionPlots()
+
+    # def _configurePlots(self):
+    #     self.chanViewMain = 0  # which channel to show large for V(t) data
+    #     self.chanViewMainAmpl = 0  # which channel to show large for A(f) data
+    #     # FIXME: clean this up...
+    #     getattr(self, f'pw_chan_main').setBackground('w')
+    #     getattr(self, f'pw_chan_main').setTitle(self.chanViewMain)
+    #     getattr(self, f'pw_amplchan_main').setBackground('w')
+    #     getattr(self, f'pw_amplchan_main').setTitle(self.chanViewMainAmpl)
+    #     getattr(self, f'pw_amplgrid_all').setBackground('w')
+    #     getattr(self, f'pw_amplgrid_all').setTitle('All')
+    #     for ii in range(N_DWA_CHANS):
+    #         # set background color to white
+    #         # FIXME: clean this up...
+    #         getattr(self, f'pw_grid_{ii}').setBackground('w')
+    #         getattr(self, f'pw_grid_{ii}').setTitle(
+    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
+    #         getattr(self, f'pw_chan_{ii}').setBackground('w')
+    #         getattr(self, f'pw_chan_{ii}').setTitle(
+    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
+    #         getattr(self, f'pw_amplgrid_{ii}').setBackground('w')
+    #         getattr(self, f'pw_amplgrid_{ii}').setTitle(
+    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
+    #         getattr(self, f'pw_amplchan_{ii}').setBackground('w')
+    #         getattr(self, f'pw_amplchan_{ii}').setTitle(
+    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
+    #         getattr(self, f'config_amplgrid_{ii}').setBackground('w')
+    #         getattr(self, f'config_amplgrid_{ii}').setTitle(
+    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
+
+    #     self.resonanceRawPlots = []
+    #     self.resonanceProcessedPlots = []
+    #     chanNum = 0
+        
+    #     for irow in range(8):
+    #         for icol in range(1):
+    #             if irow == 2 and icol == 2:
+    #                 continue
+    #             self.resonanceRawPlots.append(
+    #                 getattr(self, f'rawgrid_{chanNum}'))
+    #             self.resonanceRawPlots[-1].setTitle(
+    #                 f'DWA Chan: {chanNum} APA Chan: N/A')
+    #             self.resonanceRawPlots[-1].setBackground('w')
+    #             self.resonanceProcessedPlots.append(
+    #                 getattr(self, f'proccesedgrid_{chanNum}'))
+    #             self.resonanceProcessedPlots[-1].setTitle(
+    #                 f'DWA Chan: {chanNum} APA Chan: N/A')
+    #             self.resonanceProcessedPlots[-1].setBackground('w')
+    #             chanNum += 1
+                
+    #     self._configureTensionPlots()
 
     def _configureTensionPlots(self):
         # Tension tab
