@@ -125,7 +125,6 @@
 # for logging info:
 # https://fangpenlin.com/posts/2012/08/26/good-logging-practice-in-python/
 
-import boombox
 import DwaMicrozed as duz
 import DwaConfigFile as dcf
 import DwaDataParser as ddp
@@ -156,19 +155,19 @@ import traceback
 import faulthandler
 faulthandler.enable()
 
-
 sys.path.append('./mappings')
 sys.path.append('./database')
 sys.path.append('./processing')
 sys.path.append('./Continuity')
 sys.path.append('../../../dunedb/m2m')
 
-from common import ConnectToAPI, PerformAction
-import process_scan
-import resonance_fitting
-import channel_frequencies
-import channel_map
 import config_generator
+import channel_map
+import channel_frequencies
+import resonance_fitting
+import process_scan
+from common import ConnectToAPI, PerformAction
+import boombox
 
 DWA_CONFIG_FILE = "dwaConfigWC.ini"
 DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
@@ -201,14 +200,14 @@ SCAN_END = 0
 APA_STAGES_KEYS = ["Dev", "Winding", "PostWinding", "Installation", "Storage"]
 APA_STAGES = {}
 for stage in APA_STAGES_KEYS:
-    stageShort = stage
+    stage_short = stage
     scans = [stage]
     if stage == "Dev":
         scans = ["DWA Development"]
     if stage == "Installation":
         scans = ['Installation (Top)', 'Installation (Bottom)']
     APA_STAGES[stage] = {
-        'short': stageShort,  # used for referencing UI elements
+        'short': stage_short,  # used for referencing UI elements
         # used for labeling scans (and for loading Results table)
         'scan': scans,
         'tension': scans     # used for tension table
@@ -527,9 +526,9 @@ class Worker(qtc.QRunnable):
             self.logger.info("Thread complete")
 
 
-class APA_UUID_List_Model(qtc.QStringListModel):
+class ApaUuidListModel(qtc.QStringListModel):
     def __init__(self, parent=None):
-        super(APA_UUID_List_Model, self).__init__(parent)
+        super(ApaUuidListModel, self).__init__(parent)
 
 
 class TensionTableModel(qtc.QAbstractTableModel):
@@ -546,13 +545,13 @@ class TensionTableModel(qtc.QAbstractTableModel):
                 return ""
             elif val == TensionStatus.NOT_MEASURED:
                 layer = kk[0]
-                wireSegment = index.row() + 1
-                apaChannel = channel_frequencies.wire_to_apa_channel(
-                    layer, wireSegment)
+                wire_segment = index.row() + 1
+                apa_channel = channel_frequencies.wire_to_apa_channel(
+                    layer, wire_segment)
                 headboard = channel_map.apa_channel_to_board_number(
-                    layer, apaChannel)
+                    layer, apa_channel)
                 grouping_number = channel_map.get_grouping_number(
-                    layer, apaChannel)
+                    layer, apa_channel)
                 return "Headboard "+str(headboard)+" Tension scan "+str(grouping_number)
             elif val == TensionStatus.NOT_FOUND:
                 return "Not found"
@@ -582,17 +581,6 @@ class TensionTableModel(qtc.QAbstractTableModel):
                 return TENSION_HIGH_COLOR
             else:
                 return TENSION_GOOD_COLOR
-
-    def row_count(self, index):
-        return len(self._data[list(self._data.keys())[0]])
-
-    def column_count(self, index):
-        # assumes all rows are the same length!
-        return len(self._data.keys())
-
-    def set_data(self, dd):
-        self._data = dd  # FIXME: do we need deepcopy?
-
 
 class SortFilterProxyModel(qtc.QSortFilterProxyModel):
     def __init__(self, *args, **kwargs):
@@ -892,7 +880,7 @@ class MainWindow(qtw.QMainWindow):
         # (should update the list of APA UUIDs during the GUI session)
 
         # Store the UUIDs in the model
-        self.apaUuidListModel = APA_UUID_List_Model()
+        self.apaUuidListModel = ApaUuidListModel()
         self.apaUuidListModel.setStringList(uuids)
         apaUuidAutocompleter = qtw.QCompleter(caseSensitivity=qtc.Qt.CaseInsensitive,
                                               completionMode=qtw.QCompleter.UnfilteredPopupCompletion)
