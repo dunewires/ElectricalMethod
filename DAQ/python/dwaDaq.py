@@ -537,6 +537,16 @@ class TensionTableModel(qtc.QAbstractTableModel):
         super(TensionTableModel, self).__init__()
         self._data = data
 
+    def rowCount(self, index):
+        return len(self._data[list(self._data.keys())[0]])
+    
+    def columnCount(self, index):
+        # assumes all rows are the same length!
+        return len(self._data.keys())
+    
+    def setData(self, dd):
+        self._data = dd
+
     def data(self, index, role):
         kk = list(sorted(self._data.keys()))[index.column()]
         val = self._data[kk][index.row()]
@@ -587,11 +597,11 @@ class SortFilterProxyModel(qtc.QSortFilterProxyModel):
         qtc.QSortFilterProxyModel.__init__(self, *args, **kwargs)
         self.filters = {}
 
-    def set_filter_by_column(self, regex, column):
+    def setFilterByColumn(self, regex, column):
         self.filters[column] = regex
         self.invalidateFilter()
 
-    def filter_accepts_row(self, source_row, source_parent):
+    def filterAcceptsRow(self, source_row, source_parent):
         for key, regex in self.filters.items():
             ix = self.sourceModel().index(source_row, key, source_parent)
             if ix.isValid():
@@ -1095,7 +1105,7 @@ class MainWindow(qtw.QMainWindow):
         le.setPlaceholderText(
             RESULTS_WIRES_TABLE_HDRS[ResultsWires.MSRMT_TIME])
         le.textChanged.connect(lambda text, col=ResultsWires.MSRMT_TIME:
-                               self.recentWiresFilterProxy.set_filter_by_column(qtc.QRegExp(text,
+                               self.recentWiresFilterProxy.setFilterByColumn(qtc.QRegExp(text,
                                                                                             qtc.Qt.CaseSensitive,
                                                                                             qtc.QRegExp.FixedString),
                                                                                 col))
@@ -1105,7 +1115,7 @@ class MainWindow(qtw.QMainWindow):
         le.setPlaceholderText(
             RESULTS_WIRES_TABLE_HDRS[ResultsWires.WIRE_SEGMENT])
         le.textChanged.connect(lambda text, col=ResultsWires.WIRE_SEGMENT:
-                               self.recentWiresFilterProxy.set_filter_by_column(qtc.QRegExp(text,
+                               self.recentWiresFilterProxy.setFilterByColumn(qtc.QRegExp(text,
                                                                                             qtc.Qt.CaseSensitive,
                                                                                             qtc.QRegExp.FixedString),
                                                                                 col))
@@ -1113,7 +1123,7 @@ class MainWindow(qtw.QMainWindow):
         le = getattr(self, f'filterLineEditHeadboard')
         le.setPlaceholderText(RESULTS_WIRES_TABLE_HDRS[ResultsWires.HEADBOARD])
         le.textChanged.connect(lambda text, col=ResultsWires.HEADBOARD:
-                               self.recentWiresFilterProxy.set_filter_by_column(qtc.QRegExp(text+'$'),
+                               self.recentWiresFilterProxy.setFilterByColumn(qtc.QRegExp(text+'$'),
                                                                                 col))
         for stage in APA_STAGES_SHORT:
             getattr(self, f'filterStage{stage}').stateChanged.connect(
@@ -1143,7 +1153,14 @@ class MainWindow(qtw.QMainWindow):
 
     def resultsWiresTableLoad(self):
         # Empty the table model...
-        self.resultsWiresTableInit()
+        self.recentWiresTableModel.locked = True
+
+        # Remove all rows from the model
+        for _ in range(self.recentWiresTableModel.rowCount()):
+            self.recentWiresTableModel.removeRow(0)
+
+        # Unlock the model
+        self.recentWiresTableModel.locked = False
 
         # Fresh read of JSON file
         resultsDict = self.getResultsDict()
@@ -1291,7 +1308,7 @@ class MainWindow(qtw.QMainWindow):
                 filterString += f'{val}|'
         filterString = filterString.rstrip("|")
         print(filterString)
-        self.recentWiresFilterProxy.set_filter_by_column(qtc.QRegExp(
+        self.recentWiresFilterProxy.setFilterByColumn(qtc.QRegExp(
             filterString, qtc.Qt.CaseSensitive), ResultsWires.STAGE)
 
     def filterLayerChanged(self):
@@ -1302,7 +1319,7 @@ class MainWindow(qtw.QMainWindow):
         if len(filterString):
             filterString = filterString[:-1]
         print(filterString)
-        self.recentWiresFilterProxy.set_filter_by_column(qtc.QRegExp(
+        self.recentWiresFilterProxy.setFilterByColumn(qtc.QRegExp(
             filterString, qtc.Qt.CaseSensitive), ResultsWires.LAYER)
 
     def filterSideChanged(self):
@@ -1313,7 +1330,7 @@ class MainWindow(qtw.QMainWindow):
         if len(filterString):
             filterString = filterString[:-1]
         print(filterString)
-        self.recentWiresFilterProxy.set_filter_by_column(
+        self.recentWiresFilterProxy.setFilterByColumn(
             qtc.QRegExp(filterString, qtc.Qt.CaseSensitive), ResultsWires.SIDE)
 
     def filterTypeChanged(self):
@@ -1324,7 +1341,7 @@ class MainWindow(qtw.QMainWindow):
         if len(filterString):
             filterString = filterString[:-1]
         print(filterString)
-        self.recentWiresFilterProxy.set_filter_by_column(qtc.QRegExp(
+        self.recentWiresFilterProxy.setFilterByColumn(qtc.QRegExp(
             filterString, qtc.Qt.CaseSensitive), ResultsWires.MSRMT_TYPE)
 
     def filterConfidenceChanged(self):
@@ -1335,7 +1352,7 @@ class MainWindow(qtw.QMainWindow):
         if len(filterString):
             filterString = filterString[:-1]
         print(filterString)
-        self.recentWiresFilterProxy.set_filter_by_column(qtc.QRegExp(
+        self.recentWiresFilterProxy.setFilterByColumn(qtc.QRegExp(
             filterString, qtc.Qt.CaseSensitive), ResultsWires.CONFIDENCE)
 
     def filterSubmittedChanged(self):
@@ -1346,7 +1363,7 @@ class MainWindow(qtw.QMainWindow):
         if len(filterString):
             filterString = filterString[:-1]
         print(filterString)
-        self.recentWiresFilterProxy.set_filter_by_column(qtc.QRegExp(
+        self.recentWiresFilterProxy.setFilterByColumn(qtc.QRegExp(
             filterString, qtc.Qt.CaseSensitive), ResultsWires.SUBMITTED)
 
     def recentWiresRowDoubleClicked(self, mi):
