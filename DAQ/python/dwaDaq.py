@@ -260,22 +260,8 @@ CONTINUITY_SCAN_PARAMS_DEFAULT = {
     #    'stimMag':200 # Hex
 }
 
-# Attempt to display logged events in a text window in the GUI
-# class QtHandler(logging.Handler):
-#    """ handle logging events -- display them in a text box in the gui"""
-#    def __init__(self):
-#        logging.Handler.__init__(self)
-#
-#    def emit(self, record):
-#        print("in EMIT....")
-#        msg = self.format(record)
-#        self.logTextBox.appendPlainText(msg)
-#        #XStream.stdout().write("{}\n".format(record))
-
-
 SCAN_CONFIG_TABLE_HDRS = ['Result', 'Type', 'Layer', 'Status',
                           'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
-
 
 class Scans(IntEnum):
     # SCAN_NUM  = SCAN_CONFIG_TABLE_HDRS.index('Scan #')
@@ -288,27 +274,17 @@ class Scans(IntEnum):
     FREQ_MAX = SCAN_CONFIG_TABLE_HDRS.index('Freq Max (Hz)')
     FREQ_STEP = SCAN_CONFIG_TABLE_HDRS.index('Step Size (Hz)')
 
-
 class TensionSaveStatus(IntEnum):
     AUTO = 0
     UNSAVED = 1
     SAVING = 2
     SAVED = 3
 
-# ScanConfigStatusString = {
-#    ScanConfigStatus.DONE:'Done',
-#    ScanConfigStatus.RUNNING:'Running',
-#    ScanConfigStatus.PENDING:'Pending'
-# }
-
-
-#
 # Recent scan list
 SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer', 'headboardNum',
                        'measuredBy', 'apaUuid', 'stage']  # 'wireSegments'
 RESULTS_WIRES_TABLE_HDRS = ['Measurement Time', 'Stage', 'Side', 'Layer', 'Headboard', 'Wire Segment',
                             'Measurement Type', 'Result', 'Uncertainty', 'Submitted', 'Scan ID']
-
 
 class ResultsWires(IntEnum):
     MSRMT_TIME = RESULTS_WIRES_TABLE_HDRS.index('Measurement Time')
@@ -323,10 +299,8 @@ class ResultsWires(IntEnum):
     SUBMITTED = RESULTS_WIRES_TABLE_HDRS.index('Submitted')
     SCAN = RESULTS_WIRES_TABLE_HDRS.index('Scan ID')
 
-
 RESULTS_SCANS_TABLE_HDRS = ['Measurement Time', 'Stage', 'Side', 'Layer',
                             'Headboard', 'Measurement Type', 'Missing', 'Out of Spec', 'Scan ID']
-
 
 class ResultsScans(IntEnum):
     MSRMT_TIME = RESULTS_SCANS_TABLE_HDRS.index('Measurement Time')
@@ -338,7 +312,6 @@ class ResultsScans(IntEnum):
     MISSING = RESULTS_SCANS_TABLE_HDRS.index('Missing')
     OUT_OF_SPEC = RESULTS_SCANS_TABLE_HDRS.index('Out of Spec')
     SCAN = RESULTS_SCANS_TABLE_HDRS.index('Scan ID')
-
 
 class State(IntEnum):
     IDLE = 0             # Idle Waiting for the start of a test
@@ -354,19 +327,15 @@ class State(IntEnum):
     # Wait for the end of run header to be sent before we go to the idle state and wait for another scan
     PKT_BUILD_FINISH = 8
 
-
 class ScanType(IntEnum):
     CUSTOM = 0  # user-defined custom config file
     AUTO = 1   # auto-generated scan list
 
-
 SCAN_END_MODE_KEYWORD = 'scanEndMode'
-
 
 class ScanEnd(IntEnum):
     NORMAL = 0  # scan ended normally
     ABORTED = 1  # scan ended because user pushed Abort button
-
 
 class MainView(IntEnum):
     STIMULUS = 0  # config/V(t)/A(f) [Stimulus view]
@@ -374,7 +343,6 @@ class MainView(IntEnum):
     TENSION = 2  # Tension view
     LOG = 3  # Log-file output
     EVTVWR = 4  # Event Viewer tab
-
 
 class StimView(IntEnum):
     ''' for stackedWidget page indexing '''
@@ -385,13 +353,11 @@ class StimView(IntEnum):
     A_GRID = 4+STIM_VIEW_OFFSET  # A(f) (grid view)
     A_CHAN = 5+STIM_VIEW_OFFSET  # A(f) (channel view)
 
-
 class ResultsView(IntEnum):
     TABLE_SCANS = 0
     TABLE_WIRES = 1
     RAW = 2
     PROCESSED = 3
-
 
 class TensionStatus(IntEnum):
     NOT_MEASURED = -1
@@ -399,14 +365,9 @@ class TensionStatus(IntEnum):
     NOT_APPLICABLE = -3
     TOO_SHORT = -4
 
-
 TAB_ACTIVE_MAIN = MainView.STIMULUS
-# TAB_ACTIVE_MAIN = MainView.RESULTS
-# TAB_ACTIVE_MAIN = MainView.TENSION
-# TAB_ACTIVE_MAIN = MainView.EVTVWR
 TAB_ACTIVE_STIM = StimView.CONFIG
 TAB_ACTIVE_RESULTS = ResultsView.TABLE_SCANS
-
 
 class Shortcut(Enum):
     STIMULUS = "CTRL+S"
@@ -426,12 +387,10 @@ class Shortcut(Enum):
     EVT_FIRST = "A"
     EVT_LAST = "E"
 
-
 class Submitted(IntEnum):
     YES = 0
     NO = 1
     UNKNOWN = 2
-
 
 class WorkerSignals(qtc.QObject):
     '''
@@ -465,7 +424,6 @@ class WorkerSignals(qtc.QObject):
     data = qtc.pyqtSignal(tuple)
     newUdpPayload = qtc.pyqtSignal(dict)
     status = qtc.pyqtSignal(tuple)
-
 
 class Worker(qtc.QRunnable):
     ''' 
@@ -526,11 +484,9 @@ class Worker(qtc.QRunnable):
             print("\n ======== Worker.run() finally ========== \n")
             self.logger.info("Thread complete")
 
-
 class ApaUuidListModel(qtc.QStringListModel):
     def __init__(self, parent=None):
         super(ApaUuidListModel, self).__init__(parent)
-
 
 class TensionTableModel(qtc.QAbstractTableModel):
     # See: https://www.learnpyqt.com/tutorials/qtableview-modelviews-numpy-pandas/
@@ -611,7 +567,6 @@ class SortFilterProxyModel(qtc.QSortFilterProxyModel):
                     return False
         return True
 
-
 class APA_Diagram_Model():
     def __init__(self):
         print("APA_Diagram_Model")
@@ -630,7 +585,6 @@ class APA_Diagram_Model():
     def setChannels(self, channels):
         self.apaChans = channels
         self.signals.dataChanged.emit()
-
 
 class APA_Diagram_Signals(qtc.QObject):
     '''
@@ -678,7 +632,6 @@ class MainWindow(qtw.QMainWindow):
         self._scanConfigTableInit()
         self._resultsScansTableInit()
         self._resultsWiresTableInit()
-        self._initTensionTable()
         self._initModels()
         self.heartPixmaps = [qtg.QPixmap(
             'icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
@@ -701,10 +654,6 @@ class MainWindow(qtw.QMainWindow):
 
         self.scannedButMissingLabel.setStyleSheet("color : red")
         self.setAutomaticallyLabel.setStyleSheet("color : teal")
-
-        # self.logHandler = QtHandler()
-        # self.logHandler.setFormatter(logging.Formatter("%(levelname)s:%(message)s"))
-        # self.logger.addHandler(self.logHandler)
 
         # must come after loadUi() call
         self.logFilename_val.setText(self.logFilename)
@@ -785,8 +734,6 @@ class MainWindow(qtw.QMainWindow):
         self.advStimAmplitudeContLineEdit.setText(
             f'{CONTINUITY_SCAN_PARAMS_DEFAULT["stimMag"]}')
 
-        # self.dwaControllerState = None
-
         # For loading saved A(f) data
         self._initResonanceFitLines()
         self._initResonanceExpectedLines()
@@ -801,23 +748,6 @@ class MainWindow(qtw.QMainWindow):
         else:
             self.verbose = 1
         self._udpConnect()
-
-    # end of __init__ for class MainWindow
-
-    # Moved to process/process_scan.py
-    # def getAnalysisVersion(self):
-    #    #$ git rev-parse --short `git log -n 1 --pretty=format:%H -- processing/`
-    #    #a4df205
-    #    print(f'********** Resonance algorithm version ***********')
-    #    cmd = ['git', 'log', '-n 1', '--pretty=format:%H', '--', 'processing/']
-    #    out = subprocess.check_output(cmd)
-    #    print(f'out = {out}')
-    #    cmd = ['git', 'rev-parse', '--short', out]
-    #    out = subprocess.check_output(cmd).strip()
-    #    out = str(out)
-    #    print(f'out = {out}')
-    #    print(f'**************************************************')
-    #    self.analysisVersion = out
 
     def _setPushButtonStatusAll(self, buttonVals):
         # Set all push button GUI elements
@@ -899,17 +829,6 @@ class MainWindow(qtw.QMainWindow):
     def _initModels(self):
         with open('./processing/X_and_G_layer_model.pkl', 'rb') as f:
             self.model_x_g = pickle.load(f)
-
-    def _initTensionTable(self):
-        print("init")
-        # self.tensionData = {
-        #     'A':[np.nan]*MAX_WIRE_SEGMENT,
-        #     'B':[np.nan]*MAX_WIRE_SEGMENT,
-        # }
-        # self.tensionTableModel = TensionTableModel(self.tensionData)
-        # self.tensionTableView.setModel(self.tensionTableModel)
-        # #self.tensionTableView.resizeColumnsToContents()
-        # self.tensionTableView.resizeRowsToContents()
 
     def _scanConfigTableInit(self):
         # change scanConfigTable to QTableView
