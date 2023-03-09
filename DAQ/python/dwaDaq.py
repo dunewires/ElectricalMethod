@@ -670,7 +670,7 @@ class MainWindow(qtw.QMainWindow):
         self._scanButtonDisable()
         self._submitResonanceButtonDisable()
         self._setScanButtonAction('START')
-        self.setDwaStatusLabel('notConnected')
+        self._setDwaStatusLabel('notConnected')
         self.setPushButtonStatusAll([-1]*4)
         self.setDwaErrorStatus(None)
         self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
@@ -1664,7 +1664,7 @@ class MainWindow(qtw.QMainWindow):
         # FIXME --- need to read/parse .ini file...
 
         if not self.udpListening:
-            self.udpListen()
+            self._udpListen()
 
         self._loadDaqConfig()
 
@@ -1710,7 +1710,7 @@ class MainWindow(qtw.QMainWindow):
 
         if self.connectedToUzed:
             self.btnDwaConnect.setText("Re-connect")
-            self.setDwaStatusLabel('connected')
+            self._setDwaStatusLabel('connected')
             self.dwaFirmwareDate_val.setText(dateCodeYYMMDD)
             self.enableScanButtonTemp = True
             self.connectLabel.setText("")
@@ -2087,19 +2087,12 @@ class MainWindow(qtw.QMainWindow):
             getattr(self, f'config_amplgrid_{ii}').setBackground('w')
             getattr(self, f'config_amplgrid_{ii}').setTitle(
                 "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-            # getattr(self, f'pw_resfreqfit_{ii}').setBackground('w')
-            # getattr(self, f'pw_resfreqfit_{ii}').setTitle(ii)
-
-        # Resonance Tab, raw A(f) plots (will also show f0 lines)
-        # self.resonanceRawDataGLW.setBackground('w')        # "GLW" = GraphicsLayoutWidget
-        # self.resonanceProcessedDataGLW.setBackground('w')
 
         self.resonanceRawPlots = []
         self.resonanceProcessedPlots = []
         chanNum = 0
-        # for irow in range(4):
-        #    for icol in range(2):
-        for irow in range(8):     # fixme: can addPlot(row=, col=)...
+        
+        for irow in range(8):
             for icol in range(1):
                 if irow == 2 and icol == 2:
                     continue
@@ -2114,8 +2107,7 @@ class MainWindow(qtw.QMainWindow):
                     f'DWA Chan: {chanNum} APA Chan: N/A')
                 self.resonanceProcessedPlots[-1].setBackground('w')
                 chanNum += 1
-            # self.resonanceRawDataGLW.nextRow()
-            # self.resonanceProcessedDataGLW.nextRow()
+                
         self._configureTensionPlots()
 
     def _configureTensionPlots(self):
@@ -2161,20 +2153,20 @@ class MainWindow(qtw.QMainWindow):
         # scatter.setData(pos)
         # self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
 
-    def printOutput(self, s):
+    def _printOutput(self, s):
         print("printOutput():")
         print(s)
 
-    def threadComplete(self):
+    def _threadComplete(self):
         logging.info("THREAD COMPLETE!")
 
-    def saveTensionsThreadComplete(self):
+    def _saveTensionsThreadComplete(self):
         print("saveTensionsThread complete!")
 
-    def nominalTensionsThreadComplete(self):
+    def _nominalTensionsThreadComplete(self):
         print("nominalTensionsThread complete!")
 
-    def loadTensionsThreadComplete(self):
+    def _loadTensionsThreadComplete(self):
         print("loadTensionsThread complete!")
 
     def _makeDummyData(self):
@@ -2422,27 +2414,27 @@ class MainWindow(qtw.QMainWindow):
         # Event Viewer shortcuts
         self.scEvtVwrNext = qtw.QShortcut(
             qtg.QKeySequence(Shortcut.EVT_NEXT.value), self)
-        self.scEvtVwrNext.activated.connect(partial(self.evtVwrChange, 1))
+        self.scEvtVwrNext.activated.connect(partial(self._evtVwrChange, 1))
         self.scEvtVwrPrev = qtw.QShortcut(
             qtg.QKeySequence(Shortcut.EVT_PREV.value), self)
-        self.scEvtVwrPrev.activated.connect(partial(self.evtVwrChange, -1))
+        self.scEvtVwrPrev.activated.connect(partial(self._evtVwrChange, -1))
         self.scEvtVwrNext10 = qtw.QShortcut(
             qtg.QKeySequence(Shortcut.EVT_NEXT10.value), self)
-        self.scEvtVwrNext10.activated.connect(partial(self.evtVwrChange, 10))
+        self.scEvtVwrNext10.activated.connect(partial(self._evtVwrChange, 10))
         self.scEvtVwrPrev10 = qtw.QShortcut(
             qtg.QKeySequence(Shortcut.EVT_PREV10.value), self)
-        self.scEvtVwrPrev10.activated.connect(partial(self.evtVwrChange, -10))
+        self.scEvtVwrPrev10.activated.connect(partial(self._evtVwrChange, -10))
         self.scEvtVwrLast = qtw.QShortcut(
             qtg.QKeySequence(Shortcut.EVT_LAST.value), self)
         self.scEvtVwrLast.activated.connect(
-            partial(self.evtVwrChange, 100000000))
+            partial(self._evtVwrChange, 100000000))
         self.scEvtVwrFirst = qtw.QShortcut(
             qtg.QKeySequence(Shortcut.EVT_FIRST.value), self)
         self.scEvtVwrFirst.activated.connect(
-            partial(self.evtVwrChange, -100000000))
+            partial(self._evtVwrChange, -100000000))
 
     @pyqtSlot()
-    def evtVwrChange(self, step=None):
+    def _evtVwrChange(self, step=None):
         # print('\n\n\n')
         # print(f"step by {step}")
 
@@ -2459,9 +2451,9 @@ class MainWindow(qtw.QMainWindow):
         self.evtData['freqIdx'] = idx
         self.evtData['freqCurrent'] = self.evtData['freqUnion'][self.evtData['freqIdx']]
         # print('\n\n\n')
-        self.evtVwrUpdatePlots()
+        self._evtVwrUpdatePlots()
 
-    def evtVwrUpdatePlots(self, plotAmpl=False):
+    def _evtVwrUpdatePlots(self, plotAmpl=False):
         # print("updating plots...")
         ifrq = self.evtData['freqIdx']
         for ichan in range(N_DWA_CHANS):
@@ -2486,12 +2478,12 @@ class MainWindow(qtw.QMainWindow):
                 self.curves['evtVwr']['A(f)'][ichan].setData(
                     self.evtData['freqUnion'], self.evtData['A(f)'][ichan])
 
-    def udpListen(self):
+    def _udpListen(self):
         # Pass the function to execute
         worker = Worker(self.startUdpReceiver,
                         newdata_callback=self.signals.newUdpPayload)
-        worker.signals.result.connect(self.printOutput)
-        worker.signals.finished.connect(self.threadComplete)
+        worker.signals.result.connect(self._printOutput)
+        worker.signals.finished.connect(self._threadComplete)
         self.signals.newUdpPayload.connect(self.processUdpPayload)
 
         # execute
@@ -2503,13 +2495,13 @@ class MainWindow(qtw.QMainWindow):
         self.daqConfig = self.daqConfigFile.getConfigDict(section='DAQ')
 
     @pyqtSlot()
-    def abortScan(self):
+    def _abortScan(self):
         print("User has requested a soft abort of this run...")
         print("... this is not yet tested")
         self.ampData[SCAN_END_MODE_KEYWORD] = ScanEnd.ABORTED
         self.uz.abort()
 
-    def setDwaStatusLabel(self, state):
+    def _setDwaStatusLabel(self, state):
         # state can be 'connected', 'configuring', 'notConnected'
         if state == 'connected':
             text = 'Connected'
@@ -2526,19 +2518,19 @@ class MainWindow(qtw.QMainWindow):
 
     ###############################################################
     # Auto Scan Thread
-    def startScanThreadStarting(self):
+    def _startScanThreadStarting(self):
         self._scanButtonDisable()
         self.btnScanCtrl.setStyleSheet("background-color : orange")
         self.btnScanCtrl.setText("Configuring DWA...")
-        self.setDwaStatusLabel('configuring')
+        self._setDwaStatusLabel('configuring')
 
-    def startScanThreadComplete(self):
-        self.setDwaStatusLabel('connected')
+    def _startScanThreadComplete(self):
+        self._setDwaStatusLabel('connected')
         self._setScanButtonAction('ABORT')
         self._scanButtonEnable(force=True)
         print("startScanThread complete!")
 
-    def startNextScanIfRequested(self):
+    def _startNextScanIfRequested(self):
         print("Checking if next scan should start automatically...")
         runAllScans = self.scanCtrlRunAll.isChecked()
         if not runAllScans:
@@ -2557,7 +2549,7 @@ class MainWindow(qtw.QMainWindow):
             print("auto-starting next scan...")
             self.startScanThread()
 
-    def loadLastScanIfRequested(self):
+    def _loadLastScanIfRequested(self):
         # Don't load next scan if unsaved tensions exist
         unsavedTensions = self.tensionSaveStatus in [TensionSaveStatus.SAVED, TensionSaveStatus.SAVING]
         if unsavedTensions:
@@ -2601,8 +2593,8 @@ class MainWindow(qtw.QMainWindow):
         # Pass the function to execute
         worker = Worker(self.startScan)  # could pass args/kwargs too..
         # worker.signals.result.connect(self.printOutput)
-        worker.signals.finished.connect(self.startScanThreadComplete)
-        worker.signals.starting.connect(self.startScanThreadStarting)
+        worker.signals.finished.connect(self._startScanThreadComplete)
+        worker.signals.starting.connect(self._startScanThreadStarting)
 
         # execute
         self.threadPool.start(worker)
@@ -2641,7 +2633,7 @@ class MainWindow(qtw.QMainWindow):
         # Pass the function to execute
         worker = Worker(self.saveTensions)  # could pass args/kwargs too..
         # worker.signals.result.connect(self.printOutput)
-        worker.signals.finished.connect(self.saveTensionsThreadComplete)
+        worker.signals.finished.connect(self._saveTensionsThreadComplete)
 
         # execute
         self.threadPool.start(worker)
@@ -2652,7 +2644,7 @@ class MainWindow(qtw.QMainWindow):
         # Pass the function to execute
         worker = Worker(self.nominalTensions)  # could pass args/kwargs too..
         # worker.signals.result.connect(self.printOutput)
-        worker.signals.finished.connect(self.nominalTensionsThreadComplete)
+        worker.signals.finished.connect(self._nominalTensionsThreadComplete)
 
         # execute
         self.threadPool.start(worker)
@@ -2663,7 +2655,7 @@ class MainWindow(qtw.QMainWindow):
         # Pass the function to execute
         worker = Worker(self.loadTensions)  # could pass args/kwargs too..
         # worker.signals.result.connect(self.printOutput)
-        worker.signals.finished.connect(self.loadTensionsThreadComplete)
+        worker.signals.finished.connect(self._loadTensionsThreadComplete)
 
         # execute
         self.threadPool.start(worker)
@@ -2675,7 +2667,7 @@ class MainWindow(qtw.QMainWindow):
         # could pass args/kwargs too..
         worker = Worker(self.saveTensions, selectedDwaChan)
         # worker.signals.result.connect(self.printOutput)
-        worker.signals.finished.connect(self.saveTensionsThreadComplete)
+        worker.signals.finished.connect(self._saveTensionsThreadComplete)
 
         # execute
         self.threadPool.start(worker)
@@ -2687,7 +2679,7 @@ class MainWindow(qtw.QMainWindow):
         # could pass args/kwargs too..
         worker = Worker(self.nominalTensions, selectedDwaChan)
         # worker.signals.result.connect(self.printOutput)
-        worker.signals.finished.connect(self.nominalTensionsThreadComplete)
+        worker.signals.finished.connect(self._nominalTensionsThreadComplete)
 
         # execute
         self.threadPool.start(worker)
@@ -2711,8 +2703,8 @@ class MainWindow(qtw.QMainWindow):
         print("disableRelaysThreadComplete")
         self._setScanButtonAction('START')
         self._scanButtonEnable(force=True)
-        self.startNextScanIfRequested()
-        self.loadLastScanIfRequested()
+        self._startNextScanIfRequested()
+        self._loadLastScanIfRequested()
 
     def setTensionSaveStatus(self, status):
         self.tensionSaveStatus = status
@@ -3354,7 +3346,7 @@ class MainWindow(qtw.QMainWindow):
         self.evtData['freqIdx'] = idx
         self.evtData['freqCurrent'] = f0
         # Update plots
-        self.evtVwrUpdatePlots(plotAmpl=False)
+        self._evtVwrUpdatePlots(plotAmpl=False)
 
     # @pyqtSlot()
     def _expectedLineMoved(self, evt):
@@ -3879,7 +3871,7 @@ class MainWindow(qtw.QMainWindow):
         # for ichan in range(N_DWA_CHANS):
         self.evtData['freqIdx'] = 0
         self.evtData['freqCurrent'] = self.evtData['freqUnion'][self.evtData['freqIdx']]
-        self.evtVwrUpdatePlots(plotAmpl=True)
+        self._evtVwrUpdatePlots(plotAmpl=True)
 
         # print("Payload -------------------")
         # print(self.evtDataParser.dwaPayload)
@@ -4615,8 +4607,8 @@ class MainWindow(qtw.QMainWindow):
             self.btnScanCtrl.clicked.connect(self.startScanThreadHandler)
             self.btnScanCtrlAdv.clicked.connect(self.startScanAdvThread)
         elif state == 'ABORT':
-            self.btnScanCtrl.clicked.connect(self.abortScan)
-            self.btnScanCtrlAdv.clicked.connect(self.abortScan)
+            self.btnScanCtrl.clicked.connect(self._abortScan)
+            self.btnScanCtrlAdv.clicked.connect(self._abortScan)
 
     def _submitResonanceButtonDisable(self):
         self.btnSaveTensions.setEnabled(False)
