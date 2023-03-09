@@ -638,7 +638,6 @@ class APA_Diagram_Signals(qtc.QObject):
     '''
     dataChanged = qtc.pyqtSignal()
 
-
 class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -671,16 +670,16 @@ class MainWindow(qtw.QMainWindow):
         self._submitResonanceButtonDisable()
         self._setScanButtonAction('START')
         self._setDwaStatusLabel('notConnected')
-        self.setPushButtonStatusAll([-1]*4)
-        self.setDwaErrorStatus(None)
+        self._setPushButtonStatusAll([-1]*4)
+        self._setDwaErrorStatus(None)
         self.dwaInfoHeading_label.setStyleSheet("font-weight: bold;")
         self.runStatusHeading_label.setStyleSheet("font-weight: bold;")
-        self.channelStatusTableInit()
-        self.scanConfigTableInit()
-        self.resultsScansTableInit()
-        self.resultsWiresTableInit()
-        self.initTensionTable()
-        self.initModels()
+        self._channelStatusTableInit()
+        self._scanConfigTableInit()
+        self._resultsScansTableInit()
+        self._resultsWiresTableInit()
+        self._initTensionTable()
+        self._initModels()
         self.heartPixmaps = [qtg.QPixmap(
             'icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
         self.heartval = 0
@@ -698,10 +697,7 @@ class MainWindow(qtw.QMainWindow):
         # On connect, don't activate Start Scan buttons until we confirm that DWA is in IDLE state
         self.enableScanButtonTemp = False
 
-        # self.logTextBox = QTextEditLogger(self.page_logging)
         self.logTextBox.appendPlainText("log viewing not yet implemented")
-        # logging.getLogger().addHandler(self.logTextBox)
-        # logging.getLogger().setLevel(logging.INFO)
 
         self.scannedButMissingLabel.setStyleSheet("color : red")
         self.setAutomaticallyLabel.setStyleSheet("color : teal")
@@ -779,7 +775,7 @@ class MainWindow(qtw.QMainWindow):
 
         self._configureAmps()
         self._initTimeseriesData()
-        self.initPlottingUpdater()
+        self._initPlottingUpdater()
 
         # Info about current run
         self.stimFreqMin = 0
@@ -804,7 +800,7 @@ class MainWindow(qtw.QMainWindow):
             self.verbose = int(self.daqConfig['verbose'])
         else:
             self.verbose = 1
-        self.udpConnect()
+        self._udpConnect()
 
     # end of __init__ for class MainWindow
 
@@ -823,14 +819,14 @@ class MainWindow(qtw.QMainWindow):
     #    print(f'**************************************************')
     #    self.analysisVersion = out
 
-    def setPushButtonStatusAll(self, buttonVals):
+    def _setPushButtonStatusAll(self, buttonVals):
         # Set all push button GUI elements
         # buttonVals is a list of integers or bools
 
         for ii, val in enumerate(buttonVals):
-            self.setPushButtonStatus(ii, val)
+            self._setPushButtonStatus(ii, val)
 
-    def setDwaErrorStatus(self, errorString):
+    def _setDwaErrorStatus(self, errorString):
         # print(f"setDwaErrorStatus: {errorString}")
         if errorString is None:
             color = 'gray'
@@ -853,12 +849,8 @@ class MainWindow(qtw.QMainWindow):
         self.dwaErrorState_val.setText(label)
         self.dwaErrorState_val.setStyleSheet(style)
 
-    def setPushButtonStatus(self, buttonId, buttonVal):
+    def _setPushButtonStatus(self, buttonId, buttonVal):
         # Set a single push button GUI element
-        # width = self.dwaPB0Status_label.size().width()
-        # radius = int(width/2)
-        # self.dwaPB0Status.resize(width, width)
-        # print(f"setPushButtonStatus: buttonId, buttonVal = {buttonId}, {buttonVal}")
         if buttonId not in PUSH_BUTTON_LIST:
             return
 
@@ -871,11 +863,9 @@ class MainWindow(qtw.QMainWindow):
         else:
             color = 'black'
             borderSize = 0
-        # style = f"border: 3px solid {color}; border-radius: {radius}px;"
+            
         style = f"border: {borderSize}px solid {color};"
         getattr(self, f'dwaPB{buttonId}Status').setStyleSheet(style)
-        # self.dwaPB0Status.setStyleSheet(style)
-        # self.dwaPB1Status.setStyleSheet(style)
 
     def initApaUuidSuggestions(self):
 
@@ -906,11 +896,11 @@ class MainWindow(qtw.QMainWindow):
             uuids.insert(0, newUuid)
         self.apaUuidListModel.setStringList(uuids)
 
-    def initModels(self):
+    def _initModels(self):
         with open('./processing/X_and_G_layer_model.pkl', 'rb') as f:
             self.model_x_g = pickle.load(f)
 
-    def initTensionTable(self):
+    def _initTensionTable(self):
         print("init")
         # self.tensionData = {
         #     'A':[np.nan]*MAX_WIRE_SEGMENT,
@@ -921,7 +911,7 @@ class MainWindow(qtw.QMainWindow):
         # #self.tensionTableView.resizeColumnsToContents()
         # self.tensionTableView.resizeRowsToContents()
 
-    def scanConfigTableInit(self):
+    def _scanConfigTableInit(self):
         # change scanConfigTable to QTableView
         # Model:
         self.scanConfigTableModel = qtg.QStandardItemModel()
@@ -939,7 +929,7 @@ class MainWindow(qtw.QMainWindow):
         # self.scanConfigTable.doubleClicked.connect(self.scanConfigTableRowDoubleClicked)
         self.scanConfigTable.selectionModel().selectionChanged.connect(self.setAPADiagram)
 
-    def resultsScansTableInit(self):
+    def _resultsScansTableInit(self):
         self.recentScansTableModel = qtg.QStandardItemModel()
         self.recentScansTableModel.setHorizontalHeaderLabels(
             RESULTS_SCANS_TABLE_HDRS)
@@ -1071,14 +1061,14 @@ class MainWindow(qtw.QMainWindow):
         dt = tend-tstart
         print(f"Populating table took [s] {dt}")
 
-    def channelStatusTableInit(self):
+    def _channelStatusTableInit(self):
         self.channelStatusTableModel = qtg.QStandardItemModel()
         self.channelStatusTable.setModel(self.channelStatusTableModel)
         self.channelStatusTable.setSortingEnabled(False)
         self.channelStatusTable.setSelectionMode(
             qtw.QTableView.SingleSelection)  # only select one item at a time
 
-    def resultsWiresTableInit(self):
+    def _resultsWiresTableInit(self):
         self.recentWiresTableModel = qtg.QStandardItemModel()
         self.recentWiresTableModel.setHorizontalHeaderLabels(
             RESULTS_WIRES_TABLE_HDRS)
@@ -1373,7 +1363,7 @@ class MainWindow(qtw.QMainWindow):
         print(f"double-clicked col: {mi.column()}")
         self.loadResultsScan()
 
-    def initPlottingUpdater(self):
+    def _initPlottingUpdater(self):
         self.plottingTimer = qtc.QTimer()
         self.plottingTimer.timeout.connect(self.updatePlots)
         self.plottingTimer.setInterval(
@@ -1622,7 +1612,7 @@ class MainWindow(qtw.QMainWindow):
                 chanNum += 1
             self.evtVwrPlotsGLW.nextRow()
 
-    def udpConnect(self):
+    def _udpConnect(self):
         ###########################################
         # Configure the UDP connection
         UDP_IP = ''     # '' is a symbolic name meaning all available interfaces
@@ -4478,7 +4468,7 @@ class MainWindow(qtw.QMainWindow):
             # Display the status of the push buttons
             self.buttonStatus_val.setText(
                 f"{udpDict[ddp.Frame.STATUS]['buttonStatus']}")
-            self.setPushButtonStatusAll(
+            self._setPushButtonStatusAll(
                 udpDict[ddp.Frame.STATUS]['buttonStatusList'])
 
     def updateErrorStatusInGui(self, errorBitsString):
@@ -4486,7 +4476,7 @@ class MainWindow(qtw.QMainWindow):
         # print(f'errorBitsString = {errorBitsString}')
         # statusErrorBits looks like this: '000000000000000000000000'
         # not yet sure of the mapping...
-        self.setDwaErrorStatus(errorBitsString)
+        self._setDwaErrorStatus(errorBitsString)
 
     def logDwaButtonStatus(self, msg):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
