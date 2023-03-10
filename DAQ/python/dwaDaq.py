@@ -3298,7 +3298,7 @@ class MainWindow(qtw.QMainWindow):
             self.chanViewMain = chan
 
     @pyqtSlot()
-    def saveAmplitudeData(self):
+    def _saveAmplitudeData(self):
         if ("fnOfAmpData" in self.__dict__):
             # add metadata to ampData before writing to file (this could also be done earlier)
             # FIXME: grab these values from user input
@@ -4125,7 +4125,7 @@ class MainWindow(qtw.QMainWindow):
                 print("\nSCAN IS DONE")
                 boombox.BoomBox('sounds/scanFinished.wav').play()
 
-                self.saveAmplitudeData()  # do this first to avoid data loss
+                self._saveAmplitudeData()  # do this first to avoid data loss
 
                 self._formatRunStatusIndicators(state='stale')
 
@@ -4177,9 +4177,7 @@ class MainWindow(qtw.QMainWindow):
             self.logger.info(f'regId = {regId}')
             reg = self.registerOfVal[regId]
 
-            # If this DWA channel does not correspond to an actual wire, then don't update
-            # plots in the GUI
-            # print(f" regId = {regId}; self.apaChannels = {self.apaChannels}")
+            # If this DWA channel does not correspond to an actual wire, then don't update plots in the GUI
             if (self.scanType == ScanType.AUTO) and (self.apaChannels[regId] is None):
                 return
 
@@ -4191,7 +4189,6 @@ class MainWindow(qtw.QMainWindow):
                 len(self.adcData[reg]['ADC']))*dt
             self.adcData[reg]['freq'] = udpDict[ddp.Frame.FREQ]['stimFreqActive_Hz']
 
-            #################################
             # Update plots
             self.DATA_TO_PLOT = True
 
@@ -4213,8 +4210,6 @@ class MainWindow(qtw.QMainWindow):
                 print(f"\n FOUND STATUS FRAME {datetime.datetime.now()}")
                 print(udpDict[ddp.Frame.STATUS])
 
-            # print(f"hvDisable = {udpDict[ddp.Frame.STATUS]['hvDisable']}")
-
             # some status frames should be logged...
             # see DwaDataParser.py for details
             # e.g. 'trgTimeout', 'trgStateChange', 'trgButtonChange', 'trgErrorChange'
@@ -4234,7 +4229,6 @@ class MainWindow(qtw.QMainWindow):
             self.dwaControllerState = udpDict[ddp.Frame.STATUS]['controllerState']
 
             if self.enableScanButtonTemp and (self.dwaControllerState == State.IDLE):
-                print("\n\n enabling button via temp\n\n")
                 self.enableScanButtonTemp = False
                 self._scanButtonEnable()
 
