@@ -1364,11 +1364,11 @@ class MainWindow(qtw.QMainWindow):
 
         # Resonance Tab
         self.btnRemoveAndArchive.clicked.connect(self.removeAndArchive)
-        self.btnSaveTensions.clicked.connect(self.saveTensionsThread)
+        self.btnSaveTensions.clicked.connect(partial(self.saveTensions, None))
         self.btnSaveAndLoadNext.clicked.connect(self.saveTensionsAndLoadNext)
 
         for i in range(8):
-            getattr(self, f'saveTension_{i}').clicked.connect(partial(self.saveTensionsThread, i))
+            getattr(self, f'saveTension_{i}').clicked.connect(partial(self.saveTensions, i))
             getattr(self, f'nominalTension_{i}').clicked.connect(partial(self.nominalTensionsThread, i))
             
         # Tensions tab
@@ -3430,9 +3430,11 @@ class MainWindow(qtw.QMainWindow):
         self.resultsWiresTableLoad()
         self.loadNextUncomfirmed()
 
+    @pyqtSlot()
     def saveTensions(self, selectedDwaChan=None):
         # TODO: Fix this so that it writes to file in scanData/processed/ instead of database
         self.setTensionSaveStatus(TensionSaveStatus.SAVING)
+        qtc.QCoreApplication.processEvents()
         # Load sietch credentials
         # sietch = SietchConnect("sietch.creds")
         apaUuid = self.configApaUuid
