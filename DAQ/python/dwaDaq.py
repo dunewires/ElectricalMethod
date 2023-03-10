@@ -22,6 +22,9 @@ press "Start selected scan". This will start the following stack of function cal
       -> _runScan: Loads the MicroZed config file and sends it to the MizcroZed, which starts the scan. The UDP
                    data generated in the scan will be processed by _processUpPayload that is running in another thread
 
+_processUdpPayload is respnsible for handling all the incoming data. What it does varies depending
+on the data it receives.
+
 
 
 """
@@ -1364,11 +1367,44 @@ class MainWindow(qtw.QMainWindow):
         self.btnSaveTensions.clicked.connect(self.saveTensionsThread)
         self.btnSaveAndLoadNext.clicked.connect(self.saveTensionsAndLoadNext)
         
-        for i in range(8):
-            getattr(self, f'saveTension_{i}').clicked.connect(
-                lambda i=i: self.saveTensionsThread(i))
-            getattr(self, f'nominalTension_{i}').clicked.connect(
-                lambda i=i: self.nominalTensionsThread(i))
+        getattr(self, f'saveTension_0').clicked.connect(
+            lambda: self.saveTensionsThread(0))
+        getattr(self, f'saveTension_1').clicked.connect(
+            lambda: self.saveTensionsThread(1))
+        getattr(self, f'saveTension_2').clicked.connect(
+            lambda: self.saveTensionsThread(2))
+        getattr(self, f'saveTension_3').clicked.connect(
+            lambda: self.saveTensionsThread(3))
+        getattr(self, f'saveTension_4').clicked.connect(
+            lambda: self.saveTensionsThread(4))
+        getattr(self, f'saveTension_5').clicked.connect(
+            lambda: self.saveTensionsThread(5))
+        getattr(self, f'saveTension_6').clicked.connect(
+            lambda: self.saveTensionsThread(6))
+        getattr(self, f'saveTension_7').clicked.connect(
+            lambda: self.saveTensionsThread(7))
+        getattr(self, f'nominalTension_0').clicked.connect(
+            lambda: self.nominalTensionsThread(0))
+        getattr(self, f'nominalTension_1').clicked.connect(
+            lambda: self.nominalTensionsThread(1))
+        getattr(self, f'nominalTension_2').clicked.connect(
+            lambda: self.nominalTensionsThread(2))
+        getattr(self, f'nominalTension_3').clicked.connect(
+            lambda: self.nominalTensionsThread(3))
+        getattr(self, f'nominalTension_4').clicked.connect(
+            lambda: self.nominalTensionsThread(4))
+        getattr(self, f'nominalTension_5').clicked.connect(
+            lambda: self.nominalTensionsThread(5))
+        getattr(self, f'nominalTension_6').clicked.connect(
+            lambda: self.nominalTensionsThread(6))
+        getattr(self, f'nominalTension_7').clicked.connect(
+            lambda: self.nominalTensionsThread(7))
+
+        # for i in range(8):
+        #     getattr(self, f'saveTension_{i}').clicked.connect(
+        #         lambda j=i: self.saveTensionsThread(j))
+        #     getattr(self, f'nominalTension_{i}').clicked.connect(
+        #         lambda j=i: self.nominalTensionsThread(j))
             
         # Tensions tab
         self.btnLoadTensions.clicked.connect(self.loadTensionsThread)
