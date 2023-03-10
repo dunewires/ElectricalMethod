@@ -1,7 +1,30 @@
+"""
+Main file for the DWA DAQ software
+
+Authors: Chris Stanford (chris.j.stanford@gmail.com), James Battat (jbattat@wellesley.edu)
+
+How it works:
+
+After opening the GUI, enter the UUID of the APA you are working with and hit Enter/Start.
+
+If you are taking measurements, press the Connect button to connect to the DWA. This will call:
+-> _dwaConnect
+  -> _udpListen
+    -> _startUdpReceiver: Starts a thread that listens for UDP data coming from the FPGA (MicroZed) in the DWA 
+    -> _processUdpPayload: Processes incoming UDP data (if any)
+
+Then, Set the desired settings in the config tab, click configure scans, select a scan, and 
+press "Start selected scan". This will start the following stack of function calls:
+
+-> _startScanThreadHandler: Checks the selected row of the config table to see if the scan should be run
+  -> _startScanThread: Creates a separate thread for the scan so that it doesn't interfere with the GUI
+    -> _startScan: Generates and writes the MicroZed config file
+      -> _runScan: Loads the MicroZed config file and sends it to the MizcroZed, which starts the scan. The UDP
+                   data generated in the scan will be processed by _processUpPayload that is running in another thread
 
 
-# for logging info:
-# https://fangpenlin.com/posts/2012/08/26/good-logging-practice-in-python/
+
+"""
 
 import DwaMicrozed as duz
 import DwaConfigFile as dcf
@@ -1162,7 +1185,7 @@ class MainWindow(qtw.QMainWindow):
 
     def _initPlottingUpdater(self):
         self.plottingTimer = qtc.QTimer()
-        self.plottingTimer.timeout.connect(self.updatePlots)
+        self.plottingTimer.timeout.connect(self._updatePlots)
         self.plottingTimer.setInterval(
             int(PLOT_UPDATE_TIME_SEC*1000))  # millseconds
         self.plottingTimer.start()
@@ -1327,7 +1350,7 @@ class MainWindow(qtw.QMainWindow):
         self.configApaUuidLineEdit.returnPressed.connect(self.apaUuidChanged)
         self.btnLoadApaUuid.clicked.connect(self.apaUuidChanged)
         #
-        self.btnDwaConnect.clicked.connect(self.dwaConnect)
+        self.btnDwaConnect.clicked.connect(self._dwaConnect)
         self.configFileName.returnPressed.connect(self.configFileNameEnter)
         self.pb_scanDataLoad.clicked.connect(self.loadArbitraryScanData)
         self.pb_scanDataSelectedLoad.clicked.connect(self.loadResultsScan)
@@ -1357,8 +1380,8 @@ class MainWindow(qtw.QMainWindow):
             self.submitTensionsFormChanged)
 
         # Config Tab
-        self.doContinuityCb.stateChanged.connect(self.doContinuityChanged)
-        self.doTensionCb.stateChanged.connect(self.doTensionChanged)
+        self.doContinuityCb.stateChanged.connect(self._doContinuityChanged)
+        self.doTensionCb.stateChanged.connect(self._doTensionChanged)
         self.btnConfigureScans.clicked.connect(self.configureScans)
         for stage in APA_STAGES_SCANS:
             self.configStageComboBox.addItem(stage)
@@ -1446,7 +1469,7 @@ class MainWindow(qtw.QMainWindow):
         # self.udpListen()
 
     @pyqtSlot()
-    def dwaConnect(self):
+    def _dwaConnect(self):
         # Collect/parse DAQ-related configuration parameters
         # FIXME --- need to read/parse .ini file...
 
@@ -1457,29 +1480,24 @@ class MainWindow(qtw.QMainWindow):
 
         # Set up connection to Microzed
         if 'DWA_IP' not in self.daqConfig:
-            print(
-                "Error: cannot connect to DWA... DWA_IP not specified in DAQ config file")
+            print("Error: Cannot connect to DWA... DWA_IP not specified in DAQ config file")
             return
         else:
             self.uz = duz.DwaMicrozed(ip=self.daqConfig['DWA_IP'])
-
-        print("self.daqConfig")
-        print(self.daqConfig)
 
         # Set up STATUS frame cadence
         self.uz.setStatusFramePeriod(self.daqConfig['statusPeriod'])
 
         # Set up Client IP address
         if 'client_IP' in self.daqConfig and self.daqConfig['client_IP'] is not None:
-            print(f"setting client_IP to {self.daqConfig['client_IP']}")
+            if self.verbose > 0: print(f"Setting client_IP to {self.daqConfig['client_IP']}")
             self.uz.setUdpAddress(self.daqConfig['client_IP'])
 
         self.clientIp_val.setText(self.daqConfig['client_IP'])
         self.dwaIp_val.setText(self.daqConfig['DWA_IP'])
 
         if 'guiUpdatePeriodSec' in self.daqConfig:
-            print(
-                f"\n\n updating GUI udpate rate to {self.daqConfig['guiUpdatePeriodSec']}\n\n")
+            if self.verbose > 0: print(f"Updating GUI update rate to {self.daqConfig['guiUpdatePeriodSec']}")
             self.plottingTimer.setInterval(
                 int(float(self.daqConfig['guiUpdatePeriodSec'])*1000))
             self.plottingTimer.start()
@@ -1489,11 +1507,11 @@ class MainWindow(qtw.QMainWindow):
             # Read date code (0x13)
             out = self.uz.readValue('00000013')  # Firmware date code (YYMMDD)
             dateCodeYYMMDD = '{:06X}'.format(out[-1])
-            print(f"Firmware date code [YYMMDD] = {dateCodeYYMMDD}")
+            if self.verbose > 0: print(f"Firmware date code [YYMMDD] = {dateCodeYYMMDD}")
             self.connectedToUzed = True
         except Exception:
             self.connectedToUzed = False
-            print("could not connect to the microzed...")
+            print("Error: Could not connect to the MicroZed...")
 
         if self.connectedToUzed:
             self.btnDwaConnect.setText("Re-connect")
@@ -1944,34 +1962,11 @@ class MainWindow(qtw.QMainWindow):
                 labels = None
                 if (irow == 1 and icol == 0):
                     labels = {'left': 'Tension [N]', 'bottom': 'Wire number'}
-                self.tensionPlots['tensionOfWireNumber'][layer][side] = self.tensionGLW.addPlot(row=irow, col=icol,
-                                                                                                title=f'{layer}{side}',
-                                                                                                labels=labels)
-                self.tensionPlots['tensionOfWireNumber'][layer][side].addItem(pg.LinearRegionItem(values=[TENSION_SPEC_MIN, TENSION_SPEC_MAX],
-                                                                                                  orientation='horizontal',
-                                                                                                  movable=False))
-                self.tensionPlots['tensionOfWireNumber'][layer][side].setYRange(
-                    3, 10)
-        # # tensionSpecRegion = pg.LinearRegionItem(values=self.tensionData["GA"], orientation='horizontal',  movable=False)
-
-        # can add other kinds of plots here (e.g. histograms)
-
-        # for side in APA_SIDES:
-        #    self.tensionPlots[side] = (self.tensionGLW.addPlot())
-        #    self.tensionPlots[side].setTitle(f'Side {side}')
-
-        # self.tensionPlots = {}
-        # self.tensionPlots['tensionOfWireNumber'] = self.tensionGLW.addPlot(title="Tensions", labels={'left':"Tension [N]", 'bottom':"Wire number"})
-        # logging.warning("self.tensionData[GA]")
-        # logging.warning(self.tensionData["GA"])
-        # # tensionSpecRegion = pg.LinearRegionItem(values=self.tensionData["GA"], orientation=1,  movable=False) # 1=horizontal, 0=vert.
-
-        # # Create the scatter plot and add it to the view
-        # scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
-        # self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
-        # pos = [{'pos': [i,self.tensionData["GA"][i]]} for i in range(MAX_WIRE_SEGMENT)]
-        # scatter.setData(pos)
-        # self.tensionPlots['tensionOfWireNumber'].addItem(scatter)
+                self.tensionPlots['tensionOfWireNumber'][layer][side] = \
+                    self.tensionGLW.addPlot(row=irow, col=icol, title=f'{layer}{side}', labels=labels)
+                self.tensionPlots['tensionOfWireNumber'][layer][side].addItem(
+                    pg.LinearRegionItem(values=[TENSION_SPEC_MIN, TENSION_SPEC_MAX], orientation='horizontal', movable=False))
+                self.tensionPlots['tensionOfWireNumber'][layer][side].setYRange(3, 10)
 
     def _printOutput(self, s):
         print("printOutput():")
@@ -2300,11 +2295,11 @@ class MainWindow(qtw.QMainWindow):
 
     def _udpListen(self):
         # Pass the function to execute
-        worker = Worker(self.startUdpReceiver,
+        worker = Worker(self._startUdpReceiver,
                         newdata_callback=self.signals.newUdpPayload)
         worker.signals.result.connect(self._printOutput)
         worker.signals.finished.connect(self._threadComplete)
-        self.signals.newUdpPayload.connect(self.processUdpPayload)
+        self.signals.newUdpPayload.connect(self._processUdpPayload)
 
         # execute
         self.threadPool.start(worker)
@@ -2367,7 +2362,7 @@ class MainWindow(qtw.QMainWindow):
             boombox.BoomBox('sounds/completed.wav').play()
         else:
             print("auto-starting next scan...")
-            self.startScanThread()
+            self._startScanThread()
 
     def _loadLastScanIfRequested(self):
         # Don't load next scan if unsaved tensions exist
@@ -2384,7 +2379,7 @@ class MainWindow(qtw.QMainWindow):
             self.viewResults()
 
     @pyqtSlot()
-    def startScanThreadHandler(self):
+    def _startScanThreadHandler(self):
         # Launch either one scan or all scans
         print('startScanThreadHandler')
 
@@ -2404,14 +2399,14 @@ class MainWindow(qtw.QMainWindow):
                 break
         print(f"self.autoScansRemain = {self.autoScansRemain}")
 
-        self.startScanThread()
+        self._startScanThread()
 
-    def startScanThread(self):
+    def _startScanThread(self):
         print("User has requested a new AUTO scan (DWA is IDLE)")
         self.scanType = ScanType.AUTO
 
         # Pass the function to execute
-        worker = Worker(self.startScan)  # could pass args/kwargs too..
+        worker = Worker(self._startScan)  # could pass args/kwargs too..
         # worker.signals.result.connect(self.printOutput)
         worker.signals.finished.connect(self._startScanThreadComplete)
         worker.signals.starting.connect(self._startScanThreadStarting)
@@ -2433,7 +2428,7 @@ class MainWindow(qtw.QMainWindow):
         self._scanButtonEnable(force=True)
 
     @pyqtSlot()
-    def startScanAdvThread(self):
+    def _startScanAdvThread(self):
 
         print("User has requested a new CUSTOM scan (DWA is IDLE)")
         self.scanType = ScanType.CUSTOM
@@ -2550,7 +2545,7 @@ class MainWindow(qtw.QMainWindow):
         # Break all relay connections to let charge bleed off of wires
         self.uz.disableAllRelays()
 
-    def disableRelaysThread(self):
+    def _disableRelaysThread(self):
         # Pass the function to execute
         worker = Worker(self.disableRelays)
         worker.signals.finished.connect(self.disableRelaysThreadComplete)
@@ -2559,7 +2554,7 @@ class MainWindow(qtw.QMainWindow):
         # execute
         self.threadPool.start(worker)
 
-    def startScan(self):
+    def _startScan(self):
         # need to create dictionaries in this thread to actually update inputs and files
 
         # What kind of scan is this (resonance or continuity)?
@@ -2706,7 +2701,7 @@ class MainWindow(qtw.QMainWindow):
             self.combinedConfig, 'dwaConfig.ini', self.scanRunDataDir)  # self.configFileDir
         self.configFile = os.path.join(self.scanRunDataDir, "dwaConfig.ini")
 
-        self.runScan()
+        self._runScan()
 
     def makeScanOutputDir(self, scanType):
         scanRunSubDir = "APA_"+str(self.configApaUuid)
@@ -2763,7 +2758,7 @@ class MainWindow(qtw.QMainWindow):
         shutil.copy(self.configFile, os.path.join(
             self.scanRunDataDir, 'dwaConfig.ini'))
 
-        self.runScan()
+        self._runScan()
 
     def _setScanMetadata(self):
         # FIXME: rename... really this is used to set metadata in the A(f) .json file
@@ -2791,7 +2786,7 @@ class MainWindow(qtw.QMainWindow):
 
         print(f'self.ampData = {self.ampData}')
 
-    def runScan(self):
+    def _runScan(self):
 
         # Update text in table to indicate that scan is running
         self.scanConfigTableModel.item(
@@ -2817,14 +2812,14 @@ class MainWindow(qtw.QMainWindow):
 
         try:
             self.logger.info('======= dwaReset() ===========')
-            print('======= dwaReset() ===========')
+            if self.verbose > 0: print('======= dwaReset() ===========')
             self.uz.reset()
         except Exception:
             self.logger.error("DWA reset failed")
 
         try:
             self.logger.info('======= dwa disable HV ===========')
-            print('======= dwa disable HV ===========')
+            if self.verbose > 0: print('======= dwa disable HV ===========')
             self.uz.hvDisable()
             time.sleep(0.5)  # sleep to let HV drain
         except Exception:
@@ -2832,7 +2827,7 @@ class MainWindow(qtw.QMainWindow):
 
         try:
             self.logger.info('======= dwaConfig() ===========')
-            print('======= dwaConfig() ===========')
+            if self.verbose > 0: print('======= dwaConfig() ===========')
             # single TCP/IP call -- many reg writes
             self.uz.scanConfigMulti(self.dwaConfigFile.config['FPGA'])
             # self.uz.scanConfig(self.dwaConfigFile.config['FPGA']) # many TCP/IP calls -- one reg write per call
@@ -2842,7 +2837,7 @@ class MainWindow(qtw.QMainWindow):
         try:
             time.sleep(0.5)
             self.logger.info('======= dwa enable HV ===========')
-            print('======= dwa enable HV ===========')
+            if self.verbose > 0: print('======= dwa enable HV ===========')
             self.uz.hvEnable()
             time.sleep(0.5)  # sleep to let HV ramp up
         except Exception:
@@ -2850,7 +2845,7 @@ class MainWindow(qtw.QMainWindow):
 
         try:
             self.logger.info('======= dwaStart() ===========')
-            print('======= dwaStart() ===========')
+            if self.verbose > 0: print('======= dwaStart() ===========')
             self.uz.start()
             self.logger.info('======= DONE WITH dwaStart() ===========')
             # logger.info('\n\n======= dwaStat() ===========')
@@ -3988,7 +3983,7 @@ class MainWindow(qtw.QMainWindow):
         print(f"self.fnOfAmpData = {self.fnOfAmpData}")
         self.logger.info(f"self.fnOfAmpData = {self.fnOfAmpData}")
 
-    def startUdpReceiver(self, newdata_callback):
+    def _startUdpReceiver(self, newdata_callback):
         # initiate a DWA acquisition
         # send configuration
         # start listening for UDP data
@@ -4000,7 +3995,7 @@ class MainWindow(qtw.QMainWindow):
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
         logger.info("============= startUdpReceiver() ===============")
-        print("\n\n ============= startUdpReceiver() ===============\n\n")
+        if self.verbose > 0: print("\n\n ============= startUdpReceiver() ===============\n\n")
 
         if self.udpListening:
             return
@@ -4046,11 +4041,11 @@ class MainWindow(qtw.QMainWindow):
                         self.oldDataFormat = True
                     if self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'] == SCAN_START or \
                        self.oldDataFormat:
-                        print("New run detected... creating new filenames")
-                        print("runStatus = ")
-                        print(
-                            self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'])
-                        print(f'self.oldDataFormat = {self.oldDataFormat}')
+                        if self.verbose > 0: 
+                            print("New run detected... creating new filenames")
+                            print("runStatus = ")
+                            print(self.dwaDataParser.dwaPayload[ddp.Frame.RUN]['runStatus'])
+                            print(f'self.oldDataFormat = {self.oldDataFormat}')
                         if self.verbose > 3:
                             logger.info(
                                 "New run detected... creating new filenames")
@@ -4086,7 +4081,7 @@ class MainWindow(qtw.QMainWindow):
             finally:
                 self.udpListening = False
 
-    def processUdpPayload(self, udpDict):
+    def _processUdpPayload(self, udpDict):
         # new UDP payload has arrived from DWA.
         # Deal with it (update plots, or status, or ...)
         self.logger.info('\n\n')
@@ -4112,7 +4107,7 @@ class MainWindow(qtw.QMainWindow):
                 self.stimFreqMin = udpDict[ddp.Frame.RUN]['stimFreqMin_Hz']
                 self.stimFreqMax = udpDict[ddp.Frame.RUN]['stimFreqMax_Hz']
                 self.stimFreqStep = udpDict[ddp.Frame.RUN]['stimFreqStep_Hz']
-                self.formatRunStatusIndicators(state='fresh')
+                self._formatRunStatusIndicators(state='fresh')
                 self.globalFreqMin_val.setText(f"{self.stimFreqMin:.3f}")
                 self.globalFreqMax_val.setText(f"{self.stimFreqMax:.3f}")
                 self.globalFreqStep_val.setText(f"{self.stimFreqStep:.4f}")
@@ -4124,30 +4119,25 @@ class MainWindow(qtw.QMainWindow):
                 self._configureAmplitudePlots()  # must come after setScanMetadata()
 
                 print("\n\nSCAN START")
-                print(f"self.ampData = {self.ampData}")
 
             # if end of scan...
             elif udpDict[ddp.Frame.RUN]['runStatus'] == SCAN_END:
-                print("\n SCAN IS DONE")
+                print("\nSCAN IS DONE")
                 boombox.BoomBox('sounds/scanFinished.wav').play()
 
                 self.saveAmplitudeData()  # do this first to avoid data loss
 
-                self.formatRunStatusIndicators(state='stale')
+                self._formatRunStatusIndicators(state='stale')
 
                 # FIXME: shouldn't really change button state or controller state via
                 # RUN end frame. Should only do this from STATUS frame...
-                # print("\nScan button disable\n")
                 self._scanButtonDisable()
-                # print("\nSet button to START\n")
                 self._setScanButtonAction('START')
-                # qtc.QCoreApplication.processEvents()
 
-                self.disableRelaysThread()
+                self._disableRelaysThread()
 
-                # print("UPDATING PLOTS ONE LAST TIME")
-                self.updatePlots(force_all=True)
-                self.wrapUpStimulusScan()
+                self._updatePlots(force_all=True)
+                self._wrapUpStimulusScan()
 
                 # if the scan is auto, then when it finishes and the scan is over this
                 # finds what row was scanned and updates the status for that row
@@ -4229,17 +4219,17 @@ class MainWindow(qtw.QMainWindow):
             # see DwaDataParser.py for details
             # e.g. 'trgTimeout', 'trgStateChange', 'trgButtonChange', 'trgErrorChange'
             if udpDict[ddp.Frame.STATUS]['trgButtonChange']:
-                self.logDwaButtonStatus(
+                self._logDwaButtonStatus(
                     ''.join(udpDict[ddp.Frame.STATUS]['buttonStatusList']))
             if udpDict[ddp.Frame.STATUS]['trgErrorChange']:
-                self.logDwaErrorStatus(
+                self._logDwaErrorStatus(
                     udpDict[ddp.Frame.STATUS]['statusErrorBits'])
 
             self.updateErrorStatusInGui(
                 udpDict[ddp.Frame.STATUS]['statusErrorBits'])
 
             # update heart logo
-            self.updateHeartbeatLogo()
+            self._updateHeartbeatLogo()
 
             self.dwaControllerState = udpDict[ddp.Frame.STATUS]['controllerState']
 
@@ -4275,26 +4265,26 @@ class MainWindow(qtw.QMainWindow):
         # not yet sure of the mapping...
         self._setDwaErrorStatus(errorBitsString)
 
-    def logDwaButtonStatus(self, msg):
+    def _logDwaButtonStatus(self, msg):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        fout = self.getScanStatusFilename()
+        fout = self._getScanStatusFilename()
         with open(fout, 'a') as ff:
             ff.write(f'btn0 {timestamp} {msg}\n')
             # e.g. btn0 2019-01-14T20:01:46 0010
 
-    def logDwaErrorStatus(self, msg):
+    def _logDwaErrorStatus(self, msg):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        fout = self.getScanStatusFilename()
+        fout = self._getScanStatusFilename()
         with open(fout, 'a') as ff:
             ff.write(f'err0 {timestamp} {msg}\n')
             # e.g. err0 2019-01-14T20:01:46 0010
 
-    def getScanStatusFilename(self):
+    def _getScanStatusFilename(self):
         fname = datetime.datetime.now().strftime("%Y%m%d.status")
         fname = os.path.join(self.scanStatusDir, fname)
         return fname
 
-    def formatRunStatusIndicators(self, state=None):
+    def _formatRunStatusIndicators(self, state=None):
         if state.upper() == 'STALE':
             color = 'gray'
         elif state.upper() == 'FRESH':
@@ -4305,7 +4295,7 @@ class MainWindow(qtw.QMainWindow):
         self.globalFreqStep_val.setStyleSheet(f"color: {color}")
         self.globalFreqActive_val.setStyleSheet(f"color: {color}")
 
-    def updatePlotsVGrid(self):
+    def _updatePlotsVGrid(self):
         # for reg in self.registers:
         for reg in self.activeRegisters:
             self.curves['grid'][reg].setData(self.adcData[reg]['time'],
@@ -4313,7 +4303,7 @@ class MainWindow(qtw.QMainWindow):
             self.curvesFit['grid'][reg].setData(self.adcData[reg]['tfit'],
                                                 self.adcData[reg]['ADCfit'])
 
-    def updatePlotsVChan(self):
+    def _updatePlotsVChan(self):
         # for reg in self.registers:
         for reg in self.activeRegisters:
             self.curves['chan'][reg].setData(self.adcData[reg]['time'],
@@ -4326,7 +4316,7 @@ class MainWindow(qtw.QMainWindow):
         self.curvesFit['chan']['main'].setData(self.adcData[self.chanViewMain]['tfit'],
                                                self.adcData[self.chanViewMain]['ADCfit'])
 
-    def updatePlotsAmpGrid(self):
+    def _updatePlotsAmpGrid(self):
         for reg in self.activeRegisters:
             # for reg in self.registers:
             self.curves['amplgrid'][reg].setData(
@@ -4334,7 +4324,7 @@ class MainWindow(qtw.QMainWindow):
             self.curves['configamplgrid'][reg].setData(
                 self.ampData[reg]['freq'], self.ampData[reg]['ampl'])
 
-    def updatePlotsAmpChan(self):
+    def _updatePlotsAmpChan(self):
         for reg in self.activeRegisters:
             # for reg in self.registers:
             self.curves['amplchan'][reg].setData(
@@ -4343,13 +4333,13 @@ class MainWindow(qtw.QMainWindow):
         self.curves['amplchan']['main'].setData(
             self.ampData[self.chanViewMainAmpl]['freq'], self.ampData[self.chanViewMainAmpl]['ampl'])
 
-    def updatePlots(self, force_all=False):
+    def _updatePlots(self, force_all=False):
 
         if force_all:
-            self.updatePlotsVGrid()
-            self.updatePlotsVChan()
-            self.updatePlotsAmpGrid()
-            self.updatePlotsAmpChan()
+            self._updatePlotsVGrid()
+            self._updatePlotsVChan()
+            self._updatePlotsAmpGrid()
+            self._updatePlotsAmpChan()
             return
 
         if not self.DATA_TO_PLOT:
@@ -4357,24 +4347,24 @@ class MainWindow(qtw.QMainWindow):
 
         if self.currentViewStage == MainView.STIMULUS:
             if self.currentViewStim == StimView.V_GRID:
-                self.updatePlotsVGrid()
+                self._updatePlotsVGrid()
             elif self.currentViewStim == StimView.V_CHAN:
-                self.updatePlotsVChan()
+                self._updatePlotsVChan()
             elif self.currentViewStim == StimView.A_GRID or self.currentViewStim == StimView.CONFIG:
-                self.updatePlotsAmpGrid()
+                self._updatePlotsAmpGrid()
             elif self.currentViewStim == StimView.A_CHAN:
-                self.updatePlotsAmpChan()
+                self._updatePlotsAmpChan()
 
         self.DATA_TO_PLOT = False
 
-    def updateHeartbeatLogo(self):
+    def _updateHeartbeatLogo(self):
         self.heartval = (self.heartval+1) % len(self.heartPixmaps)
         self.heartbeat_val.setPixmap(self.heartPixmaps[self.heartval])
         self.heartbeat_val.resize(self.heartPixmaps[self.heartval].width(),
                                   self.heartPixmaps[self.heartval].height())
         # self.heartbeat_val.setText(f"{self.heartval}")
 
-    def doContinuityChanged(self):
+    def _doContinuityChanged(self):
         # self.doContinuity = True if self.doContinuityCb.checkState() == qtc.Qt.Checked else False
         self.doContinuity = self.doContinuityCb.isChecked()
         # print(f"clicked check box: state = {self.doContinuityCb.checkState()}")
@@ -4382,7 +4372,7 @@ class MainWindow(qtw.QMainWindow):
         # print(f"is   checked:      {self.doContinuity == qtc.Qt.Checked}")
         print(f"self.doContinuity: {self.doContinuity}")
 
-    def doTensionChanged(self):
+    def _doTensionChanged(self):
         self.doTension = self.doTensionCb.isChecked()
         print(f"self.doTension: {self.doTension}")
 
@@ -4424,8 +4414,8 @@ class MainWindow(qtw.QMainWindow):
 
         if state == 'START':
             # self.btnScanCtrl.clicked.connect(self.startScanThread)
-            self.btnScanCtrl.clicked.connect(self.startScanThreadHandler)
-            self.btnScanCtrlAdv.clicked.connect(self.startScanAdvThread)
+            self.btnScanCtrl.clicked.connect(self._startScanThreadHandler)
+            self.btnScanCtrlAdv.clicked.connect(self._startScanAdvThread)
         elif state == 'ABORT':
             self.btnScanCtrl.clicked.connect(self._abortScan)
             self.btnScanCtrlAdv.clicked.connect(self._abortScan)
@@ -4450,7 +4440,7 @@ class MainWindow(qtw.QMainWindow):
         if force or (self.connectedToUzed and self.idle):
             self.btnScanCtrlAdv.setEnabled(True)
 
-    def wrapUpStimulusScan(self):
+    def _wrapUpStimulusScan(self):
         # Set the active tab to be RESONANCE
         if AUTO_CHANGE_TAB:
             self.currentViewStage = MainView.RESULTS
