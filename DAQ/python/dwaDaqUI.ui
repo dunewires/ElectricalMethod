@@ -35,12 +35,12 @@
         <height>16777215</height>
        </size>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_39" stretch="2,10">
+      <layout class="QHBoxLayout" name="horizontalLayout_39" stretch="3,10">
        <item>
         <widget class="QWidget" name="controls" native="true">
          <property name="minimumSize">
           <size>
-           <width>110</width>
+           <width>190</width>
            <height>0</height>
           </size>
          </property>
@@ -1459,7 +1459,7 @@
                    </sizepolicy>
                   </property>
                   <property name="currentIndex">
-                   <number>1</number>
+                   <number>3</number>
                   </property>
                   <widget class="QWidget" name="tab_6">
                    <attribute name="title">
