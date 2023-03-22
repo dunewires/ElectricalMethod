@@ -536,7 +536,7 @@ class MainWindow(qtw.QMainWindow):
         self._scanConfigTableInit()
         self._resultsScansTableInit()
         self._resultsWiresTableInit()
-        self._initModels()
+
         self.heartPixmaps = [qtg.QPixmap(
             'icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
         self.heartval = 0
@@ -729,10 +729,6 @@ class MainWindow(qtw.QMainWindow):
         if newUuid not in uuids:         # if the new UUID not already in the list, then add it
             uuids.insert(0, newUuid)
         self.apaUuidListModel.setStringList(uuids)
-
-    def _initModels(self):
-        with open('./processing/X_and_G_layer_model.pkl', 'rb') as f:
-            self.model_x_g = pickle.load(f)
 
     def _scanConfigTableInit(self):
         # change scanConfigTable to QTableView
@@ -3052,7 +3048,7 @@ class MainWindow(qtw.QMainWindow):
         # process each scan
         for scan in scansToProcess:
             process_scan.process_scan(
-                resultsDict, scan, self.model_x_g, MAX_FREQ)
+                resultsDict, scan, MAX_FREQ)
 
         # save scan analysis results to JSON file
         self.writeResultsDict(resultsDict)
@@ -4448,9 +4444,9 @@ class MainWindow(qtw.QMainWindow):
         fullResultsDict = self.getResultsDict()
         scanResultsDict = self.newResultsDict()
         dirName = os.path.dirname(self.fnOfAmpData)
-        process_scan.process_scan(fullResultsDict, dirName, self.model_x_g)
+        process_scan.process_scan(fullResultsDict, dirName)
         scanType, apaChannels, results = process_scan.process_scan(
-            scanResultsDict, os.path.dirname(self.fnOfAmpData), self.model_x_g, MAX_FREQ, self.verbose)
+            scanResultsDict, os.path.dirname(self.fnOfAmpData), MAX_FREQ, self.verbose)
         for apaChannel, result in zip(apaChannels, results):
             if result == "bridged":
                 if self.skipChannels:
@@ -4525,7 +4521,7 @@ class MainWindow(qtw.QMainWindow):
             self.curves['resProcFit'][reg].setData(
                 self.ampDataS[reg]['freq'], bsub)
             segments, opt_res_arr, _, _, _ = process_scan.process_channel(
-                layer, apaCh, f, a, self.model_x_g, MAX_FREQ, self.verbose)
+                layer, apaCh, f, a, MAX_FREQ, self.verbose)
             self.expectedFreqs[reg.value] = expected_resonances
             self.resonantFreqs[reg.value] = list(opt_res_arr)
 

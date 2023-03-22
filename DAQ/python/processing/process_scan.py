@@ -210,16 +210,6 @@ def slope_near_bin(freqs, amps, i, window):
         startBin = startBin - (endBin - (length - 1))
     return (amps[endBin]-amps[startBin])/df
 
-def new_results_dictOLD(APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
-    resultsDict = {}
-    for l in APA_LAYERS:
-        resultsDict[l] = {}
-        for s in APA_SIDES:
-            resultsDict[l][s] = {}
-            for i in range(MAX_WIRE_SEGMENT[l]+1):
-                resultsDict[l][s][str(i).zfill(5)] = {"tension": {}, "continuity": {}}
-    return resultsDict
-
 def blank_tension_result():
     return {"tension": {}, "continuity": {}}
 
@@ -281,151 +271,6 @@ def min_peak_height(layer, a):
     trimmed = a[int(length/20):] # cut out first 5% of scan to avoid having transients affect the min peak height
     if layer in ['X','G']: return 0.1*np.max(trimmed)
     else: return max(5., 0.05*np.max(trimmed))
-            
-def process_channel_v1(layer, apaCh, f, a, maxFreq=250.): 
-    stepSize = f[1]-f[0]
-    segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,maxFreq)
-    roundex = []
-    for seg in expected_resonances:
-        roundex.append([round(x,2) for x in seg])
-    expected_resonances = roundex
-    
-    bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
-    bsubabs = np.abs(bsub)
-    smooth = savgol_filter(bsubabs, resonance_fitting.get_num_savgol_bins(f), 3)
-
-    #if plot: ax.plot(f,bsub)
-    if not resonance_fitting.contains_resonances(f,bsub,layer):
-        print(f"DWA Chan {apaCh}: No resonances found")
-        return segments, [[] for s in segments], [-1 for s in segments], [-1 for s in segments]
-
- 
-    if layer in ['X','G']:
-        peak_thresh = min_peak_height(layer, bsub)
-        pks = f
-        while len(pks) > 10:
-            pks, _ = find_peaks(bsub,height=peak_thresh,width=int(0.5/stepSize))
-            fpks = np.array([f[pk] for pk in pks])
-            fcut = np.min(f)+0.1*(np.max(f)-np.min(f)) # Freq value 10% of the way into the trace
-            fpks = fpks[fpks>fcut] # Cut peaks occuring in the first 5% to avoid transient effects being confused as peaks
-            peak_thresh = peak_thresh*1.2
-          
-        print("PEAKS", apaCh, fpks)
-        wire_segment_res = np.array(expected_resonances[0])
-        opt_res_arr = [wire_segment_res - np.min(wire_segment_res) + fpks[0]]
-        minMeasured = np.min(opt_res_arr[0])
-        minExpected = np.min(expected_resonances[0])
-        tension = 6.5*(minMeasured/minExpected)**2
-        return segments, opt_res_arr, [tension], [0]
-    else:
-        peak_thresh = min_peak_height(layer, smooth)
-        pks = f
-        while len(pks) > 10:
-            pks, props = find_peaks(smooth,height=peak_thresh,width=int(0.5/stepSize),prominence=5.)
-            peak_thresh = peak_thresh*1.2
-        fpks = np.array([f[pk] for pk in pks])   
-        print("PEAKS", apaCh, fpks)
-        placements, costs, diffs, tensions = resonance_fitting.analyze_res_placement(f,smooth,expected_resonances,fpks)
-        if len(placements) < 1: 
-            print(f"DWA Chan {apaCh}: No valid placements found")
-            return segments, [[] for s in segments], [-1 for s in segments], [-1 for s in segments]
-        # lowest_cost = np.min(costs)
-        # select_best = (costs < 1.2*lowest_cost)
-        # best_placements = placements[select_best]
-        # best_diffs = diffs[select_best]
-        # best_costs = costs[select_best]
-        # best_tensions = tensions[select_best]
-        # min_index = np.argmin(best_diffs)
-
-        
-        lowest_diff = np.min(diffs)
-        select_best = (diffs < 5*lowest_diff)
-        best_placements = placements[select_best]
-        best_tensions = tensions[select_best]
-        best_costs = costs[select_best]
-        best_diffs = diffs[select_best]
-        min_index = np.argmin(best_costs)        
-        # for i,placement in enumerate(best_placements):
-        #     print('PLACEMENT', placement, best_diffs[i], best_costs[i])
-
-        return segments, best_placements[min_index], best_tensions[min_index], np.std(best_tensions,0)
-
-def process_channel_v2(layer, apaCh, f, a, maxFreq=250., verbosity=0):
-    if maxFreq > np.max(f): maxFreq = np.max(f) 
-    segments,expected_resonances = channel_frequencies.get_expected_resonances(layer,apaCh,maxFreq)
-    # Get baseline subtracted trace
-    bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
-    # Scale trace to counter the effect that resonances at higher frequencies are smaller
-    bsubf = bsub*f**(1.5)
-    # Normalize
-    bsubf /= np.max(bsubf)
-    # Get the derivative/slope of the trace
-    m = np.array([slope_near_bin(f, bsubf, i, 5) for i in range(len(f))])
-    m /= np.max(m)
-    # The ringing resonances appear to be sin-like. So we add the square of the trace to the square of the derivative, which results in peaks where the trace is sin-like due to sin^2 + cos^2 being maximized.
-    t = bsubf**2+m**2
-    # Smooth out the processed trace
-    t_smooth = savgol_filter(t, resonance_fitting.get_num_savgol_bins(f), 3)
-    # Normalize the ptocessed trace
-    t_smooth /= np.max(t_smooth)
-    # Find the peaks in the trace that are at leas 5% of the largest peak.
-    stepSize = f[1]-f[0]
-    pks, props = find_peaks(t_smooth,height=0.05,width=int(0.5/stepSize))
-    fpks = np.array([f[pk] for pk in pks])
-    peak_heights = props['peak_heights']
-    clean_fpks = []
-    clean_heights = []
-    for i,fpk in enumerate(fpks):
-        lm = lowest_max_in_surrounding(f, t_smooth, fpk-30, fpk+30, 1, 5)
-        #print("lowest max", peak_heights[i], lm)
-        if peak_heights[i] > 10*lm: 
-            clean_fpks.append(fpk)
-            clean_heights.append(peak_heights[i])
-    fpks = np.array(clean_fpks)
-    peak_heights = np.array(clean_heights)
-    # If there are too many peaks, it is likely noisy data
-    # if len(fpks) > 20 or (layer in ['X','G'] and len(fpks) > 10): 
-    #     print(f"DWA Chan {apaCh}: Too noisy")
-    #     return segments, [[] for s in segments], [-1 for s in segments], [-1 for s in segments], fpks
-    if verbosity > 1: print("PEAKS", apaCh, fpks)
-    # Analyze all the possible placements for the resonances
-    placements, costs, diffs, tensions, reductions = resonance_fitting.analyze_res_placement(f,t_smooth,expected_resonances,fpks, peak_heights)
-    
-    # If no valid placements were found, abort
-    if len(placements) < 1: 
-        print(f"DWA Chan {apaCh}: No valid placements found")
-        return segments, [[] for s in segments], [-1 for s in segments], [-1 for s in segments], fpks
-    
-    # Gathe the placements that require moving the least away from the nominal tensions
-    lowest_diff = np.min(diffs)
-    select_low_diffs = (diffs < lowest_diff+20)
-    # Of those, choose the ones that minimize the "cost", which is a complex calculation but essentially means minimizing the number of peaks that don't have assigned resonances 
-    lowest_cost = np.min(costs[select_low_diffs])
-    select_best = select_low_diffs & (costs < 1.1*lowest_cost)
-    best_placements = placements[select_best]
-    best_tensions = tensions[select_best]
-    best_costs = costs[select_best]
-    best_diffs = diffs[select_best]
-    best_reductions = reductions[select_best]
-    # Select the best placement
-    min_index = np.argmin(best_diffs)        
-    for i,placement in enumerate(placements):
-        if verbosity > 1: print('Placement/diff/cost', placement, diffs[i], costs[i])
-    best_placement = best_placements[min_index]
-    best_tension = best_tensions[min_index]
-    dts = np.abs(best_tensions-best_tension)
-    refined_placement = []
-    refined_tension = []
-    for i,res_seg in enumerate(best_placement):
-        old_res = np.min(res_seg)
-        if np.max(res_seg) > 90: old_res = np.max(res_seg)
-        new_res = refine_peak_position(f,bsubf,old_res,radius=3)
-        new_res_seg = resonance_fitting.shift_res_seg_to_f0(res_seg, old_res, new_res)
-        refined_placement.append(new_res_seg)
-        refined_tension.append(best_tension[i]*new_res**2/old_res**2)
-    best_tension = refined_tension
-    best_placement = refined_placement
-    return segments, best_placement, best_tension, np.max(np.abs(dts),0), fpks
 
 def move_to_nth_nearest(res_seg, n, fpks, min_or_max = 'max'):
     if min_or_max == 'max':
@@ -465,71 +310,8 @@ NEAR_PEAK_AMPLITUDE = 0.2
 COST_F_THRESH = 150.
 COST_FIRST_PEAK_FACTOR = 2.
 
-def process_channel_x_g(layer, apa_ch, freq, ampl, model, max_freq=250., verbosity=0, nominal_tension = 6.5):
-    if verbosity > 1: 
-        print(f"################################################")
-        print(f"         PROCESSING CHANNEL {apa_ch}            ")
-        print(f"################################################")
-    num_peaks = 5 # This must match the value used during training
-    if max_freq > np.max(freq): 
-        max_freq = np.max(freq) 
-    segments, expected_resonances = channel_frequencies.get_expected_resonances(layer, apa_ch, max_freq)
-    default_res_arr = [[] for s in segments]
-    default_tensions = [-1 for s in segments]
-    default_confidences = [-1 for s in segments]
-    default_fpks = []
+def process_channel(layer, apaCh, f, a, maxFreq=250., verbosity=0, nominalTension = 6.5):
 
-    try:
-        if expected_resonances == []:
-            raise ResonanceFinderFailed("No expected resonances in the given frequency range")
-
-        # Prevent short scans or connectivity scans from being processed
-        if len(freq) < 50 or max(freq) > 450: 
-            raise ResonanceFinderFailed("Trace size out of range")
-            
-        # Get baseline subtracted trace
-        bsub = baseline_subtracted(freq, np.cumsum(ampl))
-        
-        # Remove scans with low rms ratio because they are likely all noise
-        rms_ratio = sliding_window_rms_ratio(freq, bsub, 10)
-        if rms_ratio < 4: 
-            raise ResonanceFinderFailed("Trace is too noisy")
-
-        # Get positive peak data
-        fpks_pos, heights_pos = get_channel_peak_data(freq, bsub, num_peaks)
-
-        # Generate a row of data
-        row_pos = fpks_pos + heights_pos
-        
-        # Get negative peak data
-        fpks_neg, heights_neg = get_channel_peak_data(freq, -bsub, num_peaks)
-
-        # Generate a row of data
-        row_neg = fpks_neg + heights_neg
-        
-        # Get the tension
-        pred_tension, pred_tension_err = predict_tension(row_pos, row_neg, model[0], model[1])
-
-        # Compute the resonance array
-        moved_res_array = [[val * (pred_tension / nominal_tension) ** 0.5 for val in expected_resonances[0]]]
-
-
-    except ResonanceFinderFailed as e:
-        if verbosity > 1: print("Error:", e)
-        return segments, default_res_arr, default_tensions, default_confidences, default_fpks
-    else:
-        if verbosity > 1: 
-            print("segments:", segments)
-            print("moved_res_array:", moved_res_array)
-            print("pred_tensions:", [pred_tension])
-            print("pred_tension_errs:", [pred_tension_err])
-        return segments, moved_res_array, [pred_tension], [pred_tension_err], fpks_pos
-
-
-def process_channel(layer, apaCh, f, a, model_x_g, maxFreq=250., verbosity=0, nominalTension = 6.5):
-    #if layer == "X" or layer == "G":
-    #    return process_channel_x_g(layer, apaCh, f, a, model_x_g, maxFreq, verbosity, nominalTension)
-    #verbosity = 2
     if verbosity > 1: 
         print(f"################################################")
         print(f"         PROCESSING CHANNEL {apaCh}             ")
@@ -539,17 +321,16 @@ def process_channel(layer, apaCh, f, a, model_x_g, maxFreq=250., verbosity=0, no
     default_res_arr = [[] for s in segments]
     default_tensions = [-1 for s in segments]
     default_confidences = [-1 for s in segments]
-    default_fpks = []
     if expected_resonances == []:
         if verbosity > 1: print("ERROR: No expected resonances in the given frequency range")
-        return segments, default_res_arr, default_tensions, default_confidences, default_fpks
+        return segments, default_res_arr, default_tensions, default_confidences
     flat_expected = np.array([sub_res for res_seg in expected_resonances for sub_res in res_seg])
 
     # Get baseline subtracted trace
     bsub = resonance_fitting.baseline_subtracted(f,np.cumsum(a))
     if np.max(np.abs(bsub)) < BSUB_MIN: 
         print("No expected resonances in the given frequency range")
-        return segments, default_res_arr, default_tensions, default_confidences, default_fpks 
+        return segments, default_res_arr, default_tensions, default_confidences 
     # Normalize
     bsub /= np.max(bsub)
     # Get the derivative/slope of the trace
@@ -728,148 +509,214 @@ def process_channel(layer, apaCh, f, a, model_x_g, maxFreq=250., verbosity=0, no
                 selected_tension.append(nominalTension*(np.max(selected_moved_res_arr[i])/np.max(expected_resonances[i]))**2)
 
     if selected_moved_res_arr == []:
-        return segments, default_res_arr, default_tensions, default_confidences, fpks
+        return segments, default_res_arr, default_tensions, default_confidences
     else:
-        return segments, selected_moved_res_arr, selected_tension, [0]*len(selected_tension), fpks
+        return segments, selected_moved_res_arr, selected_tension, [0]*len(selected_tension)
 
-def process_scan_v1(resultsDict, dirName, maxFreq=250.):
-    '''Process a scan with a given directory name and update the given results dictionary.'''
-    try: # Ensure that there is an amplitudeData.json file present!
-        with open(dirName+'/amplitudeData.json', "r") as fh:
-            data = json.load(fh)
+from typing import Any, Dict, List, Tuple, Union
 
-    except:
-        print(f"Could not find scan (bad json file?) {dirName}...")
+
+def load_amplitude_data(
+    dir_name: str, verbosity: int = 0
+) -> Union[Dict[str, Any], None]:
+    """Load amplitude data from a JSON file in the specified directory."""
+    amplitude_data_file = os.path.join(dir_name, "amplitudeData.json")
+
+    try:
+        if verbosity > 0:
+            print(amplitude_data_file)
+
+        with open(amplitude_data_file, "r") as file_handle:
+            data = json.load(file_handle)
+        return data
+
+    except Exception as e:
+        if verbosity > 0:
+            print(f"Could not find scan (bad json file?) {dir_name}...")
         return None
-    
-    stage = data['stage']
-    layer = data['layer']
-    side = data['side']
-    scanId = os.path.basename(dirName)
-    scanType = data['type']
-    print("Processing ",stage,layer,side,scanId,scanType)
+
+
+def process_non_continuity_scan(
+    data: Dict[str, Any], max_freq: float, verbosity: int
+) -> List[Any]:
+    """Process a non-continuity scan given the loaded amplitude data."""
     results = []
-    apaChannels = data['apaChannels']
 
-    if scanType == 'Continuity':
-        for reg, apaCh in enumerate(apaChannels):
-            dwaCh = str(reg)
-            print(f"Processing {reg}")
-            #print(data[dwaCh].keys())
-            apaCh = data['apaChannels'][reg]
-            if not apaCh:
-                results.append("no channel")
-            a = np.array(data[dwaCh]['ampl'])
-            # If 80% of the values are above 30000, it's probably a bridged channel
-            if len(a) > 0 and len(a[a>30000])/len(a) > 0.8:
-                results.append("bridged")
-            else:
-                results.append("ok")
+    for reg in range(8):
+        dwa_channel = str(reg)
+        apa_channel = data["apaChannels"][reg]
 
-        # channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr = capacitanceFile.connectivityTest(dirName)
-        # print("Continuity results")
-        # print(booleanArr)
-        # for i, chanName in enumerate(channelNameArr):
-        #     apaChan = int(chanName[1:]) # Converts "U1" to 1
-        #     segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan)
-        #     continuous = booleanArr[i]
-        #     capacitanceCal = calibratedCapArr[i]
-        #     capacitanceUnCal = uncalibratedCapArr[i]
-        #     if resultsDict:
-        #         update_results_dict_continuity(resultsDict, stage, layer, side, scanId, segments, continuous, capacitanceCal, capacitanceUnCal)
-    else:
-        for reg in range(8):
-            dwaCh = str(reg)
-            print(f"Processing {reg}")
-            #print(data[dwaCh].keys())
-            apaCh = data['apaChannels'][reg]
-            if not apaCh:
-                print(f"DWA Chan {reg}: No channel")
-                continue
-                
-            f = np.array(data[dwaCh]['freq'])
-            a = np.array(data[dwaCh]['ampl'])
-            if len(f) == 0 or len(f) < 50:
-                print(f"DWA Chan {reg}: Not a valid scan")
-                continue
+        if verbosity > 0:
+            print(f"Processing {reg}: APA {apa_channel}")
 
-            segments, opt_res_arr, best_tensions, best_tension_confidences = process_channel(layer, apaCh, f, a, maxFreq)
-            results.append(best_tensions)
-            if resultsDict:
-                update_results_dict_tension(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_confidences)
-    return apaChannels, results
+        if not apa_channel:
+            if verbosity > 0:
+                print(f"DWA Channel {reg}: No channel")
+            results.append(None)
+            continue
+
+        frequencies = np.array(data[dwa_channel]["freq"])
+        amplitudes = np.array(data[dwa_channel]["ampl"])
+
+        if len(frequencies) == 0 or len(frequencies) < 50:
+            if verbosity > 0:
+                print(f"DWA Channel {reg}: Not a valid scan")
+            results.append(None)
+            continue
+
+        (
+            segments,
+            opt_res_arr,
+            best_tensions,
+            best_tension_confidences,
+            fpks,
+        ) = process_channel(layer, apa_channel, frequencies, amplitudes, max_freq, verbosity)
+
+        results.append(best_tensions)
+    return results
 
 
-def process_scan(resultsDict, dirName, model_x_g, maxFreq=250., verbosity=0):
-    #verbosity = 2
-    '''Process a scan with a given directory name and update the given results dictionary.'''
-    try: # Ensure that there is an amplitudeData.json file present!
-        if verbosity > 0: print(dirName+'/amplitudeData.json')
-        with open(dirName+'/amplitudeData.json', "r") as fh:
-            data = json.load(fh)
+def process_scan(
+    results_dict: Dict[str, Any],
+    dir_name: str,
+    max_freq: float = 250.0,
+    verbosity: int = 0,
+) -> Tuple[Union[str, None], Union[List[int], None], Union[List[Any], None]]:
+    """
+    Process a scan with a given directory name and update the given results dictionary.
 
-    except:
-        #print(f"Could not find scan (bad json file?) {dirName}...")
+    :param results_dict: A dictionary containing the results.
+    :param dir_name: The directory name containing the scan.
+    :param max_freq: Maximum frequency to process.
+    :param verbosity: Verbosity level for output messages.
+    :return: A tuple containing scan type, APA channels, and results.
+    """
+
+    data = load_amplitude_data(dir_name, verbosity)
+    if not data:
         return None, None, None
-    
-    stage = data['stage']
-    layer = data['layer']
-    side = data['side']
-    scanId = os.path.basename(dirName)
-    scanType = data['type']
-    if verbosity > 0: 
-        print("Processing ",stage,layer,side,scanId,scanType)
-    results = []
-    apaChannels = data['apaChannels']
 
-    if scanType == 'Continuity':
-        for reg, apaCh in enumerate(apaChannels):
-            dwaCh = str(reg)
-            if verbosity > 0: print(f"Processing {reg}")
-            #print(data[dwaCh].keys())
-            apaCh = data['apaChannels'][reg]
-            if not apaCh:
-                results.append("no channel")
-            a = np.array(data[dwaCh]['ampl'])
-            # If 80% of the values are above 30000, it's probably a bridged channel
-            if len(a) > 0 and len(a[a>30000])/len(a) > 0.8:
-                results.append("bridged")
-            else:
-                results.append("ok")
+    stage = data["stage"]
+    layer = data["layer"]
+    side = data["side"]
+    scan_id = os.path.basename(dir_name)
+    scan_type = data["type"]
 
-        # channelNameArr, booleanArr, uncalibratedCapArr, calibratedCapArr = capacitanceFile.connectivityTest(dirName)
-        # print("Continuity results")
-        # print(booleanArr)
-        # for i, chanName in enumerate(channelNameArr):
-        #     apaChan = int(chanName[1:]) # Converts "U1" to 1
-        #     segments, _ = channel_frequencies.get_expected_resonances(layer,apaChan)
-        #     continuous = booleanArr[i]
-        #     capacitanceCal = calibratedCapArr[i]
-        #     capacitanceUnCal = uncalibratedCapArr[i]
-        #     if resultsDict:
-        #         update_results_dict_continuity(resultsDict, stage, layer, side, scanId, segments, continuous, capacitanceCal, capacitanceUnCal)
+    if verbosity > 0:
+        print(f"Processing {stage} {layer} {side} {scan_id} {scan_type}")
+
+    apa_channels = data["apaChannels"]
+
+    if scan_type == "Continuity":
+        results = []
     else:
+        results = process_non_continuity_scan(data, max_freq, verbosity)
+
+        if results_dict:
+            for idx, best_tensions in enumerate(results):
+                if best_tensions:
+                    segments, _, _, best_tension_confidences, _ = process_channel
+                    
+    return scan_type, apa_channels, results
+
+def process_scan(
+    results_dict: Dict[str, Any],
+    dir_name: str,
+    max_freq: float = 250.0,
+    verbosity: int = 0,
+) -> Tuple[Union[str, None], Union[List[int], None], Union[List[Any], None]]:
+    """
+    Process a scan with a given directory name and update the given results dictionary.
+
+    :param results_dict: A dictionary containing the results.
+    :param dir_name: The directory name containing the scan.
+    :param max_freq: Maximum frequency to process.
+    :param verbosity: Verbosity level for output messages.
+    :return: A tuple containing scan type, APA channels, and results.
+    """
+
+    # Define amplitude data file path
+    amplitude_data_file = os.path.join(dir_name, "amplitudeData.json")
+
+    # Load the JSON file
+    try:
+        if verbosity > 0:
+            print(amplitude_data_file)
+
+        with open(amplitude_data_file, "r") as file_handle:
+            data = json.load(file_handle)
+
+    except Exception as e:
+        if verbosity > 0:
+            print(f"Could not find scan (bad json file?) {dir_name}...")
+        return None, None, None
+
+    # Extract metadata from the loaded data
+    stage = data["stage"]
+    layer = data["layer"]
+    side = data["side"]
+    scan_id = os.path.basename(dir_name)
+    scan_type = data["type"]
+
+    if verbosity > 0:
+        print(f"Processing {stage} {layer} {side} {scan_id} {scan_type}")
+
+    results = []
+    apa_channels = data["apaChannels"]
+
+    # Check if the scan is of type "Continuity"
+    if scan_type == "Continuity":
+        pass
+
+    else:
+        # Process non-continuity scans
         for reg in range(8):
-            dwaCh = str(reg)
-            #print(data[dwaCh].keys())
-            apaCh = data['apaChannels'][reg]
-            if verbosity > 0: print(f"Processing {reg}: APA {apaCh}")
-            if not apaCh:
-                if verbosity > 0: print(f"DWA Chan {reg}: No channel")
-                results.append(None)
-                continue
-                
-            f = np.array(data[dwaCh]['freq'])
-            a = np.array(data[dwaCh]['ampl'])
-            if len(f) == 0 or len(f) < 50:
-                if verbosity > 0: print(f"DWA Chan {reg}: Not a valid scan")
+            dwa_channel = str(reg)
+            apa_channel = data["apaChannels"][reg]
+
+            if verbosity > 0:
+                print(f"Processing {reg}: APA {apa_channel}")
+
+            # Check if APA channel exists
+            if not apa_channel:
+                if verbosity > 0:
+                    print(f"DWA Channel {reg}: No channel")
                 results.append(None)
                 continue
 
-            segments, opt_res_arr, best_tensions, best_tension_confidences, fpks = process_channel(layer, apaCh, f, a, model_x_g, maxFreq, verbosity)
-            #print('best',best_tensions)
+            # Extract frequency and amplitude data
+            frequencies = np.array(data[dwa_channel]["freq"])
+            amplitudes = np.array(data[dwa_channel]["ampl"])
+
+            # Check if frequency data is valid
+            if len(frequencies) == 0 or len(frequencies) < 50:
+                if verbosity > 0:
+                    print(f"DWA Channel {reg}: Not a valid scan")
+                results.append(None)
+                continue
+
+            # Process the channel data
+            (
+                segments,
+                opt_res_arr,
+                best_tensions,
+                best_tension_confidences,
+                fpks,
+            ) = process_channel(layer, apa_channel, frequencies, amplitudes, max_freq, verbosity)
+
             results.append(best_tensions)
-            if resultsDict:
-                update_results_dict_tension(resultsDict, stage, layer, side, scanId, segments, best_tensions, best_tension_confidences)
-        
-    return scanType, apaChannels, results
+
+            # Update the results dictionary
+            if results_dict:
+                update_results_dict_tension(
+                    results_dict,
+                    stage,
+                    layer,
+                    side,
+                    scan_id,
+                    segments,
+                    best_tensions,
+                    best_tension_confidences,
+                )
+
+    return scan_type, apa_channels, results
