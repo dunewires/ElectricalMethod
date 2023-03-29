@@ -68,8 +68,8 @@ sys.path.append('../../../dunedb/m2m')
 import config_generator
 import channel_map
 import channel_frequencies
-import resonance_fitting
-import process_scan
+import peak_deconvolution
+import data_processing
 from common import ConnectToAPI, PerformAction
 import boombox
 
@@ -2932,7 +2932,7 @@ class MainWindow(qtw.QMainWindow):
         self.viewResults()
 
     def newResultsDict(self):
-        return process_scan.new_results_dict(APA_STAGES_SCANS, APA_LAYERS,
+        return data_processing.new_results_dict(APA_STAGES_SCANS, APA_LAYERS,
                                              APA_SIDES, MAX_WIRE_SEGMENT)
 
     def getResultsDict(self):
@@ -3051,7 +3051,7 @@ class MainWindow(qtw.QMainWindow):
 
         # process each scan
         for scan in scansToProcess:
-            process_scan.process_scan(
+            data_processing.process_scan(
                 resultsDict, scan, self.model_x_g, MAX_FREQ)
 
         # save scan analysis results to JSON file
@@ -4448,8 +4448,8 @@ class MainWindow(qtw.QMainWindow):
         fullResultsDict = self.getResultsDict()
         scanResultsDict = self.newResultsDict()
         dirName = os.path.dirname(self.fnOfAmpData)
-        process_scan.process_scan(fullResultsDict, dirName, self.model_x_g)
-        scanType, apaChannels, results = process_scan.process_scan(
+        data_processing.process_scan(fullResultsDict, dirName, self.model_x_g)
+        scanType, apaChannels, results = data_processing.process_scan(
             scanResultsDict, os.path.dirname(self.fnOfAmpData), self.model_x_g, MAX_FREQ, self.verbose)
         for apaChannel, result in zip(apaChannels, results):
             if result == "bridged":
@@ -4518,14 +4518,15 @@ class MainWindow(qtw.QMainWindow):
             f = np.array(self.ampDataS[reg]['freq'])
             a = np.array(self.ampDataS[reg]['ampl'])
             maxFreq = np.min([np.max(f), MAX_FREQ])
-            segments, expected_resonances = channel_frequencies.get_expected_resonances(
-                layer, apaCh, maxFreq)
+            segments, expected_resonances = channel_frequencies.get_expected_frequencies(
+                apaCh, layer, maxFreq)
             self.resonantFreqs[reg.value] = [[] for _ in segments]
-            bsub = resonance_fitting.baseline_subtracted(f, np.cumsum(a))
+            smoothed_signal = peak_deconvolution.preprocess_signal(f, a)
             self.curves['resProcFit'][reg].setData(
-                self.ampDataS[reg]['freq'], bsub)
-            segments, opt_res_arr, _, _, _ = process_scan.process_channel(
-                layer, apaCh, f, a, self.model_x_g, MAX_FREQ, self.verbose)
+                self.ampDataS[reg]['freq'], smoothed_signal)
+            segments, opt_res_arr, best_tensions, best_tension_confidences, fpks = peak_deconvolution.fit_tensions_scipy(
+                f, smoothed_signal, apaCh, layer
+            )
             self.expectedFreqs[reg.value] = expected_resonances
             self.resonantFreqs[reg.value] = list(opt_res_arr)
 

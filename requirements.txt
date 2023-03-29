@@ -5,3 +5,4 @@ scikit-learn
 pyqt5
 pyqtgraph
 boombox
+pandas
