@@ -3,6 +3,7 @@ import os
 import sys
 import numpy as np
 import pandas as pd
+
 sys.path.append("../mappings")
 from channel_frequencies import get_frequency_expectation
 from peak_deconvolution import resonance_fit_scipy
@@ -10,6 +11,7 @@ from peak_deconvolution import resonance_fit_scipy
 
 def blank_tension_result():
     return {"tension": {}, "continuity": {}}
+
 
 def new_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
     resultsDict = {}
@@ -19,7 +21,7 @@ def new_results_dict(STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT):
             resultsDict[stage][layer] = {}
             for side in APA_SIDES:
                 resultsDict[stage][layer][side] = {}
-                for i in range(1,MAX_WIRE_SEGMENT[layer]+1):
+                for i in range(1, MAX_WIRE_SEGMENT[layer] + 1):
                     resultsDict[stage][layer][side][str(i).zfill(5)] = blank_tension_result()
     return resultsDict
 
@@ -82,9 +84,13 @@ def process_scan(resultsDict, dirName, model_x_g, maxFreq=250.0, verbosity=0):
                 results.append(None)
                 continue
 
-            segments, opt_res_arr, best_tensions, best_tension_confidences, fpks = resonance_fit_scipy(
-                layer, apaCh, f, a, model_x_g, maxFreq, verbosity
-            )
+            (
+                segments,
+                opt_res_arr,
+                best_tensions,
+                best_tension_confidences,
+                fpks,
+            ) = resonance_fit_scipy(f, a, apaCh, layer)
             # print('best',best_tensions)
             results.append(best_tensions)
             if resultsDict:
@@ -99,17 +105,30 @@ def process_scan(resultsDict, dirName, model_x_g, maxFreq=250.0, verbosity=0):
                     best_tension_confidences,
                 )
 
-def update_results_dict_tension(resultsDict, stage, layer, side, scanId, wireSegments, tensions, tension_confidences):
+
+def update_results_dict_tension(
+    resultsDict, stage, layer, side, scanId, wireSegments, tensions, tension_confidences
+):
     for i, wireSegment in enumerate(wireSegments):
         tension = tensions[i]
         tension_confidence = tension_confidences[i]
         wireSegmentStr = str(wireSegment).zfill(5)
-        if wireSegmentStr not in resultsDict[stage][layer][side].keys(): resultsDict[stage][layer][side][wireSegmentStr] = blank_tension_result()
-        if not tension: continue
+        if wireSegmentStr not in resultsDict[stage][layer][side].keys():
+            resultsDict[stage][layer][side][wireSegmentStr] = blank_tension_result()
+        if not tension:
+            continue
         elif tension == -1:
-            resultsDict[stage][layer][side][wireSegmentStr]["tension"][scanId] = {'tension': 'Not Found'}
+            resultsDict[stage][layer][side][wireSegmentStr]["tension"][scanId] = {
+                "tension": "Not Found"
+            }
         elif tension > 0:
-            resultsDict[stage][layer][side][str(wireSegment).zfill(5)]["tension"][scanId] = {'tension': tension, 'tension_confidence': tension_confidence, 'submitted': 'Auto', 'algo_ver':algo_version}
+            resultsDict[stage][layer][side][str(wireSegment).zfill(5)]["tension"][scanId] = {
+                "tension": tension,
+                "tension_confidence": tension_confidence,
+                "submitted": "Auto",
+                "algo_ver": "peak_deconvolution",
+            }
+
 
 def load_json_at_index(df, index):
     file_path = df.iloc[index]["json_path"]
@@ -119,14 +138,15 @@ def load_json_at_index(df, index):
         data = json.load(f)
     return data
 
+
 def load_raw_data(directory, include_wires=False):
     """Load raw data from a given directory.
-    
+
     Parameters
     ----------
     directory : str
         Path to directory containing scan folders
-    
+
     Returns
     -------
     df : pd.DataFrame

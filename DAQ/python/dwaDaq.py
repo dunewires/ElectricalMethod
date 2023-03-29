@@ -4518,13 +4518,13 @@ class MainWindow(qtw.QMainWindow):
             f = np.array(self.ampDataS[reg]['freq'])
             a = np.array(self.ampDataS[reg]['ampl'])
             maxFreq = np.min([np.max(f), MAX_FREQ])
-            segments, expected_resonances = channel_frequencies.get_expected_frequencies(
+            segments, expected_resonances = channel_frequencies.get_frequency_expectation(
                 apaCh, layer, maxFreq)
             self.resonantFreqs[reg.value] = [[] for _ in segments]
             smoothed_signal = peak_deconvolution.preprocess_signal(f, a)
             self.curves['resProcFit'][reg].setData(
                 self.ampDataS[reg]['freq'], smoothed_signal)
-            segments, opt_res_arr, best_tensions, best_tension_confidences, fpks = peak_deconvolution.fit_tensions_scipy(
+            segments, opt_res_arr, best_tensions, best_tension_confidences, fpks = peak_deconvolution.resonance_fit_scipy(
                 f, smoothed_signal, apaCh, layer
             )
             self.expectedFreqs[reg.value] = expected_resonances
