@@ -29,3 +29,4 @@ DAQ/python/mappings/__pycache__/*
 *udpstream.txt
 *.status
 .DS_Store
+.venv/
