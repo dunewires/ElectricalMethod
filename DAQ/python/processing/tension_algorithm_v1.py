@@ -1,5 +1,5 @@
 import resonance_fitting
-import tension_algorithm
+from tension_algorithm import TensionAlgorithmBase
 import numpy as np
 from scipy.signal import savgol_filter, find_peaks
 import channel_frequencies
@@ -8,7 +8,6 @@ import itertools
 from scipy.interpolate import interp1d
 from typing import List, Tuple, Optional, Dict, Any, Union
 from scipy import signal
-
 
 BSUB_MIN = 30
 SMOOTH_PEAK_HEIGHT_START = 0.3
@@ -34,7 +33,7 @@ NEAR_PEAK_AMPLITUDE = 0.2
 COST_F_THRESH = 150.
 COST_FIRST_PEAK_FACTOR = 2.
 
-class TensionAlgorithm(tension_algorithm.TensionAlgorithmBase):
+class TensionAlgorithmV1(TensionAlgorithmBase):
     def __init__(verbosity):
         super().__init__(verbosity)
 
@@ -78,7 +77,7 @@ class TensionAlgorithm(tension_algorithm.TensionAlgorithmBase):
         flat_expected = np.array([sub_res for res_seg in expected_resonances for sub_res in res_seg])
 
         # Get baseline subtracted trace
-        bsub = self.baseline_subtracted(freq_arr, np.cumsum(ampl_arr))
+        bsub = self.cumsum_and_baseline_subtracted(freq_arr, np.cumsum(ampl_arr))
 
         # Normalize
         bsub /= np.max(bsub)
@@ -126,9 +125,9 @@ class TensionAlgorithm(tension_algorithm.TensionAlgorithmBase):
         else:
             return wire_segments, selected_moved_res_arr, selected_tension, [0]*len(selected_tension)
 
-    def baseline_subtracted(self, freq_arr: np.ndarray, ampl_arr: np.ndarray) -> np.ndarray:
+    def cumsum_and_baseline_subtracted(self, freq_arr: np.ndarray, ampl_arr: np.ndarray) -> np.ndarray:
         """
-        Subtract the smoothed curve (baseline) from the amplitude array using the Savitzky-Golay filter.
+        Take the cumulative sum of the amplitude array and subtract the smoothed curve (baseline) using the Savitzky-Golay filter.
         
         Args:
             freq_arr (np.ndarray): A NumPy array of frequency values.
@@ -141,7 +140,7 @@ class TensionAlgorithm(tension_algorithm.TensionAlgorithmBase):
         num_bins = self.get_num_savgol_bins(freq_arr)
 
         # Apply the Savitzky-Golay filter to smooth the amplitude array
-        smooth_curve = signal.savgol_filter(ampl_arr, num_bins, 3)
+        smooth_curve = signal.savgol_filter(np.cumsum(ampl_arr), num_bins, 3)
 
         # Subtract the smoothed curve (baseline) from the original amplitude array
         return ampl_arr - smooth_curve
@@ -720,39 +719,3 @@ class TensionAlgorithm(tension_algorithm.TensionAlgorithmBase):
                     selected_tension.append(nominal_tension * (np.max(selected_moved_res_arr[i]) / np.max(expected_resonances[i])) ** 2)
 
         return selected_tension
-
-
-    def calculate_costs(self, movements: List[int], costs: List[int]) -> List[int]:
-        # Initialize an empty list to store the calculated costs
-        calculated_costs = []
-
-        # Iterate through the movements
-        for movement in movements:
-            # Calculate the cost for the current movement and append it to the calculated_costs list
-            cost = 0
-            for i in range(len(costs)):
-                cost += movement * costs[i]
-            calculated_costs.append(cost)
-
-        # Return the list of calculated costs
-        return calculated_costs
-
-    def select_best_arr(self, costs: List[int], arrays: List[List[int]]) -> Tuple[int, List[int]]:
-        # Find the index of the minimum cost in the costs list
-        min_cost_index = costs.index(min(costs))
-        
-        # Get the array corresponding to the minimum cost
-        best_arr = arrays[min_cost_index]
-
-        # Return the minimum cost and the best array as a tuple
-        return min_cost_index, best_arr
-
-    def get_selected_tension(self, tensions: List[float], best_index: int) -> float:
-        # Get the selected tension corresponding to the best_index
-        selected_tension = tensions[best_index]
-
-        # Return the selected tension
-        return selected_tension
-
-
-

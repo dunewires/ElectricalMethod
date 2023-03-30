@@ -70,6 +70,7 @@ import channel_map
 import channel_frequencies
 import resonance_fitting
 import process_scan
+import tension_algorithm
 from common import ConnectToAPI, PerformAction
 import boombox
 
@@ -4506,22 +4507,23 @@ class MainWindow(qtw.QMainWindow):
                 continue
 
             layer = self.ampDataS['layer']
-            apaCh = self.ampDataS['apaChannels'][reg]
-            if not apaCh:
+            apa_channel = self.ampDataS['apaChannels'][reg]
+            if not apa_channel:
                 print(f"DWA Chan {reg.value}: No channel")
                 continue
 
-            f = np.array(self.ampDataS[reg]['freq'])
-            a = np.array(self.ampDataS[reg]['ampl'])
-            maxFreq = np.min([np.max(f), MAX_FREQ])
+            freq_arr = np.array(self.ampDataS[reg]['freq'])
+            ampl_arr = np.array(self.ampDataS[reg]['ampl'])
+            max_freq = np.min([np.max(freq_arr), MAX_FREQ])
             segments, expected_resonances = channel_frequencies.get_expected_resonances(
-                layer, apaCh, maxFreq)
+                layer, apa_channel, max_freq)
             self.resonantFreqs[reg.value] = [[] for _ in segments]
-            bsub = resonance_fitting.baseline_subtracted(f, np.cumsum(a))
+            algo = process_scan.get_tension_algorithm(self.algorithm_version, self.verbose)
+            bsub = algo.cumsum_and_baseline_subtracted(freq_arr, ampl_arr)
             self.curves['resProcFit'][reg].setData(
                 self.ampDataS[reg]['freq'], bsub)
-            segments, opt_res_arr, _, _, _ = process_scan.process_channel(
-                layer, apaCh, f, a, MAX_FREQ, self.verbose)
+            segments, opt_res_arr, _, _, _ = algo.process_channel(
+                layer, apa_channel, freq_arr, ampl_arr, MAX_FREQ, self.verbose)
             self.expectedFreqs[reg.value] = expected_resonances
             self.resonantFreqs[reg.value] = list(opt_res_arr)
 

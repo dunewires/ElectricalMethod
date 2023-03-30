@@ -7,12 +7,6 @@ def get_num_savgol_bins(freq):
     num_bins = int(round(27/(8*step_size)))
     if (num_bins % 2) == 0: num_bins += 1
     return num_bins
-    
-def baseline_subtracted(freq, amps):
-    '''Use the savgol filter to smooth out a trace.'''
-    num_bins = get_num_savgol_bins(freq)
-    smooth_curve = signal.savgol_filter(amps, num_bins, 3)
-    return amps-smooth_curve
 
 def get_r2(arr):
     '''Comutes the r-squared of an array'''

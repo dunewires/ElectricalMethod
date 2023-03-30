@@ -1,5 +1,3 @@
-import tension_algorithm_v1
-import tension_algorithm_v2
 from typing import List, Tuple, Optional, Dict, Any, Union
 from abc import ABC, abstractmethod
 import numpy as np
@@ -8,7 +6,7 @@ class TensionAlgorithmBase(ABC):
     def __init__(self, verbosity):
         self.verbosity = verbosity
     
-    @abstractmethod
+    @abstractmethod # This must be implemented by derived classes
     def process_channel(self, layer: int, apa_channel: int, freq_arr: np.ndarray, ampl_arr: np.ndarray, 
                         max_freq: float = 250., verbosity: int = 0, nominal_tension: float = 6.5) -> Tuple[List, List, List, List]:
         """
@@ -32,10 +30,10 @@ class TensionAlgorithmBase(ABC):
         """
         pass
     
-    @abstractmethod
-    def baseline_subtracted(self, freq_arr: np.ndarray, ampl_arr: np.ndarray) -> np.ndarray:
+    @abstractmethod # This must be implemented by derived classes
+    def cumsum_and_baseline_subtracted(self, freq_arr: np.ndarray, ampl_arr: np.ndarray) -> np.ndarray:
         """
-        Generate a waveform with the baseline subtracted to display in plots.
+        Take the raw amplitude array and generate a waveform to display in plots for manual correction.
         
         Args:
             freq_arr (np.ndarray): A NumPy array of frequency values.
@@ -84,10 +82,4 @@ class TensionAlgorithmBase(ABC):
 
         return segments, default_res_arr, default_tensions, default_confidences
 
-def get_tension_algorithm(version, verbosity):
-    if version == "v1":
-        return tension_algorithm_v1.TensionAlgorithm(verbosity)
-    elif version == "v2":
-        return tension_algorithm_v2.TensionAlgorithm(verbosity)
-    else:
-        return None
+
