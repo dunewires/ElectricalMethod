@@ -26,12 +26,12 @@ between the results of this algorithm and laser measurements performed on APA4.
 
 
 class TensionAlgorithmV2(TensionAlgorithmBase):
-    def __init__(verbosity):
+    def __init__(self, verbosity):
         super().__init__(verbosity)
 
     def process_channel(
         self,
-        layer: int,
+        layer: str,
         apa_channel: int,
         freq_arr: np.ndarray,
         ampl_arr: np.ndarray,
@@ -43,7 +43,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         Process a given channel to find the optimal placement of resonances and calculate the tension of each segment.
 
         Args:
-            layer (int): The layer of the channel.
+            layer (str): The layer of the channel.
             apa_channel (int): The channel number.
             freq_arr (np.ndarray): A NumPy array of frequency values.
             ampl_arr (np.ndarray): A NumPy array of amplitude values.
@@ -107,16 +107,16 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         """
 
         # Check that files exist and load the models. Return NaNs if they don't.
-        if layer in [0, 1]:
+        if layer in ["X", "G"]:
             try:
                 model = joblib.load("tension_algorithm_v2_xg.pkl")
             except FileNotFoundError:
-                return np.full(len(diagnostics_dict["segment"]), np.nan)
-        elif layer in [2, 3]:
+                return np.full(len(diagnostics_dict["min_weights"]), np.nan)
+        elif layer in ["U", "V"]:
             try:
                 model = joblib.load("tension_algorithm_v2_uv.pkl")
             except FileNotFoundError:
-                return np.full(len(diagnostics_dict["segment"]), np.nan)
+                return np.full(len(diagnostics_dict["min_weights"]), np.nan)
         else:
             raise ValueError("Invalid layer number.")
 
@@ -365,7 +365,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         b=0,
         downsample=1,
     ):
-        adjusted_frequencies = self.get_tension_adjusted_frequencies(tensions, default_frequencies)
+        adjusted_frequencies = self._get_tension_adjusted_frequencies(tensions, default_frequencies)
         # combined the frequencies for each segment into one array
         expected_frequencies = np.concatenate(adjusted_frequencies)
         # Expected frequencies where the Gaussian kernels are centered are offset
@@ -378,7 +378,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         # Need to convert from the frequency to the index in the correlation amplitude.
         max_freq, min_freq = np.max(x), np.min(x)
         gauss_locations = ((expected_frequencies - min_freq) / (max_freq - min_freq)) * len(x)
-        weights, residual = self.deconvolve_resonances(corr_amplitude, gauss_scale, gauss_locations)
+        weights, residual = self._deconvolve_resonances(corr_amplitude, gauss_scale, gauss_locations)
         # undo the downsampling for gauss locations
         gauss_locations = gauss_locations * downsample
         return weights, residual, gauss_locations
@@ -442,6 +442,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             b=GAUSS_OFFSET,
             downsample=downsample,
         )
+        
         unmatched_peak_frequencies, unmatched_peak_weights = self._find_unmatched_peaks(
             x,
             corr_amplitude,
@@ -452,6 +453,10 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         # be indicated by a very small weight.
         merged_weights = []
         frequencies = self._get_tension_adjusted_frequencies(tensions, default_frequencies)
+        # Turn the array of flat weights into a list of arrays, where each array corresponds
+        # to the weights for a segment. This assumes that the order of the weights is the
+        # same as the order of the frequencies.
+        weights = self._unflatten_weights(default_frequencies, weights)
         for segment_weights, segment_freq in zip(weights, frequencies):
             # Sometimes two frequencies within a segment are very close to each other,
             # which causes the weight of one of them to go to zero. In these cases
