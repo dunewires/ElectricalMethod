@@ -34,7 +34,7 @@ COST_F_THRESH = 150.
 COST_FIRST_PEAK_FACTOR = 2.
 
 class TensionAlgorithmV1(TensionAlgorithmBase):
-    def __init__(verbosity):
+    def __init__(self, verbosity):
         super().__init__(verbosity)
 
     def process_channel(self, layer: int, apa_channel: int, freq_arr: np.ndarray, ampl_arr: np.ndarray, 

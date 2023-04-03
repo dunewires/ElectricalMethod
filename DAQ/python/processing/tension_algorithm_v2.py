@@ -3,7 +3,7 @@ import joblib
 import numpy as np
 from typing import List, Tuple, Optional, Dict, Any, Union
 
-from scipy import signal, optimize
+from scipy import signal, optimize, stats
 from tension_algorithm import TensionAlgorithmBase
 
 sys.path.append("../mappings/")
@@ -17,11 +17,11 @@ Marginalized fits on a number of spectra revealed that these values are a good
 approximation of the shape of the resonances in the DWA scans and there is no
 need to re-fit them for every spectrum.
 """
-GLOBAL_TENSION_OFFSET = -0.35
+GLOBAL_TENSION_OFFSET = 0.02
 """Global offset to apply to the tension values.
 
-The value of this offset was determined by calculating the median difference
-between the results of this algorithm and laser measurements performed on APA4.
+The value of this constant was determined as a manual correction after looking 
+at a couple of DWA scans.
 """
 
 
@@ -35,7 +35,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         apa_channel: int,
         freq_arr: np.ndarray,
         ampl_arr: np.ndarray,
-        max_freq: float = 250.0,
+        max_freq: float = 200.0,
         verbosity: int = 0,
         nominal_tension: float = 6.5,
     ) -> Tuple[List, List, List, List]:
@@ -58,7 +58,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
                 - selected_tension: The list of selected tension values.
                 - confidences: The list of confidence values for each tension value.
         """
-
+        verbosity = 1
         # Get the frequency expectation for this channel
         segments, default_frequencies = self._get_frequency_expectation(apa_channel, layer)
         # Get the resonances for this channel
@@ -69,19 +69,21 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             layer,
             use_de=True,
             downsample=2,
-            prior_width=1.0,
+            prior_width=None,
             max_freq=max_freq,
             gauss_scale=GAUSS_SCALE,
             gauss_offset=GAUSS_OFFSET,
-            ignore_first=10,
-            popsize=50,
-            maxiter=1000,
-            tol=1e-4,
-            polish=False,
+            ignore_first=5,
+            popsize=200,
+            init="sobol",
+            polish=True,
             nominal_tension=nominal_tension,
+            amp_regularization=0.0,
+            max_tension=10.0,
             verbosity=verbosity,
         )
         tensions += GLOBAL_TENSION_OFFSET
+        best_fit_freqs = self._get_tension_adjusted_frequencies(tensions, default_frequencies)
 
         # Get the confidence values for each tension value
         confidences = self.estimate_confidences(layer, diagnostics_dict)
@@ -190,9 +192,11 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         max_freq=250,
         gauss_scale=GAUSS_SCALE,
         gauss_offset=GAUSS_OFFSET,
-        ignore_first=10,
+        ignore_first=5,
         nominal_tension=6.5,
+        max_tension=10,
         verbosity=0,
+        amp_regularization=0.0,
         **kwargs
     ):
         # We can keep the widths of the wavelets fixed since the step size is always the same.
@@ -209,19 +213,31 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         # Bounds are individual per segment such that the maximum tension corresponds to the
         # maximum frequency for that segment. We also want the lower bound to be at the minimum
         # frequency of the input + <ignore_first> Hz.
-        min_freq = np.min(x) + ignore_first
+        min_freq = np.min(frequencies) + ignore_first
+        if max_freq > np.max(frequencies):
+            max_freq = np.max(frequencies)
         bounds = []
         for segment, default_freq_arr in zip(segments, default_frequencies):
             # The maximum tension is the tension that corresponds to the maximum frequency
             # for that segment.
             max_default_freq = np.max(default_freq_arr)
-            max_tension = self._frequency_to_tension(max_freq, max_default_freq, nominal_tension)
+            _max_tension = self._frequency_to_tension(max_freq, max_default_freq, nominal_tension)
+            if _max_tension > max_tension:
+                _max_tension = max_tension
             # The minimum tension is the tension that corresponds to the minimum frequency
             # for that segment.
             min_default_freq = np.min(default_freq_arr)
             min_tension = self._frequency_to_tension(min_freq, min_default_freq, nominal_tension)
 
-            bounds.append((min_tension, max_tension))
+            if min_tension > _max_tension:
+                # If the minimum tension is greater than the maximum tension, then we
+                # need to swap the values.
+                if verbosity > 0:
+                    print("Swapping min and max tension for segment {}".format(segment))
+                    print("Min tension: {}".format(min_tension))
+                    print("Max tension: {}".format(_max_tension))
+                min_tension, _max_tension = _max_tension, min_tension
+            bounds.append((min_tension, _max_tension))
         if verbosity > 0:
             print("Bounds: {}".format(bounds))
         initial_guess = [nominal_tension] * len(segments)
@@ -229,7 +245,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         args = (x, corr_amplitude, default_frequencies)
         # add additional arguments to the function
         # Gauss scale, a, b, downsample, prior_width
-        args += (gauss_scale, 1, gauss_offset, downsample, prior_width, nominal_tension)
+        args += (gauss_scale, 1, gauss_offset, downsample, prior_width, nominal_tension, amp_regularization)
 
         # minimize residual
         if use_de:
@@ -237,6 +253,19 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
                 popsize = kwargs.pop("popsize")
             else:
                 popsize = 50
+            if "init" in kwargs and kwargs["init"] == "truncated_normal":
+                # initialize the population with truncated normal distributions
+                # within the bounds, centered at the initial guess, and with
+                # a standard deviation of 2 N.
+                init_samples = []
+                scale = 2
+                for i, (lower, upper) in enumerate(bounds):
+                    a, b = (lower - initial_guess[i]) / scale, (upper - initial_guess[i]) / scale
+                    init_samples.append(
+                        stats.truncnorm.rvs(a, b, size=popsize, loc=initial_guess[i], scale=scale)
+                    )
+                init_samples = np.array(init_samples).T
+                kwargs["init"] = init_samples
             res = optimize.differential_evolution(
                 self._tension_fit_residual, bounds, args=args, popsize=popsize, **kwargs
             )
@@ -395,6 +424,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         downsample=2,
         prior_width=None,
         nominal_tension=6.5,
+        amp_regularization=0.0
     ):
         if np.any(tensions < 0):
             raise ValueError("Tensions must be positive")
@@ -409,6 +439,14 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             downsample=downsample,
         )
         assert np.isfinite(residual), "Residual is not finite"
+        # The Gauss locations are in units of the index in the correlation amplitude.
+        # We can check the amplitude at point of the peak of the Gaussian kernel by 
+        # rounding the location to the nearest integer.
+        index = np.clip(np.round(gauss_locations).astype(int), 0, len(corr_amplitude) - 1)
+        amplitudes = corr_amplitude[index]
+        # We can regularize the solution by adding a penalty if the smallest amplitude
+        # is very small, i.e. if a hypothesized frequency does not have a resonant peak.
+        residual += amp_regularization / np.min(amplitudes)
         if prior_width is not None:
             residual += np.sum((tensions - nominal_tension) ** 2 / (2 * prior_width**2))
         return residual

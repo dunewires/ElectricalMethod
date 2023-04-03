@@ -125,6 +125,10 @@ def read_amplitude_data(dir_name: str, verbosity: int) -> Union[Dict[str, Any], 
 
         with open(amplitude_data_file, "r") as file_handle:
             data = json.load(file_handle)
+            # Loading from JSON always turn int keys into strings
+            for dwa_channel in range(8):
+                data[dwa_channel] = data[str(dwa_channel)]
+                del data[str(dwa_channel)]
         return data
     except Exception as e:
         if verbosity > 0:
@@ -228,7 +232,8 @@ def process_scan(
     """
     # Read amplitude data from the given directory
     data = read_amplitude_data(dir_name, verbosity)
-
+    if "dir_name" not in data:
+        data["dir_name"] = dir_name
     # If data couldn't be read, return None values
     if not data:
         return None, None, None
@@ -244,8 +249,12 @@ def process_scan(
     if scan_type == "Continuity":
         return scan_type, apa_channels, None
 
+    if "version" in data:
+        version = data["version"]
+    else:
+        version = "v2"
     # Process tension scans and obtain results
-    tension_results = process_tension_scan(results_dict, data, max_freq, verbosity)
+    tension_results = process_tension_scan(results_dict, data, max_freq, version, verbosity)
 
     # Return the scan type, APA channels, and results
     return scan_type, apa_channels, tension_results
