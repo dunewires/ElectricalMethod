@@ -3,19 +3,11 @@
 import numpy as np
 import json
 import sys
-from scipy.signal import savgol_filter, find_peaks
 sys.path.append("../mappings")
 sys.path.append("../Continuity")
-import capacitanceFile
-import channel_frequencies
-import resonance_fitting
 import os
 import subprocess
-import itertools
-from scipy.interpolate import interp1d
 from typing import List, Tuple, Optional, Dict, Any, Union
-import pickle
-import tension_algorithm
 import tension_algorithm_v1
 import tension_algorithm_v2
 
