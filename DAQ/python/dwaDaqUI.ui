@@ -1459,7 +1459,7 @@
                    </sizepolicy>
                   </property>
                   <property name="currentIndex">
-                   <number>3</number>
+                   <number>0</number>
                   </property>
                   <widget class="QWidget" name="tab_6">
                    <attribute name="title">
@@ -6286,6 +6286,33 @@
                      </layout>
                     </item>
                    </layout>
+                  </widget>
+                  <widget class="QWidget" name="tab_10">
+                   <attribute name="title">
+                    <string>Advanced</string>
+                   </attribute>
+                   <widget class="QWidget" name="formLayoutWidget">
+                    <property name="geometry">
+                     <rect>
+                      <x>10</x>
+                      <y>10</y>
+                      <width>181</width>
+                      <height>501</height>
+                     </rect>
+                    </property>
+                    <layout class="QFormLayout" name="formLayout_2">
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="algoVerLabel">
+                       <property name="text">
+                        <string>Algorithm Version</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QComboBox" name="algoVersionComboBox"/>
+                     </item>
+                    </layout>
+                   </widget>
                   </widget>
                  </widget>
                 </item>

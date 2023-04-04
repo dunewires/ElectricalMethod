@@ -37,8 +37,8 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
     def __init__(self, verbosity):
         super().__init__(verbosity)
 
-    def process_channel(self, layer: int, apa_channel: int, freq_arr: np.ndarray, ampl_arr: np.ndarray, 
-                        max_freq: float = 250., verbosity: int = 0, nominal_tension: float = 6.5) -> Tuple[List, List, List, List]:
+    def process_channel(self, layer: str, apa_channel: int, freq_arr: np.ndarray, ampl_arr: np.ndarray, 
+                        max_freq: float = 250., nominal_tension: float = 6.5) -> Tuple[List, List, List, List]:
         """
         Process a given channel to find the optimal placement of resonances and calculate the tension of each segment.
         
@@ -48,7 +48,6 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
             freq_arr (np.ndarray): A NumPy array of frequency values.
             ampl_arr (np.ndarray): A NumPy array of amplitude values.
             max_freq (float, optional): The maximum frequency to search for resonances. Defaults to 250.
-            verbosity (int, optional): Verbosity level of the output. Defaults to 0.
             nominal_tension (float, optional): The nominal tension value. Defaults to 6.5.
         
         Returns:
@@ -64,64 +63,65 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
         self.print_if_verbose(f"################################################", 1)
 
         # Make sure the maximum frequency to search for resonances does not exceed the domain of the trace
-        max_freq = np.min(max_freq, np.max(freq_arr))
+        max_freq = min(max_freq, np.max(freq_arr))
 
         # Get the list of wire segments corresponding to this channel and a list of lists containing the expected resonance values for each segment
         wire_segments, expected_resonances = channel_frequencies.get_expected_resonances(layer, apa_channel, max_freq)
         
-
         # If there are no expected frequencies in the given domain, return
         if expected_resonances == []:
-            self.print_if_verbose("ERROR: No expected resonances in the given frequency range", 1)
+            self.print_if_verbose(f"ERROR: No expected resonances {expected_resonances} in the given frequency range {max_freq}", 1)
             return self.get_default_values(wire_segments)
         flat_expected = np.array([sub_res for res_seg in expected_resonances for sub_res in res_seg])
 
         # Get baseline subtracted trace
-        bsub = self.cumsum_and_baseline_subtracted(freq_arr, np.cumsum(ampl_arr))
-
-        # Normalize
-        bsub /= np.max(bsub)
+        bsub = self.cumsum_and_baseline_subtracted(freq_arr, ampl_arr)
         
         # Remove scans with low rms ratio because they are likely all noise
-        rms_ratio = self.sliding_window_rms_ratio(freq_arr, ampl_arr, 10)
+        rms_ratio = self.sliding_window_rms_ratio(freq_arr, bsub, 10)
         if rms_ratio < 4:
-            self.print_if_verbose("No expected resonances in the given frequency range", 1)
+            self.print_if_verbose(f"Low rms ratio {rms_ratio}", 1)
             return self.get_default_values(wire_segments)
 
         # Get the derivative/slope of the trace
-        bsub_dadf = self.calculate_slope(freq_arr, ampl_arr, 10)
+        bsub_dadf = self.calculate_slope(freq_arr, bsub, 10)
         bsub_dadf /= np.max(bsub_dadf)
 
         # The ringing resonances appear to be sin-like. So we add the square of the trace to the square of the derivative, which results in peaks where the trace is sin-like due to sin^2 + cos^2 being maximized.
         pythag_smooth = self.process_pythagorean(bsub, bsub_dadf, freq_arr)
 
         # Find the peaks in the smoothed trace
-        peak_freqs, peak_heights, peak_proms = self.find_adaptive_peaks(freq_arr, pythag_smooth, flat_expected, verbosity)
-        
+        peak_freqs, peak_heights, peak_proms = self.find_adaptive_peaks(freq_arr, pythag_smooth, flat_expected)
+        self.print_if_verbose(f"find_adaptive_peaks {peak_freqs}", 1)
+
         # Find the clean peaks
         peak_freqs, peak_heights = self.clean_peak_data(freq_arr, pythag_smooth, peak_freqs, peak_heights, peak_proms)
-        
+        self.print_if_verbose(f"clean_peak_data {peak_freqs}", 1)
+
         # Find the frequencies corresponding to the first bump of each resonance
-        fpks_first_bump = self.find_first_bump_peaks(freq_arr, bsub, peak_freqs, verbosity)
+        fpks_first_bump = self.find_first_bump_peaks(freq_arr, bsub, peak_freqs)
+        self.print_if_verbose(f"fpks_first_bump {fpks_first_bump}", 1)
 
         # Gather placements to test by performing a grid search on the nearest resonances to the nominal placements 
         moved_res_arrs, moved_res_arr_movement_factors = self.move_resonances_to_nearest_peaks(expected_resonances, fpks_first_bump)
+        self.print_if_verbose(f"moved_res_arrs {moved_res_arrs}", 1)
 
         # Filter out the unreasonable placements
-        pruned_moved_res_arrs, pruned_moved_res_arr_movement_factors = self.prune_resonance_placements(moved_res_arrs, moved_res_arr_movement_factors, freq_arr, fpks_first_bump, pythag_smooth, verbosity)
-    
+        pruned_moved_res_arrs, pruned_moved_res_arr_movement_factors = self.prune_resonance_placements(moved_res_arrs, moved_res_arr_movement_factors, freq_arr, fpks_first_bump, pythag_smooth)
+        self.print_if_verbose(f"pruned_moved_res_arrs {pruned_moved_res_arrs}", 1)
+
         # Compute the cost of each placement
-        pruned_moved_res_arr_costs = self.compute_placement_costs(pruned_moved_res_arrs, fpks_first_bump, peak_heights, freq_arr, verbosity)
+        pruned_moved_res_arr_costs = self.compute_placement_costs(pruned_moved_res_arrs, fpks_first_bump, peak_heights, freq_arr)
 
         # Select the optimal placement
-        selected_moved_res_arr = self.select_optimal_placement(pruned_moved_res_arrs, pruned_moved_res_arr_costs, verbosity)
+        selected_moved_res_arr = self.select_optimal_placement(pruned_moved_res_arrs, pruned_moved_res_arr_costs)
     
         # Compute the tension of the segment
         selected_tension = self.calculate_selected_tension(selected_moved_res_arr, expected_resonances, nominal_tension)
         
         # Return
         if selected_moved_res_arr == []:
-            return self.get_default_values(wire_segments, -1)
+            return self.get_default_values(wire_segments)
         else:
             return wire_segments, selected_moved_res_arr, selected_tension, [0]*len(selected_tension)
 
@@ -139,13 +139,45 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
         # Calculate the number of bins for the Savitzky-Golay filter
         num_bins = self.get_num_savgol_bins(freq_arr)
 
+        # Get the cumsum
+        cumsum_ampl_arr = np.cumsum(ampl_arr)
+
         # Apply the Savitzky-Golay filter to smooth the amplitude array
-        smooth_curve = signal.savgol_filter(np.cumsum(ampl_arr), num_bins, 3)
+        smooth_curve = signal.savgol_filter(cumsum_ampl_arr, num_bins, 3)
 
         # Subtract the smoothed curve (baseline) from the original amplitude array
-        return ampl_arr - smooth_curve
+        bsub = cumsum_ampl_arr - smooth_curve
 
-    def get_num_savgol_bins(freq: List[float]) -> int:
+        # Normalize
+        bsub /= np.max(bsub)
+
+        return bsub
+    
+    def sliding_window_rms_ratio(self, freqs: np.ndarray, ampl: np.ndarray, window_size_freq: float) -> float:
+        """
+        Computes the ratio of the maximum window root mean square (RMS) to the minimum window RMS
+        when sliding a window of specified width across the trace.
+        This ratio is a good indicator of whether a trace contains a resonance or just noise.
+        Args:
+            freqs (np.ndarray): An array of frequency values.
+            ampl (np.ndarray): An array of amplitude values.
+            window_size_freq (float): The width of the sliding window in frequency units.
+        Returns:
+            float: The ratio of the maximum window RMS to the minimum window RMS.
+        """
+        min_rms = float("inf")
+        max_rms = 0.0
+        window_size_bins = int(window_size_freq / (freqs[1] - freqs[0]))
+
+        for i in range(len(ampl) - window_size_bins):
+            selection = np.array(ampl[i:i+window_size_bins])
+            rms = np.sqrt(np.mean(selection ** 2))
+            min_rms = min(min_rms, rms)
+            max_rms = max(max_rms, rms)
+
+        return float("inf") if min_rms == 0 else max_rms / min_rms
+
+    def get_num_savgol_bins(self, freq: List[float]) -> int:
         """
         Calculate the number of bins for the Savitzky-Golay filter based on the frequency array.
         
@@ -167,7 +199,7 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
 
         return num_bins
 
-    def move_to_nth_nearest(res_seg: List[float], n: int, fpks: List[float], min_or_max: str = 'max') -> Tuple[Optional[List[float]], Optional[float]]:
+    def move_to_nth_nearest(self, res_seg: List[float], n: int, fpks: List[float], min_or_max: str = 'max') -> Tuple[Optional[List[float]], Optional[float]]:
         """
         Move the resonance segment to the nth nearest peak frequency in the given list of peak frequencies.
         
@@ -292,7 +324,7 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
 
         return pythag_smooth
 
-    def find_adaptive_peaks(self, freq_arr: np.ndarray, pythag_smooth: np.ndarray, flat_expected: np.ndarray, verbosity: int = 0) -> Tuple[np.ndarray, np.ndarray]:
+    def find_adaptive_peaks(self, freq_arr: np.ndarray, pythag_smooth: np.ndarray, flat_expected: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Find peaks in a smoothed spectrum adaptively, based on a given height threshold and width.
 
@@ -304,8 +336,6 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
             Smoothed power spectrum.
         flat_expected : np.ndarray
             Array of expected peak frequencies.
-        verbosity : int, optional
-            Verbosity level, by default 0.
 
         Returns
         -------
@@ -335,7 +365,7 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
 
         # Extract peak heights from properties
         peak_heights = props['peak_heights']
-        peak_proms = props['peak_prominences']
+        peak_proms = props['prominences']
 
         return peak_freqs, peak_heights, peak_proms
 
@@ -378,7 +408,7 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
 
         return lowest_max
 
-    def clean_peak_data(self, freq_arr: np.ndarray, pythag_smooth: np.ndarray, peak_freqs: np.ndarray, peak_heights: np.ndarray, peak_proms: np.ndarray, verbosity: int = 0) -> Tuple[np.ndarray, np.ndarray]:
+    def clean_peak_data(self, freq_arr: np.ndarray, pythag_smooth: np.ndarray, peak_freqs: np.ndarray, peak_heights: np.ndarray, peak_proms: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Clean the peak data by filtering out peaks based on various criteria.
 
@@ -394,8 +424,6 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
             Array of peak heights.
         peak_proms : np.ndarray
             Array of peak prominences.
-        verbosity : int, optional
-            Verbosity level, by default 0.
 
         Returns
         -------
@@ -406,28 +434,24 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
         clean_fpks = []
         clean_heights = []
 
-        if verbosity > 1:
-            print("Peaks in smoothed trace found at ", peak_freqs)
+        self.print_if_verbose(f"Peaks in smoothed trace found at {peak_freqs}", 1)
 
         for i, fpk in enumerate(peak_freqs):
             lm = self.lowest_max_in_surrounding(freq_arr, pythag_smooth, fpk - LOWEST_MAX_SEARCH_RADIUS, fpk + LOWEST_MAX_SEARCH_RADIUS, 1, LOWEST_MAX_WINDOW)
             
             # Filter out peaks with height less than a factor of the lowest maximum in the surrounding region
             if peak_heights[i] < HEIGHT_TO_LOWEST_SURROUNDING_FACTOR * lm: 
-                if verbosity > 1:
-                    print(f"Peak at {fpk}, {peak_heights[i]} small relative to surroundings {lm}")
+                self.print_if_verbose(f"Peak at {fpk}, {peak_heights[i]} small relative to surroundings {lm}", 1)
                 continue
             
             # Filter out peaks with prominence less than a factor of their height
             if peak_proms[i] < PROM_TO_HEIGHT_FACTOR * peak_heights[i]:
-                if verbosity > 1:
-                    print(f"Peak at {fpk} has prominence less than a certain factor of its height") 
+                self.print_if_verbose(f"Peak at {fpk} has prominence less than a certain factor of its height", 1) 
                 continue
             
             # Filter out peaks right after a much bigger peak
             if i > 0 and fpk - peak_freqs[i - 1] < HEIGHT_TO_PREV_HEIGHT_RANGE and peak_heights[i] < HEIGHT_TO_PREV_HEIGHT_FACTOR * peak_heights[i - 1]: 
-                if verbosity > 1:
-                    print(f"Peak at {fpk} is right after a much bigger peak")
+                self.print_if_verbose(f"Peak at {fpk} is right after a much bigger peak", 1)
                 continue
 
             clean_fpks.append(fpk)
@@ -436,12 +460,11 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
         peak_freqs = np.array(clean_fpks)
         peak_heights = np.array(clean_heights)
 
-        if verbosity > 1:
-            print("Peaks in smoothed trace (after processing) found at ", peak_freqs)
+        self.print_if_verbose(f"Peaks in smoothed trace (after processing) found at {peak_heights}", 1)
         
         return peak_freqs, peak_heights
         
-    def find_first_bump_peaks(self, freq_arr: np.ndarray, bsub: np.ndarray, peak_freqs: np.ndarray, verbosity: int = 0) -> np.ndarray:
+    def find_first_bump_peaks(self, freq_arr: np.ndarray, bsub: np.ndarray, peak_freqs: np.ndarray) -> np.ndarray:
         """
         Find peaks corresponding to the first bump of each resonance in the frequency array.
 
@@ -453,8 +476,6 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
             Baseline-subtracted power spectrum.
         peak_freqs : np.ndarray
             Array of found peak frequencies.
-        verbosity : int, optional
-            Verbosity level, by default 0.
 
         Returns
         -------
@@ -486,8 +507,7 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
             amps1 += [selected_a[pk] for pk in pks_neg]
 
             if len(fpks1):
-                if verbosity > 1:
-                    print(f"For resonance around {fpk}, local peaks found at {fpks1}. Setting resonance-start at {fpks1[np.argmin(fpks1)]}")
+                self.print_if_verbose(f"For resonance around {fpk}, local peaks found at {fpks1}. Setting resonance-start at {fpks1[np.argmin(fpks1)]}", 1)
                 index_first_bump = np.argmin(fpks1)
                 fpks_first_bump.append(fpks1[index_first_bump])
 
@@ -541,7 +561,7 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
 
         return moved_res_arrs, moved_res_arr_movement_factors
 
-    def prune_resonance_placements(self, moved_res_arrs: List[List[np.ndarray]], moved_res_arr_movement_factors: List[List[float]], freq_arr: np.ndarray, fpks_first_bump: np.ndarray, pythag_smooth: np.ndarray, verbosity: int = 1) -> Tuple[List[List[np.ndarray]], List[List[float]]]:
+    def prune_resonance_placements(self, moved_res_arrs: List[List[np.ndarray]], moved_res_arr_movement_factors: List[List[float]], freq_arr: np.ndarray, fpks_first_bump: np.ndarray, pythag_smooth: np.ndarray) -> Tuple[List[List[np.ndarray]], List[List[float]]]:
         """
         Prune the list of moved resonance placements based on their movement factors and proximity to peaks.
 
@@ -557,8 +577,6 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
             Array of found first bump peak frequencies.
         pythag_smooth : np.ndarray
             Array of smoothed Pythagorean values.
-        verbosity : int, optional
-            Verbosity level, by default 1.
 
         Returns
         -------
@@ -569,43 +587,37 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
         pruned_moved_res_arrs = []
         pruned_moved_res_arr_movement_factors = []
 
-        if verbosity > 1:
-            print("Analyzing placements:")
-        if verbosity > 1 and len(moved_res_arr_movement_factors) == 0:
-            print("    No placements found")
+        self.print_if_verbose("Analyzing placements:", 1)
+        if len(moved_res_arr_movement_factors) == 0:
+            self.print_if_verbose("    No placements found", 1)
 
         for i, moved_res_arr_movement_factor in enumerate(moved_res_arr_movement_factors):
             moved_res_arr = moved_res_arrs[i]
 
-            if verbosity > 1:
-                print("    Checking", moved_res_arr)
+            self.print_if_verbose(f"    Checking {moved_res_arr}", 1)
 
             within_movement_factor = True
             # Check if tensions are too diverse
             if np.max(moved_res_arr_movement_factor) > REL_MOVEMENT_FACTOR_MAX * np.min(moved_res_arr_movement_factor):
-                if verbosity > 1:
-                    print("        Tensions are too diverse", [str(round(x * 100, 2)) + '%' for x in moved_res_arr_movement_factor])
+                self.print_if_verbose(f"        Tensions are too diverse {[str(round(x * 100, 2)) + '%' for x in moved_res_arr_movement_factor]}", 1)
 
                 # Drop the short segment if tensions are too diverse
                 for j, res_seg in enumerate(moved_res_arr):
                     if len(res_seg) == 1:
                         moved_res_arr[j] = []
                         moved_res_arr_movement_factor[j] = np.nan
-                        if verbosity > 1:
-                            print("        Dropping the short segment")
+                        self.print_if_verbose("        Dropping the short segment", 1)
 
                 if np.nanmax(moved_res_arr_movement_factor) > REL_MOVEMENT_FACTOR_MAX * np.nanmin(moved_res_arr_movement_factor):
                     within_movement_factor = False
-                    if verbosity > 1:
-                        print("        Tensions still too diverse", [str(round(x * 100, 2)) + '%' for x in moved_res_arr_movement_factor])
+                    self.print_if_verbose(f"        Tensions still too diverse {[str(round(x * 100, 2)) + '%' for x in moved_res_arr_movement_factor]}", 1)
 
             # Check if the absolute movement factor is out of range
             if np.nanmax(moved_res_arr_movement_factor) > ABS_MOVEMENT_FACTOR_MAX or np.nanmin(moved_res_arr_movement_factor) < ABS_MOVEMENT_FACTOR_MIN:
-                if verbosity > 1:
-                    print("        Absolute movement factor out of range", [str(round(x * 100, 2)) + '%' for x in moved_res_arr_movement_factor])
+                self.print_if_verbose(f"        Absolute movement factor out of range {[str(round(x * 100, 2)) + '%' for x in moved_res_arr_movement_factor]}", 1)
                 within_movement_factor = False
 
-            if within_movement_factor == False:
+            if not within_movement_factor:
                 continue
 
             flat_res = np.array([sub_seg for res_seg in moved_res_arrs[i] for sub_seg in res_seg])
@@ -615,15 +627,13 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
                 if np.max(np.min(np.abs(sub_seg - fpks_first_bump))) > NEAR_PEAK_DISTANCE:
                     if sub_seg < np.min(freq_arr) or sub_seg > np.max(freq_arr):
                         res_not_near_peak.append(sub_seg)
-                        if verbosity > 1:
-                            print(f"        This placement puts the resonance at {sub_seg} outside the scanned range ({np.min(freq_arr)}, {np.max(freq_arr)})")
+                        self.print_if_verbose(f"        This placement puts the resonance at {sub_seg} outside the scanned range ({np.min(freq_arr)}, {np.max(freq_arr)})", 1)
                         continue
 
                     t_smooth_interp = interp1d(freq_arr, pythag_smooth)
                     if t_smooth_interp(sub_seg) < NEAR_PEAK_AMPLITUDE:
                         res_not_near_peak.append(sub_seg)
-                        if verbosity > 1:
-                            print(f"        This placement puts the resonance at {sub_seg} more than {NEAR_PEAK_DISTANCE} from a peak and not in a high amplitude region ({t_smooth_interp(sub_seg)}).")
+                        self.print_if_verbose(f"        This placement puts the resonance at {sub_seg} more than {NEAR_PEAK_DISTANCE} from a peak and not in a high amplitude region ({t_smooth_interp(sub_seg)}).")
 
             if res_not_near_peak:
                 continue
@@ -634,7 +644,7 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
         return pruned_moved_res_arrs, pruned_moved_res_arr_movement_factors
 
 
-    def compute_placement_costs(self, pruned_moved_res_arrs: List[List[float]], fpks_first_bump: np.ndarray, peak_heights: np.ndarray, freq_arr: np.ndarray, verbosity: int) -> List[float]:
+    def compute_placement_costs(self, pruned_moved_res_arrs: List[List[float]], fpks_first_bump: np.ndarray, peak_heights: np.ndarray, freq_arr: np.ndarray) -> List[float]:
         """
         Compute the cost of each pruned moved resonance array.
         Args:
@@ -642,13 +652,11 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
         fpks_first_bump: Array of the first bumps in the frequency peaks.
         peak_heights: Array of the heights of the peaks.
         freq_arr: Array of frequencies.
-        verbosity: Level of verbosity for print statements.
 
         Returns:
         List of costs for each pruned moved resonance array.
         """
-        if verbosity > 1:
-            print("The following placements look valid, now checking which one is optimal")
+        self.print_if_verbose("The following placements look valid, now checking which one is optimal")
 
         pruned_moved_res_arr_costs = []
 
@@ -676,13 +684,12 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
 
         return pruned_moved_res_arr_costs
 
-    def select_optimal_placement(self, pruned_moved_res_arrs: List[List[float]], pruned_moved_res_arr_costs: List[float], verbosity: int) -> List[float]:
+    def select_optimal_placement(self, pruned_moved_res_arrs: List[List[float]], pruned_moved_res_arr_costs: List[float]) -> List[float]:
         """
         Select the optimal placement of resonances based on the computed costs.
         Args:
         pruned_moved_res_arrs: List of pruned moved resonance arrays.
         pruned_moved_res_arr_costs: List of costs for each pruned moved resonance array.
-        verbosity: Level of verbosity for print statements.
 
         Returns:
         The optimal placement of resonances as a list of floats.
@@ -693,8 +700,7 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
             selected_moved_res_arr_index = np.argmin(pruned_moved_res_arr_costs)
             selected_moved_res_arr = pruned_moved_res_arrs[selected_moved_res_arr_index]
 
-        if verbosity > 1:
-            print("Selected placement", selected_moved_res_arr)
+        self.print_if_verbose(f"Selected placement {selected_moved_res_arr}")
 
         return selected_moved_res_arr
 
@@ -716,6 +722,6 @@ class TensionAlgorithmV1(TensionAlgorithmBase):
                 if selected_moved_res_arr[i] == []:
                     selected_tension.append([])
                 else:
-                    selected_tension.append(nominal_tension * (np.max(selected_moved_res_arr[i]) / np.max(expected_resonances[i])) ** 2)
+                    selected_tension.append(round(nominal_tension * (np.max(selected_moved_res_arr[i]) / np.max(expected_resonances[i])) ** 2, 2))
 
         return selected_tension

@@ -12,14 +12,12 @@ from channel_frequencies import get_expected_resonances
 GAUSS_SCALE = 15.5
 GAUSS_OFFSET = 3.5
 """The scale and offset of the Gaussian kernel used to model the resonances.
-
 Marginalized fits on a number of spectra revealed that these values are a good
 approximation of the shape of the resonances in the DWA scans and there is no
 need to re-fit them for every spectrum.
 """
 GLOBAL_TENSION_OFFSET = 0.02
 """Global offset to apply to the tension values.
-
 The value of this constant was determined as a manual correction after looking 
 at a couple of DWA scans.
 """
@@ -41,7 +39,6 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
     ) -> Tuple[List, List, List, List]:
         """
         Process a given channel to find the optimal placement of resonances and calculate the tension of each segment.
-
         Args:
             layer (str): The layer of the channel.
             apa_channel (int): The channel number.
@@ -50,7 +47,6 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             max_freq (float, optional): The maximum frequency to search for resonances. Defaults to 250.
             verbosity (int, optional): Verbosity level of the output. Defaults to 0.
             nominal_tension (float, optional): The nominal tension value. Defaults to 6.5.
-
         Returns:
             Tuple[List, List, List, List]: A tuple containing the following lists:
                 - wire_segments: The list of wire segments corresponding to the channel.
@@ -92,7 +88,6 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
 
     def estimate_confidences(self, layer, diagnostics_dict):
         """Estimate confidences for each tension value using the diagnostics dictionary.
-
         This uses a scikit-learn DecisionTreeRegressor to estimate the absolute value of the error
         in Newtons for each tension value. It expects that the dictionary contains
         the arrays of the input variables that are passed into the decision tree for each segment.
@@ -293,7 +288,6 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
 
     def _get_frequency_expectation(self, apa_channel, layer, thresh=300):
         """Get the expected frequencies for a given APA channel and layer.
-
         These frequencies correspond to the default tension of 6.5 N.
         """
         segments, frequencies = get_expected_resonances(layer, apa_channel, thresh=300)
@@ -345,7 +339,6 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
 
     def _transform_cwt_amplitude(self, amplitudes, widths=(8, 16)):
         """Get the CWT amplitude for a given signal.
-
         Transforms the input amplitudes using a CWT with a Morlet wavelet and
         returns the mean of the absolute values of the coefficients.
         """

@@ -8,7 +8,7 @@ class TensionAlgorithmBase(ABC):
     
     @abstractmethod # This must be implemented by derived classes
     def process_channel(self, layer: int, apa_channel: int, freq_arr: np.ndarray, ampl_arr: np.ndarray, 
-                        max_freq: float = 250., verbosity: int = 0, nominal_tension: float = 6.5) -> Tuple[List, List, List, List]:
+                        max_freq: float = 250., nominal_tension: float = 6.5) -> Tuple[List, List, List, List]:
         """
         Process a given channel to find the optimal placement of resonances and calculate the tension of each segment.
         
@@ -18,7 +18,6 @@ class TensionAlgorithmBase(ABC):
             freq_arr (np.ndarray): A NumPy array of frequency values.
             ampl_arr (np.ndarray): A NumPy array of amplitude values.
             max_freq (float, optional): The maximum frequency to search for resonances. Defaults to 250.
-            verbosity (int, optional): Verbosity level of the output. Defaults to 0.
             nominal_tension (float, optional): The nominal tension value. Defaults to 6.5.
         
         Returns:
@@ -28,7 +27,6 @@ class TensionAlgorithmBase(ABC):
                 - selected_tension: The list of selected tension values.
                 - confidences: The list of confidence values for each tension value.
         """
-        pass
     
     @abstractmethod # This must be implemented by derived classes
     def cumsum_and_baseline_subtracted(self, freq_arr: np.ndarray, ampl_arr: np.ndarray) -> np.ndarray:
@@ -42,9 +40,8 @@ class TensionAlgorithmBase(ABC):
         Returns:
             np.ndarray: A NumPy array of baseline-subtracted amplitude values.
         """
-        pass
 
-    def print_if_verbose(self, message: str, verbosity_level: int) -> None:
+    def print_if_verbose(self, message: str, verbosity_level: int = 1) -> None:
         """
         Print a message if the given verbosity level is greater than or equal to the specified verbosity level.
 
@@ -60,7 +57,7 @@ class TensionAlgorithmBase(ABC):
         if self.verbosity >= verbosity_level:
             print(message)
 
-    def get_default_values(segments: List[float]) -> Tuple[List[List[float]], List[float], List[float]]:
+    def get_default_values(self, segments: List[float]) -> Tuple[List[List[float]], List[float], List[float]]:
         """
         Generate default values for resonances, tensions, and confidences based on the segments list.
 
