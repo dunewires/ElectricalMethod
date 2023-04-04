@@ -30,3 +30,4 @@ DAQ/python/mappings/__pycache__/*
 *.status
 .DS_Store
 .venv/
+.vscode/
