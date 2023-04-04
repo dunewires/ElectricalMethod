@@ -388,3 +388,13 @@ def get_expected_resonances(wire_layer, channel, thresh = 1000.):
     return [int(w) for w in freqs_in_range], [freqs_in_range[w] for w in freqs_in_range]
 
 
+def get_frequency_expectation(apa_channel, layer, thresh=300):
+    """Get the expected frequencies for a given APA channel and layer.
+    These frequencies correspond to the default tension of 6.5 N.
+    """
+    segments, frequencies = get_expected_resonances(layer, apa_channel, thresh=thresh)
+    # sometimes, freqencies appear twice, so we need to remove duplicates
+    unique_frequencies = []
+    for f in frequencies:
+        unique_frequencies.append(list(np.unique(f)))
+    return segments, unique_frequencies
