@@ -125,6 +125,7 @@ def read_amplitude_data(dir_name: str, verbosity: int) -> Union[Dict[str, Any], 
 
         with open(amplitude_data_file, "r") as file_handle:
             data = json.load(file_handle)
+            data["dirName"] = dir_name
         return data
     except Exception as e:
         if verbosity > 0:
@@ -136,7 +137,7 @@ def extract_metadata(data: Dict[str, Any]) -> Tuple[str, str, str, str, str, Lis
     stage = data["stage"]
     layer = data["layer"]
     side = data["side"]
-    scan_id = os.path.basename(data["dir_name"])
+    scan_id = os.path.basename(data["dirName"])
     scan_type = data["type"]
     apa_channels = data["apaChannels"]
 
@@ -171,10 +172,10 @@ def process_tension_scan(results_dict: Dict[str, Any], data: Dict[str, Any], max
                 print(f"No channel")
             results.append(None)
             continue
-
+        
         # Extract frequency and amplitude data for the current APA channel
-        frequencies = np.array(data[dwa_channel]["freq"])
-        amplitudes = np.array(data[dwa_channel]["ampl"])
+        frequencies = np.array(data[str(dwa_channel)]["freq"])
+        amplitudes = np.array(data[str(dwa_channel)]["ampl"])
 
         # Check if the scan data is valid, append None to results and continue if not
         if len(frequencies) == 0 or len(frequencies) < 50:
@@ -192,7 +193,7 @@ def process_tension_scan(results_dict: Dict[str, Any], data: Dict[str, Any], max
             opt_res_arr,
             best_tensions,
             best_tension_confidences,
-        ) = algo.process_channel(layer, apa_channel, frequencies, amplitudes, max_freq, verbosity)
+        ) = algo.process_channel(layer, apa_channel, frequencies, amplitudes, max_freq)
 
         # Update the results dictionary with the tension information
         update_results_dict_tension(
@@ -214,7 +215,8 @@ def process_tension_scan(results_dict: Dict[str, Any], data: Dict[str, Any], max
 def process_scan(
     results_dict: Dict[str, Any],
     dir_name: str,
-    max_freq: float = 250.0,
+    max_freq: float,
+    version: str,
     verbosity: int = 0,
 ) -> Tuple[Union[str, None], Union[List[int], None], Union[List[Any], None]]:
     """
@@ -223,6 +225,7 @@ def process_scan(
     :param results_dict: A dictionary containing the results.
     :param dir_name: The directory name containing the scan.
     :param max_freq: Maximum frequency to process.
+    :param version: Version of the algorithm to use.
     :param verbosity: Verbosity level for output messages.
     :return: A tuple containing scan type, APA channels, and results.
     """
@@ -245,7 +248,7 @@ def process_scan(
         return scan_type, apa_channels, None
 
     # Process tension scans and obtain results
-    tension_results = process_tension_scan(results_dict, data, max_freq, verbosity)
+    tension_results = process_tension_scan(results_dict, data, max_freq, version, verbosity)
 
     # Return the scan type, APA channels, and results
     return scan_type, apa_channels, tension_results
