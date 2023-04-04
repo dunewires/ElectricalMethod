@@ -231,8 +231,7 @@ def process_scan(
     """
     # Read amplitude data from the given directory
     data = read_amplitude_data(dir_name, verbosity)
-    if "dir_name" not in data:
-        data["dir_name"] = dir_name
+
     # If data couldn't be read, return None values
     if not data:
         return None, None, None
@@ -248,10 +247,6 @@ def process_scan(
     if scan_type == "Continuity":
         return scan_type, apa_channels, None
 
-    if "version" in data:
-        version = data["version"]
-    else:
-        version = "v2"
     # Process tension scans and obtain results
     tension_results = process_tension_scan(results_dict, data, max_freq, version, verbosity)
 

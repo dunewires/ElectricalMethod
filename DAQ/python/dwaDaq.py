@@ -444,8 +444,6 @@ class MainWindow(qtw.QMainWindow):
         self._resultsScansTableInit()
         self._resultsWiresTableInit()
 
-        self.algorithm_version = "v2"
-
         self.heartPixmaps = [qtg.QPixmap(
             'icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
         self.heartval = 0
