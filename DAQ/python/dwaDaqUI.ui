@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1916</width>
-    <height>988</height>
+    <width>1592</width>
+    <height>941</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -376,19 +376,19 @@
             <attribute name="horizontalHeaderVisible">
              <bool>false</bool>
             </attribute>
-            <attribute name="horizontalHeaderDefaultSectionSize">
+            <attribute name="horizontalHeaderMinimumSectionSize">
              <number>33</number>
             </attribute>
-            <attribute name="horizontalHeaderMinimumSectionSize">
+            <attribute name="horizontalHeaderDefaultSectionSize">
              <number>33</number>
             </attribute>
             <attribute name="verticalHeaderVisible">
              <bool>false</bool>
             </attribute>
-            <attribute name="verticalHeaderDefaultSectionSize">
+            <attribute name="verticalHeaderMinimumSectionSize">
              <number>10</number>
             </attribute>
-            <attribute name="verticalHeaderMinimumSectionSize">
+            <attribute name="verticalHeaderDefaultSectionSize">
              <number>10</number>
             </attribute>
            </widget>
@@ -478,7 +478,7 @@
                <enum>QTabWidget::Triangular</enum>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tabStimulus">
                <attribute name="title">
@@ -1459,7 +1459,7 @@
                    </sizepolicy>
                   </property>
                   <property name="currentIndex">
-                   <number>0</number>
+                   <number>4</number>
                   </property>
                   <widget class="QWidget" name="tab_6">
                    <attribute name="title">
@@ -6294,10 +6294,10 @@
                    <widget class="QWidget" name="formLayoutWidget">
                     <property name="geometry">
                      <rect>
-                      <x>10</x>
-                      <y>10</y>
-                      <width>181</width>
-                      <height>501</height>
+                      <x>11</x>
+                      <y>11</y>
+                      <width>441</width>
+                      <height>28</height>
                      </rect>
                     </property>
                     <layout class="QFormLayout" name="formLayout_2">
@@ -6311,6 +6311,37 @@
                      <item row="0" column="1">
                       <widget class="QComboBox" name="algoVersionComboBox"/>
                      </item>
+                    </layout>
+                   </widget>
+                   <widget class="QLabel" name="label">
+                    <property name="geometry">
+                     <rect>
+                      <x>11</x>
+                      <y>61</y>
+                      <width>441</width>
+                      <height>16</height>
+                     </rect>
+                    </property>
+                    <property name="text">
+                     <string>Algorithm Settings</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                   <widget class="QWidget" name="formLayoutWidget_2">
+                    <property name="geometry">
+                     <rect>
+                      <x>11</x>
+                      <y>86</y>
+                      <width>441</width>
+                      <height>441</height>
+                     </rect>
+                    </property>
+                    <layout class="QFormLayout" name="algoSettingsFormLayout">
+                     <property name="formAlignment">
+                      <set>Qt::AlignHCenter|Qt::AlignTop</set>
+                     </property>
                     </layout>
                    </widget>
                   </widget>
@@ -6678,8 +6709,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1916</width>
-     <height>21</height>
+     <width>1592</width>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFIle">

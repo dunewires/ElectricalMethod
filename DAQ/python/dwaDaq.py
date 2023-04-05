@@ -469,7 +469,6 @@ class MainWindow(qtw.QMainWindow):
         # must come after loadUi() call
         self.logFilename_val.setText(self.logFilename)
         self.logFilenameLog_val.setText(self.logFilename)
-        # self.log_tb.append("logging window...")  # FIXME... how to update...?
 
         self.configFileName.setText(DWA_CONFIG_FILE)
 
@@ -478,18 +477,13 @@ class MainWindow(qtw.QMainWindow):
         self.evtData = None
 
         # Make handles for widgets in the UI
-        # self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
-        # self.stack.setStyleSheet("background-color:white")
 
-        # self.tabWidgetStage is the main set of tabs showing each stage in the process
-        # self.tabWidgetStim is the set of tabs under the stimulus tab
         self.currentViewStage = TAB_ACTIVE_MAIN
         self.currentViewStim = TAB_ACTIVE_STIM
         self.currentViewResults = TAB_ACTIVE_RESULTS
         self.updateTabView()
         self.horizontalWidget.setVisible(False)
-        # self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
-        # self.tabWidgetStim.setCurrentIndex(self.currentViewStim)
+
         self.DATA_TO_PLOT = False
 
         # testing updating tab labels
@@ -499,9 +493,12 @@ class MainWindow(qtw.QMainWindow):
         self._connectSignalsSlots()
 
         # Algorithm versions
-        self.algoVersionComboBox.addItem("v1")
+        # self.algoVersionComboBox.addItem("v1")
         self.algoVersionComboBox.addItem("v2")
-
+        self.algoVersionComboBox.addItem("v1")
+        self.algoVersionComboBox.activated.connect(self.populate_algo_settings)
+        
+        self.current_algo_kwargs = {}
         # Tension Tab
         self._configureTensionTab()
 
@@ -562,8 +559,111 @@ class MainWindow(qtw.QMainWindow):
             self.verbose = int(self.daqConfig['verbose'])
         else:
             self.verbose = 1
+        
+        self.populate_algo_settings()
         self._udpConnect()
 
+    def clear_form_layout(self, layout):
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+            elif child.layout():
+                self.clear_form_layout(child.layout())
+
+    def populate_algo_settings(self):
+        version = self.algoVersionComboBox.currentText()
+        algorithm = process_scan.get_tension_algorithm(version, 0)
+
+        # The available settings are a dictionary of dictionaries. The keys of the top-level
+        # dictionary are the names of the variable names in the algorithm. The values are
+        # dictionaries that contain at least the keys "type" and "default". The "type" key
+        # contains the type of the variable, and the "default" key contains the default value.
+        available_settings = algorithm.get_available_settings()
+        # First, we clear out the existing widgets in the form layout.
+        self.clear_form_layout(self.algoSettingsFormLayout)
+
+        # We will now populate the algoSettingsFormLayout with widgets for each of the
+        # available settings. We will use the type of the variable to determine what type
+        # of widget to use.
+        for setting_name, setting_info in available_settings.items():
+            setting_type = setting_info["type"]
+            setting_default = setting_info["default"]
+            if setting_type == "float":
+                widget = qtw.QDoubleSpinBox()
+                if "bounds" in setting_info:
+                    widget.setMinimum(setting_info["bounds"][0])
+                    widget.setMaximum(setting_info["bounds"][1])
+                else:
+                    widget.setMinimum(-1000000)
+                    widget.setMaximum(1000000)
+                widget.setValue(setting_default)
+            elif setting_type == "integer":
+                widget = qtw.QSpinBox()
+                if "bounds" in setting_info:
+                    widget.setMinimum(setting_info["bounds"][0])
+                    widget.setMaximum(setting_info["bounds"][1])
+                else:
+                    widget.setMinimum(-1000000)
+                    widget.setMaximum(1000000)
+                widget.setValue(setting_default)
+            elif setting_type == "boolean":
+                widget = qtw.QCheckBox()
+                widget.setChecked(setting_default)
+            elif setting_type == "string":
+                widget = qtw.QLineEdit()
+                widget.setText(setting_default)
+            elif setting_type == "choice":
+                widget = qtw.QComboBox()
+                for choice in setting_info["choices"]:
+                    widget.addItem(choice)
+                widget.setCurrentText(setting_default)
+            else:
+                raise ValueError(f"Unknown setting type: {setting_type}")
+            if "label" in setting_info:
+                label = setting_info["label"]
+            else:
+                label = setting_name
+            widget.setObjectName(f"algo_setting__{setting_name}")
+            self.algoSettingsFormLayout.addRow(label, widget)
+            # connect the valueChanged signal to the _update_current_algo_kwargs function
+            if isinstance(widget, qtw.QDoubleSpinBox):
+                widget.valueChanged.connect(self._update_current_algo_kwargs)
+            elif isinstance(widget, qtw.QSpinBox):
+                widget.valueChanged.connect(self._update_current_algo_kwargs)
+            elif isinstance(widget, qtw.QCheckBox):
+                widget.stateChanged.connect(self._update_current_algo_kwargs)
+            elif isinstance(widget, qtw.QLineEdit):
+                widget.textChanged.connect(self._update_current_algo_kwargs)
+            elif isinstance(widget, qtw.QComboBox):
+                widget.currentTextChanged.connect(self._update_current_algo_kwargs)
+        self._update_current_algo_kwargs()
+
+    def _update_current_algo_kwargs(self):
+        # This function updates the current_algo_kwargs dictionary with the values
+        # from the widgets in the algoSettingsFormLayout.
+        self.current_algo_kwargs = {}
+        for row in range(self.algoSettingsFormLayout.rowCount()):
+            form_item = self.algoSettingsFormLayout.itemAt(row, qtw.QFormLayout.FieldRole)
+            if form_item is None:
+                continue
+            widget = form_item.widget()
+            setting_name = widget.objectName().split("__")[1]
+            if isinstance(widget, qtw.QDoubleSpinBox):
+                self.current_algo_kwargs[setting_name] = float(widget.value())
+            elif isinstance(widget, qtw.QSpinBox):
+                self.current_algo_kwargs[setting_name] = int(widget.value())
+            elif isinstance(widget, qtw.QCheckBox):
+                self.current_algo_kwargs[setting_name] = widget.isChecked()
+            elif isinstance(widget, qtw.QLineEdit):
+                self.current_algo_kwargs[setting_name] = widget.text()
+            elif isinstance(widget, qtw.QComboBox):
+                self.current_algo_kwargs[setting_name] = widget.currentText()
+            else:
+                raise ValueError(f"Unknown widget type: {type(widget)}")
+
+        if self.verbose > 0:
+            print(f"current_algo_kwargs = {self.current_algo_kwargs}")
     def _setPushButtonStatusAll(self, buttonVals):
         # Set all push button GUI elements
         # buttonVals is a list of integers or bools
@@ -2959,7 +3059,7 @@ class MainWindow(qtw.QMainWindow):
         # process each scan
         for scan in scansToProcess:
             process_scan.process_scan(
-                resultsDict, scan, MAX_FREQ, self._getAlgorithmVersion())
+                resultsDict, scan, MAX_FREQ, self._getAlgorithmVersion(), **self.current_algo_kwargs)
 
         # save scan analysis results to JSON file
         self.writeResultsDict(resultsDict)
@@ -4355,9 +4455,8 @@ class MainWindow(qtw.QMainWindow):
         fullResultsDict = self.getResultsDict()
         scanResultsDict = self.newResultsDict()
         dirName = os.path.dirname(self.fnOfAmpData)
-        process_scan.process_scan(fullResultsDict, dirName)
         scanType, apaChannels, results = process_scan.process_scan(
-            scanResultsDict, os.path.dirname(self.fnOfAmpData), MAX_FREQ, self.verbose)
+            scanResultsDict, os.path.dirname(self.fnOfAmpData), MAX_FREQ, self.verbose, **self.current_algo_kwargs)
         for apaChannel, result in zip(apaChannels, results):
             if result == "bridged":
                 if self.skipChannels:
@@ -4434,7 +4533,7 @@ class MainWindow(qtw.QMainWindow):
             self.curves['resProcFit'][reg].setData(
                 self.ampDataS[reg]['freq'], bsub)
             segments, opt_res_arr, _, _ = algo.process_channel(
-                layer, apa_channel, freq_arr, ampl_arr, MAX_FREQ)
+                layer, apa_channel, freq_arr, ampl_arr, MAX_FREQ, **self.current_algo_kwargs)
             self.expectedFreqs[reg.value] = expected_resonances
             self.resonantFreqs[reg.value] = list(opt_res_arr)
     

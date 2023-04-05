@@ -14,16 +14,34 @@ Marginalized fits on a number of spectra revealed that these values are a good
 approximation of the shape of the resonances in the DWA scans and there is no
 need to re-fit them for every spectrum.
 """
-GLOBAL_TENSION_OFFSET = 0.02
-"""Global offset to apply to the tension values.
-The value of this constant was determined as a manual correction after looking 
-at a couple of DWA scans.
-"""
+GLOBAL_TENSION_OFFSET = 0.0
+"""Global offset to apply to the tension values."""
 
 
 class TensionAlgorithmV2(TensionAlgorithmBase):
     def __init__(self, verbosity):
         super().__init__(verbosity)
+        self.available_settings = {
+            "popsize": {
+                "type": "integer",
+                "default": 100,
+                "bounds": (10, 500),
+                "label": "Population size",
+            },
+            "init": {
+                "type": "choice",
+                "default": "correlated",
+                "choices": ["latinhypercube", "sobol", "correlated", "truncnorm"],
+                "label": "Initialization method",
+            },
+            "polish": {"type": "boolean", "default": True, "label": "Polish solution"},
+            "max_tension": {
+                "type": "float",
+                "default": 10.0,
+                "bounds": (7.5, 20.0),
+                "label": "Maximum tension",
+            },
+        }
 
     def process_channel(
         self,
@@ -33,6 +51,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         ampl_arr: np.ndarray,
         max_freq: float = 250.0,
         nominal_tension: float = 6.5,
+        **kwargs,
     ) -> Tuple[List, List, List, List]:
         """
         Process a given channel to find the optimal placement of resonances and calculate the tension of each segment.
@@ -50,6 +69,9 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
                 - selected_tension: The list of selected tension values.
                 - confidences: The list of confidence values for each tension value.
         """
+        self.check_kwargs(kwargs)
+        if self.verbosity > 0:
+            print(f"Received kwargs: {kwargs}")
         # Get the frequency expectation for this channel
         segments, default_frequencies = get_expected_resonances_unique(apa_channel, layer, max_freq)
         # Get baseline subtracted amplitude array
@@ -67,13 +89,9 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             gauss_scale=GAUSS_SCALE,
             gauss_offset=GAUSS_OFFSET,
             ignore_first=5,
-            popsize=50,
-            init="latinhypercube",
-            polish=True,
             nominal_tension=nominal_tension,
-            amp_regularization=0.0,
-            max_tension=9.0,
             verbosity=self.verbosity,
+            **kwargs,
         )
         tensions += GLOBAL_TENSION_OFFSET
         best_fit_freqs = self._get_tension_adjusted_frequencies(tensions, default_frequencies)
@@ -179,7 +197,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         layer,
         use_de=False,
         downsample=2,
-        prior_width=1.0,
+        prior_width=None,
         max_freq=250,
         gauss_scale=GAUSS_SCALE,
         gauss_offset=GAUSS_OFFSET,
@@ -187,7 +205,6 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         nominal_tension=6.5,
         max_tension=10,
         verbosity=0,
-        amp_regularization=0.0,
         init="latinhypercube",
         **kwargs
     ):
@@ -304,7 +321,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
                 args=args,
                 bounds=bounds,
                 method=method,
-                **kwargs
+                **kwargs,
             )
         if verbosity > 0:
             print(res)

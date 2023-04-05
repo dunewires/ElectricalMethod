@@ -5,10 +5,59 @@ import numpy as np
 class TensionAlgorithmBase(ABC):
     def __init__(self, verbosity):
         self.verbosity = verbosity
-    
+        self.available_settings = {}
+
+    def get_available_settings(self) -> Dict[str, Any]:
+        """
+        Get the available settings for the algorithm.
+
+        This defines the keyword arguments that are accepted by the `process_channel` method.
+
+        Returns:
+            Dict[str, Any]: A dictionary of available settings.
+        """
+        return self.available_settings
+
+    def check_kwargs(self, kwargs) -> None:
+        """
+        Check that the keyword arguments are valid.
+
+        Args:
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            None
+        """
+        # Check that all keyword arguments are valid
+        for key in kwargs:
+            if key not in self.available_settings:
+                raise ValueError(f"Invalid keyword argument: {key}")
+        
+        expected_type = {
+            "float": float,
+            "integer": int,
+            "string": str,
+            "boolean": bool,
+            "choice": str
+        }
+
+        # Check that the keyword arguments are of the correct type
+        for key, value in kwargs.items():
+            if self.available_settings[key]["type"] == "choice":
+                if value not in self.available_settings[key]["choices"]:
+                    raise ValueError(f"Invalid choice for {key}: {value}")
+            elif not isinstance(value, expected_type[self.available_settings[key]["type"]]):
+                raise ValueError(f"Invalid type for {key}: {value}")
+        
+        # Check that the keyword arguments are within the allowed range if the "bounds" key is present
+        for key, value in kwargs.items():
+            if "bounds" in self.available_settings[key]:
+                if value < self.available_settings[key]["bounds"][0] or value > self.available_settings[key]["bounds"][1]:
+                    raise ValueError(f"Invalid value for {key}: {value}")
+
     @abstractmethod # This must be implemented by derived classes
     def process_channel(self, layer: int, apa_channel: int, freq_arr: np.ndarray, ampl_arr: np.ndarray, 
-                        max_freq: float = 250., nominal_tension: float = 6.5) -> Tuple[List, List, List, List]:
+                        max_freq: float = 250., nominal_tension: float = 6.5, **kwargs) -> Tuple[List, List, List, List]:
         """
         Process a given channel to find the optimal placement of resonances and calculate the tension of each segment.
         
@@ -19,6 +68,7 @@ class TensionAlgorithmBase(ABC):
             ampl_arr (np.ndarray): A NumPy array of amplitude values.
             max_freq (float, optional): The maximum frequency to search for resonances. Defaults to 250.
             nominal_tension (float, optional): The nominal tension value. Defaults to 6.5.
+            **kwargs: Arbitrary keyword arguments depending on the version of the algorithm.
         
         Returns:
             Tuple[List, List, List, List]: A tuple containing the following lists:

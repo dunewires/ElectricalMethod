@@ -135,7 +135,7 @@ def extract_metadata(data: Dict[str, Any]) -> Tuple[str, str, str, str, str, Lis
 
     return stage, layer, side, scan_id, scan_type, apa_channels
 
-def process_tension_scan(results_dict: Dict[str, Any], data: Dict[str, Any], max_freq: float, version: str, verbosity: int) -> List[List[float]]:
+def process_tension_scan(results_dict: Dict[str, Any], data: Dict[str, Any], max_freq: float, version: str, verbosity: int, **algo_kwargs) -> List[List[float]]:
     """
     Process a tension scan and update the given results dictionary.
 
@@ -185,7 +185,7 @@ def process_tension_scan(results_dict: Dict[str, Any], data: Dict[str, Any], max
             opt_res_arr,
             best_tensions,
             best_tension_confidences,
-        ) = algo.process_channel(layer, apa_channel, frequencies, amplitudes, max_freq)
+        ) = algo.process_channel(layer, apa_channel, frequencies, amplitudes, max_freq, **algo_kwargs)
 
         # Update the results dictionary with the tension information
         update_results_dict_tension(
@@ -210,6 +210,7 @@ def process_scan(
     max_freq: float,
     version: str,
     verbosity: int = 0,
+    **algo_kwargs,
 ) -> Tuple[Union[str, None], Union[List[int], None], Union[List[Any], None]]:
     """
     Process a scan with a given directory name and update the given results dictionary.
@@ -240,7 +241,7 @@ def process_scan(
         return scan_type, apa_channels, None
 
     # Process tension scans and obtain results
-    tension_results = process_tension_scan(results_dict, data, max_freq, version, verbosity)
+    tension_results = process_tension_scan(results_dict, data, max_freq, version, verbosity, **algo_kwargs)
 
     # Return the scan type, APA channels, and results
     return scan_type, apa_channels, tension_results
