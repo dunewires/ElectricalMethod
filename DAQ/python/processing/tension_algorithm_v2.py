@@ -5,7 +5,7 @@ from typing import List, Tuple, Optional, Dict, Any, Union
 
 from scipy import signal, optimize, stats
 from tension_algorithm import TensionAlgorithmBase
-from channel_frequencies import get_frequency_expectation
+from channel_frequencies import get_expected_resonances_unique
 
 GAUSS_SCALE = 15.5
 GAUSS_OFFSET = 3.5
@@ -51,7 +51,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
                 - confidences: The list of confidence values for each tension value.
         """
         # Get the frequency expectation for this channel
-        segments, default_frequencies = get_frequency_expectation(apa_channel, layer)
+        segments, default_frequencies = get_expected_resonances_unique(apa_channel, layer, max_freq)
         # Get the resonances for this channel
         tensions, best_fit_freqs, diagnostics_dict = self._find_resonances(
             freq_arr,
@@ -191,7 +191,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         # We can keep the widths of the wavelets fixed since the step size is always the same.
         corr_amplitude = self._transform_cwt_amplitude(amplitudes)
 
-        segments, default_frequencies = get_frequency_expectation(apa_channel, layer)
+        segments, default_frequencies = get_expected_resonances_unique(apa_channel, layer, max_freq)
         x = frequencies
         # There is often a spurious resonance at the beginning of the spectrum. We cut the first
         # <ignore_first> Hz off of the spectrum to avoid this.
