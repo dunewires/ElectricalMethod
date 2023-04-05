@@ -94,23 +94,20 @@ def load_measurement(df, scan_id, algorithm_version="v2", verbosity=0):
     layer = data["layer"]
     side = data["side"]
     headboard_num = df.loc[index, "headboard_num"].astype(int)
-
+    datetime = df.loc[index, "datetime"]
     out_dict = {}
     out_dict["layer"] = layer
     out_dict["side"] = side
     out_dict["apa_channels"] = apa_channels
     out_dict["headboard_num"] = headboard_num
+    out_dict["datetime"] = datetime
 
-    processing_algorithm = process_scan.get_tension_algorithm(
-        algorithm_version, verbosity=verbosity
-    )
     for i, channel in enumerate(apa_channels):
         x = np.array(data[str(i)]["freq"])
         if len(x) == 0:
             out_dict[channel] = {"freq": [], "ampl": []}
             continue
         y = np.array(data[str(i)]["ampl"])
-        y = processing_algorithm.cumsum_and_baseline_subtracted(x, y)
         out_dict[channel] = {"freq": x, "ampl": y}
         segments, frequency_expectation = channel_frequencies.get_frequency_expectation(
             channel, layer
@@ -145,7 +142,7 @@ def process_raw_data_to_dict(raw_df, algorithm_version="v2", verbosity=0, max_fr
             (
                 wire_segments,
                 selected_moved_res_arr,
-                selected_tension,
+                selected_tensions,
                 confidences,
             ) = processing_algorithm.process_channel(
                 layer, apa_channel, frequencies, amplitudes, max_freq=max_freq, nominal_tension=6.5
@@ -153,7 +150,7 @@ def process_raw_data_to_dict(raw_df, algorithm_version="v2", verbosity=0, max_fr
 
             scan_dict[apa_channel]["wire_segments"] = wire_segments
             scan_dict[apa_channel]["selected_moved_res_arr"] = selected_moved_res_arr
-            scan_dict[apa_channel]["selected_tension"] = selected_tension
+            scan_dict[apa_channel]["selected_tensions"] = selected_tensions
             scan_dict[apa_channel]["confidences"] = confidences
 
         results_dict[scan_id] = scan_dict
@@ -169,6 +166,7 @@ def results_dict_to_dataframe(results_dict):
         side = scan_dict["side"]
         layer = scan_dict["layer"]
         headboard_num = scan_dict["headboard_num"]
+        datetime = scan_dict["datetime"]
         for dwa_channel, apa_channel in enumerate(apa_channels):
             if apa_channel is None or (not apa_channel > 0):
                 continue
@@ -176,13 +174,25 @@ def results_dict_to_dataframe(results_dict):
                 continue
 
             wire_segments = scan_dict[apa_channel]["segments"]
-            selected_tension = scan_dict[apa_channel]["selected_tension"]
+            selected_tensions = scan_dict[apa_channel]["selected_tensions"]
             confidences = scan_dict[apa_channel]["confidences"]
 
-            for segment, tension, confidence in zip(wire_segments, selected_tension, confidences):
+            if len(selected_tensions) == 0:
+                continue
+
+            for segment, tension, confidence in zip(wire_segments, selected_tensions, confidences):
+                try:
+                    tension = float(tension)
+                except TypeError:
+                    tension = np.nan
+                    confidence = np.nan
+                if tension < 0:
+                    tension = np.nan
+                    confidence = np.nan
                 data_list.append(
                     {
                         "scan_id": scan_id,
+                        "datetime": datetime,
                         "side": side,
                         "layer": layer,
                         "headboard_num": headboard_num,
@@ -231,7 +241,7 @@ def convert_result_dict_to_json(results_dict_from_raw, stage="Winding"):
                 continue
 
             segments = scan_dict[apa_channel]["segments"]
-            best_tensions = scan_dict[apa_channel]["selected_tension"]
+            best_tensions = scan_dict[apa_channel]["selected_tensions"]
             best_tension_confidences = scan_dict[apa_channel]["confidences"]
 
             process_scan.update_results_dict_tension(
@@ -317,7 +327,7 @@ if __name__ == "__main__":
     raw_df = convert_top_level_dir_to_dataframe(input_dir)
 
     # Process the raw data
-    results_dict = process_raw_data_to_dict(raw_df, algorithm_version="v2", verbosity=verbosity, max_freq=300)
+    results_dict = process_raw_data_to_dict(raw_df, algorithm_version="v1", verbosity=verbosity, max_freq=300)
 
     # Convert the results dict to a DataFrame
     result_df = results_dict_to_dataframe(results_dict)
