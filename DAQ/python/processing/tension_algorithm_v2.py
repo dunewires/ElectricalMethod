@@ -285,7 +285,6 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
                     # Clip init_samples to the bounds for each segment
                     for i, (lower, upper) in enumerate(bounds):
                         init_samples[:, i] = np.clip(init_samples[:, i], lower, upper)
-                print(init_samples)
                 init = init_samples
             res = optimize.differential_evolution(
                 self._tension_fit_residual, bounds, args=args, popsize=popsize, init=init, **kwargs
