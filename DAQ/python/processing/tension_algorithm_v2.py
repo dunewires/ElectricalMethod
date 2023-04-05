@@ -52,6 +52,8 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         """
         # Get the frequency expectation for this channel
         segments, default_frequencies = get_expected_resonances_unique(apa_channel, layer, max_freq)
+        # Get baseline subtracted amplitude array
+        ampl_arr = self.cumsum_and_baseline_subtracted(freq_arr, ampl_arr)
         # Get the resonances for this channel
         tensions, best_fit_freqs, diagnostics_dict = self._find_resonances(
             freq_arr,
@@ -65,7 +67,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             gauss_scale=GAUSS_SCALE,
             gauss_offset=GAUSS_OFFSET,
             ignore_first=5,
-            popsize=200,
+            popsize=50,
             init="latinhypercube",
             polish=True,
             nominal_tension=nominal_tension,
@@ -186,11 +188,11 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         max_tension=10,
         verbosity=0,
         amp_regularization=0.0,
+        init="latinhypercube",
         **kwargs
     ):
         # We can keep the widths of the wavelets fixed since the step size is always the same.
         corr_amplitude = self._transform_cwt_amplitude(amplitudes)
-
         segments, default_frequencies = get_expected_resonances_unique(apa_channel, layer, max_freq)
         x = frequencies
         # There is often a spurious resonance at the beginning of the spectrum. We cut the first
@@ -241,16 +243,14 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             downsample,
             prior_width,
             nominal_tension,
-            amp_regularization,
         )
-
         # minimize residual
         if use_de:
             if "popsize" in kwargs:
                 popsize = kwargs.pop("popsize")
             else:
                 popsize = 50
-            if "init" in kwargs and kwargs["init"] == "truncated_normal":
+            if init == "truncated_normal":
                 # initialize the population with truncated normal distributions
                 # within the bounds, centered at the initial guess, and with
                 # a standard deviation of 2 N.
@@ -262,9 +262,33 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
                         stats.truncnorm.rvs(a, b, size=popsize, loc=initial_guess[i], scale=scale)
                     )
                 init_samples = np.array(init_samples).T
-                kwargs["init"] = init_samples
+                init = init_samples
+            elif init == "correlated":
+                # Initialize samples under the assumption that the segments are correlated.
+                # We first sample <popsize> tensions uniformly. Then, we sample the tensions
+                # for all segments from a normal distribution centered at the tension previously
+                # sampled.
+                # Make new numpy random state with fixed seed to make sure that the result is
+                # reproducible.
+                np.random.seed(0)
+                scale = 1.5
+                max_bound, min_bound = np.max([max(b) for b in bounds]), np.min(
+                    [min(b) for b in bounds]
+                )
+                base_tensions = np.random.uniform(min_bound, max_bound, size=(popsize, 1))
+                if len(bounds) == 1:
+                    init_samples = base_tensions
+                else:
+                    init_samples = np.random.normal(
+                        loc=base_tensions, scale=scale, size=(popsize, len(bounds))
+                    )
+                    # Clip init_samples to the bounds for each segment
+                    for i, (lower, upper) in enumerate(bounds):
+                        init_samples[:, i] = np.clip(init_samples[:, i], lower, upper)
+                print(init_samples)
+                init = init_samples
             res = optimize.differential_evolution(
-                self._tension_fit_residual, bounds, args=args, popsize=popsize, **kwargs
+                self._tension_fit_residual, bounds, args=args, popsize=popsize, init=init, **kwargs
             )
         else:
             if "method" in kwargs:
@@ -414,7 +438,6 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         downsample=2,
         prior_width=None,
         nominal_tension=6.5,
-        amp_regularization=0.0,
     ):
         if np.any(tensions < 0):
             raise ValueError("Tensions must be positive")
@@ -429,14 +452,6 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             downsample=downsample,
         )
         assert np.isfinite(residual), "Residual is not finite"
-        # The Gauss locations are in units of the index in the correlation amplitude.
-        # We can check the amplitude at point of the peak of the Gaussian kernel by
-        # rounding the location to the nearest integer.
-        index = np.clip(np.round(gauss_locations).astype(int), 0, len(corr_amplitude) - 1)
-        amplitudes = corr_amplitude[index]
-        # We can regularize the solution by adding a penalty if the smallest amplitude
-        # is very small, i.e. if a hypothesized frequency does not have a resonant peak.
-        residual += amp_regularization / np.min(amplitudes)
         if prior_width is not None:
             residual += np.sum((tensions - nominal_tension) ** 2 / (2 * prior_width**2))
         return residual
@@ -520,10 +535,13 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             ]
 
         diagnostics_dict = {
+            "residual": residual,
             "min_weights": min_weights,
             "mean_weights": mean_weights,
             "weight_ratio_min_max": weight_ratio_min_max,
             "max_unmatched_peak_frequency": max_unmatched_peak_frequency,
             "max_unmatched_peak_weight": max_unmatched_peak_weight,
         }
+        if self.verbosity > 0:
+            print(diagnostics_dict)
         return diagnostics_dict

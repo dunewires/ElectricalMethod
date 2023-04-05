@@ -102,16 +102,12 @@ def load_measurement(df, scan_id, algorithm_version="v2", verbosity=0):
     out_dict["headboard_num"] = headboard_num
     out_dict["datetime"] = datetime
 
-    processing_algorithm = process_scan.get_tension_algorithm(
-        algorithm_version, verbosity=verbosity
-    )
     for i, channel in enumerate(apa_channels):
         x = np.array(data[str(i)]["freq"])
         if len(x) == 0:
             out_dict[channel] = {"freq": [], "ampl": []}
             continue
         y = np.array(data[str(i)]["ampl"])
-        y = processing_algorithm.cumsum_and_baseline_subtracted(x, y)
         out_dict[channel] = {"freq": x, "ampl": y}
         segments, frequency_expectation = channel_frequencies.get_frequency_expectation(
             channel, layer
