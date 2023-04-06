@@ -27,31 +27,48 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
                 "default": 50,
                 "bounds": (10, 500),
                 "label": "Population size",
+                "tooltip": "The number of points in the population.\n"
+                "Larger values will increase the runtime but decrease the\n"
+                "chance of a solution being missed.",
             },
             "init": {
                 "type": "choice",
                 "default": "latinhypercube",
                 "choices": ["latinhypercube", "sobol", "correlated", "truncnorm"],
                 "label": "Initialization method",
+                "tooltip": "The method used to initialize the population.\n"
+                "latinhypercube: Latin hypercube sampling.\n"
+                "sobol: Sobol sequence.\n"
+                "correlated: Samples tensions that are correlated between segments.\n"
+                "truncnorm: Samples tensions from a truncated normal distribution.",
             },
-            "polish": {"type": "boolean", "default": True, "label": "Polish solution"},
+            "polish": {
+                "type": "boolean",
+                "default": True,
+                "label": "Polish solution",
+                "tooltip": "Polish the best Differential Evolution sample with a local fit using L-BFGS-B.",
+            },
             "max_tension": {
                 "type": "float",
                 "default": 10.0,
                 "bounds": (7.5, 20.0),
                 "label": "Maximum tension",
+                "tooltip": "The maximum tension value to search for.",
             },
             "ignore_first": {
                 "type": "float",
                 "default": 0.0,
                 "bounds": (0.0, 20.0),
                 "label": "Ignore first x Hz",
+                "tooltip": "Ignore the first x Hz of the spectrum when searching for resonances.",
             },
             "downsample": {
                 "type": "integer",
                 "default": 2,
                 "bounds": (1, 10),
                 "label": "Downsample by factor of x",
+                "tooltip": "Downsample the spectrum by a factor of x before searching for resonances.\n"
+                "Larger values decrease runtime but can cost accuracy.",
             },
         }
 
@@ -216,7 +233,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         max_tension=10,
         verbosity=0,
         init="latinhypercube",
-        **kwargs
+        **kwargs,
     ):
         # We can keep the widths of the wavelets fixed since the step size is always the same.
         corr_amplitude = self._transform_cwt_amplitude(amplitudes)

@@ -625,6 +625,8 @@ class MainWindow(qtw.QMainWindow):
             else:
                 label = setting_name
             widget.setObjectName(f"algo_setting__{setting_name}")
+            if "tooltip" in setting_info:
+                widget.setToolTip(setting_info["tooltip"])
             self.algoSettingsFormLayout.addRow(label, widget)
             # connect the valueChanged signal to the _update_current_algo_kwargs function
             if isinstance(widget, qtw.QDoubleSpinBox):
