@@ -14,8 +14,16 @@ Marginalized fits on a number of spectra revealed that these values are a good
 approximation of the shape of the resonances in the DWA scans and there is no
 need to re-fit them for every spectrum.
 """
-GLOBAL_TENSION_OFFSET = 0.0
-"""Global offset to apply to the tension values."""
+GLOBAL_TENSION_OFFSET = {
+    "X": 0.29,
+    "G": 0.29,
+    "U": 0.13,
+    "V": 0.0,
+}
+"""Global offset to apply to the tension values. These values were determined 
+by the median offset between the tension values obtained from this algorithm
+and human-corrected tension values.
+"""
 
 
 class TensionAlgorithmV2(TensionAlgorithmBase):
@@ -120,7 +128,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             verbosity=self.verbosity,
             **kwargs,
         )
-        tensions += GLOBAL_TENSION_OFFSET
+        tensions += GLOBAL_TENSION_OFFSET[layer]
         best_fit_freqs = self._get_tension_adjusted_frequencies(tensions, default_frequencies)
 
         # Get the confidence values for each tension value
