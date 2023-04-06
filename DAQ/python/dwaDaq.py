@@ -662,7 +662,7 @@ class MainWindow(qtw.QMainWindow):
             else:
                 raise ValueError(f"Unknown widget type: {type(widget)}")
 
-        if self.verbose > 0:
+        if self.verbose > 2:
             print(f"current_algo_kwargs = {self.current_algo_kwargs}")
     def _setPushButtonStatusAll(self, buttonVals):
         # Set all push button GUI elements

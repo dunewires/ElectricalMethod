@@ -24,13 +24,13 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         self.available_settings = {
             "popsize": {
                 "type": "integer",
-                "default": 100,
+                "default": 50,
                 "bounds": (10, 500),
                 "label": "Population size",
             },
             "init": {
                 "type": "choice",
-                "default": "correlated",
+                "default": "latinhypercube",
                 "choices": ["latinhypercube", "sobol", "correlated", "truncnorm"],
                 "label": "Initialization method",
             },
@@ -40,6 +40,18 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
                 "default": 10.0,
                 "bounds": (7.5, 20.0),
                 "label": "Maximum tension",
+            },
+            "ignore_first": {
+                "type": "float",
+                "default": 0.0,
+                "bounds": (0.0, 20.0),
+                "label": "Ignore first x Hz",
+            },
+            "downsample": {
+                "type": "integer",
+                "default": 2,
+                "bounds": (1, 10),
+                "label": "Downsample by factor of x",
             },
         }
 
@@ -83,12 +95,10 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             apa_channel,
             layer,
             use_de=True,
-            downsample=2,
             prior_width=None,
             max_freq=max_freq,
             gauss_scale=GAUSS_SCALE,
             gauss_offset=GAUSS_OFFSET,
-            ignore_first=5,
             nominal_tension=nominal_tension,
             verbosity=self.verbosity,
             **kwargs,
