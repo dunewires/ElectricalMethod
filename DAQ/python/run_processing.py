@@ -16,10 +16,12 @@ the best fit tension, and the uncertainties on the tension. The DataFrame is the
 to a JSON file in the same output format as the GUI app.
 """
 
+import ast
 import os
 import sys
 import pandas as pd
 import numpy as np
+import argparse
 
 import json
 import tqdm
@@ -109,7 +111,7 @@ def load_measurement(df, scan_id, algorithm_version="v2", verbosity=0):
             continue
         y = np.array(data[str(i)]["ampl"])
         out_dict[channel] = {"freq": x, "ampl": y}
-        segments, frequency_expectation = channel_frequencies.get_frequency_expectation(
+        segments, frequency_expectation = channel_frequencies.get_expected_resonances_unique(
             channel, layer
         )
         out_dict[channel]["freq_expectation"] = frequency_expectation
@@ -117,12 +119,17 @@ def load_measurement(df, scan_id, algorithm_version="v2", verbosity=0):
     return out_dict
 
 
-def process_raw_data_to_dict(raw_df, algorithm_version="v2", verbosity=0, max_freq=300):
+def process_raw_data_to_dict(raw_df, algorithm_version="v2", verbosity=0, max_freq=300, debug=False, **kwargs):
     processing_algorithm = process_scan.get_tension_algorithm(
         algorithm_version, verbosity=verbosity
     )
     results_dict = {}
+    max_index = len(raw_df)
+    if debug:
+        max_index = 10
     for index, row in tqdm.tqdm(raw_df.iterrows(), total=len(raw_df)):
+        if index >= max_index:
+            break
         scan_id = row["scan_id"]
         scan_dict = load_measurement(raw_df, scan_id)
         if scan_dict is None:
@@ -145,7 +152,7 @@ def process_raw_data_to_dict(raw_df, algorithm_version="v2", verbosity=0, max_fr
                 selected_tensions,
                 confidences,
             ) = processing_algorithm.process_channel(
-                layer, apa_channel, frequencies, amplitudes, max_freq=max_freq, nominal_tension=6.5
+                layer, apa_channel, frequencies, amplitudes, max_freq=max_freq, nominal_tension=6.5, **kwargs
             )
 
             scan_dict[apa_channel]["wire_segments"] = wire_segments
@@ -258,9 +265,37 @@ def convert_result_dict_to_json(results_dict_from_raw, stage="Winding"):
 
     return result_dict
 
+def to_csv_with_comments(df, path_or_buf=None, comment_lines=None, **kwargs):
+    if path_or_buf is None:
+        raise ValueError("You must provide a file path or buffer to write the CSV data to.")
+    
+    # Write comments to file first
+    if comment_lines is not None:
+        with open(path_or_buf, 'w') as file:
+            for comment in comment_lines:
+                file.write(f"# {comment}\n")
+
+    # Write DataFrame contents to file using to_csv
+    df.to_csv(path_or_buf=path_or_buf, index=False, header=True, mode='a', **kwargs)
+
+class ParseKwargsAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        try:
+            kwargs_dict = ast.literal_eval(values)
+            setattr(namespace, self.dest, kwargs_dict)
+        except Exception as e:
+            raise argparse.ArgumentTypeError(f"Invalid value for {option_string}: {values}. Error: {e}")
+
+def get_default_algo_kwargs(algorithm_version):
+    processing_algorithm = process_scan.get_tension_algorithm(
+        algorithm_version, verbosity=0
+    )
+    available_settings = processing_algorithm.get_available_settings()
+    default_dict = dict([(key, value["default"]) for key, value in available_settings.items()])
+    return default_dict
 
 if __name__ == "__main__":
-    import argparse
+    
 
     # Parse the command line arguments
     parser = argparse.ArgumentParser()
@@ -277,6 +312,10 @@ if __name__ == "__main__":
         if not os.path.exists(parent_dir):
             raise argparse.ArgumentTypeError(f"Path {parent_dir} does not exist.")
         return path
+    
+    # define argument type for Python dictionary
+    def dict_from_str(string):
+        dict = eval(string)
 
     parser.add_argument(
         "input_dir",
@@ -311,12 +350,40 @@ if __name__ == "__main__":
         help="Increase output verbosity.",
     )
 
+    parser.add_argument(
+        "--version",
+        dest="algo_version",
+        help="Version of the algorithm to use.",
+        required=False,
+        default="v1",
+        type=str,
+    )
+
+    parser.add_argument(
+        "--kwargs",
+        dest="algo_kwargs",
+        help="Keyword arguments to pass to the algorithm.",
+        required=False,
+        action=ParseKwargsAction,
+        default={},
+    )
+
+    parser.add_argument(
+        "--debug",
+        dest="debug",
+        help="Run in debug mode.",
+        required=False,
+        action="store_true",
+    )
+
     args = parser.parse_args()
     input_dir = args.input_dir
     verbosity = args.verbose
     print("Verbosity:", verbosity)
     output_csv_path = args.output_csv_path
 
+    assert args.algo_version in ["v1", "v2"], "Algorithm version must be v1 or v2."
+ 
     output_json_path = args.output_json_path
     if output_json_path is None:
         # By default, we place the processed data in <file_dir>/scanData/processed with the same name as the
@@ -333,15 +400,34 @@ if __name__ == "__main__":
 
     # Process the raw data
     results_dict = process_raw_data_to_dict(
-        raw_df, algorithm_version="v1", verbosity=verbosity, max_freq=300
+        raw_df, algorithm_version=args.algo_version, verbosity=verbosity, max_freq=300, debug=args.debug, **args.algo_kwargs
     )
 
     # Convert the results dict to a DataFrame
     result_df = results_dict_to_dataframe(results_dict)
 
     # Save the DataFrame to a CSV file
+    comment_lines = [
+        "This file contains the results of the tension measurement algorithm.",
+        f"Algorithm version: {args.algo_version}",
+        f"Input directory: {input_dir}",
+        f"Output JSON file: {output_json_path}",
+    ]
+
+    
+    # We want to add not only the kwargs that were set, but also all the default values
+    # to the comment lines. This way, we can see what the default values were when the
+    # file was created.
+    algo_kwargs = get_default_algo_kwargs(args.algo_version)
+    algo_kwargs.update(args.algo_kwargs)
+
+    if algo_kwargs:
+        comment_lines.append("Algorithm keyword arguments:")
+        for key, value in algo_kwargs.items():
+            comment_lines.append(f"{key}: {value}")
+    
     if output_csv_path is not None:
-        result_df.to_csv(output_csv_path, index=False)
+        to_csv_with_comments(result_df, path_or_buf=output_csv_path, comment_lines=comment_lines)
 
     # Convert the results dict to a JSON file
     result_json = convert_result_dict_to_json(results_dict, stage="Winding")
