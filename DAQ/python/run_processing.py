@@ -37,13 +37,15 @@ def convert_top_level_dir_to_dataframe(input_dir):
     The DataFrame has one row per Scan ID. The row contains the path to the raw data file with
     the waveforms that correspond to that scan.
     """
-    folders = os.listdir(input_dir)
-    datetimes = [f.split("_")[0] for f in folders if f.endswith("_T")]
-    layers = [f.split("_")[1] for f in folders if f.endswith("_T")]
-    sides = [f.split("_")[2] for f in folders if f.endswith("_T")]
-    headboard_num = [int(f.split("_")[3]) for f in folders if f.endswith("_T")]
-    wires = [f.split("_")[4] for f in folders if f.endswith("_T")]
-    folders = [f for f in folders if f.endswith("_T")]
+    folders = [f for f in os.listdir(input_dir) if f.endswith("_T")]
+    datetimes = [f.split("_")[0] for f in folders]
+    layers = [f.split("_")[1] for f in folders]
+    sides = [f.split("_")[2] for f in folders]
+    headboard_num = [int(f.split("_")[3]) for f in folders]
+    wires = [f.split("_")[4] for f in folders]
+
+    json_folders = [f for f in folders if f.endswith("_T")]
+    json_paths = [os.path.join(input_dir, f, "amplitudeData.json") for f in json_folders]
 
     df = pd.DataFrame({"datetime": datetimes})
     df["datetime"] = pd.to_datetime(df["datetime"], format="%Y%m%dT%H%M%S")
@@ -51,9 +53,7 @@ def convert_top_level_dir_to_dataframe(input_dir):
     df["side"] = sides
     df["headboard_num"] = headboard_num
     # df["wires"] = wires
-    df["json_path"] = [
-        os.path.join(input_dir, f, "amplitudeData.json") for f in folders if f.endswith("_T")
-    ]
+    df["json_path"] = json_paths
     df["scan_id"] = folders
 
     return df
@@ -156,6 +156,7 @@ def process_raw_data_to_dict(raw_df, algorithm_version="v2", verbosity=0, max_fr
         results_dict[scan_id] = scan_dict
     return results_dict
 
+
 def results_dict_to_dataframe(results_dict):
     """Convert a results dictionary to a pandas DataFrame."""
     data_list = []
@@ -217,14 +218,14 @@ def convert_result_dict_to_json(results_dict_from_raw, stage="Winding"):
         dictionaries with frequency and amplitude arrays as values.
     stage : str
         The stage of the measurement.
-    
+
     Returns
     -------
     dict
         Output dictionary in the format expected by the GUI.
     """
 
-    # The input 
+    # The input
     result_dict = process_scan.new_results_dict(
         APA_STAGES_SCANS, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT
     )
@@ -254,19 +255,22 @@ def convert_result_dict_to_json(results_dict_from_raw, stage="Winding"):
                 best_tensions,
                 best_tension_confidences,
             )
-    
+
     return result_dict
+
 
 if __name__ == "__main__":
     import argparse
+
     # Parse the command line arguments
     parser = argparse.ArgumentParser()
-    
+
     # define argument type that checks if the path exists
     def path_exists(path):
         if not os.path.exists(path):
             raise argparse.ArgumentTypeError(f"Path {path} does not exist.")
         return path
+
     # define argument type that checks if the parent directory exists
     def parent_dir_exists(path):
         parent_dir = os.path.dirname(path)
@@ -279,7 +283,7 @@ if __name__ == "__main__":
         help="Directory containing the raw data files.",
         type=path_exists,
     )
-    
+
     parser.add_argument(
         "--json",
         dest="output_json_path",
@@ -319,7 +323,8 @@ if __name__ == "__main__":
         # input directory and a .json extension.
         output_json_path = os.path.join(
             os.path.dirname(__file__),
-            "scan_data", "processed",
+            "scan_data",
+            "processed",
             os.path.basename(input_dir) + ".json",
         )
 
@@ -327,7 +332,9 @@ if __name__ == "__main__":
     raw_df = convert_top_level_dir_to_dataframe(input_dir)
 
     # Process the raw data
-    results_dict = process_raw_data_to_dict(raw_df, algorithm_version="v1", verbosity=verbosity, max_freq=300)
+    results_dict = process_raw_data_to_dict(
+        raw_df, algorithm_version="v1", verbosity=verbosity, max_freq=300
+    )
 
     # Convert the results dict to a DataFrame
     result_df = results_dict_to_dataframe(results_dict)
@@ -340,5 +347,3 @@ if __name__ == "__main__":
     result_json = convert_result_dict_to_json(results_dict, stage="Winding")
     with open(output_json_path, "w") as f:
         json.dump(result_json, f)
-
-    
