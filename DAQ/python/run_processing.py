@@ -23,6 +23,9 @@ import pandas as pd
 import numpy as np
 import argparse
 
+from concurrent.futures import ThreadPoolExecutor
+import itertools
+
 import json
 import tqdm
 from dwa_daq_constants import APA_LAYERS, APA_SIDES, APA_STAGES_SCANS, MAX_WIRE_SEGMENT
@@ -117,6 +120,56 @@ def load_measurement(df, scan_id, algorithm_version="v2", verbosity=0):
         out_dict[channel]["freq_expectation"] = frequency_expectation
         out_dict[channel]["segments"] = segments
     return out_dict
+
+
+
+def process_raw_data_to_dict_multithreaded(raw_df, algorithm_version="v2", verbosity=0, max_freq=300, debug=False, num_threads=4, **kwargs):
+    processing_algorithm = process_scan.get_tension_algorithm(
+        algorithm_version, verbosity=verbosity
+    )
+    results_dict = {}
+    max_index = len(raw_df)
+    if debug:
+        max_index = 10
+        
+    def process_row(row):
+        scan_id = row["scan_id"]
+        scan_dict = load_measurement(raw_df, scan_id)
+        if scan_dict is None:
+            return None
+        for dwa_channel in range(8):
+            apa_channel = scan_dict["apa_channels"][dwa_channel]
+            if apa_channel is None or (not apa_channel > 0):
+                # If a measurement is missing, the APA channel will be -1
+                continue
+            layer = scan_dict["layer"]
+            side = scan_dict["side"]
+            frequencies = scan_dict[apa_channel]["freq"]
+            if len(frequencies) == 0:
+                continue
+            amplitudes = scan_dict[apa_channel]["ampl"]
+            (
+                wire_segments,
+                selected_moved_res_arr,
+                selected_tensions,
+                confidences,
+            ) = processing_algorithm.process_channel(
+                layer, apa_channel, frequencies, amplitudes, max_freq=max_freq, nominal_tension=6.5, **kwargs
+            )
+            scan_dict[apa_channel]["wire_segments"] = wire_segments
+            scan_dict[apa_channel]["selected_moved_res_arr"] = selected_moved_res_arr
+            scan_dict[apa_channel]["selected_tensions"] = selected_tensions
+            scan_dict[apa_channel]["confidences"] = confidences
+        return (scan_id, scan_dict)
+    
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        tasks = [executor.submit(process_row, row) for _, row in itertools.islice(raw_df.iterrows(), max_index)]
+        for task in tqdm.tqdm(tasks):
+            result = task.result()
+            if result is not None:
+                results_dict[result[0]] = result[1]
+                
+    return results_dict
 
 
 def process_raw_data_to_dict(raw_df, algorithm_version="v2", verbosity=0, max_freq=300, debug=False, **kwargs):
