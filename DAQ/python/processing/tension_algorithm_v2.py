@@ -7,18 +7,31 @@ from scipy import signal, optimize, stats
 from tension_algorithm import TensionAlgorithmBase
 from channel_frequencies import get_expected_resonances_unique
 
-GAUSS_SCALE = 15.5
-GAUSS_OFFSET = 3.5
-"""The scale and offset of the Gaussian kernel used to model the resonances.
-Marginalized fits on a number of spectra revealed that these values are a good
-approximation of the shape of the resonances in the DWA scans and there is no
-need to re-fit them for every spectrum.
-"""
+TEMPLATE_SCALE = {
+    "X": 16.25,
+    "G": 16.25,
+    "U": 16.25,
+    "V": 16.25,
+}
+TEMPLATE_OFFSET = {
+    "X": 2.2,
+    "G": 2.2,
+    "U": 3.0,
+    "V": 3.0,
+}
+# The degrees of freedom of the template determines the thickness of the tails.
+# A larger value eventually converges to a normal distribution.
+TEMPLATE_DOF = {
+    "X": 3.4,
+    "G": 3.4,
+    "U": 2.2,
+    "V": 2.2,
+}
 GLOBAL_TENSION_OFFSET = {
-    "X": 0.29,
-    "G": 0.29,
-    "U": 0.13,
-    "V": 0.0,
+    "X": 0.086,
+    "G": 0.086,
+    "U": 0.061,
+    "V": 0.061,
 }
 """Global offset to apply to the tension values. These values were determined 
 by the median offset between the tension values obtained from this algorithm
@@ -122,8 +135,9 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             use_de=True,
             prior_width=None,
             max_freq=max_freq,
-            gauss_scale=GAUSS_SCALE,
-            gauss_offset=GAUSS_OFFSET,
+            template_scale=TEMPLATE_SCALE[layer],
+            template_offset=TEMPLATE_OFFSET[layer],
+            template_dof=TEMPLATE_DOF[layer],
             nominal_tension=nominal_tension,
             verbosity=self.verbosity,
             **kwargs,
@@ -234,8 +248,9 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         downsample=2,
         prior_width=None,
         max_freq=250,
-        gauss_scale=GAUSS_SCALE,
-        gauss_offset=GAUSS_OFFSET,
+        template_scale=16.0,
+        template_offset=2.0,
+        template_dof=10,
         ignore_first=5,
         nominal_tension=6.5,
         max_tension=10,
@@ -289,12 +304,13 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         # add additional arguments to the function
         # Gauss scale, a, b, downsample, prior_width
         args += (
-            gauss_scale,
+            template_scale,
             1,
-            gauss_offset,
+            template_offset,
             downsample,
             prior_width,
             nominal_tension,
+            template_dof,
         )
         # minimize residual
         if use_de:
@@ -362,21 +378,19 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             print(res)
         tensions = res.x
         diagnostics_dict = self._get_fit_diagnostics(
-            tensions, x, corr_amplitude, default_frequencies, downsample=downsample
+            tensions, x, corr_amplitude, default_frequencies, layer, downsample=downsample
         )
         best_fit_freqs = self._get_tension_adjusted_frequencies(tensions, default_frequencies)
         return tensions, best_fit_freqs, diagnostics_dict
 
-    def _deconvolve_resonances(self, input, scale, gauss_locations):
-        # Build a kernel matrix, where each row is a Gaussian kernel
+    def _deconvolve_resonances(self, input, scale, template_locations, template_dof=10):
+        # Build a kernel matrix, where each row is a kernel
         # centered at one of the expected frequencies.
         # We do not adjust the normalization on purpose, we want the peak
         # of each kernel to be 1.
-        A = np.exp(
-            -0.5
-            * (np.arange(len(input))[:, np.newaxis] - gauss_locations[np.newaxis, :]) ** 2
-            / scale**2
-        )
+        x_minus_mu = np.arange(len(input))[:, np.newaxis] - template_locations[np.newaxis, :]
+        x_minus_mu_sq_norm = x_minus_mu ** 2 / scale ** 2
+        A = (1 + x_minus_mu_sq_norm / template_dof) ** (-(template_dof + 1) / 2)
         # Now we solve a non-negative least-squares problem to find the best
         # combination of the kernels to approximate the correlation
         # amplitude.
@@ -385,16 +399,14 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         weights, residual = optimize.nnls(A, input)
         return weights, residual
 
-    def _reconvolve_resonances(self, input, weights, gauss_locations, scale):
-        # Build a kernel matrix, where each row is a Gaussian kernel
+    def _reconvolve_resonances(self, input, weights, template_locations, scale, template_dof=10):
+        # Build a kernel matrix, where each row is a kernel
         # centered at one of the expected frequencies.
         # We do not adjust the normalization on purpose, we want the peak
         # of each kernel to be 1.
-        A = np.exp(
-            -0.5
-            * (np.arange(len(input))[:, np.newaxis] - gauss_locations[np.newaxis, :]) ** 2
-            / scale**2
-        )
+        x_minus_mu = np.arange(len(input))[:, np.newaxis] - template_locations[np.newaxis, :]
+        x_minus_mu_sq_norm = x_minus_mu ** 2 / scale ** 2
+        A = (1 + x_minus_mu_sq_norm / template_dof) ** (-(template_dof + 1) / 2)
         return np.dot(A, weights)
 
     def _get_tension_adjusted_frequencies(self, tensions, frequencies):
@@ -417,45 +429,17 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         cwtmatr = signal.cwt(amplitudes, signal.morlet2, widths=np.arange(*widths))
         return np.mean(np.abs(cwtmatr), axis=0)
 
-    def _reconvolve_with_tension_adjustment(
-        self,
-        x,
-        weights,
-        default_frequencies,
-        tensions,
-        gauss_scale=GAUSS_SCALE,
-        a=1,
-        b=GAUSS_OFFSET,
-        downsample=2,
-    ):
-        # Build a kernel matrix, where each row is a Gaussian kernel
-        # centered at one of the expected frequencies.
-        adjusted_frequencies = self.get_tension_adjusted_frequencies(tensions, default_frequencies)
-        # combined the frequencies for each segment into one array
-        expected_frequencies = np.concatenate(adjusted_frequencies)
-        # Combine the weights for each segment into one array
-        weights = np.concatenate(weights)
-        # Expected frequencies where the Gaussian kernels are centered are offset
-        expected_frequencies = a * expected_frequencies + b
-        x = x[::downsample]
-        # Adjust gauss scale
-        gauss_scale = gauss_scale / downsample
-        # Need to convert from the frequency to the index in the correlation amplitude.
-        max_freq, min_freq = np.max(x), np.min(x)
-        gauss_locations = ((expected_frequencies - min_freq) / (max_freq - min_freq)) * len(x)
-        reconvolved_amplitude = self.reconvolve_resonances(x, weights, gauss_locations, gauss_scale)
-        return x, reconvolved_amplitude
-
     def _deconvolve_with_tension_adjustment(
         self,
         x,
         corr_amplitude,
         default_frequencies,
         tensions,
-        gauss_scale=20,
-        a=1,
-        b=0,
+        template_scale=20.0,
+        a=1.0,
+        b=0.0,
         downsample=1,
+        template_dof=10,
     ):
         adjusted_frequencies = self._get_tension_adjusted_frequencies(tensions, default_frequencies)
         # combined the frequencies for each segment into one array
@@ -465,17 +449,17 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         # Downsample the correlation amplitude and input frequencies
         corr_amplitude = corr_amplitude[::downsample]
         x = x[::downsample]
-        # Adjust gauss scale
-        gauss_scale = gauss_scale / downsample
+        # Adjust template scale
+        template_scale = template_scale / downsample
         # Need to convert from the frequency to the index in the correlation amplitude.
         max_freq, min_freq = np.max(x), np.min(x)
-        gauss_locations = ((expected_frequencies - min_freq) / (max_freq - min_freq)) * len(x)
+        template_locations = ((expected_frequencies - min_freq) / (max_freq - min_freq)) * len(x)
         weights, residual = self._deconvolve_resonances(
-            corr_amplitude, gauss_scale, gauss_locations
+            corr_amplitude, template_scale, template_locations, template_dof=template_dof
         )
-        # undo the downsampling for gauss locations
-        gauss_locations = gauss_locations * downsample
-        return weights, residual, gauss_locations
+        # undo the downsampling for template locations
+        template_locations = template_locations * downsample
+        return weights, residual, template_locations
 
     def _tension_fit_residual(
         self,
@@ -483,24 +467,26 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         x,
         corr_amplitude,
         default_frequencies,
-        gauss_scale=GAUSS_SCALE,
-        a=1,
-        b=GAUSS_OFFSET,
+        template_scale=16.0,
+        a=1.0,
+        b=2.0,
         downsample=2,
         prior_width=None,
         nominal_tension=6.5,
+        template_dof=10,
     ):
         if np.any(tensions < 0):
             raise ValueError("Tensions must be positive")
-        weights, residual, gauss_locations = self._deconvolve_with_tension_adjustment(
+        weights, residual, template_locations = self._deconvolve_with_tension_adjustment(
             x,
             corr_amplitude,
             default_frequencies,
             tensions,
-            gauss_scale=gauss_scale,
+            template_scale=template_scale,
             a=a,
             b=b,
             downsample=downsample,
+            template_dof=template_dof,
         )
         assert np.isfinite(residual), "Residual is not finite"
         if prior_width is not None:
@@ -524,23 +510,32 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         return weights
 
     def _get_fit_diagnostics(
-        self, tensions, x, corr_amplitude, default_frequencies, downsample=2, weight_merge_width=5
+        self,
+        tensions,
+        x,
+        corr_amplitude,
+        default_frequencies,
+        layer,
+        downsample=2,
+        weight_merge_width=5,
+        template_dof=10,
     ):
-        weights, residual, gauss_locations = self._deconvolve_with_tension_adjustment(
+        weights, residual, template_locations = self._deconvolve_with_tension_adjustment(
             x,
             corr_amplitude,
             default_frequencies,
             tensions,
-            gauss_scale=GAUSS_SCALE,
+            template_scale=TEMPLATE_SCALE[layer],
             a=1,
-            b=GAUSS_OFFSET,
+            b=TEMPLATE_OFFSET[layer],
             downsample=downsample,
+            template_dof=template_dof,
         )
 
         unmatched_peak_frequencies, unmatched_peak_weights = self._find_unmatched_peaks(
             x,
             corr_amplitude,
-            self._reconvolve_resonances(x, weights, gauss_locations, GAUSS_SCALE),
+            self._reconvolve_resonances(x, weights, template_locations, TEMPLATE_SCALE[layer], template_dof=template_dof),
         )
         # We want to use the weights to diagnose bad fits. In particular, we want to
         # find instances where a frequency is not matched by a resonance, which would
