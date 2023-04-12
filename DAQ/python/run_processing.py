@@ -388,10 +388,6 @@ if __name__ == "__main__":
             raise argparse.ArgumentTypeError(f"Path {parent_dir} does not exist.")
         return path
 
-    # define argument type for Python dictionary
-    def dict_from_str(string):
-        dict = eval(string)
-
     parser.add_argument(
         "input_dir",
         help="Directory containing the raw data files.",
