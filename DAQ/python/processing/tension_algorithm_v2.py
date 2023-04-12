@@ -170,30 +170,31 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         # Check that files exist and load the models. Return NaNs if they don't.
         if layer in ["X", "G"]:
             try:
-                model = joblib.load("tension_algorithm_v2_xg.pkl")
+                model = joblib.load("algorithm_tuning/error_predictor_layer_XG.pkl")
             except FileNotFoundError:
                 return np.full(len(diagnostics_dict["min_weights"]), np.nan)
         elif layer in ["U", "V"]:
             try:
-                model = joblib.load("tension_algorithm_v2_uv.pkl")
+                model = joblib.load("algorithm_tuning/error_predictor_layer_UV.pkl")
             except FileNotFoundError:
                 return np.full(len(diagnostics_dict["min_weights"]), np.nan)
         else:
             raise ValueError("Invalid layer number.")
 
         # Get the input variables from the diagnostics dictionary
-        X = np.array(
-            [
-                diagnostics_dict["min_weights"],
-                diagnostics_dict["mean_weights"],
-                diagnostics_dict["weight_ratio_min_max"],
-                diagnostics_dict["max_unmatched_peak_frequency"],
-                diagnostics_dict["max_unmatched_peak_weight"],
-            ]
-        ).T
-
+        feature_keys = ["min_weights", "weight_ratio_min_max", "max_unmatched_peak_weight"]
+        num_segments = len(diagnostics_dict["min_weights"])
+        features = []
+        for key in feature_keys:
+            if isinstance(diagnostics_dict[key], list) or isinstance(diagnostics_dict[key], np.ndarray):
+                features.append(diagnostics_dict[key])
+            else:
+                features.append([diagnostics_dict[key]] * num_segments)
+        X = np.array(features).T
         # Get the predicted values from the model
         y_pred = model.predict(X)
+        if self.verbosity > 0:
+            print(f"Predicted errors: {y_pred}")
         # Return the absolute value of the predicted values
         return np.abs(y_pred)
 
