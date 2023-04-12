@@ -115,7 +115,7 @@ def load_measurement(df, scan_id, algorithm_version="v2", verbosity=0):
         y = np.array(data[str(i)]["ampl"])
         out_dict[channel] = {"freq": x, "ampl": y}
         segments, frequency_expectation = channel_frequencies.get_expected_resonances_unique(
-            channel, layer
+            channel, layer, thresh=350
         )
         out_dict[channel]["freq_expectation"] = frequency_expectation
         out_dict[channel]["segments"] = segments
@@ -123,7 +123,7 @@ def load_measurement(df, scan_id, algorithm_version="v2", verbosity=0):
 
 
 def process_raw_data_to_dict_multithreaded(
-    raw_df, algorithm_version="v2", verbosity=0, max_freq=300, debug=False, num_threads=4, **kwargs
+    raw_df, algorithm_version="v2", verbosity=0, max_freq=350, debug=False, num_threads=4, **kwargs
 ):
     processing_algorithm = process_scan.get_tension_algorithm(
         algorithm_version, verbosity=verbosity
