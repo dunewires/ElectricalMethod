@@ -183,7 +183,7 @@ def process_raw_data_to_dict_multithreaded(
 
 
 def process_raw_data_to_dict(
-    raw_df, algorithm_version="v2", verbosity=0, max_freq=300, debug=False, **kwargs
+    raw_df, algorithm_version="v2", verbosity=0, max_freq=350, debug=False, **kwargs
 ):
     processing_algorithm = process_scan.get_tension_algorithm(
         algorithm_version, verbosity=verbosity
@@ -474,7 +474,7 @@ if __name__ == "__main__":
         raw_df,
         algorithm_version=args.algo_version,
         verbosity=verbosity,
-        max_freq=300,
+        max_freq=350,
         debug=args.debug,
         **args.algo_kwargs,
     )

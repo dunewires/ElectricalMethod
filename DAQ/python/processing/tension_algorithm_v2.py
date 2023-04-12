@@ -99,7 +99,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         apa_channel: int,
         freq_arr: np.ndarray,
         ampl_arr: np.ndarray,
-        max_freq: float = 250.0,
+        max_freq: float = 350.0,
         nominal_tension: float = 6.5,
         **kwargs,
     ) -> Tuple[List, List, List, List]:
@@ -518,7 +518,6 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         layer,
         downsample=2,
         weight_merge_width=5,
-        template_dof=10,
     ):
         weights, residual, template_locations = self._deconvolve_with_tension_adjustment(
             x,
@@ -529,13 +528,13 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             a=1,
             b=TEMPLATE_OFFSET[layer],
             downsample=downsample,
-            template_dof=template_dof,
+            template_dof=TEMPLATE_DOF[layer],
         )
 
         unmatched_peak_frequencies, unmatched_peak_weights = self._find_unmatched_peaks(
             x,
             corr_amplitude,
-            self._reconvolve_resonances(x, weights, template_locations, TEMPLATE_SCALE[layer], template_dof=template_dof),
+            self._reconvolve_resonances(x, weights, template_locations, TEMPLATE_SCALE[layer], template_dof=TEMPLATE_DOF[layer]),
         )
         # We want to use the weights to diagnose bad fits. In particular, we want to
         # find instances where a frequency is not matched by a resonance, which would

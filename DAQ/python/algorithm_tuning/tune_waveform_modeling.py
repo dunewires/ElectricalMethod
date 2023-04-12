@@ -93,6 +93,7 @@ def get_channel_data(df, scan_id, apa_channel):
 
     measurement_dict = load_measurement(df, scan_id)
     channel_dict = measurement_dict[apa_channel]
+    channel_dict["layer"] = measurement_dict["layer"]
 
     # Add the tranformed waveform to the dict
     freq, ampl = channel_dict["freq"], channel_dict["ampl"]
