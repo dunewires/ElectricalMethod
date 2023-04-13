@@ -1,9 +1,8 @@
-import sys
 import joblib
 import numpy as np
-from typing import List, Tuple, Optional, Dict, Any, Union
+from typing import List, Tuple
 
-from scipy import signal, optimize, stats
+from scipy import signal, optimize
 from tension_algorithm import TensionAlgorithmBase
 from channel_frequencies import get_expected_resonances_unique
 
@@ -55,13 +54,11 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             "init": {
                 "type": "choice",
                 "default": "latinhypercube",
-                "choices": ["latinhypercube", "sobol", "correlated", "truncnorm"],
+                "choices": ["latinhypercube", "sobol"],
                 "label": "Initialization method",
                 "tooltip": "The method used to initialize the population.\n"
                 "latinhypercube: Latin hypercube sampling.\n"
                 "sobol: Sobol sequence.\n"
-                "correlated: Samples tensions that are correlated between segments.\n"
-                "truncnorm: Samples tensions from a truncated normal distribution.",
             },
             "polish": {
                 "type": "boolean",
@@ -333,54 +330,12 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         )
         # minimize residual
         if use_de:
-            if "popsize" in kwargs:
-                popsize = kwargs.pop("popsize")
-            else:
-                popsize = 50
-            if init == "truncated_normal":
-                # initialize the population with truncated normal distributions
-                # within the bounds, centered at the initial guess, and with
-                # a standard deviation of 2 N.
-                init_samples = []
-                scale = 2
-                for i, (lower, upper) in enumerate(bounds):
-                    a, b = (lower - initial_guess[i]) / scale, (upper - initial_guess[i]) / scale
-                    init_samples.append(
-                        stats.truncnorm.rvs(a, b, size=popsize, loc=initial_guess[i], scale=scale)
-                    )
-                init_samples = np.array(init_samples).T
-                init = init_samples
-            elif init == "correlated":
-                # Initialize samples under the assumption that the segments are correlated.
-                # We first sample <popsize> tensions uniformly. Then, we sample the tensions
-                # for all segments from a normal distribution centered at the tension previously
-                # sampled.
-                # Make new numpy random state with fixed seed to make sure that the result is
-                # reproducible.
-                np.random.seed(0)
-                scale = 1.5
-                max_bound, min_bound = np.max([max(b) for b in bounds]), np.min(
-                    [min(b) for b in bounds]
-                )
-                base_tensions = np.random.uniform(min_bound, max_bound, size=(popsize, 1))
-                if len(bounds) == 1:
-                    init_samples = base_tensions
-                else:
-                    init_samples = np.random.normal(
-                        loc=base_tensions, scale=scale, size=(popsize, len(bounds))
-                    )
-                    # Clip init_samples to the bounds for each segment
-                    for i, (lower, upper) in enumerate(bounds):
-                        init_samples[:, i] = np.clip(init_samples[:, i], lower, upper)
-                init = init_samples
+            popsize = kwargs.pop("popsize", 50)
             res = optimize.differential_evolution(
                 self._tension_fit_residual, bounds, args=args, popsize=popsize, init=init, **kwargs
             )
         else:
-            if "method" in kwargs:
-                method = kwargs.pop("method")
-            else:
-                method = "Nelder-Mead"
+            method = kwargs.pop("method", "Nelder-Mead")
             # Pop all arguments that are only used by differential evolution
             for de_arg in ["popsize", "init", "polish"]:
                 if de_arg in kwargs:
