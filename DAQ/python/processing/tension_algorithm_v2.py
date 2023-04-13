@@ -91,6 +91,19 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
                 "tooltip": "Downsample the spectrum by a factor of x before searching for resonances.\n"
                 "Larger values decrease runtime but can cost accuracy.",
             },
+            "use_priors": {
+                "type": "boolean",
+                "default": True,
+                "label": "Use priors around nominal tension",
+                "tooltip": "Use a prior around the nominal tension value to help the optimizer find the correct solution.",
+            },
+            "prior_width": {
+                "type": "float",
+                "default": 0.5,
+                "bounds": (0.1, 2.0),
+                "label": "Prior width",
+                "tooltip": "The width of the prior around the nominal tension value.",
+            },
         }
 
     def process_channel(
@@ -126,6 +139,11 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         segments, default_frequencies = get_expected_resonances_unique(apa_channel, layer, max_freq)
         # Get baseline subtracted amplitude array
         ampl_arr = self.cumsum_and_baseline_subtracted(freq_arr, ampl_arr)
+        if kwargs.pop("use_priors", False):
+            prior_width = kwargs.pop("prior_width", 0.5)
+        else:
+            kwargs.pop("prior_width")  # avoid duplicate kwargs error
+            prior_width = None
         # Get the resonances for this channel
         tensions, best_fit_freqs, diagnostics_dict = self._find_resonances(
             freq_arr,
@@ -133,7 +151,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             apa_channel,
             layer,
             use_de=True,
-            prior_width=None,
+            prior_width=prior_width,
             max_freq=max_freq,
             template_scale=TEMPLATE_SCALE[layer],
             template_offset=TEMPLATE_OFFSET[layer],
