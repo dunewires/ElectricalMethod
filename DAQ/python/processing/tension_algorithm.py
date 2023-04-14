@@ -54,6 +54,20 @@ class TensionAlgorithmBase(ABC):
             if "bounds" in self.available_settings[key]:
                 if value < self.available_settings[key]["bounds"][0] or value > self.available_settings[key]["bounds"][1]:
                     raise ValueError(f"Invalid value for {key}: {value}")
+        
+        # Pop all kwargs for which the "enabled" conditions are not met.
+        # If the "enabled" key is present, it will contain a dictionary where the keys are the names of other kwargs
+        # and the values are the values that the other kwargs must have for this one to be enabled.
+        kwargs_to_pop = []
+        for key, value in kwargs.items():
+            if "enabled" in self.available_settings[key]:
+                for other_key, other_value in self.available_settings[key]["enabled"].items():
+                    if kwargs[other_key] != other_value:
+                        kwargs_to_pop.append(key)
+                        break
+        
+        for key in kwargs_to_pop:
+            kwargs.pop(key)
 
     @abstractmethod # This must be implemented by derived classes
     def process_channel(self, layer: int, apa_channel: int, freq_arr: np.ndarray, ampl_arr: np.ndarray, 

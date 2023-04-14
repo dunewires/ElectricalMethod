@@ -666,6 +666,41 @@ class MainWindow(qtw.QMainWindow):
 
         if self.verbose > 2:
             print(f"current_algo_kwargs = {self.current_algo_kwargs}")
+        self._update_algo_setting_widget_enabled_state()
+    
+    def _update_algo_setting_widget_enabled_state(self):
+        # Update the enabled state of the widgets in the algoSettingsFormLayout.
+        # Some settings are only available for certain minimizers such as Differential Evolution.
+        # In the case that there are conditions for a setting to be available, the dictionary
+        # returned by get_available_settings will contain a key "enabled". The value of
+        # this key is a dictionary with the keys of the dictionary being the names of the
+        # settings that are enabled/disabled by the setting. The values of the dictionary
+        # are the values that the setting must have in order for the setting to be enabled.
+
+        version = self.algoVersionComboBox.currentText()
+        algorithm = process_scan.get_tension_algorithm(version, 0)
+
+        available_settings = algorithm.get_available_settings()
+
+        for row in range(self.algoSettingsFormLayout.rowCount()):
+            form_item = self.algoSettingsFormLayout.itemAt(row, qtw.QFormLayout.FieldRole)
+            if form_item is None:
+                continue
+            widget = form_item.widget()
+            setting_name = widget.objectName().split("__")[1]
+            if setting_name in available_settings:
+                if "enabled" in available_settings[setting_name]:
+                    enabled = True
+                    for setting, value in available_settings[setting_name]["enabled"].items():
+                        if self.current_algo_kwargs[setting] != value:
+                            enabled = False
+                            break
+                    widget.setEnabled(enabled)
+                else:
+                    widget.setEnabled(True)
+            else:
+                widget.setEnabled(False)
+
     def _setPushButtonStatusAll(self, buttonVals):
         # Set all push button GUI elements
         # buttonVals is a list of integers or bools

@@ -42,6 +42,16 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
     def __init__(self, verbosity):
         super().__init__(verbosity)
         self.available_settings = {
+            "minimizer": {
+                "type": "choice",
+                "default": "differential_evolution",
+                "choices": ["Differential Evolution", "Nelder-Mead", "MLSL (requires nlopt)"],
+                "label": "Minimizer",
+                "tooltip": "The minimizer to use to find the optimal tension values.\n"
+                "Differential Evolution: Global evolutionary optimization.\n"
+                "Nelder-Mead: Nelder-Mead simplex algorithm (local optimization).\n"
+                "MLSL: Global optimization using multiple local fits from different starting points. Requires `nlopt` to be installed.\n",
+            },
             "popsize": {
                 "type": "integer",
                 "default": 50,
@@ -50,6 +60,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
                 "tooltip": "The number of points in the population.\n"
                 "Larger values will increase the runtime but decrease the\n"
                 "chance of a solution being missed.",
+                "enabled": {"minimizer": "Differential Evolution"},
             },
             "init": {
                 "type": "choice",
@@ -58,13 +69,23 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
                 "label": "Initialization method",
                 "tooltip": "The method used to initialize the population.\n"
                 "latinhypercube: Latin hypercube sampling.\n"
-                "sobol: Sobol sequence.\n"
+                "sobol: Sobol sequence.\n",
+                "enabled": {"minimizer": "Differential Evolution"},
             },
             "polish": {
                 "type": "boolean",
                 "default": True,
                 "label": "Polish solution",
                 "tooltip": "Polish the best Differential Evolution sample with a local fit using L-BFGS-B.",
+                "enabled": {"minimizer": "Differential Evolution"},
+            },
+            "maxtime": {
+                "type": "float",
+                "default": 0.2,
+                "bounds": (0.01, 10.0),
+                "label": "Maximum runtime (s)",
+                "tooltip": "The maximum runtime for the minimizer in seconds. Only used for MLSL.",
+                "enabled": {"minimizer": "MLSL (requires nlopt)"},
             },
             "max_tension": {
                 "type": "float",
@@ -141,13 +162,18 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         else:
             kwargs.pop("prior_width")  # avoid duplicate kwargs error
             prior_width = None
+        minimizer = {
+            "Differential Evolution": "differential_evolution",
+            "Nelder-Mead": "nelder_mead",
+            "MLSL (requires nlopt)": "mlsl",
+        }[kwargs.pop("minimizer", "Differential Evolution")]
         # Get the resonances for this channel
         tensions, best_fit_freqs, diagnostics_dict = self._find_resonances(
             freq_arr,
             ampl_arr,
             apa_channel,
             layer,
-            use_de=True,
+            minimizer=minimizer,
             prior_width=prior_width,
             max_freq=max_freq,
             template_scale=TEMPLATE_SCALE[layer],
@@ -201,7 +227,9 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         num_segments = len(diagnostics_dict["min_weights"])
         features = []
         for key in feature_keys:
-            if isinstance(diagnostics_dict[key], list) or isinstance(diagnostics_dict[key], np.ndarray):
+            if isinstance(diagnostics_dict[key], list) or isinstance(
+                diagnostics_dict[key], np.ndarray
+            ):
                 features.append(diagnostics_dict[key])
             else:
                 features.append([diagnostics_dict[key]] * num_segments)
@@ -260,7 +288,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         amplitudes,
         apa_channel,
         layer,
-        use_de=False,
+        minimizer="differential_evolution",
         downsample=2,
         prior_width=None,
         max_freq=250,
@@ -274,6 +302,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         init="latinhypercube",
         **kwargs,
     ):
+        assert minimizer.lower() in ["differential_evolution", "nelder_mead", "mlsl"]
         # We can keep the widths of the wavelets fixed since the step size is always the same.
         corr_amplitude = self._transform_cwt_amplitude(amplitudes)
         segments, default_frequencies = get_expected_resonances_unique(apa_channel, layer, max_freq)
@@ -328,29 +357,72 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
             nominal_tension,
             template_dof,
         )
-        # minimize residual
-        if use_de:
-            popsize = kwargs.pop("popsize", 50)
-            res = optimize.differential_evolution(
-                self._tension_fit_residual, bounds, args=args, popsize=popsize, init=init, **kwargs
-            )
-        else:
-            method = kwargs.pop("method", "Nelder-Mead")
+        if minimizer.lower() != "differential_evolution":
             # Pop all arguments that are only used by differential evolution
             for de_arg in ["popsize", "init", "polish"]:
                 if de_arg in kwargs:
                     kwargs.pop(de_arg)
+        if minimizer.lower() != "mlsl":
+            # Pop all arguments that are only used by MLSL
+            for mlsl_arg in ["maxtime"]:
+                if mlsl_arg in kwargs:
+                    kwargs.pop(mlsl_arg)
+        # minimize residual
+        if minimizer.lower() == "differential_evolution":
+            popsize = kwargs.pop("popsize", 50)
+            res = optimize.differential_evolution(
+                self._tension_fit_residual, bounds, args=args, popsize=popsize, init=init, **kwargs
+            )
+        elif minimizer.lower() == "nelder_mead":
             res = optimize.minimize(
                 self._tension_fit_residual,
                 initial_guess,
                 args=args,
                 bounds=bounds,
-                method=method,
+                method="Nelder-Mead",
                 **kwargs,
             )
+        elif minimizer.lower() == "mlsl":
+            import nlopt
+
+            # the MLSL minimizer is only available in nlopt. We need to define
+            # a wrapper function that takes the arguments in the correct order
+            def nlopt_wrapper(x, grad):
+                return self._tension_fit_residual(x, *args)
+
+            opt = nlopt.opt(nlopt.GN_MLSL_LDS, len(initial_guess))
+            opt.set_lower_bounds([b[0] for b in bounds])
+            opt.set_upper_bounds([b[1] for b in bounds])
+            opt.set_min_objective(nlopt_wrapper)
+            # For MLSL we need to set the local optimizer.
+            local_opt = nlopt.opt(nlopt.LN_SBPLX, len(initial_guess))
+            local_opt.set_lower_bounds([b[0] for b in bounds])
+            local_opt.set_upper_bounds([b[1] for b in bounds])
+            local_opt.set_min_objective(nlopt_wrapper)
+            # We have to set more generous tolerances for the local optimizer so that MLSL
+            # can run more local searches.
+            local_opt.set_xtol_rel(0.01)
+            local_opt.set_ftol_rel(0.01)
+            opt.set_local_optimizer(local_opt)
+            # It is not possible to stop MLSL via tolerance settings, so we set a maximum
+            # runtime in seconds instead. In practice, it will always run for this amount of time.
+            opt.set_maxtime(kwargs.pop("maxtime", 0.2))
+
+            # run the minimization
+            res = opt.optimize(initial_guess)
+
+            # Polish the result with one more local optimization with a tighter tolerance
+            local_opt.set_xtol_rel(1e-4)
+            local_opt.set_ftol_rel(1e-4)
+            res = local_opt.optimize(res)
+        else:
+            raise ValueError("Minimizer {} not recognized.".format(minimizer))
         if verbosity > 0:
             print(res)
-        tensions = res.x
+        if hasattr(res, "x"):
+            tensions = res.x
+        else:
+            tensions = res
         diagnostics_dict = self._get_fit_diagnostics(
             tensions, x, corr_amplitude, default_frequencies, layer, downsample=downsample
         )
@@ -363,7 +435,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         # We do not adjust the normalization on purpose, we want the peak
         # of each kernel to be 1.
         x_minus_mu = np.arange(len(input))[:, np.newaxis] - template_locations[np.newaxis, :]
-        x_minus_mu_sq_norm = x_minus_mu ** 2 / scale ** 2
+        x_minus_mu_sq_norm = x_minus_mu**2 / scale**2
         A = (1 + x_minus_mu_sq_norm / template_dof) ** (-(template_dof + 1) / 2)
         # Now we solve a non-negative least-squares problem to find the best
         # combination of the kernels to approximate the correlation
@@ -379,7 +451,7 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         # We do not adjust the normalization on purpose, we want the peak
         # of each kernel to be 1.
         x_minus_mu = np.arange(len(input))[:, np.newaxis] - template_locations[np.newaxis, :]
-        x_minus_mu_sq_norm = x_minus_mu ** 2 / scale ** 2
+        x_minus_mu_sq_norm = x_minus_mu**2 / scale**2
         A = (1 + x_minus_mu_sq_norm / template_dof) ** (-(template_dof + 1) / 2)
         return np.dot(A, weights)
 
@@ -508,7 +580,13 @@ class TensionAlgorithmV2(TensionAlgorithmBase):
         unmatched_peak_frequencies, unmatched_peak_weights = self._find_unmatched_peaks(
             x,
             corr_amplitude,
-            self._reconvolve_resonances(x, weights, template_locations, TEMPLATE_SCALE[layer], template_dof=TEMPLATE_DOF[layer]),
+            self._reconvolve_resonances(
+                x,
+                weights,
+                template_locations,
+                TEMPLATE_SCALE[layer],
+                template_dof=TEMPLATE_DOF[layer],
+            ),
         )
         # We want to use the weights to diagnose bad fits. In particular, we want to
         # find instances where a frequency is not matched by a resonance, which would
