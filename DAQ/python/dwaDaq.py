@@ -493,9 +493,8 @@ class MainWindow(qtw.QMainWindow):
         self._connectSignalsSlots()
 
         # Algorithm versions
-        # self.algoVersionComboBox.addItem("v1")
-        self.algoVersionComboBox.addItem("v2")
         self.algoVersionComboBox.addItem("v1")
+        self.algoVersionComboBox.addItem("v2")
         self.algoVersionComboBox.activated.connect(self.populate_algo_settings)
         
         self.current_algo_kwargs = {}
