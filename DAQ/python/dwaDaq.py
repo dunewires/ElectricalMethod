@@ -276,11 +276,6 @@ class Worker(qtc.QRunnable):
         try:
             self.signals.starting.emit()  # Process is starting
             result = self.fn(*self.args, **self.kwargs)
-            # result = self.fn(
-            #    *self.args, **self.kwargs,
-            #    status = self.signals.status,
-            #    progress = self.signals.progress,
-            # )
         except Exception:
             print("\n ======== Worker.run() exception ========== \n")
             traceback.print_exc()
@@ -1091,10 +1086,6 @@ class MainWindow(qtw.QMainWindow):
 
                             items[ResultsWires.MSRMT_TIME] = qtg.QStandardItem(
                                 displayTime)
-                            # items[Results.MSRMT_TIME] = qtg.QStandardItem(strdatetime)
-                            # dtdatetime = datetime.datetime.strptime(strdatetime, date_format)
-                            # item.setData(dtdatetime.strftime('%Y-%m-%d %H:%M:%S'), qtc.Qt.DisplayRole)
-                            # self.recentWiresTableModel.setItem(i, Results.MSRMT_TIME, item)
 
                             # Measurement Type
                             items[ResultsWires.MSRMT_TYPE] = qtg.QStandardItem(
@@ -1241,12 +1232,6 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers:
             self.adcData[reg] = {}
 
-        # self.adcData[reg]['time'] = list
-        # self.adcData[reg]['ADC']  = list
-        # self.adcData[reg]['freq'] = float
-        # self.adcData[reg]['tfit'] = list
-        # self.adcData[reg]['ADCfit'] = list
-
     def initAPADiagram(self):
         # APA Diagram / schematic
         self.apaDiagramModel = APA_Diagram_Model()
@@ -1261,27 +1246,6 @@ class MainWindow(qtw.QMainWindow):
         self.ampData = {}
         self.resonantFreqs = {}
         self.expectedFreqs = {}
-
-        # Set default A(f) peak detection parameters
-        # self.resFitParams = {}
-        # self.resFitParams['preprocess'] = {'detrend':True}  # detrend: subtract a line from A(f) before processing?
-        # self.resFitParams['find_peaks'] = {'bkgPoly':-3, 'width':10, 'prominence':99}
-        # # FIXME: replace this with a Model/View approach
-        # self.resFitPreDetrend.blockSignals(True)
-        # self.resFitPreDetrend.setChecked(self.resFitParams['preprocess']['detrend'])
-        # self.resFitPreDetrend.blockSignals(False)
-        # self.resFitBkgPoly.setText(str(self.resFitParams['find_peaks']['bkgPoly']))
-        # print(f"str(self.resFitParams['find_peaks']['width']) = {str(self.resFitParams['find_peaks']['width'])}")
-        # self.resFitWidth.setText(str(self.resFitParams['find_peaks']['width']))
-        # self.resFitProminence.setText(str(self.resFitParams['find_peaks']['prominence']))
-        # FIXME: remove!!!!
-        # self.resFitKwargs.setText("width=[9,None)")
-
-        # KLUGE for now...
-        # self.resFitParamsOut = {}
-        # for reg in self.registers:
-        #     chan = reg.value
-        #     self.resFitParamsOut[chan] = {'peaks':[], 'properties':{}}
 
     def _configureOutputs(self):
 
@@ -1940,57 +1904,6 @@ class MainWindow(qtw.QMainWindow):
             self._setWidgetProperties(f'proccesedgrid_{ii}', ii, 'N/A')
 
         self._configureTensionPlots()
-
-    # def _configurePlots(self):
-    #     self.chanViewMain = 0  # which channel to show large for V(t) data
-    #     self.chanViewMainAmpl = 0  # which channel to show large for A(f) data
-    #     # FIXME: clean this up...
-    #     getattr(self, f'pw_chan_main').setBackground('w')
-    #     getattr(self, f'pw_chan_main').setTitle(self.chanViewMain)
-    #     getattr(self, f'pw_amplchan_main').setBackground('w')
-    #     getattr(self, f'pw_amplchan_main').setTitle(self.chanViewMainAmpl)
-    #     getattr(self, f'pw_amplgrid_all').setBackground('w')
-    #     getattr(self, f'pw_amplgrid_all').setTitle('All')
-    #     for ii in range(N_DWA_CHANS):
-    #         # set background color to white
-    #         # FIXME: clean this up...
-    #         getattr(self, f'pw_grid_{ii}').setBackground('w')
-    #         getattr(self, f'pw_grid_{ii}').setTitle(
-    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-    #         getattr(self, f'pw_chan_{ii}').setBackground('w')
-    #         getattr(self, f'pw_chan_{ii}').setTitle(
-    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-    #         getattr(self, f'pw_amplgrid_{ii}').setBackground('w')
-    #         getattr(self, f'pw_amplgrid_{ii}').setTitle(
-    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-    #         getattr(self, f'pw_amplchan_{ii}').setBackground('w')
-    #         getattr(self, f'pw_amplchan_{ii}').setTitle(
-    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-    #         getattr(self, f'config_amplgrid_{ii}').setBackground('w')
-    #         getattr(self, f'config_amplgrid_{ii}').setTitle(
-    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-
-    #     self.resonanceRawPlots = []
-    #     self.resonanceProcessedPlots = []
-    #     chanNum = 0
-        
-    #     for irow in range(8):
-    #         for icol in range(1):
-    #             if irow == 2 and icol == 2:
-    #                 continue
-    #             self.resonanceRawPlots.append(
-    #                 getattr(self, f'rawgrid_{chanNum}'))
-    #             self.resonanceRawPlots[-1].setTitle(
-    #                 f'DWA Chan: {chanNum} APA Chan: N/A')
-    #             self.resonanceRawPlots[-1].setBackground('w')
-    #             self.resonanceProcessedPlots.append(
-    #                 getattr(self, f'proccesedgrid_{chanNum}'))
-    #             self.resonanceProcessedPlots[-1].setTitle(
-    #                 f'DWA Chan: {chanNum} APA Chan: N/A')
-    #             self.resonanceProcessedPlots[-1].setBackground('w')
-    #             chanNum += 1
-                
-    #     self._configureTensionPlots()
 
     def _configureTensionPlots(self):
         # Tension tab
