@@ -18,6 +18,11 @@ class TestProcessScan(unittest.TestCase):
                                             ('Tension', [375, 373, 371, 369, 367, 365, 363, 361], 
                                              [[5.96, 6.85], [6.26, 6.81], [5.95, 6.9], [5.97, 6.74], [6.24, 6.69], [5.87, 6.76], [5.48, 7.27], [6.14, 7.13]]))
 
+    # A scan with missing channels and three tensions in one scan
+    def test_process_scan_integration_3(self):
+        self._test_process_scan_integration('UA_3D', 
+                                            ('Tension', [97, None, None, None, None, None, None, None], 
+                                             [[5.41, 6.29, 6.66]] + [None] * 7))
     # Add more test methods for each expected output
 
     def _test_process_scan_integration(self, dir_name, expected_output):
@@ -39,6 +44,9 @@ class TestProcessScan(unittest.TestCase):
         self.assertEqual(apa_channels, expected_apa_channels)
         if tension_results is not None and expected_tension_results is not None:
             for chan_tensions, expected_chan_tensions in zip(tension_results, expected_tension_results):
+                if expected_chan_tensions is None:
+                    self.assertIsNone(chan_tensions)
+                    continue
                 for seg_tension, expected_seg_tension in zip(chan_tensions, expected_chan_tensions):
                     self.assertAlmostEqual(seg_tension, expected_seg_tension, delta=0.5)
         else:
