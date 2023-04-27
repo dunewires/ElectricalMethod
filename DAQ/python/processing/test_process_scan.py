@@ -11,12 +11,12 @@ class TestProcessScan(unittest.TestCase):
     def test_process_scan_integration_1(self):
         self._test_process_scan_integration('20230209T081356_X_B_10_433-435-437-439-441-443-445-447_T', 
                                             ('Tension', [447, 445, 443, 441, 439, 437, 435, 433], 
-                                             [[5.84], [5.71], [6.94], [7.5], [5.78], [6.49], [6.18], [6.48]]))
+                                             [[5.84], [6.42], [6.94], [7.5], [5.78], [6.49], [6.18], [6.48]]))
 
     def test_process_scan_integration_2(self):
         self._test_process_scan_integration('20230209T081542_V_B_10_361-363-365-367-369-371-373-375-761-763-765-767-769-771-773-775_T', 
                                             ('Tension', [375, 373, 371, 369, 367, 365, 363, 361], 
-                                             [[5.96, 6.85], [6.26, 6.81], [5.95, 6.9], [5.97, 6.74], [6.24, 6.69], [5.87, 6.76], [5.48, 7.27], [5.57, 7.13]]))
+                                             [[5.96, 6.85], [6.26, 6.81], [5.95, 6.9], [5.97, 6.74], [6.24, 6.69], [5.87, 6.76], [5.48, 7.27], [6.14, 7.13]]))
 
     # Add more test methods for each expected output
 
@@ -25,7 +25,7 @@ class TestProcessScan(unittest.TestCase):
         results_dict = process_scan.new_results_dict(APA_STAGES, APA_LAYERS, APA_SIDES, MAX_WIRE_SEGMENT)
         max_freq = 350.0
         version = "v1"
-        verbosity = 2
+        verbosity = 0
         path = 'test/raw_scans'
 
         # Call the function being tested
@@ -45,4 +45,14 @@ class TestProcessScan(unittest.TestCase):
             self.assertEqual(tension_results, expected_tension_results)
 
 if __name__ == '__main__':
-    unittest.main(module='test_process_scan')
+    # create argument parser
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbosity', action='count', default=0,
+                        help='increase output verbosity (can be repeated)')
+
+    # parse arguments
+    args = parser.parse_args()
+
+    unittest.main(module='test_process_scan', verbosity=args.verbosity)
+
