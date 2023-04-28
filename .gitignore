@@ -29,3 +29,9 @@ DAQ/python/mappings/__pycache__/*
 *udpstream.txt
 *.status
 .DS_Store
+.venv/
+.vscode/
+DAQ/python/*.csv
+DAQ/python/*.json
+DAQ/python/*.pdf
+DAQ/python/algorithm_tuning/plots_output/*

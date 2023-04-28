@@ -29,6 +29,7 @@ on the data it receives.
 
 """
 
+import subprocess
 import DwaMicrozed as duz
 import DwaConfigFile as dcf
 import DwaDataParser as ddp
@@ -46,7 +47,6 @@ import functools
 import pickle
 import ctypes
 import shutil
-import platform
 import json
 import logging
 import os
@@ -70,102 +70,10 @@ import channel_map
 import channel_frequencies
 import resonance_fitting
 import process_scan
+import tension_algorithm
 from common import ConnectToAPI, PerformAction
 import boombox
-
-DWA_CONFIG_FILE = "dwaConfigWC.ini"
-DAQ_CONFIG_FILE = 'dwaConfigDAQ.ini'
-DAQ_UI_FILE = 'dwaDaqUI.ui'
-OUTPUT_DIR_ROOT = '.'
-OUTPUT_DIR_SCAN_DATA = os.path.join(OUTPUT_DIR_ROOT, 'scanData', 'raw')
-OUTPUT_DIR_PROCESSED_DATA = os.path.join(
-    OUTPUT_DIR_ROOT, 'scanData', 'processed')
-OUTPUT_DIR_ARCHIVED_DATA = os.path.join(OUTPUT_DIR_ROOT, 'scanData', 'archive')
-OUTPUT_DIR_SCAN_DATA_ADVANCED = os.path.join(OUTPUT_DIR_ROOT, 'scanDataAdv')
-OUTPUT_DIR_SCAN_STATUS = os.path.join(OUTPUT_DIR_ROOT, 'scanStatus')
-SCAN_FREQUENCY_STEP_DEFAULT = 1/8  # Hz
-STIM_VIEW_OFFSET = 0
-MAX_FREQ = 350  # Hz
-UDP_RECV_BUF_SIZE = 1024*2**20  # Bytes (2**20 Bytes is ~1MB)
-SYSTEM_PLATFORM = platform.system().upper()
-if SYSTEM_PLATFORM == 'DARWIN':
-    UDP_RECV_BUF_SIZE = 7*2**20  # Bytes (2**20 Bytes is ~1MB)
-N_DWA_CHANS = 8
-PUSH_BUTTON_LIST = [1, 2]  # PB0 is deprecated
-
-# DEBUGGING FLAGS
-AUTO_CHANGE_TAB = False  # False for debugging
-GUI_Y_OFFSET = 0  # FIXME: remove this!
-
-# FIXME: these should go in DwaDataParser.py
-SCAN_START = 1
-SCAN_END = 0
-
-APA_STAGES_KEYS = ["Dev", "Winding", "PostWinding", "Installation", "Storage"]
-APA_STAGES = {}
-for stage in APA_STAGES_KEYS:
-    stage_short = stage
-    scans = [stage]
-    if stage == "Dev":
-        scans = ["DWA Development"]
-    if stage == "Installation":
-        scans = ['Installation (Top)', 'Installation (Bottom)']
-    APA_STAGES[stage] = {
-        'short': stage_short,  # used for referencing UI elements
-        # used for labeling scans (and for loading Results table)
-        'scan': scans,
-        'tension': scans     # used for tension table
-    }
-APA_STAGES_SHORT = []
-APA_STAGES_SCANS = []
-APA_STAGES_TENSIONS = []
-for key in APA_STAGES_KEYS:
-    APA_STAGES_SHORT.append(APA_STAGES[key]['short'])
-    for val in APA_STAGES[key]['scan']:
-        APA_STAGES_SCANS.append(val)
-    for val in APA_STAGES[key]['tension']:
-        APA_STAGES_TENSIONS.append(val)
-
-APA_LAYERS = ["G", "U", "V", "X"]
-APA_SIDES = ["A", "B"]
-MAX_WIRE_SEGMENT = {
-    "U": 1151,
-    "V": 1151,
-    "X": 480,
-    "G": 481
-}
-
-# FIXME: these should be read from somewhere else (DwaConfigFile)...
-DATABASE_FIELDS = ['wireSegments', 'apaChannels', 'measuredBy',
-                   'stage', 'apaUuid', 'layer', 'headboardNum', 'side', 'type']
-
-# Recent scan list
-SCAN_LIST_DATA_KEYS = ['submitted', 'scanName', 'side', 'layer',
-                       'headboardNum', 'measuredBy', 'apaUuid', 'stage']  # 'wireSegments'
-
-TENSION_SPEC = 6.5  # Newtons
-TENSION_SPEC_TOL = 1.0
-TENSION_SPEC_MIN = TENSION_SPEC-TENSION_SPEC_TOL
-TENSION_SPEC_MAX = TENSION_SPEC+TENSION_SPEC_TOL
-TENSION_LOW_COLOR = qtg.QColor(219, 120, 120)
-TENSION_HIGH_COLOR = qtg.QColor(219, 120, 120)
-TENSION_NOT_APPLICABLE_COLOR = qtg.QColor(128, 128, 128)
-TENSION_NOT_FOUND_COLOR = qtg.QColor(219, 219, 40)
-TENSION_GOOD_COLOR = qtg.QColor(178, 251, 165)
-
-PLOT_UPDATE_TIME_SEC = 0.5
-
-CONTINUITY_SCAN_PARAMS_DEFAULT = {
-    'stimFreqMin': 100.0,  # Hz
-    'stimFreqMax': 1000.0,  # Hz
-    'stimFreqStep': 50.0,  # Hz
-    'stimTime': 0.16777216,  # s
-    'stimMag': 512       # mV
-    #    'stimMag':200 # Hex
-}
-
-SCAN_CONFIG_TABLE_HDRS = ['Result', 'Type', 'Layer', 'Status',
-                          'Wires', 'Freq Min (Hz)', 'Freq Max (Hz)', 'Step Size (Hz)']
+from dwa_daq_constants import *
 
 class Scans(IntEnum):
     # SCAN_NUM  = SCAN_CONFIG_TABLE_HDRS.index('Scan #')
@@ -369,11 +277,6 @@ class Worker(qtc.QRunnable):
         try:
             self.signals.starting.emit()  # Process is starting
             result = self.fn(*self.args, **self.kwargs)
-            # result = self.fn(
-            #    *self.args, **self.kwargs,
-            #    status = self.signals.status,
-            #    progress = self.signals.progress,
-            # )
         except Exception:
             print("\n ======== Worker.run() exception ========== \n")
             traceback.print_exc()
@@ -536,7 +439,7 @@ class MainWindow(qtw.QMainWindow):
         self._scanConfigTableInit()
         self._resultsScansTableInit()
         self._resultsWiresTableInit()
-        self._initModels()
+
         self.heartPixmaps = [qtg.QPixmap(
             'icons/heart1.png'), qtg.QPixmap('icons/heart2.png')]
         self.heartval = 0
@@ -562,7 +465,6 @@ class MainWindow(qtw.QMainWindow):
         # must come after loadUi() call
         self.logFilename_val.setText(self.logFilename)
         self.logFilenameLog_val.setText(self.logFilename)
-        # self.log_tb.append("logging window...")  # FIXME... how to update...?
 
         self.configFileName.setText(DWA_CONFIG_FILE)
 
@@ -571,18 +473,13 @@ class MainWindow(qtw.QMainWindow):
         self.evtData = None
 
         # Make handles for widgets in the UI
-        # self.stack = self.findChild(qtw.QStackedWidget, "stackedWidget")  #FIXME: can you just use self.stackedWidget ???
-        # self.stack.setStyleSheet("background-color:white")
 
-        # self.tabWidgetStage is the main set of tabs showing each stage in the process
-        # self.tabWidgetStim is the set of tabs under the stimulus tab
         self.currentViewStage = TAB_ACTIVE_MAIN
         self.currentViewStim = TAB_ACTIVE_STIM
         self.currentViewResults = TAB_ACTIVE_RESULTS
         self.updateTabView()
         self.horizontalWidget.setVisible(False)
-        # self.tabWidgetStages.setCurrentIndex(self.currentViewStage)
-        # self.tabWidgetStim.setCurrentIndex(self.currentViewStim)
+
         self.DATA_TO_PLOT = False
 
         # testing updating tab labels
@@ -591,6 +488,12 @@ class MainWindow(qtw.QMainWindow):
         # Connect slots/signals
         self._connectSignalsSlots()
 
+        # Algorithm versions
+        self.algoVersionComboBox.addItem("v1")
+        self.algoVersionComboBox.addItem("v2")
+        self.algoVersionComboBox.activated.connect(self.populate_algo_settings)
+        
+        self.current_algo_kwargs = {}
         # Tension Tab
         self._configureTensionTab()
 
@@ -651,7 +554,184 @@ class MainWindow(qtw.QMainWindow):
             self.verbose = int(self.daqConfig['verbose'])
         else:
             self.verbose = 1
+        
+        self.populate_algo_settings()
         self._udpConnect()
+
+        # If the current git branch is not "stable", we want to display a warning message window.
+
+        # Get the current git branch.
+        git_branch = subprocess.check_output(
+            ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
+        ).decode('utf-8').strip()
+        
+        # If the current git branch is not "stable", display a warning message.
+        if git_branch != 'stable':
+            self._show_non_stable_warning(git_branch)
+
+    def _show_non_stable_warning(self, git_branch):
+        doc = qtg.QTextDocument()
+        msg_html = (
+            "<p><strong>You are not working on the `stable` branch.</strong></p>"
+            f"<p>The current branch is `{git_branch}`.</p>"
+        )
+        if git_branch == "master":
+            msg_html += (
+                "<p>This branch has the very latest development code, "
+                "but it may not be stable. </p>"
+            )
+        msg_html += (
+            "<p>If you are using this program in production and do not intend to test new features, "
+            "you should switch to the `stable` branch.</p>"
+        )
+        doc.setHtml(msg_html)
+        msg = qtw.QMessageBox()
+        msg.setIcon(qtw.QMessageBox.Warning)
+        # display the message as rich text
+        msg.setTextFormat(qtc.Qt.RichText)
+        # set the message text to the HTML document
+        msg.setText(doc.toHtml())
+        msg.setWindowTitle("Non-Stable Version Warning")
+        msg.setStandardButtons(qtw.QMessageBox.Ok)
+        msg.exec_()
+
+    def clear_form_layout(self, layout):
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+            elif child.layout():
+                self.clear_form_layout(child.layout())
+
+    def populate_algo_settings(self):
+        version = self.algoVersionComboBox.currentText()
+        algorithm = process_scan.get_tension_algorithm(version, 0)
+
+        # The available settings are a dictionary of dictionaries. The keys of the top-level
+        # dictionary are the names of the variable names in the algorithm. The values are
+        # dictionaries that contain at least the keys "type" and "default". The "type" key
+        # contains the type of the variable, and the "default" key contains the default value.
+        available_settings = algorithm.get_available_settings()
+        # First, we clear out the existing widgets in the form layout.
+        self.clear_form_layout(self.algoSettingsFormLayout)
+
+        # We will now populate the algoSettingsFormLayout with widgets for each of the
+        # available settings. We will use the type of the variable to determine what type
+        # of widget to use.
+        for setting_name, setting_info in available_settings.items():
+            setting_type = setting_info["type"]
+            setting_default = setting_info["default"]
+            if setting_type == "float":
+                widget = qtw.QDoubleSpinBox()
+                if "bounds" in setting_info:
+                    widget.setMinimum(setting_info["bounds"][0])
+                    widget.setMaximum(setting_info["bounds"][1])
+                else:
+                    widget.setMinimum(-1000000)
+                    widget.setMaximum(1000000)
+                widget.setValue(setting_default)
+            elif setting_type == "integer":
+                widget = qtw.QSpinBox()
+                if "bounds" in setting_info:
+                    widget.setMinimum(setting_info["bounds"][0])
+                    widget.setMaximum(setting_info["bounds"][1])
+                else:
+                    widget.setMinimum(-1000000)
+                    widget.setMaximum(1000000)
+                widget.setValue(setting_default)
+            elif setting_type == "boolean":
+                widget = qtw.QCheckBox()
+                widget.setChecked(setting_default)
+            elif setting_type == "string":
+                widget = qtw.QLineEdit()
+                widget.setText(setting_default)
+            elif setting_type == "choice":
+                widget = qtw.QComboBox()
+                for choice in setting_info["choices"]:
+                    widget.addItem(choice)
+                widget.setCurrentText(setting_default)
+            else:
+                raise ValueError(f"Unknown setting type: {setting_type}")
+            if "label" in setting_info:
+                label = setting_info["label"]
+            else:
+                label = setting_name
+            widget.setObjectName(f"algo_setting__{setting_name}")
+            if "tooltip" in setting_info:
+                widget.setToolTip(setting_info["tooltip"])
+            self.algoSettingsFormLayout.addRow(label, widget)
+            # connect the valueChanged signal to the _update_current_algo_kwargs function
+            if isinstance(widget, qtw.QDoubleSpinBox):
+                widget.valueChanged.connect(self._update_current_algo_kwargs)
+            elif isinstance(widget, qtw.QSpinBox):
+                widget.valueChanged.connect(self._update_current_algo_kwargs)
+            elif isinstance(widget, qtw.QCheckBox):
+                widget.stateChanged.connect(self._update_current_algo_kwargs)
+            elif isinstance(widget, qtw.QLineEdit):
+                widget.textChanged.connect(self._update_current_algo_kwargs)
+            elif isinstance(widget, qtw.QComboBox):
+                widget.currentTextChanged.connect(self._update_current_algo_kwargs)
+        self._update_current_algo_kwargs()
+
+    def _update_current_algo_kwargs(self):
+        # This function updates the current_algo_kwargs dictionary with the values
+        # from the widgets in the algoSettingsFormLayout.
+        self.current_algo_kwargs = {}
+        for row in range(self.algoSettingsFormLayout.rowCount()):
+            form_item = self.algoSettingsFormLayout.itemAt(row, qtw.QFormLayout.FieldRole)
+            if form_item is None:
+                continue
+            widget = form_item.widget()
+            setting_name = widget.objectName().split("__")[1]
+            if isinstance(widget, qtw.QDoubleSpinBox):
+                self.current_algo_kwargs[setting_name] = float(widget.value())
+            elif isinstance(widget, qtw.QSpinBox):
+                self.current_algo_kwargs[setting_name] = int(widget.value())
+            elif isinstance(widget, qtw.QCheckBox):
+                self.current_algo_kwargs[setting_name] = widget.isChecked()
+            elif isinstance(widget, qtw.QLineEdit):
+                self.current_algo_kwargs[setting_name] = widget.text()
+            elif isinstance(widget, qtw.QComboBox):
+                self.current_algo_kwargs[setting_name] = widget.currentText()
+            else:
+                raise ValueError(f"Unknown widget type: {type(widget)}")
+
+        if self.verbose > 2:
+            print(f"current_algo_kwargs = {self.current_algo_kwargs}")
+        self._update_algo_setting_widget_enabled_state()
+    
+    def _update_algo_setting_widget_enabled_state(self):
+        # Update the enabled state of the widgets in the algoSettingsFormLayout.
+        # Some settings are only available for certain minimizers such as Differential Evolution.
+        # In the case that there are conditions for a setting to be available, the dictionary
+        # returned by get_available_settings will contain a key "enabled". The value of
+        # this key is a dictionary with the keys of the dictionary being the names of the
+        # settings that are enabled/disabled by the setting. The values of the dictionary
+        # are the values that the setting must have in order for the setting to be enabled.
+
+        version = self.algoVersionComboBox.currentText()
+        algorithm = process_scan.get_tension_algorithm(version, 0)
+
+        available_settings = algorithm.get_available_settings()
+
+        for row in range(self.algoSettingsFormLayout.rowCount()):
+            form_item = self.algoSettingsFormLayout.itemAt(row, qtw.QFormLayout.FieldRole)
+            if form_item is None:
+                continue
+            widget = form_item.widget()
+            setting_name = widget.objectName().split("__")[1]
+            if setting_name in available_settings:
+                if "enabled" in available_settings[setting_name]:
+                    enabled = True
+                    for setting, value in available_settings[setting_name]["enabled"].items():
+                        if self.current_algo_kwargs[setting] != value:
+                            enabled = False
+                            break
+                    widget.setEnabled(enabled)
+                else:
+                    widget.setEnabled(True)
+            else:
+                widget.setEnabled(False)
 
     def _setPushButtonStatusAll(self, buttonVals):
         # Set all push button GUI elements
@@ -729,10 +809,6 @@ class MainWindow(qtw.QMainWindow):
         if newUuid not in uuids:         # if the new UUID not already in the list, then add it
             uuids.insert(0, newUuid)
         self.apaUuidListModel.setStringList(uuids)
-
-    def _initModels(self):
-        with open('./processing/X_and_G_layer_model.pkl', 'rb') as f:
-            self.model_x_g = pickle.load(f)
 
     def _scanConfigTableInit(self):
         # change scanConfigTable to QTableView
@@ -1048,10 +1124,6 @@ class MainWindow(qtw.QMainWindow):
 
                             items[ResultsWires.MSRMT_TIME] = qtg.QStandardItem(
                                 displayTime)
-                            # items[Results.MSRMT_TIME] = qtg.QStandardItem(strdatetime)
-                            # dtdatetime = datetime.datetime.strptime(strdatetime, date_format)
-                            # item.setData(dtdatetime.strftime('%Y-%m-%d %H:%M:%S'), qtc.Qt.DisplayRole)
-                            # self.recentWiresTableModel.setItem(i, Results.MSRMT_TIME, item)
 
                             # Measurement Type
                             items[ResultsWires.MSRMT_TYPE] = qtg.QStandardItem(
@@ -1198,12 +1270,6 @@ class MainWindow(qtw.QMainWindow):
         for reg in self.registers:
             self.adcData[reg] = {}
 
-        # self.adcData[reg]['time'] = list
-        # self.adcData[reg]['ADC']  = list
-        # self.adcData[reg]['freq'] = float
-        # self.adcData[reg]['tfit'] = list
-        # self.adcData[reg]['ADCfit'] = list
-
     def initAPADiagram(self):
         # APA Diagram / schematic
         self.apaDiagramModel = APA_Diagram_Model()
@@ -1218,27 +1284,6 @@ class MainWindow(qtw.QMainWindow):
         self.ampData = {}
         self.resonantFreqs = {}
         self.expectedFreqs = {}
-
-        # Set default A(f) peak detection parameters
-        # self.resFitParams = {}
-        # self.resFitParams['preprocess'] = {'detrend':True}  # detrend: subtract a line from A(f) before processing?
-        # self.resFitParams['find_peaks'] = {'bkgPoly':-3, 'width':10, 'prominence':99}
-        # # FIXME: replace this with a Model/View approach
-        # self.resFitPreDetrend.blockSignals(True)
-        # self.resFitPreDetrend.setChecked(self.resFitParams['preprocess']['detrend'])
-        # self.resFitPreDetrend.blockSignals(False)
-        # self.resFitBkgPoly.setText(str(self.resFitParams['find_peaks']['bkgPoly']))
-        # print(f"str(self.resFitParams['find_peaks']['width']) = {str(self.resFitParams['find_peaks']['width'])}")
-        # self.resFitWidth.setText(str(self.resFitParams['find_peaks']['width']))
-        # self.resFitProminence.setText(str(self.resFitParams['find_peaks']['prominence']))
-        # FIXME: remove!!!!
-        # self.resFitKwargs.setText("width=[9,None)")
-
-        # KLUGE for now...
-        # self.resFitParamsOut = {}
-        # for reg in self.registers:
-        #     chan = reg.value
-        #     self.resFitParamsOut[chan] = {'peaks':[], 'properties':{}}
 
     def _configureOutputs(self):
 
@@ -1897,57 +1942,6 @@ class MainWindow(qtw.QMainWindow):
             self._setWidgetProperties(f'proccesedgrid_{ii}', ii, 'N/A')
 
         self._configureTensionPlots()
-
-    # def _configurePlots(self):
-    #     self.chanViewMain = 0  # which channel to show large for V(t) data
-    #     self.chanViewMainAmpl = 0  # which channel to show large for A(f) data
-    #     # FIXME: clean this up...
-    #     getattr(self, f'pw_chan_main').setBackground('w')
-    #     getattr(self, f'pw_chan_main').setTitle(self.chanViewMain)
-    #     getattr(self, f'pw_amplchan_main').setBackground('w')
-    #     getattr(self, f'pw_amplchan_main').setTitle(self.chanViewMainAmpl)
-    #     getattr(self, f'pw_amplgrid_all').setBackground('w')
-    #     getattr(self, f'pw_amplgrid_all').setTitle('All')
-    #     for ii in range(N_DWA_CHANS):
-    #         # set background color to white
-    #         # FIXME: clean this up...
-    #         getattr(self, f'pw_grid_{ii}').setBackground('w')
-    #         getattr(self, f'pw_grid_{ii}').setTitle(
-    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-    #         getattr(self, f'pw_chan_{ii}').setBackground('w')
-    #         getattr(self, f'pw_chan_{ii}').setTitle(
-    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-    #         getattr(self, f'pw_amplgrid_{ii}').setBackground('w')
-    #         getattr(self, f'pw_amplgrid_{ii}').setTitle(
-    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-    #         getattr(self, f'pw_amplchan_{ii}').setBackground('w')
-    #         getattr(self, f'pw_amplchan_{ii}').setTitle(
-    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-    #         getattr(self, f'config_amplgrid_{ii}').setBackground('w')
-    #         getattr(self, f'config_amplgrid_{ii}').setTitle(
-    #             "DWA Chan: {} APA Chan: {}".format(ii, "N/A"))
-
-    #     self.resonanceRawPlots = []
-    #     self.resonanceProcessedPlots = []
-    #     chanNum = 0
-        
-    #     for irow in range(8):
-    #         for icol in range(1):
-    #             if irow == 2 and icol == 2:
-    #                 continue
-    #             self.resonanceRawPlots.append(
-    #                 getattr(self, f'rawgrid_{chanNum}'))
-    #             self.resonanceRawPlots[-1].setTitle(
-    #                 f'DWA Chan: {chanNum} APA Chan: N/A')
-    #             self.resonanceRawPlots[-1].setBackground('w')
-    #             self.resonanceProcessedPlots.append(
-    #                 getattr(self, f'proccesedgrid_{chanNum}'))
-    #             self.resonanceProcessedPlots[-1].setTitle(
-    #                 f'DWA Chan: {chanNum} APA Chan: N/A')
-    #             self.resonanceProcessedPlots[-1].setBackground('w')
-    #             chanNum += 1
-                
-    #     self._configureTensionPlots()
 
     def _configureTensionPlots(self):
         # Tension tab
@@ -3052,7 +3046,7 @@ class MainWindow(qtw.QMainWindow):
         # process each scan
         for scan in scansToProcess:
             process_scan.process_scan(
-                resultsDict, scan, self.model_x_g, MAX_FREQ)
+                resultsDict, scan, MAX_FREQ, self._getAlgorithmVersion(), **self.current_algo_kwargs)
 
         # save scan analysis results to JSON file
         self.writeResultsDict(resultsDict)
@@ -4448,9 +4442,8 @@ class MainWindow(qtw.QMainWindow):
         fullResultsDict = self.getResultsDict()
         scanResultsDict = self.newResultsDict()
         dirName = os.path.dirname(self.fnOfAmpData)
-        process_scan.process_scan(fullResultsDict, dirName, self.model_x_g)
         scanType, apaChannels, results = process_scan.process_scan(
-            scanResultsDict, os.path.dirname(self.fnOfAmpData), self.model_x_g, MAX_FREQ, self.verbose)
+            scanResultsDict, os.path.dirname(self.fnOfAmpData), MAX_FREQ, self.verbose, **self.current_algo_kwargs)
         for apaChannel, result in zip(apaChannels, results):
             if result == "bridged":
                 if self.skipChannels:
@@ -4510,24 +4503,29 @@ class MainWindow(qtw.QMainWindow):
                 continue
 
             layer = self.ampDataS['layer']
-            apaCh = self.ampDataS['apaChannels'][reg]
-            if not apaCh:
+            apa_channel = self.ampDataS['apaChannels'][reg]
+            if not apa_channel:
                 print(f"DWA Chan {reg.value}: No channel")
                 continue
 
-            f = np.array(self.ampDataS[reg]['freq'])
-            a = np.array(self.ampDataS[reg]['ampl'])
-            maxFreq = np.min([np.max(f), MAX_FREQ])
+            freq_arr = np.array(self.ampDataS[reg]['freq'])
+            ampl_arr = np.array(self.ampDataS[reg]['ampl'])
+            max_freq = np.min([np.max(freq_arr), MAX_FREQ])
             segments, expected_resonances = channel_frequencies.get_expected_resonances(
-                layer, apaCh, maxFreq)
+                layer, apa_channel, max_freq)
             self.resonantFreqs[reg.value] = [[] for _ in segments]
-            bsub = resonance_fitting.baseline_subtracted(f, np.cumsum(a))
+            algo = process_scan.get_tension_algorithm(self._getAlgorithmVersion(), self.verbose)
+            bsub = algo.cumsum_and_baseline_subtracted(freq_arr, ampl_arr)
+
             self.curves['resProcFit'][reg].setData(
                 self.ampDataS[reg]['freq'], bsub)
-            segments, opt_res_arr, _, _, _ = process_scan.process_channel(
-                layer, apaCh, f, a, self.model_x_g, MAX_FREQ, self.verbose)
+            segments, opt_res_arr, _, _ = algo.process_channel(
+                layer, apa_channel, freq_arr, ampl_arr, MAX_FREQ, **self.current_algo_kwargs)
             self.expectedFreqs[reg.value] = expected_resonances
             self.resonantFreqs[reg.value] = list(opt_res_arr)
+    
+    def _getAlgorithmVersion(self):
+        return self.algoVersionComboBox.currentText()
 
     def _addResonanceExpectedLines(self):
         # Place expected fit lines at nominal tension frequencies

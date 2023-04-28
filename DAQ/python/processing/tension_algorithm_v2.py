@@ -1,0 +1,644 @@
+import joblib
+import numpy as np
+from typing import List, Tuple
+
+from scipy import signal, optimize
+from tension_algorithm import TensionAlgorithmBase
+from channel_frequencies import get_expected_resonances_unique
+
+TEMPLATE_SCALE = {
+    "X": 16.25,
+    "G": 16.25,
+    "U": 16.25,
+    "V": 16.25,
+}
+TEMPLATE_OFFSET = {
+    "X": 2.2,
+    "G": 2.2,
+    "U": 3.0,
+    "V": 3.0,
+}
+# The degrees of freedom of the template determines the thickness of the tails.
+# A larger value eventually converges to a normal distribution.
+TEMPLATE_DOF = {
+    "X": 3.4,
+    "G": 3.4,
+    "U": 2.2,
+    "V": 2.2,
+}
+GLOBAL_TENSION_OFFSET = {
+    "X": 0.086,
+    "G": 0.086,
+    "U": 0.061,
+    "V": 0.061,
+}
+"""Global offset to apply to the tension values. These values were determined 
+by the median offset between the tension values obtained from this algorithm
+and human-corrected tension values.
+"""
+
+
+class TensionAlgorithmV2(TensionAlgorithmBase):
+    def __init__(self, verbosity):
+        super().__init__(verbosity)
+        self.available_settings = {
+            "minimizer": {
+                "type": "choice",
+                "default": "differential_evolution",
+                "choices": ["Differential Evolution", "Nelder-Mead", "MLSL (requires nlopt)"],
+                "label": "Minimizer",
+                "tooltip": "The minimizer to use to find the optimal tension values.\n"
+                "Differential Evolution: Global evolutionary optimization.\n"
+                "Nelder-Mead: Nelder-Mead simplex algorithm (local optimization).\n"
+                "MLSL: Global optimization using multiple local fits from different starting points. Requires `nlopt` to be installed.\n",
+            },
+            "popsize": {
+                "type": "integer",
+                "default": 50,
+                "bounds": (10, 500),
+                "label": "Population size",
+                "tooltip": "The number of points in the population.\n"
+                "Larger values will increase the runtime but decrease the\n"
+                "chance of a solution being missed.",
+                "enabled": {"minimizer": "Differential Evolution"},
+            },
+            "init": {
+                "type": "choice",
+                "default": "latinhypercube",
+                "choices": ["latinhypercube", "sobol"],
+                "label": "Initialization method",
+                "tooltip": "The method used to initialize the population.\n"
+                "latinhypercube: Latin hypercube sampling.\n"
+                "sobol: Sobol sequence.\n",
+                "enabled": {"minimizer": "Differential Evolution"},
+            },
+            "polish": {
+                "type": "boolean",
+                "default": True,
+                "label": "Polish solution",
+                "tooltip": "Polish the best Differential Evolution sample with a local fit using L-BFGS-B.",
+                "enabled": {"minimizer": "Differential Evolution"},
+            },
+            "maxtime": {
+                "type": "float",
+                "default": 0.2,
+                "bounds": (0.01, 10.0),
+                "label": "Maximum runtime (s)",
+                "tooltip": "The maximum runtime for the minimizer in seconds. Only used for MLSL.",
+                "enabled": {"minimizer": "MLSL (requires nlopt)"},
+            },
+            "max_tension": {
+                "type": "float",
+                "default": 10.0,
+                "bounds": (7.5, 20.0),
+                "label": "Maximum tension",
+                "tooltip": "The maximum tension value to search for.",
+            },
+            "ignore_first": {
+                "type": "float",
+                "default": 0.0,
+                "bounds": (0.0, 20.0),
+                "label": "Ignore first x Hz",
+                "tooltip": "Ignore the first x Hz of the spectrum when searching for resonances.",
+            },
+            "downsample": {
+                "type": "integer",
+                "default": 2,
+                "bounds": (1, 10),
+                "label": "Downsample by factor of x",
+                "tooltip": "Downsample the spectrum by a factor of x before searching for resonances.\n"
+                "Larger values decrease runtime but can cost accuracy.",
+            },
+            "use_priors": {
+                "type": "boolean",
+                "default": True,
+                "label": "Use priors around nominal tension",
+                "tooltip": "Use a prior around the nominal tension value to help the optimizer find the correct solution.",
+            },
+            "prior_width": {
+                "type": "float",
+                "default": 0.5,
+                "bounds": (0.1, 2.0),
+                "label": "Prior width",
+                "tooltip": "The width of the prior around the nominal tension value.",
+            },
+        }
+
+    def process_channel(
+        self,
+        layer: str,
+        apa_channel: int,
+        freq_arr: np.ndarray,
+        ampl_arr: np.ndarray,
+        max_freq: float = 350.0,
+        nominal_tension: float = 6.5,
+        **kwargs,
+    ) -> Tuple[List, List, List, List]:
+        """
+        Process a given channel to find the optimal placement of resonances and calculate the tension of each segment.
+        Args:
+            layer (str): The layer of the channel.
+            apa_channel (int): The channel number.
+            freq_arr (np.ndarray): A NumPy array of frequency values.
+            ampl_arr (np.ndarray): A NumPy array of amplitude values.
+            max_freq (float, optional): The maximum frequency to search for resonances. Defaults to 250.
+            nominal_tension (float, optional): The nominal tension value. Defaults to 6.5.
+        Returns:
+            Tuple[List, List, List, List]: A tuple containing the following lists:
+                - wire_segments: The list of wire segments corresponding to the channel.
+                - selected_moved_res_arr: The list of selected moved resonance arrays.
+                - selected_tension: The list of selected tension values.
+                - confidences: The list of confidence values for each tension value.
+        """
+        self.check_kwargs(kwargs)
+        if self.verbosity > 0:
+            print(f"Received kwargs: {kwargs}")
+        # Get the frequency expectation for this channel
+        segments, default_frequencies = get_expected_resonances_unique(apa_channel, layer, max_freq)
+        # Get baseline subtracted amplitude array
+        ampl_arr = self.cumsum_and_baseline_subtracted(freq_arr, ampl_arr)
+        if kwargs.pop("use_priors", False):
+            prior_width = kwargs.pop("prior_width", 0.5)
+        else:
+            kwargs.pop("prior_width")  # avoid duplicate kwargs error
+            prior_width = None
+        minimizer = {
+            "Differential Evolution": "differential_evolution",
+            "Nelder-Mead": "nelder_mead",
+            "MLSL (requires nlopt)": "mlsl",
+        }[kwargs.pop("minimizer", "Differential Evolution")]
+        # Get the resonances for this channel
+        tensions, best_fit_freqs, diagnostics_dict = self._find_resonances(
+            freq_arr,
+            ampl_arr,
+            apa_channel,
+            layer,
+            minimizer=minimizer,
+            prior_width=prior_width,
+            max_freq=max_freq,
+            template_scale=TEMPLATE_SCALE[layer],
+            template_offset=TEMPLATE_OFFSET[layer],
+            template_dof=TEMPLATE_DOF[layer],
+            nominal_tension=nominal_tension,
+            verbosity=self.verbosity,
+            **kwargs,
+        )
+        tensions += GLOBAL_TENSION_OFFSET[layer]
+        best_fit_freqs = self._get_tension_adjusted_frequencies(tensions, default_frequencies)
+
+        # Get the confidence values for each tension value
+        confidences = self.estimate_confidences(layer, diagnostics_dict)
+
+        return segments, best_fit_freqs, tensions, confidences
+
+    def estimate_confidences(self, layer, diagnostics_dict):
+        """Estimate confidences for each tension value using the diagnostics dictionary.
+        This uses a scikit-learn DecisionTreeRegressor to estimate the absolute value of the error
+        in Newtons for each tension value. It expects that the dictionary contains
+        the arrays of the input variables that are passed into the decision tree for each segment.
+        There are two separate decision trees, one for the X and G layer and one of the U and V layers.
+        The decision trees are stored as pkl files in the same directory as this file.
+        If these files do not exist, an array of NaNs is returned.
+
+        Args:
+            layer (int): The layer of the channel.
+            diagnostics_dict (Dict): A dictionary containing the input variables for the decision tree.
+
+        Returns:
+            np.ndarray: A NumPy array of confidence values.
+        """
+
+        # Check that files exist and load the models. Return NaNs if they don't.
+        if layer in ["X", "G"]:
+            try:
+                model = joblib.load("algorithm_tuning/error_predictor_layer_XG.pkl")
+            except FileNotFoundError:
+                return np.full(len(diagnostics_dict["min_weights"]), np.nan)
+        elif layer in ["U", "V"]:
+            try:
+                model = joblib.load("algorithm_tuning/error_predictor_layer_UV.pkl")
+            except FileNotFoundError:
+                return np.full(len(diagnostics_dict["min_weights"]), np.nan)
+        else:
+            raise ValueError("Invalid layer number.")
+
+        # Get the input variables from the diagnostics dictionary
+        feature_keys = ["min_weights", "weight_ratio_min_max", "max_unmatched_peak_weight"]
+        num_segments = len(diagnostics_dict["min_weights"])
+        features = []
+        for key in feature_keys:
+            if isinstance(diagnostics_dict[key], list) or isinstance(
+                diagnostics_dict[key], np.ndarray
+            ):
+                features.append(diagnostics_dict[key])
+            else:
+                features.append([diagnostics_dict[key]] * num_segments)
+        X = np.array(features).T
+        # Get the predicted values from the model
+        y_pred = model.predict(X)
+        if self.verbosity > 0:
+            print(f"Predicted errors: {y_pred}")
+        # Return the absolute value of the predicted values
+        return np.abs(y_pred)
+
+    def cumsum_and_baseline_subtracted(
+        self, freq_arr: np.ndarray, ampl_arr: np.ndarray
+    ) -> np.ndarray:
+        """
+        Take the cumulative sum of the amplitude array and subtract the smoothed curve (baseline).
+
+        Args:
+            freq_arr (np.ndarray): A NumPy array of frequency values.
+            ampl_arr (np.ndarray): A NumPy array of amplitude values.
+
+        Returns:
+            np.ndarray: A NumPy array of baseline-subtracted amplitude values.
+        """
+
+        # Even though the butter filter should be able to detrend a signal, in practice
+        # it causes very large spikes at the beginning and end of the signal. To avoid
+        # this, we detrend the signal using a polynomial first.
+        y = np.cumsum(self._poly_detrend(ampl_arr, order=4))
+        # apply high-pass filter to the measured amplitude
+        b, a = signal.butter(2, [0.1, 0.2], "bandpass", analog=False)
+        y = signal.filtfilt(b, a, y)
+
+        return y
+
+    def _frequency_to_tension(self, frequency, nominal_frequency, nominal_tension=6.5):
+        """Convert a frequency to a tension value.
+
+        The equation relating two frequencies is f2 = f1*(T2/T1)^0.5, where f2 is
+        the new frequency and f1 is the nominal frequency and T1 is the nominal
+        tension. Solving for T2 gives T2 = T1*(f2/f1)^2.
+        """
+
+        return nominal_tension * (frequency / nominal_frequency) ** 2
+
+    def _poly_detrend(self, data, order=2):
+        """Detrend data using a second order polynomial."""
+        x = np.arange(len(data))
+        coeffs = np.polyfit(x, data, order)
+        detrended = data - np.polyval(coeffs, x)
+        return detrended
+
+    def _find_resonances(
+        self,
+        frequencies,
+        amplitudes,
+        apa_channel,
+        layer,
+        minimizer="differential_evolution",
+        downsample=2,
+        prior_width=None,
+        max_freq=250,
+        template_scale=16.0,
+        template_offset=2.0,
+        template_dof=10,
+        ignore_first=5,
+        nominal_tension=6.5,
+        max_tension=10,
+        verbosity=0,
+        init="latinhypercube",
+        **kwargs,
+    ):
+        assert minimizer.lower() in ["differential_evolution", "nelder_mead", "mlsl"]
+        # We can keep the widths of the wavelets fixed since the step size is always the same.
+        corr_amplitude = self._transform_cwt_amplitude(amplitudes)
+        segments, default_frequencies = get_expected_resonances_unique(apa_channel, layer, max_freq)
+        x = frequencies
+        # There is often a spurious resonance at the beginning of the spectrum. We cut the first
+        # <ignore_first> Hz off of the spectrum to avoid this.
+        valid_mask = (x - np.min(x)) > ignore_first
+        x = x[valid_mask]
+        corr_amplitude = corr_amplitude[valid_mask]
+
+        # Bounds are individual per segment such that the maximum tension corresponds to the
+        # maximum frequency for that segment. We also want the lower bound to be at the minimum
+        # frequency of the input + <ignore_first> Hz.
+        min_freq = np.min(frequencies) + ignore_first
+        if max_freq > np.max(frequencies):
+            max_freq = np.max(frequencies)
+        bounds = []
+        for segment, default_freq_arr in zip(segments, default_frequencies):
+            # The maximum tension is the tension that corresponds to the maximum frequency
+            # for that segment.
+            max_default_freq = np.max(default_freq_arr)
+            _max_tension = self._frequency_to_tension(max_freq, max_default_freq, nominal_tension)
+            if _max_tension > max_tension:
+                _max_tension = max_tension
+            # The minimum tension is the tension that corresponds to the minimum frequency
+            # for that segment.
+            min_default_freq = np.min(default_freq_arr)
+            min_tension = self._frequency_to_tension(min_freq, min_default_freq, nominal_tension)
+
+            if min_tension > _max_tension:
+                # If the minimum tension is greater than the maximum tension, then we
+                # need to swap the values.
+                if verbosity > 0:
+                    print("Swapping min and max tension for segment {}".format(segment))
+                    print("Min tension: {}".format(min_tension))
+                    print("Max tension: {}".format(_max_tension))
+                min_tension, _max_tension = _max_tension, min_tension
+            bounds.append((min_tension, _max_tension))
+        if verbosity > 0:
+            print("Bounds: {}".format(bounds))
+        initial_guess = [nominal_tension] * len(segments)
+
+        args = (x, corr_amplitude, default_frequencies)
+        # add additional arguments to the function
+        # Gauss scale, a, b, downsample, prior_width
+        args += (
+            template_scale,
+            1,
+            template_offset,
+            downsample,
+            prior_width,
+            nominal_tension,
+            template_dof,
+        )
+        if minimizer.lower() != "differential_evolution":
+            # Pop all arguments that are only used by differential evolution
+            for de_arg in ["popsize", "init", "polish"]:
+                if de_arg in kwargs:
+                    kwargs.pop(de_arg)
+        if minimizer.lower() != "mlsl":
+            # Pop all arguments that are only used by MLSL
+            for mlsl_arg in ["maxtime"]:
+                if mlsl_arg in kwargs:
+                    kwargs.pop(mlsl_arg)
+        # minimize residual
+        if minimizer.lower() == "differential_evolution":
+            popsize = kwargs.pop("popsize", 50)
+            res = optimize.differential_evolution(
+                self._tension_fit_residual, bounds, args=args, popsize=popsize, init=init, **kwargs
+            )
+        elif minimizer.lower() == "nelder_mead":
+            res = optimize.minimize(
+                self._tension_fit_residual,
+                initial_guess,
+                args=args,
+                bounds=bounds,
+                method="Nelder-Mead",
+                **kwargs,
+            )
+        elif minimizer.lower() == "mlsl":
+            import nlopt
+
+            # the MLSL minimizer is only available in nlopt. We need to define
+            # a wrapper function that takes the arguments in the correct order
+            def nlopt_wrapper(x, grad):
+                return self._tension_fit_residual(x, *args)
+
+            opt = nlopt.opt(nlopt.GN_MLSL_LDS, len(initial_guess))
+            opt.set_lower_bounds([b[0] for b in bounds])
+            opt.set_upper_bounds([b[1] for b in bounds])
+            opt.set_min_objective(nlopt_wrapper)
+            # For MLSL we need to set the local optimizer.
+            local_opt = nlopt.opt(nlopt.LN_SBPLX, len(initial_guess))
+            local_opt.set_lower_bounds([b[0] for b in bounds])
+            local_opt.set_upper_bounds([b[1] for b in bounds])
+            local_opt.set_min_objective(nlopt_wrapper)
+            # We have to set more generous tolerances for the local optimizer so that MLSL
+            # can run more local searches.
+            local_opt.set_xtol_rel(0.01)
+            local_opt.set_ftol_rel(0.01)
+            opt.set_local_optimizer(local_opt)
+            # It is not possible to stop MLSL via tolerance settings, so we set a maximum
+            # runtime in seconds instead. In practice, it will always run for this amount of time.
+            opt.set_maxtime(kwargs.pop("maxtime", 0.2))
+
+            # run the minimization
+            res = opt.optimize(initial_guess)
+
+            # Polish the result with one more local optimization with a tighter tolerance
+            local_opt.set_xtol_rel(1e-4)
+            local_opt.set_ftol_rel(1e-4)
+            res = local_opt.optimize(res)
+        else:
+            raise ValueError("Minimizer {} not recognized.".format(minimizer))
+        if verbosity > 0:
+            print(res)
+        if hasattr(res, "x"):
+            tensions = res.x
+        else:
+            tensions = res
+        diagnostics_dict = self._get_fit_diagnostics(
+            tensions, x, corr_amplitude, default_frequencies, layer, downsample=downsample
+        )
+        best_fit_freqs = self._get_tension_adjusted_frequencies(tensions, default_frequencies)
+        return tensions, best_fit_freqs, diagnostics_dict
+
+    def _deconvolve_resonances(self, input, scale, template_locations, template_dof=10):
+        # Build a kernel matrix, where each row is a kernel
+        # centered at one of the expected frequencies.
+        # We do not adjust the normalization on purpose, we want the peak
+        # of each kernel to be 1.
+        x_minus_mu = np.arange(len(input))[:, np.newaxis] - template_locations[np.newaxis, :]
+        x_minus_mu_sq_norm = x_minus_mu**2 / scale**2
+        A = (1 + x_minus_mu_sq_norm / template_dof) ** (-(template_dof + 1) / 2)
+        # Now we solve a non-negative least-squares problem to find the best
+        # combination of the kernels to approximate the correlation
+        # amplitude.
+        # The result is a vector of weights, which we can use to reconstruct
+        # the correlation amplitude.
+        weights, residual = optimize.nnls(A, input)
+        return weights, residual
+
+    def _reconvolve_resonances(self, input, weights, template_locations, scale, template_dof=10):
+        # Build a kernel matrix, where each row is a kernel
+        # centered at one of the expected frequencies.
+        # We do not adjust the normalization on purpose, we want the peak
+        # of each kernel to be 1.
+        x_minus_mu = np.arange(len(input))[:, np.newaxis] - template_locations[np.newaxis, :]
+        x_minus_mu_sq_norm = x_minus_mu**2 / scale**2
+        A = (1 + x_minus_mu_sq_norm / template_dof) ** (-(template_dof + 1) / 2)
+        return np.dot(A, weights)
+
+    def _get_tension_adjusted_frequencies(self, tensions, frequencies):
+        # The default tension is 6.5 N. To rescale a segment, we apply the function
+        # f2 = f1*(T2/T1)^0.5
+        # where f1 is the frequency for the default tension, f2 is the frequency for
+        # the new tension, T1 is the default tension, and T2 is the new tension.
+        new_frequencies = []
+        for tension, segment_frequencies in zip(tensions, frequencies):
+            new_frequencies.append(np.array(segment_frequencies) * (tension / 6.5) ** 0.5)
+        return new_frequencies
+
+    def _transform_cwt_amplitude(self, amplitudes, widths=(8, 16)):
+        """Get the CWT amplitude for a given signal.
+        Transforms the input amplitudes using a CWT with a Morlet wavelet and
+        returns the mean of the absolute values of the coefficients.
+        """
+        # Even though this is only two lines, we want to define it as a function
+        # so that we can easily change the CWT parameters globally.
+        cwtmatr = signal.cwt(amplitudes, signal.morlet2, widths=np.arange(*widths))
+        return np.mean(np.abs(cwtmatr), axis=0)
+
+    def _deconvolve_with_tension_adjustment(
+        self,
+        x,
+        corr_amplitude,
+        default_frequencies,
+        tensions,
+        template_scale=20.0,
+        a=1.0,
+        b=0.0,
+        downsample=1,
+        template_dof=10,
+    ):
+        adjusted_frequencies = self._get_tension_adjusted_frequencies(tensions, default_frequencies)
+        # combined the frequencies for each segment into one array
+        expected_frequencies = np.concatenate(adjusted_frequencies)
+        # Expected frequencies where the Gaussian kernels are centered are offset
+        expected_frequencies = a * expected_frequencies + b
+        # Downsample the correlation amplitude and input frequencies
+        corr_amplitude = corr_amplitude[::downsample]
+        x = x[::downsample]
+        # Adjust template scale
+        template_scale = template_scale / downsample
+        # Need to convert from the frequency to the index in the correlation amplitude.
+        max_freq, min_freq = np.max(x), np.min(x)
+        template_locations = ((expected_frequencies - min_freq) / (max_freq - min_freq)) * len(x)
+        weights, residual = self._deconvolve_resonances(
+            corr_amplitude, template_scale, template_locations, template_dof=template_dof
+        )
+        # undo the downsampling for template locations
+        template_locations = template_locations * downsample
+        return weights, residual, template_locations
+
+    def _tension_fit_residual(
+        self,
+        tensions,
+        x,
+        corr_amplitude,
+        default_frequencies,
+        template_scale=16.0,
+        a=1.0,
+        b=2.0,
+        downsample=2,
+        prior_width=None,
+        nominal_tension=6.5,
+        template_dof=10,
+    ):
+        if np.any(tensions < 0):
+            raise ValueError("Tensions must be positive")
+        weights, residual, template_locations = self._deconvolve_with_tension_adjustment(
+            x,
+            corr_amplitude,
+            default_frequencies,
+            tensions,
+            template_scale=template_scale,
+            a=a,
+            b=b,
+            downsample=downsample,
+            template_dof=template_dof,
+        )
+        assert np.isfinite(residual), "Residual is not finite"
+        if prior_width is not None:
+            residual += np.sum((tensions - nominal_tension) ** 2 / (2 * prior_width**2))
+        return residual
+
+    def _find_unmatched_peaks(self, x, corr_amplitude, reconvolved_amplitude):
+        # Find the peaks in the correlation amplitude that are not matched by the
+        # reconvolved correlation amplitude.
+        peaks, _ = signal.find_peaks(
+            np.clip(corr_amplitude - reconvolved_amplitude, 0, None), height=1, prominence=1
+        )
+        return x[peaks], corr_amplitude[peaks] - reconvolved_amplitude[peaks]
+
+    def _unflatten_weights(self, frequency_list, flat_weights):
+        """Unflatten the weights from a deconvolution into a list of arrays."""
+        weights = []
+        for frequencies in frequency_list:
+            weights.append(flat_weights[: len(frequencies)])
+            flat_weights = flat_weights[len(frequencies) :]
+        return weights
+
+    def _get_fit_diagnostics(
+        self,
+        tensions,
+        x,
+        corr_amplitude,
+        default_frequencies,
+        layer,
+        downsample=2,
+        weight_merge_width=5,
+    ):
+        weights, residual, template_locations = self._deconvolve_with_tension_adjustment(
+            x,
+            corr_amplitude,
+            default_frequencies,
+            tensions,
+            template_scale=TEMPLATE_SCALE[layer],
+            a=1,
+            b=TEMPLATE_OFFSET[layer],
+            downsample=downsample,
+            template_dof=TEMPLATE_DOF[layer],
+        )
+
+        unmatched_peak_frequencies, unmatched_peak_weights = self._find_unmatched_peaks(
+            x,
+            corr_amplitude,
+            self._reconvolve_resonances(
+                x,
+                weights,
+                template_locations,
+                TEMPLATE_SCALE[layer],
+                template_dof=TEMPLATE_DOF[layer],
+            ),
+        )
+        # We want to use the weights to diagnose bad fits. In particular, we want to
+        # find instances where a frequency is not matched by a resonance, which would
+        # be indicated by a very small weight.
+        merged_weights = []
+        frequencies = self._get_tension_adjusted_frequencies(tensions, default_frequencies)
+        # Turn the array of flat weights into a list of arrays, where each array corresponds
+        # to the weights for a segment. This assumes that the order of the weights is the
+        # same as the order of the frequencies.
+        weights = self._unflatten_weights(default_frequencies, weights)
+        for segment_weights, segment_freq in zip(weights, frequencies):
+            # Sometimes two frequencies within a segment are very close to each other,
+            # which causes the weight of one of them to go to zero. In these cases
+            # we want to sum the weights of the two frequencies.
+            resonance_weights = []
+            freq_diffs = np.diff(segment_freq)
+            for i in range(len(segment_freq)):
+                if i == 0:
+                    resonance_weights.append(segment_weights[i])
+                else:
+                    if freq_diffs[i - 1] < weight_merge_width:
+                        resonance_weights[-1] += segment_weights[i]
+                    else:
+                        resonance_weights.append(segment_weights[i])
+            merged_weights.append(resonance_weights)
+
+        # All diagnostics have the same length as the number of segments.
+
+        # diagnostics concerning the weights of the peaks that were matched
+        min_weights = [np.min(segment_weights) for segment_weights in merged_weights]
+        mean_weights = [np.mean(segment_weights) for segment_weights in merged_weights]
+        total_max_weight = np.max([np.max(segment_weights) for segment_weights in merged_weights])
+        weight_ratio_min_max = min_weights / total_max_weight
+
+        # diagnostics concerning the peaks that were not matched
+        if len(unmatched_peak_weights) == 0:
+            max_unmatched_peak_weight = 0
+            max_unmatched_peak_frequency = 0
+        else:
+            max_unmatched_peak_weight = np.max(unmatched_peak_weights)
+            max_unmatched_peak_frequency = unmatched_peak_frequencies[
+                np.argmax(unmatched_peak_weights)
+            ]
+
+        diagnostics_dict = {
+            "residual": residual,
+            "min_weights": min_weights,
+            "mean_weights": mean_weights,
+            "weight_ratio_min_max": weight_ratio_min_max,
+            "max_unmatched_peak_frequency": max_unmatched_peak_frequency,
+            "max_unmatched_peak_weight": max_unmatched_peak_weight,
+        }
+        if self.verbosity > 0:
+            print(diagnostics_dict)
+        return diagnostics_dict
