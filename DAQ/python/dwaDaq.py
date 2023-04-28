@@ -29,6 +29,7 @@ on the data it receives.
 
 """
 
+import subprocess
 import DwaMicrozed as duz
 import DwaConfigFile as dcf
 import DwaDataParser as ddp
@@ -556,6 +557,43 @@ class MainWindow(qtw.QMainWindow):
         
         self.populate_algo_settings()
         self._udpConnect()
+
+        # If the current git branch is not "stable", we want to display a warning message window.
+
+        # Get the current git branch.
+        git_branch = subprocess.check_output(
+            ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
+        ).decode('utf-8').strip()
+        
+        # If the current git branch is not "stable", display a warning message.
+        if git_branch != 'stable':
+            self._show_non_stable_warning(git_branch)
+
+    def _show_non_stable_warning(self, git_branch):
+        doc = qtg.QTextDocument()
+        msg_html = (
+            "<p><strong>You are not working on the `stable` branch.</strong></p>"
+            f"<p>The current branch is `{git_branch}`.</p>"
+        )
+        if git_branch == "master":
+            msg_html += (
+                "<p>This branch has the very latest development code, "
+                "but it may not be stable. </p>"
+            )
+        msg_html += (
+            "<p>If you are using this program in production and do not intend to test new features, "
+            "you should switch to the `stable` branch.</p>"
+        )
+        doc.setHtml(msg_html)
+        msg = qtw.QMessageBox()
+        msg.setIcon(qtw.QMessageBox.Warning)
+        # display the message as rich text
+        msg.setTextFormat(qtc.Qt.RichText)
+        # set the message text to the HTML document
+        msg.setText(doc.toHtml())
+        msg.setWindowTitle("Non-Stable Version Warning")
+        msg.setStandardButtons(qtw.QMessageBox.Ok)
+        msg.exec_()
 
     def clear_form_layout(self, layout):
         while layout.count():
