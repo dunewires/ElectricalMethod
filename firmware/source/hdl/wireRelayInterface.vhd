@@ -135,7 +135,7 @@ begin
 
 				when validateConfig_s =>
 					-- Lock out configurations that have two consecutive 1's in the bus relay coil drive
-					if or(relayBusAll and sll(relayBusAll)) then -- invalid configuration, set relayLockout and go back to idle
+					if or(relayBusAll and (relayBusAll sll 1)) then -- invalid configuration, set relayLockout and go back to idle
 						relayLockoutError <= '1';
 						daqRegState       <= idle_s;
 					else -- clear any existing lockout and initiate TxRx
