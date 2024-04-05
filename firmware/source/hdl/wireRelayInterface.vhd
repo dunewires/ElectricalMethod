@@ -184,7 +184,7 @@ begin
 	end process relayConfigCtrl;
 
 	-- clock domain crossing between 100 MHz register clock and 2MHz serial shift registers
-	xpm_cdc_single_inst : xpm_cdc_single
+	xpm_cdc_single_updateRequest : xpm_cdc_single
 		generic map (
 			DEST_SYNC_FF   => 4, -- DECIMAL; range: 2-10
 			INIT_SYNC_FF   => 0, -- DECIMAL; 0=disable simulation init values, 1=enable simulation init values
@@ -196,10 +196,10 @@ begin
 			src_clk => regClk,               -- 1-bit input: optional; required when SRC_INPUT_REG = 1
 
 			dest_out => updateRequest_dwaClk2, -- 1-bit output: src_in synchronized to the destination clock domain. This output is registered.
-			dest_clk => dwaClk2,               -- 1-bit input: Clock signal for the destination clock domain.
+			dest_clk => dwaClk2               -- 1-bit input: Clock signal for the destination clock domain.
 		);
 
-	xpm_cdc_single_inst : xpm_cdc_single
+	xpm_cdc_single_updateBusy : xpm_cdc_single
 		generic map (
 			DEST_SYNC_FF   => 4, -- DECIMAL; range: 2-10
 			INIT_SYNC_FF   => 0, -- DECIMAL; 0=disable simulation init values, 1=enable simulation init values
@@ -211,7 +211,7 @@ begin
 			src_clk => dwaClk2,            -- 1-bit input: optional; required when SRC_INPUT_REG = 1
 
 			dest_out => updateBusy_regClk, -- 1-bit output: src_in synchronized to the destination clock domain. This output is registered.
-			dest_clk => regClk,            -- 1-bit input: Clock signal for the destination clock domain.
+			dest_clk => regClk            -- 1-bit input: Clock signal for the destination clock domain.
 		);
 
 
