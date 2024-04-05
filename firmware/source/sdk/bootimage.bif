@@ -1,7 +1,7 @@
 //arch = zynq; split = false; format = BIN
 the_ROM_image:
 {
-[bootloader]/home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/..//source//dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/boot/fsbl.elf
-/home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/..//vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20220329_153502_0.046ns.bit
-/home/nate/projects/duneWireTension/ElectricalMethod/firmware/scripts/..//source//dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
+[bootloader]/home/nate/projects/ElectricalMethod/firmware/scripts/..//source//dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/boot/fsbl.elf
+/home/nate/projects/ElectricalMethod/firmware/scripts/..//vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20240405_171557_-37.947ns.bit
+/home/nate/projects/ElectricalMethod/firmware/scripts/..//source//dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
 }
