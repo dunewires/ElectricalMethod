@@ -21,6 +21,9 @@ use UNISIM.VCOMPONENTS.all;
 library duneDwa;
 use duneDwa.global_def.all;
 
+Library xpm;
+use xpm.vcomponents.all;
+
 entity wireRelayInterface is
 	port (
 		fromDaqReg : in  fromDaqRegType;
@@ -34,9 +37,10 @@ entity wireRelayInterface is
 		sck     : out std_logic_vector(3 downto 0) := (others => '0');
 		srclr_b : out std_logic_vector(3 downto 0) := (others => '0');
 
-		relayConfigError : out std_logic := '0';
-		dwaClk100        : in  std_logic := '0';
-		dwaClk2          : in  std_logic := '0'
+		relayConfigError  : out std_logic := '0';
+		relayLockoutError : out std_logic := '0';
+		regClk            : in  std_logic := '0';
+		dwaClk2           : in  std_logic := '0'
 	);
 end entity wireRelayInterface;
 
@@ -53,10 +57,12 @@ architecture STRUCT of wireRelayInterface is
 		);
 	END COMPONENT ;
 
-	type relayCfgState_type is (idle_s, updateSerialOut_s, shiftBitsIn_s, loadParallelReg_s, shiftBitsOut_s, waitToEnable_s, waitToShiftOut_s);
-	signal relayCfgState                                                  : relayCfgState_type := idle_s;
-	signal updateLatch,updateLatch_cdc1,updateLatch_cdc2                  : boolean            := false;
-	signal updateBusy,updateBusy_cdc1,updateBusy_cdc2,updateBusy_cdc2_del : boolean            := false;
+	type daqRegState_type is (idle_s, validateConfig_s, startSerTxRx_s, waitForDone_s, verifyTxRx_s, shiftBitsOut_s);
+	type relayCfgState_type is (idle_s, configCheck_s, updateSerialOut_s, shiftBitsIn_s, loadParallelReg_s, shiftBitsOut_s, waitToEnable_s, waitToShiftOut_s);
+	signal daqRegState                                : daqRegState_type   := idle_s;
+	signal relayCfgState                              : relayCfgState_type := idle_s;
+	signal updateRequest_regClk,updateRequest_dwaClk2 : std_logic          := '0';
+	signal updateBusy_regClk,updateBusy_dwaClk2       : std_logic          := '0';
 
 	signal serialStringOut : std_logic_vector(191 downto 0);
 	signal shiftRegOut     : std_logic_vector(191 downto 0);
@@ -75,12 +81,6 @@ architecture STRUCT of wireRelayInterface is
 			x"3F",
 			x"1F"
 		);
-
-	attribute ASYNC_REG                     : string;
-	attribute ASYNC_REG of updateBusy_cdc1  : signal is "TRUE";
-	attribute ASYNC_REG of updateBusy_cdc2  : signal is "TRUE";
-	attribute ASYNC_REG of updateLatch_cdc1 : signal is "TRUE";
-	attribute ASYNC_REG of updateLatch_cdc2 : signal is "TRUE";
 
 begin
 
@@ -110,54 +110,119 @@ begin
 
 	sdo <= shiftRegOut(shiftRegOut'left);
 
-	updateCdcDC100 : process (dwaClk100)
+	-- Coordinate the relay configuration and error checking process.
+	relayConfigCtrl : process (regClk)
+		variable relayBusAll : std_logic_vector(63 downto 0);
 	begin
-		if rising_edge(dwaClk100) then
-			updateBusy_cdc1     <= updateBusy;
-			updateBusy_cdc2     <= updateBusy_cdc1;
-			updateBusy_cdc2_del <= updateBusy_cdc2;
-			-- check registers are equal on the clock following toDaqReg update from serial string
-			checkRegEq <= updateBusy_cdc2_del and not updateBusy_cdc2;
+		if rising_edge(regClk) then
+			-- default
+			updateRequest_regClk <= '0';
+			-- pick out relay bus coil bits in order, use latched serial string data
+			relayBusAll := (serialStringOut(191 downto 160) & (serialStringOut(95 downto 64)));
+			-- boil down all register difference bits into one error bit
+			relayConfigError <= or(regDiff);
 
-			-- only enable CDC data transfer when the update is not busy
-			if not updateBusy_cdc2 then
-				serialStringOut <= fromDaqReg.relayBusBot(1) & fromDaqReg.relayBusBot(0) & --
-					fromDaqReg.relayWireBot(3) & fromDaqReg.relayWireBot(2) & fromDaqReg.relayWireBot(1) & fromDaqReg.relayWireBot(0) &
-					fromDaqReg.relayBusTop(1) & fromDaqReg.relayBusTop(0) &
-					fromDaqReg.relayWireTop(3) & fromDaqReg.relayWireTop(2) & fromDaqReg.relayWireTop(1) & fromDaqReg.relayWireTop(0);
+			-- interface to the DAQ registers that are used to configure the wire relays
+			case(daqRegState) is
+				when idle_s =>
+					if fromDaqReg.relayUpdate then                                                 -- latch configuration values, assign to serial string
+						serialStringOut <= fromDaqReg.relayBusBot(1) & fromDaqReg.relayBusBot(0) & --
+							fromDaqReg.relayWireBot(3) & fromDaqReg.relayWireBot(2) & fromDaqReg.relayWireBot(1) & fromDaqReg.relayWireBot(0) &
+							fromDaqReg.relayBusTop(1) & fromDaqReg.relayBusTop(0) &
+							fromDaqReg.relayWireTop(3) & fromDaqReg.relayWireTop(2) & fromDaqReg.relayWireTop(1) & fromDaqReg.relayWireTop(0);
+						daqRegState <= validateConfig_s;
+					end if;
 
-				shiftBusToDaq : for srb_i in 1 downto 0 loop
-					toDaqReg.relayBusTop(srb_i) <= shiftRegIn(2)((16 * srb_i)+47 downto (16 * srb_i)+32);
-					toDaqReg.relayBusBot(srb_i) <= shiftRegIn(0)((16 * srb_i)+47 downto (16 * srb_i)+32);
-				end loop shiftBusToDaq;
+				when validateConfig_s =>
+					-- Lock out configurations that have two consecutive 1's in the bus relay coil drive
+					if or(relayBusAll and sll(relayBusAll)) then -- invalid configuration, set relayLockout and go back to idle
+						relayLockoutError <= '1';
+						daqRegState       <= idle_s;
+					else -- clear any existing lockout and initiate TxRx
+						relayLockoutError <= '0';
+						daqRegState       <= startSerTxRx_s;
+					end if;
 
-				shiftWireToDaq : for srw_i in 3 downto 0 loop
-					toDaqReg.relayWireTop(srw_i) <= shiftRegIn(3)((16 * srw_i)+15 downto (16 * srw_i));
-					toDaqReg.relayWireBot(srw_i) <= shiftRegIn(1)((16 * srw_i)+15 downto (16 * srw_i));
-				end loop shiftWireToDaq;
-				-- catch relayUpdate pulse
-				updateLatch <= (fromDaqReg.relayUpdate or updateLatch);
-			else
-				--clear updateLatch when busy
-				updateLatch <= false;
-			end if;
+				when startSerTxRx_s =>
+					updateRequest_regClk <= '1';
+					if updateBusy_regClk then
+						daqRegState <= waitForDone_s;
+					end if;
+
+				when waitForDone_s =>
+					if not updateBusy_regClk then -- Update is finished, latch Rx serial string 
+						shiftBusToDaq : for srb_i in 1 downto 0 loop
+							toDaqReg.relayBusTop(srb_i) <= shiftRegIn(2)((16 * srb_i)+47 downto (16 * srb_i)+32);
+							toDaqReg.relayBusBot(srb_i) <= shiftRegIn(0)((16 * srb_i)+47 downto (16 * srb_i)+32);
+						end loop shiftBusToDaq;
+
+						shiftWireToDaq : for srw_i in 3 downto 0 loop
+							toDaqReg.relayWireTop(srw_i) <= shiftRegIn(3)((16 * srw_i)+15 downto (16 * srw_i));
+							toDaqReg.relayWireBot(srw_i) <= shiftRegIn(1)((16 * srw_i)+15 downto (16 * srw_i));
+						end loop shiftWireToDaq;
+
+						daqRegState <= verifyTxRx_s;
+					end if;
+
+				when verifyTxRx_s => --  set register difference flags, this is used to report a configuration error
+					checkBus : for srb_i in 1 downto 0 loop
+						regDiff(srb_i)     <= '0' when toDaqReg.relayBusTop(srb_i) = fromDaqReg.relayBusTop(srb_i) else '1' ;
+						regDiff(srb_i + 2) <= '0' when toDaqReg.relayBusBot(srb_i) = fromDaqReg.relayBusBot(srb_i) else '1' ;
+					end loop checkBus;
+
+					checkWire : for srw_i in 3 downto 0 loop
+						regDiff(srw_i + 4) <= '0' when toDaqReg.relayWireTop(srw_i) = fromDaqReg.relayWireTop(srw_i) else '1' ;
+						regDiff(srw_i + 8) <= '0' when toDaqReg.relayWireBot(srw_i) = fromDaqReg.relayWireBot(srw_i) else '1' ;
+					end loop checkWire;
+
+					daqRegState <= idle_s;
+				when others =>
+					daqRegState <= idle_s;
+			end case;
+
 		end if;
-	end process updateCdcDC100;
+	end process relayConfigCtrl;
 
-	updateCdcDC2 : process (dwaClk2)
-	begin
-		if rising_edge(dwaClk2) then
-			updateLatch_cdc1 <= updateLatch;
-			updateLatch_cdc2 <= updateLatch_cdc1;
-		end if;
-	end process updateCdcDC2;
+	-- clock domain crossing between 100 MHz register clock and 2MHz serial shift registers
+	xpm_cdc_single_inst : xpm_cdc_single
+		generic map (
+			DEST_SYNC_FF   => 4, -- DECIMAL; range: 2-10
+			INIT_SYNC_FF   => 0, -- DECIMAL; 0=disable simulation init values, 1=enable simulation init values
+			SIM_ASSERT_CHK => 0, -- DECIMAL; 0=disable simulation messages, 1=enable simulation messages
+			SRC_INPUT_REG  => 1  -- DECIMAL; 0=do not register input, 1=register input
+		)
+		port map (
+			src_in  => updateRequest_regClk, -- 1-bit input: Input signal to be synchronized to dest_clk domain.
+			src_clk => regClk,               -- 1-bit input: optional; required when SRC_INPUT_REG = 1
 
+			dest_out => updateRequest_dwaClk2, -- 1-bit output: src_in synchronized to the destination clock domain. This output is registered.
+			dest_clk => dwaClk2,               -- 1-bit input: Clock signal for the destination clock domain.
+		);
+
+	xpm_cdc_single_inst : xpm_cdc_single
+		generic map (
+			DEST_SYNC_FF   => 4, -- DECIMAL; range: 2-10
+			INIT_SYNC_FF   => 0, -- DECIMAL; 0=disable simulation init values, 1=enable simulation init values
+			SIM_ASSERT_CHK => 0, -- DECIMAL; 0=disable simulation messages, 1=enable simulation messages
+			SRC_INPUT_REG  => 1  -- DECIMAL; 0=do not register input, 1=register input
+		)
+		port map (
+			src_in  => updateBusy_dwaClk2, -- 1-bit input: Input signal to be synchronized to dest_clk domain.
+			src_clk => dwaClk2,            -- 1-bit input: optional; required when SRC_INPUT_REG = 1
+
+			dest_out => updateBusy_regClk, -- 1-bit output: src_in synchronized to the destination clock domain. This output is registered.
+			dest_clk => regClk,            -- 1-bit input: Clock signal for the destination clock domain.
+		);
+
+
+	-- Serial data transfer between FPGA and external shift registers
 	relayCfgState_seq : process (dwaClk2)
 	begin
 		if rising_edge(dwaClk2) then
 			--default 
-			rck   <= (others => '0');
-			clkEn <= (others => '0');
+			rck                <= (others => '0');
+			clkEn              <= (others => '0');
+			updateBusy_dwaClk2 <= '1'; --  busy everywhere except idle state
 
 			shiftRegOut <= shiftRegOut(shiftRegOut'left-1 downto 0) & '0' when clkEn /= "0000" else shiftRegOut;
 
@@ -168,12 +233,11 @@ begin
 			case (relayCfgState) is
 
 				when idle_s =>
-					waitCnt    <= (others => '0'); -- reset for next time
-					updateBusy <= false;
-					shiftCnt   <= (others => '0'); --number of bits to  shift
-					stringCnt  <= (others => '0');
-					if updateLatch_cdc1 then
-						updateBusy    <= true; --turn on update busy
+					waitCnt            <= (others => '0'); -- reset for next time
+					updateBusy_dwaClk2 <= '0';
+					shiftCnt           <= (others => '0'); --number of bits to  shift
+					stringCnt          <= (others => '0');
+					if updateRequest_dwaClk2 then
 						relayCfgState <= updateSerialOut_s;
 						--turn off all relays when updating when enabled
 						g_b <= (others => fromDaqReg.relayAutoBreakEna);
@@ -231,25 +295,6 @@ begin
 			end case;
 		end if;
 	end process relayCfgState_seq;
-
-	relayConfigErrorCheck : process (dwaClk100)
-	begin
-		if rising_edge(dwaClk100) then
-			relayConfigError <= or(regDiff);
-
-			if checkRegEq then
-				checkBus : for srb_i in 1 downto 0 loop
-					regDiff(srb_i)     <= '0' when toDaqReg.relayBusTop(srb_i) = fromDaqReg.relayBusTop(srb_i) else '1' ;
-					regDiff(srb_i + 2) <= '0' when toDaqReg.relayBusBot(srb_i) = fromDaqReg.relayBusBot(srb_i) else '1' ;
-				end loop checkBus;
-
-				checkWire : for srw_i in 3 downto 0 loop
-					regDiff(srw_i + 4) <= '0' when toDaqReg.relayWireTop(srw_i) = fromDaqReg.relayWireTop(srw_i) else '1' ;
-					regDiff(srw_i + 8) <= '0' when toDaqReg.relayWireBot(srw_i) = fromDaqReg.relayWireBot(srw_i) else '1' ;
-				end loop checkWire;
-			end if;
-		end if;
-	end process;
 
 	ila_4x32_inst : ila_4x32
 		PORT MAP (

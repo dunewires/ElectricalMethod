@@ -19,6 +19,7 @@ entity top_tension_analyzer is
     dwaClk200 : in std_logic;
     dwaClk100 : in std_logic;
     dwaClk10  : in std_logic;
+    regClk  : in std_logic;
 
     led     : out std_logic_vector(3 downto 0) := (others => '0');
     pButton : in  std_logic_vector(3 downto 0);
@@ -197,6 +198,7 @@ architecture STRUCT of top_tension_analyzer is
 
   signal vioOut3, vioOut9 : std_logic := '0';
 
+  signal relayLockoutError : std_logic := '0';
   signal relayConfigError : std_logic := '0';
   signal gainConfigError  : std_logic := '0';
   signal snMemWPError     : std_logic := '0';
@@ -433,18 +435,18 @@ begin
       fromDaqReg => fromDaqReg,
       toDaqReg   => toDaqReg_wireRelayInterface,
       --sim toDaqReg => open,
-
-      g_b     => CD_G_b,
-      srclr_b => CD_SCLR_b,
-
       sdi => CD_Dout,
       sdo => CD_Din,
-      rck => CD_RCK,
 
+      rck => CD_RCK,
+      g_b     => CD_G_b,
       sck => CD_SCK,
+      srclr_b => CD_SCLR_b,
+
 
       relayConfigError => relayConfigError,
-      dwaClk100        => dwaClk100,
+      relayLockoutError => relayLockoutError,
+      regClk        => regClk,
       dwaClk2          => dwaClk2
     );
 
@@ -706,7 +708,8 @@ begin
     toDaqReg.serNumMemData    <= toDaqReg_serialPromInterface.serNumMemData;
     toDaqReg.errors           <= (
         23          => checkBound_error,
-        22 downto 6 => '0',
+        22 downto 7 => '0',
+        6           => relayLockoutError,
         5           => relayConfigError,
         4           => gainConfigError,
         3           => snMemWPError,

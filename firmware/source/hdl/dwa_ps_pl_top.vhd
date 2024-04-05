@@ -365,13 +365,12 @@ begin
             toDaqReg   => toDaqReg,
 
 
-            --dwaClk100 => S_AXI_ACLK_100,
             dwaClk400 => plClk_400,
             dwaClk333 => plClk_333,
             dwaClk200 => plClk_200,
             dwaClk100 => plClk_100,
-            --dwaClk10  => S_AXI_ACLK_10,
             dwaClk10 => plClk_10,
+            regClk => S_AXI_ACLK_100,
 
             led     => led,
             pButton => pButton,
