@@ -13,6 +13,52 @@ time.sleep(sleepSec)
 # read errorBits                                                                                 
 dwa.dwaRegRead(s, '00000034')
 time.sleep(sleepSec)
+
+# relayBusTop(1);
+dwa.dwaRegWrite(s, '0000002B', '00000000')
+time.sleep(sleepSec)
+# relayBusTop(0);
+dwa.dwaRegWrite(s, '0000002A', '00000000')
+time.sleep(sleepSec)
+# relayWireTop(3);
+dwa.dwaRegWrite(s, '00000029', '00000000')
+time.sleep(sleepSec)
+# relayWireTop(2);
+dwa.dwaRegWrite(s, '00000028', '00000000')
+time.sleep(sleepSec)
+# relayWireTop(1);
+dwa.dwaRegWrite(s, '00000027', '00000000')
+time.sleep(sleepSec)
+# relayWireTop(0);
+dwa.dwaRegWrite(s, '00000026', '00000000')
+time.sleep(sleepSec)
+# relayBusBot(1);
+dwa.dwaRegWrite(s, '00000025', '00000000')
+time.sleep(sleepSec)
+# relayBusBot(0);
+dwa.dwaRegWrite(s, '00000024', '00000000')
+time.sleep(sleepSec)
+# relayWireBot(3);
+dwa.dwaRegWrite(s, '00000023', '00000000')
+time.sleep(sleepSec)
+# relayWireBot(2);
+dwa.dwaRegWrite(s, '00000022', '00000000')
+time.sleep(sleepSec)
+# relayWireBot(1);
+dwa.dwaRegWrite(s, '00000021', '00000000')
+time.sleep(sleepSec)
+# relayWireBot(0);
+dwa.dwaRegWrite(s, '00000020', '00000000')
+time.sleep(sleepSec)
+
+# Update relays
+dwa.dwaRegWrite(s, '00000000', '00000004')
+time.sleep(sleepSec)
+
+# read errorBits                                                                                 
+dwa.dwaRegRead(s, '00000034')
+time.sleep(sleepSec)
+
 # ctrl busy                                                                                          
 dwa.dwaRegRead(s, '00000011')
 time.sleep(sleepSec)
