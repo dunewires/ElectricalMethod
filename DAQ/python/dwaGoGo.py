@@ -52,7 +52,7 @@ for i in range(16):
 
 		# read errorBits 
 		errors=dwa.dwaRegRead(s, '00000034')                                                                                
-		print (errors, end=' ')
+		print (errors, end=' ', file = sourceFile)
 		time.sleep(sleepSec)
 
 		# relayBusTop(1);
@@ -72,7 +72,7 @@ for i in range(16):
 		time.sleep(sleepSec)
 
 		# read errorBits                                                                                 
-		errors=dwa.dwaRegRead(s, '00000034')                                                                                
+		errors=dwa.dwaRegRead(s, '00000034', file = sourceFile)                                                                                
 		print (errors)
 		time.sleep(sleepSec)
 
