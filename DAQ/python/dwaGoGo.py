@@ -4,16 +4,20 @@ import time
 print('\n\n======= dwaRelayConfigTest() ===========')
 #dwa.dwaReset(verbose=1)
 sleepSec = 0.2
+s = dwa.tcpOpen(verbose=False)
 
 relayBusTopReg = ['']*2
 relayBusBotReg = ['']*2
 
-relayBusTopReg[0] =  '00000000'
-relayBusTopReg[1] =  '00000000'
-relayBusBotReg[0] =  '00000000'
-relayBusBotReg[1] =  '00000000'
+#set initial values
+relayBusTopReg[0] =  0x0
+relayBusTopReg[1] =  0xaa
+relayBusBotReg[0] =  relayBusTopReg[1] <<2
+relayBusBotReg[1] =  0x22
+print('relayBusTopReg', relayBusTopReg[1],relayBusTopReg[0])
+print('relayBusTopReg', relayBusBotReg[1],relayBusBotReg[0])
 
-s = dwa.tcpOpen(verbose=False)
+
 
 # LS 24b dateCode                                                                          
 dwa.dwaRegRead(s, '00000012')
@@ -23,11 +27,18 @@ dwa.dwaRegRead(s, '00000034')
 time.sleep(sleepSec)
 
 # relayBusTop(1);
-dwa.dwaRegWrite(s, '0000002B', rbt1)
+dwa.dwaRegWrite(s, '0000002B', '00000000')
 time.sleep(sleepSec)
 # relayBusTop(0);
-dwa.dwaRegWrite(s, '0000002A', )
 time.sleep(sleepSec)
+# relayBusBot(1);
+dwa.dwaRegWrite(s, '00000025', '00000000')
+time.sleep(sleepSec)
+# relayBusBot(0);
+dwa.dwaRegWrite(s, '00000024', '00000000')
+time.sleep(sleepSec)
+
+# !! for now all wires are off, should we do something here?
 # relayWireTop(3);
 dwa.dwaRegWrite(s, '00000029', '00000000')
 time.sleep(sleepSec)
@@ -39,12 +50,6 @@ dwa.dwaRegWrite(s, '00000027', '00000000')
 time.sleep(sleepSec)
 # relayWireTop(0);
 dwa.dwaRegWrite(s, '00000026', '00000000')
-time.sleep(sleepSec)
-# relayBusBot(1);
-dwa.dwaRegWrite(s, '00000025', '00000000')
-time.sleep(sleepSec)
-# relayBusBot(0);
-dwa.dwaRegWrite(s, '00000024', '00000000')
 time.sleep(sleepSec)
 # relayWireBot(3);
 dwa.dwaRegWrite(s, '00000023', '00000000')
