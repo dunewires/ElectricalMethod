@@ -5,6 +5,14 @@ print('\n\n======= dwaRelayConfigTest() ===========')
 #dwa.dwaReset(verbose=1)
 sleepSec = 0.2
 
+relayBusTopReg = ['']*2
+relayBusBotReg = ['']*2
+
+relayBusTopReg[0] =  '00000000'
+relayBusTopReg[1] =  '00000000'
+relayBusBotReg[0] =  '00000000'
+relayBusBotReg[1] =  '00000000'
+
 s = dwa.tcpOpen(verbose=False)
 
 # LS 24b dateCode                                                                          
@@ -15,10 +23,10 @@ dwa.dwaRegRead(s, '00000034')
 time.sleep(sleepSec)
 
 # relayBusTop(1);
-dwa.dwaRegWrite(s, '0000002B', '00000000')
+dwa.dwaRegWrite(s, '0000002B', rbt1)
 time.sleep(sleepSec)
 # relayBusTop(0);
-dwa.dwaRegWrite(s, '0000002A', '00000000')
+dwa.dwaRegWrite(s, '0000002A', )
 time.sleep(sleepSec)
 # relayWireTop(3);
 dwa.dwaRegWrite(s, '00000029', '00000000')
@@ -59,15 +67,6 @@ time.sleep(sleepSec)
 dwa.dwaRegRead(s, '00000034')
 time.sleep(sleepSec)
 
-# ctrl busy                                                                                          
-dwa.dwaRegRead(s, '00000011')
-time.sleep(sleepSec)
-# constant                                                                                           
-dwa.dwaRegRead(s, '00000012')
-time.sleep(sleepSec)
-# fifoAutoDC_ff fifoAutoDC_ef                                                                        
-dwa.dwaRegRead(s, '0000001B')
-time.sleep(sleepSec)
 dwa.tcpClose(s)
 
 #print('\n\n======= dwaConfig() ===========')
