@@ -1,7 +1,8 @@
 import dwaTools as dwa
 import time
-
-print('\n\n======= dwaRelayConfigTest() ===========')
+sourceFile = open('demo.txt', 'w')
+print('Starting test', file = sourceFile, file = sourceFile)
+print('\n\n======= dwaRelayConfigTest() ===========', file = sourceFile)
 #dwa.dwaReset(verbose=1)
 sleepSec = 0.2
 s = dwa.tcpOpen(verbose=False)
@@ -40,14 +41,14 @@ for i in range(16):
 	relayBusScan =  relayBusStart
 	for j in range(16):
 		relayBus = relayBusError | relayBusScan
-		#print('test index',i,j, end=' ')
-		print('Bus bits',format(relayBus,'b').zfill(64), end=' ')
+		#print('test index',i,j, end=' ', file = sourceFile)
+		print('Bus bits',format(relayBus,'b').zfill(64), end=' ', file = sourceFile)
 		relayBusBotReg[1] =  (relayBus & 0xffff000000000000)>>48
 		relayBusBotReg[0] =  (relayBus & 0x0000ffff00000000)>>32
 		relayBusTopReg[1] =  (relayBus & 0x00000000ffff0000)>>16
 		relayBusTopReg[0] =  (relayBus & 0x000000000000ffff)
-		print('relayBusBotReg',format(relayBusBotReg[1],'x').zfill(8),format(relayBusBotReg[0],'x').zfill(8), end=' ')
-		print('relayBusTopReg',format(relayBusTopReg[1],'x').zfill(8),format(relayBusTopReg[0],'x').zfill(8), end=' ')
+		print('relayBusBotReg',format(relayBusBotReg[1],'x').zfill(8),format(relayBusBotReg[0],'x').zfill(8), end=' ', file = sourceFile)
+		print('relayBusTopReg',format(relayBusTopReg[1],'x').zfill(8),format(relayBusTopReg[0],'x').zfill(8), end=' ', file = sourceFile)
 
 		# read errorBits 
 		errors=dwa.dwaRegRead(s, '00000034')                                                                                
@@ -84,14 +85,15 @@ dwa.dwaRegRead(s, '00000012')
 time.sleep(sleepSec)
 
 dwa.tcpClose(s)
+sourceFile.close()
 
-#print('\n\n======= dwaConfig() ===========')
+#print('\n\n======= dwaConfig() ===========', file = sourceFile)
 #dwa.dwaConfig(verbose=0, configFile="dwaConfigWC.ini")
 ##dwa.dwaConfig(verbose=0, configFile="dwaConfigSingleFreq.ini")
 
-#print('\n\n======= dwaStart() ===========')
+#print('\n\n======= dwaStart() ===========', file = sourceFile)
 #dwa.dwaStart(verbose=1)
 
-#print('\n\n======= dwaStat() ===========')
+#print('\n\n======= dwaStat() ===========', file = sourceFile)
 #dwa.dwaStat(verbose=1)
 
