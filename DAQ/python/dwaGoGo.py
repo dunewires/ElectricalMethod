@@ -14,7 +14,7 @@ relayBusTopReg[0] =  0x0
 relayBusTopReg[1] =  0xaa
 relayBusBotReg[0] =  relayBusTopReg[1] <<2
 relayBusBotReg[1] =  0x22
-print('relayBusTopReg', relayBusTopReg[1],relayBusTopReg[0])
+print('relayBusTopReg', format(relayBusTopReg[1],'x').zfill(8),relayBusTopReg[0])
 print('relayBusTopReg', relayBusBotReg[1],relayBusBotReg[0])
 
 
@@ -27,7 +27,7 @@ dwa.dwaRegRead(s, '00000034')
 time.sleep(sleepSec)
 
 # relayBusTop(1);
-dwa.dwaRegWrite(s, '0000002B', '00000000')
+dwa.dwaRegWrite(s, '0000002B', 'aaaaaaaa')
 time.sleep(sleepSec)
 # relayBusTop(0);
 time.sleep(sleepSec)
