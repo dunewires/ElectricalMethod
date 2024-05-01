@@ -72,8 +72,8 @@ for i in range(16):
 		time.sleep(sleepSec)
 
 		# read errorBits                                                                                 
-		errors=dwa.dwaRegRead(s, '00000034', file = sourceFile)                                                                                
-		print (errors)
+		errors=dwa.dwaRegRead(s, '00000034')                                                                                
+		print (errors, file = sourceFile)
 		time.sleep(sleepSec)
 
 
