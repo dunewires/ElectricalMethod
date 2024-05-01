@@ -1,7 +1,7 @@
 import dwaTools as dwa
 import time
 sourceFile = open('demo.txt', 'w')
-print('Starting test', file = sourceFile, file = sourceFile)
+print('Starting test', file = sourceFile)
 print('\n\n======= dwaRelayConfigTest() ===========', file = sourceFile)
 #dwa.dwaReset(verbose=1)
 sleepSec = 0.2
