@@ -37,9 +37,9 @@ relayBusBotReg = ['']*2
 
 relayBusStart =  0x8000000000000000
 relayBusError =  0x4000000000000000
-for i in range(16):
+for i in range(32):
 	relayBusScan =  relayBusStart
-	for j in range(16):
+	for j in range(32):
 		relayBus = relayBusError | relayBusScan
 		#print('test index',i,j, end=' ', file = sourceFile)
 		print('Bus bits',format(relayBus,'b').zfill(64), end=' ', file = sourceFile)
