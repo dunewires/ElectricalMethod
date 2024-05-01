@@ -49,8 +49,9 @@ for i in range(16):
 		print('relayBusBotReg',format(relayBusBotReg[1],'x').zfill(8),format(relayBusBotReg[0],'x').zfill(8), end=' ')
 		print('relayBusTopReg',format(relayBusTopReg[1],'x').zfill(8),format(relayBusTopReg[0],'x').zfill(8), end=' ')
 
-		# read errorBits                                                                                 
-		print (dwa.dwaRegRead(s, '00000034'), end=' ')
+		# read errorBits 
+		errors=dwa.dwaRegRead(s, '00000034')                                                                                
+		print (errors, end=' ')
 		time.sleep(sleepSec)
 
 		# relayBusTop(1);
@@ -70,7 +71,8 @@ for i in range(16):
 		time.sleep(sleepSec)
 
 		# read errorBits                                                                                 
-		print (dwa.dwaRegRead(s, '00000034'), end=' ')
+		errors=dwa.dwaRegRead(s, '00000034')                                                                                
+		print (errors)
 		time.sleep(sleepSec)
 
 
