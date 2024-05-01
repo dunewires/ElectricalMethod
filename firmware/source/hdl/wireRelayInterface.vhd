@@ -68,6 +68,10 @@ architecture STRUCT of wireRelayInterface is
 	signal shiftRegOut     : std_logic_vector(191 downto 0);
 	signal shiftRegIn      : SLV_VECTOR_TYPE(3 downto 0)(63 downto 0);
 
+	signal busOdd       : std_logic_vector(31 downto 0) := (others => '0');
+	signal busEven      : std_logic_vector(31 downto 0) := (others => '0');
+	signal relayLockout : std_logic                     := '0';
+
 	signal shiftCnt  : unsigned(7 downto 0)  := (others => '0');
 	signal stringCnt : unsigned(1 downto 0)  := (others => '0');
 	signal waitCnt   : unsigned(15 downto 0) := (others => '0');
@@ -110,15 +114,29 @@ begin
 
 	sdo <= shiftRegOut(shiftRegOut'left);
 
+	findError : process (all)
+	begin
+		-- pick out even and odd bits from serial stream
+		for i in 15 downto 0 loop
+			busEven(n)    <= serialStringOut(n*2 + 64);
+			busEven(n+16) <= serialStringOut(n*2 + 160);
+			busOdd(n)     <= serialStringOut(n*2 + 65);
+			busOdd(n+16)  <= serialStringOut(n*2 + 161);
+		end loop;
+		-- if there are one or more on both even and odd, flag an error 
+		-- this is a superset of the original error detector where we just flagged neighbors 
+		-- or(relayBusAll and (relayBusAll sll 1))
+		-- there is one DAQ clock from setting serial string to the time this is read, keep comb!
+		relayLockout <= or(busEven) and or(busOdd);
+
+	end process findError;
+
 	-- Coordinate the relay configuration and error checking process.
 	relayConfigCtrl : process (regClk)
-		variable relayBusAll : std_logic_vector(63 downto 0);
 	begin
 		if rising_edge(regClk) then
 			-- default
 			updateRequest_regClk <= '0';
-			-- pick out relay bus coil bits in order, use latched serial string data
-			relayBusAll := (serialStringOut(191 downto 160) & (serialStringOut(95 downto 64)));
 			-- boil down all register difference bits into one error bit
 			relayConfigError <= or(regDiff);
 
@@ -135,7 +153,7 @@ begin
 
 				when validateConfig_s =>
 					-- Lock out configurations that have two consecutive 1's in the bus relay coil drive
-					if or(relayBusAll and (relayBusAll sll 1)) then -- invalid configuration, set relayLockout and go back to idle
+					if relayLockout then -- invalid configuration, set relayLockoutError and go back to idle
 						relayLockoutError <= '1';
 						daqRegState       <= idle_s;
 					else -- clear any existing lockout and initiate TxRx
@@ -196,7 +214,7 @@ begin
 			src_clk => regClk,               -- 1-bit input: optional; required when SRC_INPUT_REG = 1
 
 			dest_out => updateRequest_dwaClk2, -- 1-bit output: src_in synchronized to the destination clock domain. This output is registered.
-			dest_clk => dwaClk2               -- 1-bit input: Clock signal for the destination clock domain.
+			dest_clk => dwaClk2                -- 1-bit input: Clock signal for the destination clock domain.
 		);
 
 	xpm_cdc_single_updateBusy : xpm_cdc_single
@@ -211,7 +229,7 @@ begin
 			src_clk => dwaClk2,            -- 1-bit input: optional; required when SRC_INPUT_REG = 1
 
 			dest_out => updateBusy_regClk, -- 1-bit output: src_in synchronized to the destination clock domain. This output is registered.
-			dest_clk => regClk            -- 1-bit input: Clock signal for the destination clock domain.
+			dest_clk => regClk             -- 1-bit input: Clock signal for the destination clock domain.
 		);
 
 
