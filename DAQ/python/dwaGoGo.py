@@ -47,7 +47,7 @@ for i in range(16):
 		relayBusTopReg[1] =  (relayBus & 0x00000000ffff0000)>>16
 		relayBusTopReg[0] =  (relayBus & 0x000000000000ffff)
 		print('relayBusBotReg',format(relayBusBotReg[1],'x').zfill(8),format(relayBusBotReg[0],'x').zfill(8), end=' ')
-		print('relayBusTopReg',format(relayBusTopReg[1],'x').zfill(8),format(relayBusTopReg[0],'x').zfill(8))
+		print('relayBusTopReg',format(relayBusTopReg[1],'x').zfill(8),format(relayBusTopReg[0],'x').zfill(8), end=' ')
 
 		# read errorBits                                                                                 
 		print (dwa.dwaRegRead(s, '00000034'), end=' ')
