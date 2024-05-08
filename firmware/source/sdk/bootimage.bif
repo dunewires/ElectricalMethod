@@ -2,6 +2,6 @@
 the_ROM_image:
 {
 [bootloader]/home/nate/projects/ElectricalMethod/firmware/scripts/..//source//dwa_ps/vittis/dwaPsHw/export/dwaPsHw/sw/dwaPsHw/boot/fsbl.elf
-/home/nate/projects/ElectricalMethod/firmware/scripts/..//vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20240405_171557_-37.947ns.bit
+/home/nate/projects/ElectricalMethod/firmware/scripts/..//vivadoProjects/dwa_ps_pl_top/dwa_ps_pl_top_20240508_151057_-38.152ns.bit
 /home/nate/projects/ElectricalMethod/firmware/scripts/..//source//dwa_ps/vittis/dwaPsSw/Release/dwaPsSw.elf
 }

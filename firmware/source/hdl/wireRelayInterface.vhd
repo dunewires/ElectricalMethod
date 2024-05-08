@@ -117,7 +117,7 @@ begin
 	findError : process (all)
 	begin
 		-- pick out even and odd bits from serial stream
-		for i in 15 downto 0 loop
+		for n in 15 downto 0 loop
 			busEven(n)    <= serialStringOut(n*2 + 64);
 			busEven(n+16) <= serialStringOut(n*2 + 160);
 			busOdd(n)     <= serialStringOut(n*2 + 65);
