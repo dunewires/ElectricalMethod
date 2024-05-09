@@ -11,7 +11,9 @@ s = dwa.tcpOpen(verbose=False)
 
 # read errorBits                                                                                 
 regHead,regAddress,regData=dwa.dwaRegRead(s, '00000014')
-print('Firmware git hash',format(regData,'x').zfill(8), file = sourceFile)
+print('Firmware git hash:',format(regData,'x').zfill(8),end=', ',file = sourceFile)
+regHead,regAddress,regData=dwa.dwaRegRead(s, '00000030')
+print('DWA S/N:',format(regData,'x').zfill(8), file = sourceFile)
 time.sleep(sleepSec)
 
 # !! for now all wires are off, should we do something here?
