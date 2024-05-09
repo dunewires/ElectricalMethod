@@ -47,12 +47,14 @@ relayBusBotReg = ['']*2
 
 relayBusStart =  0x0000000000000000
 relayBusError =  0x0000000000000000
+# attach CSV header
 print('Run Number,Bus String,relayBusBotReg1,relayBusBotReg0,relayBusTopReg1,relayBusTopReg0,Starting Errors,Ending Errors,Total Lockout Err,Total Readback Err',file = sourceFile)
 
-
-for i in range(32):
+# outer loop will shift the error bit(s)
+for i in range(1):
 	relayBusScan =  relayBusStart
-	for j in range(1):
+	# inner loop will shift the configuration bit(s)
+	for j in range(128):
 		print(format(runNumber,'d').zfill(8), end=',', file = sourceFile)
 		print('run number:',format(runNumber,'d').zfill(8))
 		relayBus = relayBusError | relayBusScan
@@ -91,6 +93,8 @@ for i in range(32):
 		regHead,regAddress,regData=dwa.dwaRegRead(s, '00000034')
 		time.sleep(sleepSec)
 		print(format(regData,'x').zfill(8), end=',', file = sourceFile)
+
+		# count errors through entire test
 		if (regData & 0x00000040) > 0 :
 			totalLockoutEr += 1
 		if (regData & 0x00000020) > 0 :
@@ -99,13 +103,15 @@ for i in range(32):
 		print('total lockout err:',format(totalLockoutEr,'d').zfill(8))
 		print(format(totalReadbackEr,'d').zfill(8), file = sourceFile)
 		print('total readback err:',format(totalReadbackEr,'d').zfill(8),'\n')
-		runNumber+=1
 
+		#shift config
 		relayBusScan = relayBusScan>>1
-		if (num % 2) and (i < 32):
+		if not(j % 2) and (j < 64):
 			# for the first 16 odd index, shift in 1
-		    relayBusScan = relayBusScan | 1<<64
-	
+		    relayBusScan = relayBusScan | 1<<63
+
+		runNumber+=1
+	#shift error	
 	relayBusError = relayBusError>>2
 
 # LS 24b dateCode                                                                          
