@@ -1,11 +1,19 @@
 import dwaTools as dwa
 import time
-sourceFile = open('demo.txt', 'w')
-print('Starting test', file = sourceFile)
-print('\n\n======= dwaRelayConfigTest() ===========', file = sourceFile)
+sourceFile = open('dwaRelayScan.txt', 'w')
 #dwa.dwaReset(verbose=1)
 sleepSec = 0.2
+totalLockoutEr=0
+totalReadbackEr=0
+runNumber=1
+
 s = dwa.tcpOpen(verbose=False)
+
+# read errorBits                                                                                 
+regHead,regAddress,regData=dwa.dwaRegRead(s, '00000014')
+print('Firmware git hash',format(regData,'x').zfill(8), file = sourceFile)
+time.sleep(sleepSec)
+
 # !! for now all wires are off, should we do something here?
 # relayWireTop(3);
 dwa.dwaRegWrite(s, '00000029', '00000000')
@@ -37,22 +45,28 @@ relayBusBotReg = ['']*2
 
 relayBusStart =  0x8000000000000000
 relayBusError =  0x4000000000000000
-for i in range(32):
+print('Run Number,Bus String,relayBusBotReg1,relayBusBotReg0,relayBusTopReg1,relayBusTopReg0,Starting Errors,Ending Errors,Total Lockout Err,Total Readback Err',file = sourceFile)
+
+
+for i in range(2):
 	relayBusScan =  relayBusStart
-	for j in range(32):
+	for j in range(2):
+		print(format(runNumber,'d').zfill(8), end=',', file = sourceFile)
+		print('run number:',format(runNumber,'d').zfill(8))
 		relayBus = relayBusError | relayBusScan
 		#print('test index',i,j, end=' ', file = sourceFile)
-		print('Bus bits',format(relayBus,'b').zfill(64), end=' ', file = sourceFile)
+		print(format(relayBus,'b').zfill(64), end=',', file = sourceFile)
+		print('bus bits:',format(relayBus,'b').zfill(64))
 		relayBusBotReg[1] =  (relayBus & 0xffff000000000000)>>48
 		relayBusBotReg[0] =  (relayBus & 0x0000ffff00000000)>>32
 		relayBusTopReg[1] =  (relayBus & 0x00000000ffff0000)>>16
 		relayBusTopReg[0] =  (relayBus & 0x000000000000ffff)
-		print('relayBusBotReg',format(relayBusBotReg[1],'x').zfill(8),format(relayBusBotReg[0],'x').zfill(8), end=' ', file = sourceFile)
-		print('relayBusTopReg',format(relayBusTopReg[1],'x').zfill(8),format(relayBusTopReg[0],'x').zfill(8), end=' ', file = sourceFile)
+		print(format(relayBusBotReg[1],'x').zfill(8),',',format(relayBusBotReg[0],'x').zfill(8), end=',', file = sourceFile)
+		print(format(relayBusTopReg[1],'x').zfill(8),',',format(relayBusTopReg[0],'x').zfill(8), end=',', file = sourceFile)
 
 		# read errorBits 
-		errors=dwa.dwaRegRead(s, '00000034')                                                                                
-		print (errors, end=' ', file = sourceFile)
+		regHead,regAddress,regData=dwa.dwaRegRead(s, '00000034')
+		print(format(regData,'x').zfill(8), end=',', file = sourceFile)
 		time.sleep(sleepSec)
 
 		# relayBusTop(1);
@@ -72,11 +86,18 @@ for i in range(32):
 		time.sleep(sleepSec)
 
 		# read errorBits                                                                                 
-		errors=dwa.dwaRegRead(s, '00000034')                                                                                
-		print (errors, file = sourceFile)
+		regHead,regAddress,regData=dwa.dwaRegRead(s, '00000034')
 		time.sleep(sleepSec)
-
-
+		print(format(regData,'x').zfill(8), end=',', file = sourceFile)
+		if (regData & 0x00000040) > 0 :
+			totalLockoutEr += 1
+		if (regData & 0x00000020) > 0 :
+			totalReadbackEr += 1
+		print(format(totalLockoutEr,'d').zfill(8), end=',', file = sourceFile)
+		print('total lockout err:',format(totalLockoutEr,'d').zfill(8))
+		print(format(totalReadbackEr,'d').zfill(8), file = sourceFile)
+		print('total readback err:',format(totalReadbackEr,'d').zfill(8),'\n')
+		runNumber+=1
 		relayBusScan = relayBusScan>>2
 	relayBusError = relayBusError>>2
 
@@ -86,14 +107,3 @@ time.sleep(sleepSec)
 
 dwa.tcpClose(s)
 sourceFile.close()
-
-#print('\n\n======= dwaConfig() ===========', file = sourceFile)
-#dwa.dwaConfig(verbose=0, configFile="dwaConfigWC.ini")
-##dwa.dwaConfig(verbose=0, configFile="dwaConfigSingleFreq.ini")
-
-#print('\n\n======= dwaStart() ===========', file = sourceFile)
-#dwa.dwaStart(verbose=1)
-
-#print('\n\n======= dwaStat() ===========', file = sourceFile)
-#dwa.dwaStat(verbose=1)
-
