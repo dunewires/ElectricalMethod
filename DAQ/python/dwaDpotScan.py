@@ -67,7 +67,14 @@ for i in range(1):
 		time.sleep(sleepSec)
 		# relayBusTop(0);
 		dwa.dwaRegWrite(s, '0000000F', format(dpotReg[0],'x').zfill(8))
-		time.sleep(sleepSec)		print('start dpot')		regHead,regAddress,regData=dwa.dwaRegRead(s, '00000010')		print(format(regData,'x').zfill(8))		time.sleep(sleepSec)		 		regHead,regAddress,regData=dwa.dwaRegRead(s, '0000000F')		print(format(regData,'x').zfill(8))		time.sleep(sleepSec)
+		time.sleep(sleepSec)		
+		print('start dpot')		
+		regHead,regAddress,regData=dwa.dwaRegRead(s, '00000010')		
+		print(format(regData,'x').zfill(8))		
+		time.sleep(sleepSec)		 		
+		regHead,regAddress,regData=dwa.dwaRegRead(s, '0000000F')		
+		print(format(regData,'x').zfill(8))		
+		time.sleep(sleepSec)
 		print('end dpot')		 
 		# read errorBits                                                                                 
 		regHead,regAddress,regData=dwa.dwaRegRead(s, '00000034')
