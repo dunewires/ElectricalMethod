@@ -49,8 +49,8 @@ print('Run Number,Bus String,relayBusBotReg1,relayBusBotReg0,dpotReg1,dpotReg0,S
 
  # outer loop will shift the error bit(s)
  for i in range(1):
- 		dpotReg[0] = 0
- 		dpotReg[1] = 0
+	dpotReg[0] = 0
+	dpotReg[1] = 0
 
  	# inner loop will shift the configuration bit(s)
  	for j in range(25):
