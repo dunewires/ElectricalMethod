@@ -42,6 +42,14 @@ time.sleep(sleepSec)
 dwa.dwaRegWrite(s, '00000020', '00000000')
 time.sleep(sleepSec)
 
+print('start dpot')
+dwa.dwaRegWrite(s, '0000000F', '00000000')
+time.sleep(sleepSec)
+
+dwa.dwaRegRead(s, '0000000F')
+time.sleep(sleepSec)
+print('end dpot')
+
 relayBusTopReg = ['']*2
 relayBusBotReg = ['']*2
 
@@ -50,73 +58,74 @@ relayBusError =  0x0000000000000000
 # attach CSV header
 print('Run Number,Bus String,relayBusBotReg1,relayBusBotReg0,relayBusTopReg1,relayBusTopReg0,Starting Errors,Ending Errors,Total Lockout Err,Total Readback Err',file = sourceFile)
 
-# outer loop will shift the error bit(s)
-for i in range(1):
-	relayBusScan =  relayBusStart
-	# inner loop will shift the configuration bit(s)
-	for j in range(128):
-		print(format(runNumber,'d').zfill(8), end=',', file = sourceFile)
-		print('run number:',format(runNumber,'d').zfill(8))
-		relayBus = relayBusError | relayBusScan
-		#print('test index',i,j, end=' ', file = sourceFile)
-		print(format(relayBus,'b').zfill(64), end=',', file = sourceFile)
-		print('bus bits:',format(relayBus,'b').zfill(64))
-		relayBusBotReg[1] =  (relayBus & 0xffff000000000000)>>48
-		relayBusBotReg[0] =  (relayBus & 0x0000ffff00000000)>>32
-		relayBusTopReg[1] =  (relayBus & 0x00000000ffff0000)>>16
-		relayBusTopReg[0] =  (relayBus & 0x000000000000ffff)
-		print(format(relayBusBotReg[1],'x').zfill(8),',',format(relayBusBotReg[0],'x').zfill(8), end=',', file = sourceFile)
-		print(format(relayBusTopReg[1],'x').zfill(8),',',format(relayBusTopReg[0],'x').zfill(8), end=',', file = sourceFile)
-
-		# read errorBits 
-		regHead,regAddress,regData=dwa.dwaRegRead(s, '00000034')
-		print(format(regData,'x').zfill(8), end=',', file = sourceFile)
-		time.sleep(sleepSec)
-
-		# relayBusTop(1);
-		dwa.dwaRegWrite(s, '0000002B', format(relayBusTopReg[1],'x').zfill(8))
-		time.sleep(sleepSec)
-		# relayBusTop(0);
-		dwa.dwaRegWrite(s, '0000002A', format(relayBusTopReg[0],'x').zfill(8))
-		time.sleep(sleepSec)
-		# relayBusBot(1);
-		dwa.dwaRegWrite(s, '00000025', format(relayBusBotReg[1],'x').zfill(8))
-		time.sleep(sleepSec)
-		# relayBusBot(0);
-		dwa.dwaRegWrite(s, '00000024', format(relayBusBotReg[0],'x').zfill(8))
-		time.sleep(sleepSec)
-		# Update relays
-		dwa.dwaRegWrite(s, '00000000', '00000004')
-		time.sleep(sleepSec)
-
-		# read errorBits                                                                                 
-		regHead,regAddress,regData=dwa.dwaRegRead(s, '00000034')
-		time.sleep(sleepSec)
-		print(format(regData,'x').zfill(8), end=',', file = sourceFile)
-
-		# count errors through entire test
-		if (regData & 0x00000040) > 0 :
-			totalLockoutEr += 1
-		if (regData & 0x00000020) > 0 :
-			totalReadbackEr += 1
-		print(format(totalLockoutEr,'d').zfill(8), end=',', file = sourceFile)
-		print('total lockout err:',format(totalLockoutEr,'d').zfill(8))
-		print(format(totalReadbackEr,'d').zfill(8), file = sourceFile)
-		print('total readback err:',format(totalReadbackEr,'d').zfill(8),'\n')
-
-		#shift config
-		relayBusScan = relayBusScan>>1
-		if not(j % 2) and (j < 64):
-			# for the first 16 odd index, shift in 1
-		    relayBusScan = relayBusScan | 1<<63
-
-		runNumber+=1
-	#shift error	
-	relayBusError = relayBusError>>2
+# # outer loop will shift the error bit(s)
+# for i in range(1):
+# 	relayBusScan =  relayBusStart
+# 	# inner loop will shift the configuration bit(s)
+# 	for j in range(128):
+# 		print(format(runNumber,'d').zfill(8), end=',', file = sourceFile)
+# 		print('run number:',format(runNumber,'d').zfill(8))
+# 		relayBus = relayBusError | relayBusScan
+# 		#print('test index',i,j, end=' ', file = sourceFile)
+# 		print(format(relayBus,'b').zfill(64), end=',', file = sourceFile)
+# 		print('bus bits:',format(relayBus,'b').zfill(64))
+# 		relayBusBotReg[1] =  (relayBus & 0xffff000000000000)>>48
+# 		relayBusBotReg[0] =  (relayBus & 0x0000ffff00000000)>>32
+# 		relayBusTopReg[1] =  (relayBus & 0x00000000ffff0000)>>16
+# 		relayBusTopReg[0] =  (relayBus & 0x000000000000ffff)
+# 		print(format(relayBusBotReg[1],'x').zfill(8),',',format(relayBusBotReg[0],'x').zfill(8), end=',', file = sourceFile)
+# 		print(format(relayBusTopReg[1],'x').zfill(8),',',format(relayBusTopReg[0],'x').zfill(8), end=',', file = sourceFile)
+# 
+# 		# read errorBits 
+# 		regHead,regAddress,regData=dwa.dwaRegRead(s, '00000034')
+# 		print(format(regData,'x').zfill(8), end=',', file = sourceFile)
+# 		time.sleep(sleepSec)
+# 
+# 		# relayBusTop(1);
+# 		dwa.dwaRegWrite(s, '0000002B', format(relayBusTopReg[1],'x').zfill(8))
+# 		time.sleep(sleepSec)
+# 		# relayBusTop(0);
+# 		dwa.dwaRegWrite(s, '0000002A', format(relayBusTopReg[0],'x').zfill(8))
+# 		time.sleep(sleepSec)
+# 		# relayBusBot(1);
+# 		dwa.dwaRegWrite(s, '00000025', format(relayBusBotReg[1],'x').zfill(8))
+# 		time.sleep(sleepSec)
+# 		# relayBusBot(0);
+# 		dwa.dwaRegWrite(s, '00000024', format(relayBusBotReg[0],'x').zfill(8))
+# 		time.sleep(sleepSec)
+# 		# Update relays
+# 		dwa.dwaRegWrite(s, '00000000', '00000004')
+# 		time.sleep(sleepSec)
+# 
+# 		# read errorBits                                                                                 
+# 		regHead,regAddress,regData=dwa.dwaRegRead(s, '00000034')
+# 		time.sleep(sleepSec)
+# 		print(format(regData,'x').zfill(8), end=',', file = sourceFile)
+# 
+# 		# count errors through entire test
+# 		if (regData & 0x00000040) > 0 :
+# 			totalLockoutEr += 1
+# 		if (regData & 0x00000020) > 0 :
+# 			totalReadbackEr += 1
+# 		print(format(totalLockoutEr,'d').zfill(8), end=',', file = sourceFile)
+# 		print('total lockout err:',format(totalLockoutEr,'d').zfill(8))
+# 		print(format(totalReadbackEr,'d').zfill(8), file = sourceFile)
+# 		print('total readback err:',format(totalReadbackEr,'d').zfill(8),'\n')
+# 
+# 		#shift config
+# 		relayBusScan = relayBusScan>>1
+# 		if not(j % 2) and (j < 64):
+# 			# for the first 16 odd index, shift in 1
+# 		    relayBusScan = relayBusScan | 1<<63
+# 
+# 		runNumber+=1
+# 	#shift error	
+# 	relayBusError = relayBusError>>2
 
 # LS 24b dateCode                                                                          
 dwa.dwaRegRead(s, '00000012')
 time.sleep(sleepSec)
+
 
 dwa.tcpClose(s)
 sourceFile.close()
