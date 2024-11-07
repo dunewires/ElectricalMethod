@@ -48,11 +48,21 @@ time.sleep(sleepSec)
 dwa.dwaRegWrite(s, '0000000F', '89abcdef')
 time.sleep(sleepSec)
 
-dwa.dwaRegRead(s, '00000010')
+regHead,regAddress,regData=dwa.dwaRegRead(s, '00000010')
+print(format(regData,'x').zfill(8))
 time.sleep(sleepSec)
-dwa.dwaRegRead(s, '0000000F')
+ 
+regHead,regAddress,regData=dwa.dwaRegRead(s, '0000000F')
+print(format(regData,'x').zfill(8))
 time.sleep(sleepSec)
+ 
 print('end dpot')
+
+
+
+
+
+
 
 relayBusTopReg = ['']*2
 relayBusBotReg = ['']*2
